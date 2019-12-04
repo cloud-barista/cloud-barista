@@ -1,0 +1,89 @@
+{{define "Header"}}
+<!doctype html>
+<html lang="ko">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css" />
+        
+        <!-- jqvmap CSS -->
+        <link href="/assets/css/jqvmap.css" media="screen" rel="stylesheet" type="text/css"/>
+        
+        <!-- https://fontawesome.com/cheatsheet -->
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+        <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+        <!-- jqvmap -->
+        <script type="text/javascript" src="/assets/js/jquery.vmap.js"></script>
+        <script type="text/javascript" src="/assets/js/maps/jquery.vmap.world.js" charset="utf-8"></script>
+        <script type="text/javascript" src="/assets/js/jquery.vmap.sampledata.js"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+        <!-- chart -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.css">
+        <!-- chart -->
+        <!-- Common Script -->
+        <script type="text/javascript" src="/assets/js/common.js"></script>
+        <!-- Common Script -->
+        
+        <link rel="stylesheet" href="/assets/css/custom.css">
+
+        
+
+        <title>Cloud Baristar</title>
+    </head>
+    <script>
+        const CommonURL = "http://15.165.16.67:1323";
+        const SpiderURL = "http://15.165.16.67:1024"
+        const NAMESPACE ="{{with .LoginInfo}}{{ .NameSpace }}{{end}}";
+        console.log("namespace : ",NAMESPACE)
+        var btn_click_cnt = 1;
+        const DragonFlyURL = "http://182.252.133.22:9090"
+       
+    
+    </script>
+    
+        <!-- header -->
+        <header class="header">
+            <nav class="navbar">
+                <a class="navbar-brand" href="/" ><img src="/assets/img/logo.png" alt="Cloud Baristar" style="height:64px;" onclick="getNS();"></a>
+                <ul class="nav px-3">
+                    <li class="nav-item">
+                        <select class="form-control form-control-sm" id="name_select" onchange="setNS(this.value);">
+                            <option>Select nameSpace</option>
+                        </select>
+                    </li>
+                    <li class="nav-item">
+                        <div class="btn-group" role="group">
+                            <button id="btnGroupDrop1" type="button" class="btn btn-dark btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
+                                <a class="dropdown-item" href="/Region/list">Region 관리</a>
+                                <a class="dropdown-item" href="/Connection/list">클라우드 연결 관리</a>
+                                <a class="dropdown-item" href="/Driver/list">Driver 관리</a>
+                                <a class="dropdown-item" href="/NS/list">네임스페이스 관리</a>
+                                <a class="dropdown-item" href="/Credential/list">Credential 관리</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="nav-item ">
+                        <a class="text-light" href="#!" onclick="javscript:if(confirm('로그아웃하시겠습니까?')){location.href='/logout';};">
+                            
+                            <strong>{{with .LoginInfo}}{{ .Username }}{{end}}</strong>님
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </header>
+        <!-- //header -->
+        <body>
+            <!-- common methods -->
+            <script type="text/javascript" src="/assets/js/jquery.serialize.object.js"></script>
+            <!-- common methods -->
+{{end}}

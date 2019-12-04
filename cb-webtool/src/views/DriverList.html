@@ -1,0 +1,228 @@
+{{template "Header" .}}
+
+        <!-- container -->
+        <div class="container-fluid">
+            {{template "LNB" .}}
+
+            <!-- contents -->
+            
+                <main role="main" class="main">
+                    <div class="page-header">
+                        <div>
+                            <h1>Driver List</h1>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Managed Driver
+                                    </strong>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-danger" id="sel_del">삭제</button>
+                                    <button type="button" class="btn btn-sm btn-outline-dark">수정</button>
+                                    <button type="button" onclick="location.href='/Driver/reg';" class="btn btn-sm btn-dark">등록</button>
+                                </div>
+                            </div>
+                        </div>
+                        <form name="Form">
+                        <div class="card-body">
+                            <div class="d-flex mb-3 justify-content-between align-items-center">
+                                <!-- <div>
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <label class="input-group-text" for="inputGroupSelect01">show</label>
+                                        </div>
+                                        <select class="custom-select" id="inputGroupSelect01">
+                                            <option selected>Choose...</option>
+                                            <option value="1">One</option>
+                                            <option value="2">Two</option>
+                                            <option value="3">Three</option>
+                                        </select>
+                                    </div>
+                                </div> -->
+                                <div>
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text" id="inputGroup-sizing-default">search</span>
+                                        </div>
+                                        <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="table-overflow">
+                                <table class="table table-bordered">
+                                    <colgroup>
+                                        <col style="width: 50px">
+                                        <col style="width: 50px">
+                                        <col>
+                                        <col>
+                                        <col>
+                                        <!-- <col>
+                                        <col style="width: 50px">
+                                        <col>
+                                        <col style="width: 150px"> -->
+                                    </colgroup>
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th class="text-center">
+                                                <div class="form-input">
+                                                    <span class="input">
+                                                        <input type="checkbox"  name="chkall" value="1" onclick="check_all(this.form)" id=""><i></i>
+                                                    </span>
+                                                </div>
+                                            </th>
+                                            <th>DriverName</th>
+                                            <th>ProviderName</th>
+                                            <th>DriverLibFileName</th>
+                                           
+                                        
+                                        </tr>
+                                    </thead>
+                                    <tbody id="con_table">
+                                        <tr>
+                                            <td class="text-center">
+                                                <div class="form-input">
+                                                    <span class="input">
+                                                        <input type="checkbox" class="chk" name="chk[]" id="" value='{{ .ConfigName}}' /><i></i>
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                         
+                                        </tr>
+                                      
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        </form>
+                        <!-- <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <span class="mr-2">
+                                        showing 1 to <span>5</span> <span>25</span> record
+                                    </span>
+                                    <nav>
+                                        <ul class="pagination pagination-sm">
+                                            <li class="page-item disabled">
+                                                <span class="page-link"><i class="fas fa-angle-left"></i></span>
+                                            </li>
+                                            <li class="page-item"><a class="page-link" href="#">1</a></li>
+                                            <li class="page-item active" aria-current="page">
+                                                <span class="page-link">
+                                                    2
+                                                    <span class="sr-only">(current)</span>
+                                                </span>
+                                            </li>
+                                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="#"><i class="fas fa-angle-right"></i></a>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-dark btn-sm">등록</button>
+                                </div>
+                            </div>
+                        </div> -->
+                    </div>
+
+                
+                </main>
+           
+            <!-- //contents -->
+
+        </div>
+        <!-- //container -->
+
+
+        {{template "Footer" .}}
+<script>
+var getList = "{{ .NSList}}";
+console.log(getList);
+var getInfo = "{{ .LoginInfo}}";
+console.log(getInfo);
+var f = document.Form;
+
+function check_all(f) {
+	var chk = document.getElementsByName("chk[]");
+
+    for (i=0; i<chk.length; i++)
+        chk[i].checked = f.chkall.checked;
+}
+
+$(document).ready(function(){
+    //alert("reload")
+
+    var url = SpiderURL+"/driver";
+    axios.get(url).then(result=>{
+        var data = result.data
+        var html = ""
+        if(data){
+            for(var i in data){
+                html += '<tr>'
+                    +'<td class="text-center">'
+                    +'<div class="form-input">'
+                    +'<span class="input">'
+                    +'<input type="checkbox" class="chk" name="chk[]" id="" value="'+data[i].DriverName+'" /><i></i>'
+                    +'</span>'
+                    +'</div>'
+                    +'</td>'
+                    +'<td>'+data[i].DriverName+'</td>'
+                    +'<td>'+data[i].ProviderName+'</td>'
+                    +'<td>'+data[i].DriverLibFileName+'</td>'
+                  
+                    +'</tr>'
+            }
+            $("#con_table").empty();
+            $("#con_table").append(html);
+        }else{
+            $("#con_table").empty();
+            $("#con_table").append("<td colspan='6'>등록된 데이터가 없습니다.</td>");
+        }
+
+    })
+    $("#sel_del").click(function(){
+        var cnt = 0;
+        var id = "";
+		$(".chk").each(function(){
+			if($(this).is(":checked")){
+				//alert("chk");
+                cnt++;
+                id = $(this).val();
+			
+			}
+		});
+		if(cnt < 1 ){
+            alert("삭제할 대상을 선택해 주세요.");
+            return;
+        }
+        if(cnt == 1){
+           
+            var u = SpiderURL+"/driver/"+id
+           
+            if(confirm("삭제하시겠습니까?")){
+             axios.delete(u).then(result=>{
+                 var data = result.data
+                 if(result.status == 200){
+                     alert("삭제되었습니다.")
+                     location.reload()
+                 }
+             })
+            }
+        }
+        if(cnt >1){
+            alert("한개씩만 삭제 가능합니다.")
+            return;
+        }
+	
+	});
+})
+
+
+</script>

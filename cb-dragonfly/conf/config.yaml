@@ -1,0 +1,30 @@
+#### Config for cb-dragonfly ####
+
+# influxdb connection info
+influxdb:
+  endpoint_url: http://{{influxdb_ip}}:8086
+  database: cbmon
+  user_name: cbmon
+  password: {{password}}
+
+# etcd connection info
+etcd:
+  endpoint_url: http://{{etcd_ip}}:2379
+  ttl: 60                 # time to live (s)
+
+# collect manager configuration info
+collect_manager:
+  collector_ip: {{collector_ip}}
+  collector_port: 8094    # udp port
+  collector_count: 1      # default collector count
+
+# api server configuration info
+api_server:
+  port: 9090
+
+# monitoring interval configuration info
+monitoring:
+  agent_interval: 2       # agent interval (s)
+  collector_interval: 10  # aggregate interval (s)
+  schedule_interval: 10   # scale interval (s)
+  max_host_count: 10      # maximum host count per collector

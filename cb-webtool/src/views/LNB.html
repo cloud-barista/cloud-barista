@@ -1,0 +1,79 @@
+{{define "LNB"}}
+ <!-- sidebar -->
+ <nav class="sidebar">
+        <div class="sidebar-sticky">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="/dashboard">
+                        <i class="fas fa-home"></i>
+                        Dashboard <span class="sr-only">(current)</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <p class="sidebar-heading">Cloud-Barista 운영</p>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link " href="/dashboard">
+                                <i class="fas fa-gem"></i>
+                                서비스(MCIS)운영
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/monitoring">
+                                <i class="fas fa-poll"></i>
+                                모니터링
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="#">
+                                <i class="fas fa-won-sign"></i>
+                                비용관리
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <p class="sidebar-heading">Cloud-Barista 운영설정</p>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link " href="/MCIS/list">
+                                <i class="fas fa-server"></i>
+                                서비스(MCIS)관리
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/Resource/board">
+                                <i class="fas fa-database"></i>
+                                리소스(MCIR)관리
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="#">
+                                <i class="fas fa-gavel"></i>
+                                정책 관리
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/NS/list">
+                                    <i class="fas fa-wrench"></i>
+                                네임스페이스(NS) 관리
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <p class="sidebar-heading">Cloud-Barista 환경설정</p>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link " href="/Connection/list">
+                                <i class="fas fa-cloud"></i>
+                                클라우드 연결
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <!-- //sidebar -->
+{{end}}

@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="ko">
+    <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+            <!-- Bootstrap CSS -->
+            <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css" />
+            <!-- https://fontawesome.com/cheatsheet -->
+            
+            <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    
+            <link rel="stylesheet" href="../assets/css/custom.css">
+    
+            <title>Cloud Baristar</title>
+        </head>
+   
+    <body>
+        <div class="page-login">
+            <div class="container-fluid-pop">
+                <div class="d-flex flex-column h-100 align-items-center justify-content-center">
+                        <h1 class="display-4 mb-5 text-white"></h1>
+                    <div class="col-">
+                        <div class="card">
+                                <div class="card-header">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>
+                                                    Spec List
+                                                </strong>
+                                            </div>
+                                            <!-- <div>
+                                                <button type="button" class="btn btn-sm btn-danger">삭제</button>
+                                                <button type="button" class="btn btn-sm btn-outline-dark">수정</button>
+                                                <button type="button" class="btn btn-sm btn-dark">등록</button>
+                                            </div> -->
+                                        </div>
+                                    </div>
+                                    <div class="card-body" style="
+                                    padding-top: 10px;
+                                ">
+                                    <div class="d-flex mb-3 justify-content-between align-items-center">
+                                    <div>
+                                        <div class="input-group input-group-sm">
+                                            <!-- <div class="input-group-prepend">
+                                                <label class="input-group-text" for="inputGroupSelect01">show</label>
+                                            </div> -->
+                                            <!-- <select class="custom-select" id="inputGroupSelect01">
+                                                <option selected>Choose...</option>
+                                                <option value="1">One</option>
+                                                <option value="2">Two</option>
+                                                <option value="3">Three</option>
+                                            </select> -->
+                                        </div>
+                                    </div>
+                                    <div>
+                                            <!-- <button type="button" class="btn btn-sm btn-danger">삭제</button>
+                                            <button type="button" class="btn btn-sm btn-outline-dark">수정</button> -->
+                                            <button type="button" class="btn btn-sm btn-dark" id="sel">선택</button>
+                                        </div>
+                                </div>
+                                <div class="table-overflow" style="overflow:auto;height:500px;">
+                                    <table class="table table-bordered">
+                                        <colgroup>
+                                            <col style="width: 50px">
+                                            <col style="width: 50px">
+                                            <col>
+                                            <col>
+                                            <col>
+                                            <col>
+                                            <col>
+                                            <col>
+                                            <col style="width: 50px">
+                                           
+                                        </colgroup>
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th class="text-center">
+                                                    <div class="form-input">
+                                                        <span class="input">
+                                                            <input type="checkbox" id=""><i></i>
+                                                        </span>
+                                                    </div>
+                                                </th>
+                                                
+                                                <th>Name</th>
+                                                <th>ConnectionName</th>
+                                                <th>vCpu</th>
+                                                <th>Memory</th>
+                                                <th>Storage</th>
+                                                <th>Cost/Hour</th>
+                                                <th>OsType</th>
+                                               
+                                            </tr>
+                                        </thead>
+                                        <tbody id="spec_list">
+                                            <tr>
+                                            <td class="text-center">
+                                                <div class="form-input">
+                                                    <span class="input">
+                                                        <input type="checkbox" id="" class="chk" value="vmspec-1234"><i></i>
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td>1</td>
+                                            <td><a href="">Baristar1</a></td>
+                                            <td>awsaws driver ver0.1</td>
+                                            <td>aws key 1</td>
+                                            <td>ap-northest-1</td>
+                                            <td>
+                                            <div class="custom-control custom-switch">
+                                                <input type="checkbox" class="custom-control-input" id="customSwitch1">
+                                                <label class="custom-control-label" for="customSwitch1"></label>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-pill badge-warning">stop</span>
+                                        </td>
+                                        <td>2019-05-05</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                                   
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+       
+    </body>
+</html>
+<script>
+$(document).ready(function(){
+    var configName = $("#configName_"+vm_cnt+" option:selected").val();
+    console.log("configname : ",configName);
+    var nsid = NAMESPACE;
+    var specUrl = CommonURL+"/ns/"+nsid+"/resources/spec"
+    console.log("specUrl : ",specUrl)
+    axios.get(specUrl).then(result=>{
+        var res = result.data.spec
+        console.log(res);
+        var html = "";
+        var count = 0;
+        for(var i in res){
+            if(configName == res[i].connectionName){ 
+                var cnt = parseInt(i)+1;
+                count++;
+                html += '<tr>'
+                    +'<td class="text-center">'
+                    +'<div class="form-input">'
+                    +'<span class="input">'
+                    +'<input type="radio" id="" class="chk" value="'+res[i].id+'|'+res[i].name+'|'+res[i].num_vCPU+'|'+res[i].mem_GiB+'|'+res[i].storage_GiB+'|'+res[i].cost_per_hour+'|'+res[i].os_type+'"><i></i>'
+                    +'</span></div></td>'
+
+                    +'<td>'+res[i].name+'</td>'
+                    +'<td>'+res[i].connectionName+'</td>'
+                    +'<td>'+res[i].num_vCPU+'</td>'
+                    +'<td>'+res[i].mem_GiB+'</td>'
+                    +'<td>'+res[i].storage_GiB+'</td>'
+                    +'<td>'+res[i].cost_per_hour+'</td>'
+                    +'<td>'+res[i].os_type+'</td><tr>';
+            }
+        }
+        if(count == 0){
+                html +='<tr><td colspan="7">등록된 스펙이 없습니다.</td></tr>'
+            }
+        $("#spec_list").empty();
+        $("#spec_list").append(html);
+
+    })
+    //alert("reload")
+    $("#sel").click(function(){
+       
+        var cnt = 0;
+        var values = "";
+		$(".chk").each(function(){
+			if($(this).is(":checked")){
+				//alert("chk");
+                cnt++;
+                values  = $(this).val();
+                
+			
+			}
+		});
+		if(cnt < 1 ){
+            alert("대상을 선택해 주세요.");
+            return;
+        }
+        if(cnt == 1){
+          //alert(id);
+          console.log("values : ",values)
+          values = values.split("|");
+          $("#vmspec_"+vm_cnt+"").val(values[0]);
+          // name이 들어갈때
+          //$("#vmspec_"+vm_cnt+"").val(values[1]);
+          $("#vmspecName_"+vm_cnt+"").val(values[1]+"("+values[0]+")");
+          $("#vcpu_"+vm_cnt+"").val(values[2]);
+          $("#mem_"+vm_cnt+"").val(values[3]);
+          $("#storage_"+vm_cnt+"").val(values[4]);
+          $("#cPh"+vm_cnt+"").val(values[5]);
+          $("#osType_"+vm_cnt+"").val(values[6]);
+
+
+          $('#transDiv').remove();
+        }
+        if(cnt >1){
+            alert("한개씩 등록 가능합니다.")
+            return;
+        }
+	
+	});
+})
+</script>
