@@ -1,0 +1,2 @@
+# docs
+Cloud-Barista Documentation
