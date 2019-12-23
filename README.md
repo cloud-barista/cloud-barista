@@ -10,6 +10,8 @@ Main frameworks are as follows,
 5. CB-Store (provides an unified DB interface for meta info of Cloud-Barista)
 6. CB-Log (provides log system)
 
+The frameworks are in src directory.
+
 ***
 
 ## [목    차]
