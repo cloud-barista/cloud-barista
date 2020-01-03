@@ -56,7 +56,7 @@ The frameworks are in src directory.
 
   - CB-Webtool 설치 및 실행
     - cloud-barista/cb-webtool README를 참고하여 설정, 설치
-    - cb-webtool 실행 (cb-webtool UGI 서버 실행)
+    - cb-webtool 실행 (cb-webtool GI 서버 실행)
   
 ## [API 규격]
 - cloud-barista/docs/API-Specifications/User-REST-API(v0.30).md 참고
