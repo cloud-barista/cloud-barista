@@ -10,7 +10,7 @@ Main frameworks are as follow,
 1. CB-Tumblebug (manages multi-cloud resource and provides multi-cloud infra services)
 1. CB-Tumblebug/cb-milkyway (CB-Tumblebug benchmark agent)
 1. CB-Dragonfly (monitors multi-cloud service)
-1. CB-Waterstrider/CB-Webtool (provides a GUI to Cloud-Barista users)
+1. CB-Waterstrider/cb-webtool (provides a GUI to Cloud-Barista users)
 1. CB-Bridge/cb-operator (operation tool for Cloud-Barista system runtime)
 1. CB-Bridge/cb-store (provides an unified DB interface for meta info of Cloud-Barista)
 1. CB-Bridge/cb-log (provides log system)
@@ -45,8 +45,9 @@ If you have any difficulties in using Cloub-Barista, please let us know.
 
 ## [설치 및 실행]
 
-- Git 설치
-- Go 설치(1.12 이상)  
+- Cloud-Barista 플랫폼 통합 실행 (Docker 이미지 기반)
+  - cb-operator 를 통해 Cloud-Barista 전체 FW를 통합 실행할 수 있음
+    - 참고: cloud-barista/cb-operator
 
 - Cloud-Barista 소스 다운로드 및 설치
   - Cloud-Barista alliance 설치 (CB-Log)
@@ -72,9 +73,7 @@ If you have any difficulties in using Cloub-Barista, please let us know.
     - cloud-barista/cb-webtool README를 참고하여 설정, 설치
     - cb-webtool 실행 (cb-webtool GUI 서버 실행)
 
-- Cloud-Barista 플랫폼 통합 실행 방법 (Docker-Compose 기반)
-  - cb-operator 를 통해 Cloud-Barista 전체 FW를 통합 실행할 수 있음
-    - 참고: cloud-barista/cb-operator
+
 
 ## [문서 및 API 규격]
 - 문서 통합 Repository
