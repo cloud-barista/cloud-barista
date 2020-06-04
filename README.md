@@ -33,7 +33,7 @@ If you have any difficulties in using Cloub-Barista, please let us know.
 1. [설치 환경](#설치-환경)
 2. [설치 및 실행](#설치-및-실행)
 3. [실행 준비](#실행-준비)
-4. [API 규격](#API-규격)
+4. [문서 및 API 규격](#문서-및-API-규격)
 5. [특이 사항](#특이-사항)
 6. [활용 예시](#활용-예시)
 
@@ -76,8 +76,11 @@ If you have any difficulties in using Cloub-Barista, please let us know.
   - cb-operator 를 통해 Cloud-Barista 전체 FW를 통합 실행할 수 있음
     - 참고: cloud-barista/cb-operator
 
-## [API 규격]
-- cloud-barista/docs/API-Specifications/User-REST-API(v0.30).md 참고
+## [문서 및 API 규격]
+- 문서 통합 Repository
+  - github.com/cloud-barista/docs
+- API 규격
+  - github.com/cloud-barista/docs/blob/master/API/User-REST-API(v0.2.0-cappuccino).md
 
 ## [특이 사항]
 - 개발상태: 초기 기능 중심 개발 추진 중 / 기술 개발용 / 상용 활용시 보완필요
@@ -89,13 +92,13 @@ If you have any difficulties in using Cloub-Barista, please let us know.
 
 ### CB-Tumblebug 및 CB-Spider의 REST API를 사용하여 테스트
 - CB-Spider API를 통해 클라우드 인프라 연동 정보 등록
-   - https://cloud-barista.github.io/rest-api/v0.2.0/spider/ccim/
+   - cloud-barista.github.io/rest-api/v0.2.0/spider/ccim/
 - CB-Tumblebug 멀티 클라우드 네임스페이스 관리 API를 통해서 Namespace 생성
-   - https://cloud-barista.github.io/rest-api/v0.2.0/tumblebug/namespace/
+   - cloud-barista.github.io/rest-api/v0.2.0/tumblebug/namespace/
 - CB-Tumblebug 멀티 클라우드 인프라 자원(MCIR) 관리 API를 통해서 VM 생성을 위한 자원 (MCIR) 생성
-   - https://cloud-barista.github.io/rest-api/v0.2.0/tumblebug/mcir/
+   - cloud-barista.github.io/rest-api/v0.2.0/tumblebug/mcir/
 - CB-Tumblebug 멀티 클라우드 인프라 서비스(MCIS) 관리 API를 통해서 MCIS 생성, 조회, 제어, 원격명령수행, 종료
-   - https://cloud-barista.github.io/rest-api/v0.2.0/tumblebug/mcis/
+   - cloud-barista.github.io/rest-api/v0.2.0/tumblebug/mcis/
 
 ### CB-Tumblebug 스크립트를 통한 테스트 개요
 - cloud-barista/cb-tumblebug/test/official/
