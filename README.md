@@ -6,13 +6,13 @@ Cloub-Barista consists of multiple frameworks (sub-systems) to accommodate micro
 Main frameworks are as follows,
 
 1. CB-Spider (connects all clouds in a single interface)
-2. CB-Tumblebug (manages multi-cloud resource and provides multi-cloud infra services)
-   - cb-milkyway (CB-Tumblebug benchmark agent)
-3. CB-Dragonfly (monitors multi-cloud service)
-4. CB-Waterstrider/CB-Webtool (provides a GUI to Cloud-Barista users)
-5. CB-Bridge/cb-operator (operation tool for Cloud-Barista system runtime)
-5. CB-Bridge/cb-store (provides an unified DB interface for meta info of Cloud-Barista)
-6. CB-Bridge/cb-log (provides log system)
+1. CB-Tumblebug (manages multi-cloud resource and provides multi-cloud infra services)
+1. CB-Tumblebug/cb-milkyway (CB-Tumblebug benchmark agent)
+1. CB-Dragonfly (monitors multi-cloud service)
+1. CB-Waterstrider/CB-Webtool (provides a GUI to Cloud-Barista users)
+1. CB-Bridge/cb-operator (operation tool for Cloud-Barista system runtime)
+1. CB-Bridge/cb-store (provides an unified DB interface for meta info of Cloud-Barista)
+1. CB-Bridge/cb-log (provides log system)
 
 The frameworks are listed in the root directory.
 
