@@ -464,8 +464,9 @@ Dozing for 1 : 1 (Back to work)
       }
       ```
 
+<details>
+<summary>테스트 스크립트 디렉토리 전체 Tree 보기</summary>
 
-#### [테스트 코드 파일 트리 설명]
 ```
 ~/go/src/github.com/cloud-barista/cb-tumblebug/test/official$ tree
 .
@@ -541,3 +542,4 @@ Dozing for 1 : 1 (Back to work)
     └── test-ns-cloud.sh
 ```
 
+</details>
