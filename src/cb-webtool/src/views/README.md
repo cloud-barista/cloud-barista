@@ -1,1 +1,0 @@
-View template files
