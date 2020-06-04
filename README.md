@@ -422,6 +422,9 @@ Dozing for 1 : 1 (Back to work)
 
 마지막의 [Executed Command List] 에는 수행한 커맨드의 히스토리가 포함됨. 
 (cat ./executionStatus 를 통해 다시 확인 가능)
+      
+</details>
+
 
 #### 3) MCIS 기반 애플리케이션 운용 방법 및 최종 검증
 
@@ -460,8 +463,6 @@ Dozing for 1 : 1 (Back to work)
         ]
       }
       ```
-      
-</details>
 
 
 #### [테스트 코드 파일 트리 설명]
