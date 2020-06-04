@@ -41,7 +41,7 @@ If you have any difficulties in using Cloub-Barista, please let us know.
 
 ## [설치 환경]
 
-- 리눅스(검증시험:Ubuntu 18.04)
+- 리눅스(검증시험: Ubuntu 18.04)
 
 ## [설치 및 실행]
 
