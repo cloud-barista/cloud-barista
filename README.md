@@ -1,9 +1,10 @@
-# Cloud-Barista
-Multi-Cloud Service Platform.
+# Cloud-Barista 
+
+The Multi-Cloud Service Platform.
 
 Cloub-Barista consists of multiple frameworks (sub-systems) to accommodate microservice architecture (MSA).
 
-Main frameworks are as follows,
+Main frameworks are as follow,
 
 1. CB-Spider (connects all clouds in a single interface)
 1. CB-Tumblebug (manages multi-cloud resource and provides multi-cloud infra services)
