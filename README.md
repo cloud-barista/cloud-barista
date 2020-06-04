@@ -102,11 +102,11 @@ If you have any difficulties in using Cloub-Barista, please let us know.
 ### [사용 방법 2] CB-Tumblebug 테스트 스크립트를 통한 운용
 - cloud-barista/cb-tumblebug/test/official/
    - 클라우드 인증 정보, 테스트 기본 정보 입력
-   - 클라우드정보, Namespace, MCIR, MCIS 등 개별 제어 시험 (개별 시험시, 오브젝트들의 의존성 고려 필요))
-   - 한꺼번에 통합 시험 (추천 테스트 방법)
+   - 개별 수동 제어: 클라우드정보, Namespace, MCIR, MCIS 등 제어 (개별 시험시, 오브젝트들의 의존성 고려 필요))
+   - 통합 자동 제어: 의존성을 고려한 자동 통합 제어 (추천 테스트 방법)
      - cloud-barista/cb-tumblebug/test/official/sequentialFullTest
 
-#### 0) 클라우드 인증 정보, 테스트 기본 정보 입력
+#### 1) 클라우드 인증 정보, 테스트 기본 정보 입력
 - cloud-barista/cb-tumblebug/test/official/ 이동
 - credentials.conf  # Cloud 정보 등록을 위한 CSP별 인증정보 (사용자에 맞게 수정 필요)
    - 기본적인 클라우드 타입 (AWS, GCP, AZURE, ALIBABA)에 대해 템플릿 제공
@@ -115,8 +115,10 @@ If you have any difficulties in using Cloub-Barista, please let us know.
    - 클라우드 타입(CSP)별 약 1~3개의 기본 리전이 입력되어 있음
      - 이미지와 스팩은 리전에 의존성이 있는 경우가 많으므로, 리전별로 지정이 필요
 
-#### 1) 클라우드정보, Namespace, MCIR, MCIS 등 개별 제어 시험
-- 제어하고 싶은 리소스 오브젝트에 대해, 해당 디렉토리로 이동하여 필요한 시험 수행
+#### 2) 개별 수동 제어 또는 통합 자동 제어
+
+##### [개별 수동 제어] 클라우드정보, Namespace, MCIR, MCIS 등 개별 제어
+- 제어하고 싶은 리소스 오브젝트에 대해, 해당 디렉토리로 이동하여 필요한 제어 수행
   - 오브젝트는 서로 의존성이 있으므로, 번호를 참고하여 오름차순으로 수행하는 것이 바람직함
     - 0.settingSpider  # 클라우드 정보 등록 관련 스크립트 모음
     - 0.settingTB  # 네임스페이스 관련 스크립트 모음
@@ -127,8 +129,8 @@ If you have any difficulties in using Cloub-Barista, please let us know.
     - 5.spec  # MCIR spec 등록 관련 스크립트 모음
     - 6.mcis  # MCIS 생성 및 제어 관련 스크립트 모음
 
-#### 2) 한꺼번에 통합 시험 (추천 테스트 방법)
-- sequentialFullTest 에 포함된 cleanAll-mcis-mcir-ns-cloud.sh 을 수행하면 모든 것을 한번에 테스트 가능
+##### [통합 자동 제어] 의존성을 고려한 자동 통합 제어 (추천 테스트 방법)
+- sequentialFullTest 에 포함된 cleanAll-mcis-mcir-ns-cloud.sh 을 수행하면 모든 것을 한번에 제어 및 테스트 가능
 ```
 └── sequentialFullTest  # Cloud 정보 등록, NS 생성, MCIR 생성, MCIS 생성까지 한번에 자동 테스트
     ├── cleanAll-mcis-mcir-ns-cloud.sh  # 모든 오브젝트 역으로 제어
@@ -419,7 +421,7 @@ Dozing for 1 : 1 (Back to work)
 마지막의 [Executed Command List] 에는 수행한 커맨드의 히스토리가 포함됨. 
 (cat ./executionStatus 를 통해 다시 확인 가능)
 
-#### 3) MCIS 응용 기반 최종 검증
+#### 3) MCIS 기반 애플리케이션 운용 방법 및 최종 검증
 
   - SSH 원격 커맨드 실행을 통해서 접속 여부 등을 확인 가능
     - command-mcis.sh  # 생성된 MCIS(다중VM)에 원격 명령 수행
