@@ -1,0 +1,10 @@
+datasources:
+- name: '${DS_INFLUX}'
+  type: 'influxdb'
+  access: 'proxy'
+  database: 'cbrestapigw'
+  org_id: 1
+  url: 'http://influxdb:8086'
+  is_default: true
+  version: 1
+  editable: true

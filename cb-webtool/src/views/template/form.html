@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css" />
+
+        <link rel="stylesheet" href="../assets/css/custom.css">
+
+        <title>Cloud Baristar</title>
+    </head>
+    <body>
+        <!-- header -->
+        <header class="header">
+            <nav class="navbar">
+                <a class="navbar-brand" href="#"><img src="https://imgnew.megazone.com/2019/08/mzcloud-logo-1.png" alt="Cloud Baristar"></a>
+                <ul class="nav px-3">
+                    <li class="nav-item">
+                        <select class="form-control form-control-sm">
+                            <option>Select nameSpace</option>
+                        </select>
+                    </li>
+                    <li class="nav-item">
+                        <div class="btn-group" role="group">
+                            <button id="btnGroupDrop1" type="button" class="btn btn-dark btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
+                                <a class="dropdown-item" href="#">Region 관리</a>
+                                <a class="dropdown-item" href="#">클라우드 연결 관리</a>
+                                <a class="dropdown-item" href="#">Driver 관리</a>
+                                <a class="dropdown-item" href="#">네임스페이스 관리</a>
+                                <a class="dropdown-item" href="#">Credential 관리</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="nav-item ">
+                        <a class="text-light" href="#">
+                            <strong>홍길동</strong>님
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </header>
+        <!-- //header -->
+
+        <!-- container -->
+        <div class="container-fluid">
+            <!-- sidebar -->
+            {{template "LNB" .}}
+            <!-- //sidebar -->
+
+            <!-- contents -->
+            <main role="main" class="main">
+                <div class="page-header">
+                    <div>
+                        <h1>클라우드 연결 관리</h1>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Create </strong>
+                            </div>
+                            <div>
+                                <!-- 좌우측 정렬되는 버튼이 필요할때 여기에 넣어주세요 -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+
+                        <table class="table table-bordered table-horizontal mb-0">
+                            <colgroup>
+                                <col style="width: 20%">
+                                <col>
+                            </colgroup>
+                            <tbody>
+                                <tr>
+                                    <th>Name tag</th>
+                                    <td>
+                                        <input class="form-control form-control-sm" type="text" placeholder="Default input">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>IPv4 CIDR block<strong class="text-danger">*</strong></th>
+                                    <td>
+                                        <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>IPv6 CIDR block</th>
+                                    <td>
+                                        <div class="form-group">
+                                            <div class="form-input">
+                                                <span class="input">
+                                                    <input type="radio" id="test1"><i></i>
+                                                </span>
+                                                <label for="test1">No IPv6 CIDR Block</label>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="form-input">
+                                                <span class="input">
+                                                    <input type="radio" id="test2"><i></i>
+                                                </span>
+                                                <label for="test2">Amazon provided IPv6 CIDR Block</label>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Tenancy</th>
+                                    <td>
+                                        <select class="form-control form-control-sm">
+                                            <option selected>Open this select menu</option>
+                                            <option value="1">One</option>
+                                            <option value="2">Two</option>
+                                            <option value="3">Three</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Tenancy</th>
+                                    <td>
+                                        <div class="form-row">
+                                            <div class="col">
+                                                <input type="text" class="form-control form-control-sm" placeholder="First name">
+                                            </div>
+                                            <div class="col">
+                                                <select class="form-control form-control-sm">
+                                                    <option selected>Open this select menu</option>
+                                                    <option value="1">One</option>
+                                                    <option value="2">Two</option>
+                                                    <option value="3">Three</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Switch</th>
+                                    <td>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="customSwitch1">
+                                            <label class="custom-control-label" for="customSwitch1"></label>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-flex justify-content-end align-items-center">
+                            <button type="button" class="btn btn-dark btn-sm">Confirm</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <!-- //contents -->
+
+        </div>
+        <!-- //container -->
+
+
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    </body>
+</html>

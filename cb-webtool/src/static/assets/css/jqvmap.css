@@ -1,0 +1,97 @@
+.jqvmap-label
+{
+	position: absolute;
+	display: none;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	background: #292929;
+	color: white;
+	font-family: sans-serif, Verdana;
+	font-size: smaller;
+	padding: 3px;
+  pointer-events:none;
+}
+.jqvmap-pin {
+  pointer-events:none;
+}
+.jqvmap-zoomin, .jqvmap-zoomout
+{
+	position: absolute;
+	left: 10px;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	background: #000000;
+	padding: 3px;
+	color: white;
+	width: 10px;
+	height: 10px;
+	cursor: pointer;
+	line-height: 10px;
+	text-align: center;
+}
+.jqvmap-zoomin
+{
+	top: 10px;
+}
+.jqvmap-zoomout
+{
+	top: 30px;
+}
+.jqvmap-region
+{
+  cursor: pointer;
+}
+.jqvmap-ajax_response
+{
+  width: 100%;
+  height: 500px;
+}
+
+.map-pin {
+	width: 64px;
+	height: 50px;
+	position: absolute;
+	top: -25px;
+	left: -32px;
+	background-size: 32px 32px;
+	background-repeat: no-repeat;
+	text-align: center;
+	background-position: top center;
+	color: #888;
+	font-weight: 500;
+	font-size: 14px;
+  }
+
+  .red {
+	background-image: url('/assets/img/marker/red.png');
+  }
+
+  .blue {
+	background-image: url('/assets/img/marker/blue.png');
+  }
+
+  .purple {
+	background-image: url('/assets/img/marker/purple.png');
+  }
+
+  .orange {
+	background-image: url('/assets/img/marker/orange.png');
+  }
+
+  .green {
+	background-image: url('/assets/img/marker/green.png');
+  }
+
+  .yellow {
+	background-image: url('/assets/img/marker/yellow.png');
+  }
+
+  .map-pin span {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	text-align: center;
+	left: 0;
+  }

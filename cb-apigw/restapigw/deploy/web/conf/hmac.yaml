@@ -1,0 +1,3 @@
+secret_key: "###TEST_SECURE_KEY###"
+access_key: "test"
+duration: 5m

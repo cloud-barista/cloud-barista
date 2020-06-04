@@ -1,0 +1,533 @@
+@import url("https://fonts.googleapis.com/css?family=Noto+Sans+KR|PT+Sans&display=swap");
+html,
+body {
+	height: 100%;
+	min-height: 100%;
+	font-family: 'PT Sans', 'Noto Sans KR', sans-serif;
+}
+
+body {
+	font-size: .875rem;
+	overflow-y: scroll;
+}
+
+/*
+* login
+*/
+.page-login {
+	height: 100%;
+}
+
+.page-login .container-fluid:before {
+	height: 420px;
+}
+
+.page-login .card {
+	background-color: #f7fafc;
+}
+
+.page-login .card-body {
+	padding: 50px;
+}
+
+.page-login h1 {
+	position: relative;
+	text-align: center;
+	text-transform: uppercase;
+}
+
+.page-login .input-group {
+	position: relative;
+}
+
+.page-login .input-group i {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 50px;
+	height: 100%;
+	z-index: 4;
+	text-align: center;
+	line-height: 48px;
+	opacity: .5;
+}
+
+.page-login .input-group .form-control {
+	height: 48px;
+	padding-left: 50px;
+	font-size: 14px;
+	box-shadow: 0 1px 3px rgba(50, 50, 93, 0.15), 0 1px 0 rgba(0, 0, 0, 0.02);
+	border: 0;
+	-webkit-transition: box-shadow .15s ease;
+	transition: box-shadow .15s ease;
+}
+
+.page-login .input-group .form-control:focus {
+	box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.page-login .input-group .form-control:focus ~ i {
+	opacity: 1;
+}
+
+.page-login .btn {
+	height: 48px;
+	font-size: 14px;
+}
+
+/*
+* header
+*/
+.header {
+	position: relative;
+	z-index: 1;
+	height: 80px;
+	background: linear-gradient(87deg, #172b4d, #1a174d);
+}
+
+.navbar {
+	-webkit-box-pack: end;
+	        justify-content: flex-end;
+	height: 100%;
+	padding: 0;
+}
+
+.navbar .nav {
+	-webkit-box-align: center;
+	        align-items: center;
+}
+
+.navbar .nav-item {
+	padding: 8px;
+}
+
+.navbar .nav-item .dropdown-item {
+	font-size: 13px;
+}
+
+.navbar-brand {
+	position: fixed;
+	left: 0;
+	top: 0;
+	z-index: 101;
+	display: block;
+	width: 250px;
+	height: 80px;
+	margin: 0;
+	padding: 0;
+	text-align: center;
+	line-height: 80px;
+	background-color: #fff;
+}
+
+/*
+* Container
+*/
+.container-fluid {
+	height: 100%;
+	padding: 0;
+	box-sizing: border-box;
+	background: #f8f9fe;
+}
+
+.container-fluid:before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 320px;
+	background: linear-gradient(87deg, #172b4d, #1a174d);
+}
+
+.container-fluid-pop {
+	height: 100%;
+	padding: 0;
+	box-sizing: border-box;
+	background: #f8f9fe;
+}
+
+.container-fluid-pop:before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(87deg, #172b4d, #1a174d);
+}
+
+/*
+* Sidebar
+*/
+.sidebar {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	top: 80px;
+	float: left;
+	width: 250px;
+	z-index: 100;
+	/* Behind the navbar */
+	box-shadow: 0 0 2rem 0 rgba(136, 152, 170, 0.15);
+	background: #fff;
+}
+
+.sidebar-sticky {
+	position: relative;
+	top: 0;
+	height: calc(100vh - 50px);
+	padding-top: .5rem;
+	overflow-x: hidden;
+	overflow-y: auto;
+	/* Scrollable contents if viewport is shorter than content. */
+}
+
+@supports ((position: -webkit-sticky) or (position: sticky)) {
+	.sidebar-sticky {
+		position: -webkit-sticky;
+		position: sticky;
+	}
+}
+
+.sidebar .nav-link {
+	position: relative;
+	padding: 10px 24px;
+	font-weight: 500;
+	color: rgba(0, 0, 0, 0.5);
+}
+
+.sidebar .nav-link:before {
+	content: '';
+	display: block;
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 2px;
+	background-color: transparent;
+}
+
+.sidebar .nav-link i {
+	min-width: 20px;
+	text-align: center;
+	margin-right: 10px;
+	opacity: .6;
+}
+
+.sidebar .nav-link:hover {
+	background-color: rgba(0, 0, 0, 0.03);
+}
+
+.sidebar .nav-link:hover i {
+	opacity: .8;
+}
+
+.sidebar .nav-link.active {
+	color: rgba(0, 0, 0, 0.9);
+	background-color: rgba(0, 0, 0, 0.03);
+}
+
+.sidebar .nav-link.active:before {
+	background-color: #1a174d;
+}
+
+.sidebar .nav-link.active i {
+	opacity: 1;
+}
+
+.sidebar-heading {
+	margin: 0;
+	padding: 10px 24px;
+	font-size: .75rem;
+	color: #8898aa;
+	text-transform: uppercase;
+}
+
+/*
+* Content
+*/
+.sidebar ~ .main {
+	padding-left: 290px;
+}
+
+.main {
+	padding: 10px 40px 40px;
+}
+
+/*
+* page-header
+*/
+.page-header {
+	position: relative;
+	display: -webkit-box;
+	display: flex;
+	-webkit-box-pack: justify;
+	        justify-content: space-between;
+	padding-bottom: 15px;
+	color: #fff;
+}
+
+/*
+ * heading
+*/
+h1 {
+	font-size: 24px;
+	margin: 0;
+}
+
+h2 {
+	font-size: 20px;
+	font-weight: bold;
+	margin: 0;
+}
+
+h3 {
+	font-size: 17px;
+	font-weight: bold;
+	margin: 0;
+}
+
+h4 {
+	font-size: 15px;
+	margin: 0;
+}
+
+h5 {
+	font-size: 13px;
+	margin: 0;
+}
+
+/*
+* Card
+*/
+.card {
+	border: 1px solid rgba(0, 0, 0, 0.05);
+	box-shadow: 0 0 2rem 0 rgba(136, 152, 170, 0.15);
+}
+
+.card-header, .card-footer {
+	background-color: #fff;
+}
+
+.card ~ .card {
+	margin-top: 20px;
+}
+
+/*
+* table
+*/
+.table {
+	color: #525f7f;
+}
+
+.table th {
+	padding: 10px 16px;
+}
+
+.th-right{
+	text-align: right;
+}
+
+.th-left{
+	text-align: left;
+}
+
+.th-center{
+	text-align: center;
+}
+
+.table td {
+	padding: 16px;
+}
+
+.table-overflow {
+	display: block;
+	width: 100%;
+	overflow-x: auto;
+	overflow-y: scroll;
+	-webkit-overflow-scrolling: touch;
+}
+
+.table-overflow th,
+.table-overflow td {
+	white-space: nowrap;
+}
+
+.table-horizontal th {
+	background-color: #f6f9fc;
+	color: #8898aa;
+	border-color: #e9ecef;
+	font-weight: normal;
+}
+
+.table-horizontal td .form-group {
+	margin-bottom: 0;
+}
+
+.table .thead-light th {
+	background-color: #f6f9fc;
+	color: #8898aa;
+	border-bottom: 1px solid #e9ecef;
+	font-size: 10px;
+
+	font-weight: normal;
+	letter-spacing: 1px;
+}
+
+/*
+* Pagination
+*/
+.pagination {
+	margin: 0;
+}
+
+.pagination .page-item .page-link {
+	color: #343a40;
+}
+
+.pagination .page-item.disabled .page-link {
+	color: #ddd;
+}
+
+.pagination .page-item.active .page-link {
+	color: #fff;
+	border-color: #343a40;
+	background-color: #343a40;
+}
+
+/*
+* tab
+*/
+.nav-pills .nav-link {
+	color: #343a40;
+}
+
+.nav-pills .nav-link.active {
+	background-color: #343a40;
+}
+
+/*
+* Badge
+*/
+.badge {
+	text-transform: capitalize;
+	font-size: 12px;
+}
+
+/*
+* icon
+*/
+.icon {
+	width: 88px;
+	height: 88px;
+}
+
+.icon-shape {
+	display: -webkit-inline-box;
+	display: inline-flex;
+	-webkit-box-align: center;
+	        align-items: center;
+	-webkit-box-pack: center;
+	        justify-content: center;
+	padding: 12px;
+	text-align: center;
+}
+
+/*
+ * form
+*/
+.form-input {
+	display: inline-block;
+}
+
+.form-input .input {
+	display: inline-block;
+	vertical-align: middle;
+	position: relative;
+	width: 17px;
+	height: 17px;
+}
+
+.form-input label {
+	display: inline-block;
+	vertical-align: middle;
+	margin: 0;
+}
+
+.form-input input[type="checkbox"],
+.form-input input[type="radio"] {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 17px;
+	height: 17px;
+	opacity: 0;
+	cursor: pointer;
+}
+
+.form-input input[type="checkbox"] + i,
+.form-input input[type="radio"] + i {
+	display: inline-block;
+	width: 17px;
+	height: 17px;
+	border: 1px solid #ddd;
+	background-color: #fff;
+	border-radius: 2px;
+}
+
+.form-input input[type="checkbox"] + i:before,
+.form-input input[type="radio"] + i:before {
+	content: '';
+	display: block;
+	position: absolute;
+	left: 0;
+	top: 0;
+	opacity: 0;
+	-webkit-transition: opacity .2s;
+	transition: opacity .2s;
+	pointer-events: none;
+}
+
+.form-input input[type="checkbox"]:checked + i,
+.form-input input[type="radio"]:checked + i {
+	background-color: #007bff;
+	border-color: #007bff;
+}
+
+.form-input input[type="checkbox"]:checked + i::before,
+.form-input input[type="radio"]:checked + i::before {
+	opacity: 1;
+}
+
+.form-input input[type="checkbox"] + i:before {
+	width: 7px;
+	height: 5px;
+	margin: 5px;
+	-webkit-transform: rotate(-45deg);
+	        transform: rotate(-45deg);
+	border-left: 2px solid #fff;
+	border-bottom: 2px solid #fff;
+}
+
+.form-input input[type="radio"] + i {
+	border-radius: 100%;
+}
+
+.form-input input[type="radio"] + i:before {
+	width: 7px;
+	height: 7px;
+	margin: 5px;
+	background-color: #fff;
+	border-radius: 100%;
+}
+
+/*
+ * btn
+*/
+.btn-icon {
+	width: 30px;
+	padding: 0;
+	line-height: auto;
+	font-size: 13px;
+}

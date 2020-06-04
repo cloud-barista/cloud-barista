@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.3.1/css/ol.css" type="text/css">
+    <style>
+      .map {
+        height: 600px;
+        width: 100%;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.3.1/build/ol.js"></script>
+    
+  
+    <title>OpenLayers example</title>
+  </head>
+  <body>
+    <h2>My Map</h2>
+    <div id="map" class="map"></div>
+    <script type="text/javascript">
+
+    // const faFlagSolidStyle = new ol.style.Style({
+    // text: new ol.style.Text({
+    //     text: '\uf024', // fas flag solid
+    //     scale: 1
+    //     font: 'normal 18px FontAwesome',
+    //     offsety: -30,
+    //     offsetx: -10,
+    //     fill: new ol.style.Fill({color: 'black'}),
+    // })
+    // })
+
+    // const faCircleSolidStyle = new ol.style.Style({
+    // text: new ol.style.Text({
+    //     text: '\uf111', // fas circle
+    //     scale: 2,
+    //     font: 'normal 18px FontAwesome',
+    //     offsety: -30,
+    //     offsetx: -10,
+    //     fill: new ol.style.Fill({color: 'red'})
+    // })
+    // })
+    const icon = new ol.style.Style({
+    image: new ol.style.Icon({
+        src:'/assets/img/marker/purple.png', // fas circle
+        anchor: [0.5, 1],
+      
+    })
+    })
+// 처음 보여줄 지도의 중심 위경도    
+const centerCoord = ol.proj.fromLonLat([127.4, 36.4]);
+const centerCoord2 = ol.proj.fromLonLat([-42,-19]);
+const startGeo = ol.proj.fromLonLat([37.41, 8.82])
+// 포인트를 찍을 부분
+const pointGeom = new ol.geom.Point(centerCoord);
+const pointGeom2 = new ol.geom.Point(centerCoord2);
+const point = new ol.geom.Point(startGeo)
+// 포인트를 찍을 부분의 피쳐
+const pointFeature = new ol.Feature(pointGeom);
+const pointFeature2 = new ol.Feature(pointGeom2);
+const point_f = new ol.Feature(point)
+// 벡터로 들어가기 피쳐에 배열로 넣어주면 될꺼 같은데
+
+var wkt =
+  "POLYGON((127.4 36.4, -42 -19, 37.41 8.82))";
+console.log(wkt)
+var format = new ol.format.WKT();
+
+var feature = format.readFeature(wkt, {
+  dataProjection: "EPSG:4326",
+  featureProjection: "EPSG:3857"
+});
+
+const stackVectorSource = new ol.source.Vector({
+  features: [ point_f,pointFeature,pointFeature2,feature]
+});
+
+// 레이어로 덮어주기.
+const stackedPointLayer = new ol.layer.Vector({
+  source: stackVectorSource
+});
+
+
+
+
+// 이게 지도 불러 오는거
+const osmLayer = new ol.layer.Tile({
+      source: new ol.source.OSM(),
+    });
+
+pointFeature.setStyle([icon])
+pointFeature2.setStyle([icon])
+point_f.setStyle([icon])
+
+      const map = new ol.Map({
+        target: 'map',
+        layers: [
+          osmLayer,stackedPointLayer
+        ],
+        view: new ol.View({
+          center: ol.proj.fromLonLat([37.41, 8.82]),
+          zoom: 1
+        })
+      });
+      console.log("MAP info : ",map);
+      var wkt2 =
+  "POLYGON((10.689 -25.092, 34.595 " +
+  "-20.170, 38.814 -35.639, 13.502 " +
+  "-39.155, 10.689 -25.092))";
+
+
+
+var feature2 = format.readFeature(wkt2, {
+  dataProjection: "EPSG:4326",
+  featureProjection: "EPSG:3857"
+});
+
+const stackVectorSource2 = new ol.source.Vector({
+  features: [feature2]
+});
+
+// 레이어로 덮어주기.
+const stackedPointLayer2 = new ol.layer.Vector({
+  source: stackVectorSource2
+});
+
+map.addLayer(stackedPointLayer2);
+var geo = map.getLayerGroup()
+console.log("geometry info : ",geo)
+
+    </script>
+  </body>
+</html>
+
+<!-- <script>
+    var selectClick = new ol.interaction.Select({
+  condition: ol.events.condition.click
+});
+
+var raster = new ol.layer.Tile({
+  source: new ol.source.OSM()
+});
+
+var wkt =
+  "POLYGON((10.689 -25.092, 34.595 " +
+  "-20.170, 38.814 -35.639, 13.502 " +
+  "-39.155, 10.689 -25.092))";
+
+var format = new ol.format.WKT();
+
+var feature = format.readFeature(wkt, {
+  dataProjection: "EPSG:4326",
+  featureProjection: "EPSG:3857"
+});
+
+var vector = new ol.layer.Vector({
+  renderMode: 'image',
+  source: new ol.source.Vector({
+    features: [feature]
+  })
+});
+
+var map = new ol.Map({
+  layers: [raster, vector],
+  target: "map",
+  view: new ol.View({
+    center: [2952104.0199, -3277504.823],
+    zoom: 1
+  })
+});
+
+map.addInteraction(selectClick);
+
+this.selectClick.on("select", e => {
+  console.log("e", e);
+});
+
+
+
+</script> -->
+
+<!--
+
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript" src="http://map.vworld.kr/js/vworldMapInit.js.do?version=2.0&apiKey=CEB52025-E065-364C-9DBA-44880E3B02B8"></script>
+ 
+<script src="https://code.jquery.com/jquery-2.1.4.js"></script>
+<!--  <script src="https://openlayers.org/en/v4.4.2/build/ol.js"></script>
+<link rel="stylesheet" href="https://openlayers.org/en/v4.4.2/css/ol.css" type="text/css">-->
+<meta charset="UTF-8">
+<title>경로이동_course.html</title>
+</head>
+ 
+ 
+<body>
+    <div id="map" style="width: 500px; height: 400px;"></div>
+    <div>
+    <button onclick="javascript:addPoint();">경로추가</button>
+    <button onclick="javascript:end();">입력완료</button>
+    <button onclick="javascript:allOpen();">모든 팝업창 열기</button>
+    <button onclick="javascript:allClosed();">모든 팝업창 닫기</button>
+    </div>
+ 
+ 
+    <script type="text/javascript">
+        var array = [ 
+                        [ "대진중학교", "강원도 고성군 현내면 화진포길476", 38.484, 128.433 ],
+                [ "거성초등학교", "강원도 고성군 거진읍 거성길38", 38.452, 128.457 ],
+                [ "공현진초등학교", "강원도 고성군 공현진한옥길49", 38.355, 128.508 ],
+                [ "광산초등학교", "강원도고성군 간성읍 진부령로 2427", 38.375, 128.413 ],
+                [ "아야진초등학교", "강원도고성군 토성면 아야진길15", 38.274, 128.549 ],
+                [ "천진초등학교", "강원도 고성군 토성면 천진1길 14", 38.257, 128.557 ],
+                [ "인흥초등학교", "강원도 고성군 토성면 인흥1길 26", 38.237, 128.551 ],
+                [ "명주교육도서관", "강원도강릉시주문진읍해안3길11", 37.886, 128.829 ] ]
+         
+        var coordinates = []; //좌표 설정 라인 좌표를 저장
+         
+        var features = new Array(); // feature 배열
+         
+         
+         
+        vw.ol3.MapOptions = {
+            basemapType : vw.ol3.BasemapType.GRAPHIC,
+            controlDensity : vw.ol3.DensityType.EMPTY,
+            interactionDensity : vw.ol3.DensityType.FULL,
+            controlsAutoArrange : true,
+            homePosition : vw.ol3.CameraPosition,
+            initPosition : vw.ol3.CameraPosition
+        };
+ 
+        map = new vw.ol3.Map("map", vw.ol3.MapOptions); //객체 생성
+        map.getView().setCenter([14310231.756076247, 4611822.83153393]); // 위치 이동
+        map.getView().setZoom(9); // 줌설정
+         
+        var style = new ol.style.Style({
+            stroke : new ol.style.Stroke({
+                color : [ 0, 100, 0, .7 ], //투명도
+                width : 3 //두께
+            })
+        }); // 스타일 설정
+         
+        var iconStyle = new ol.style.Style({
+            image : new ol.style.Icon(/** @type {olx.style.IconOptions} */
+            ({
+                anchor : [ 0.5, 25 ], // 위치설정
+                anchorXUnits : 'fraction',
+                anchorYUnits : 'pixels',
+                src : 'http://map.vworld.kr/images/ol3/marker_blue.png'
+            }))
+        }); //Point에 마커 디자인을 설정
+         
+        //feature 배열 셋팅 feature 에 속성 정보를 저장
+        for(var i=0;i <array.length;i++){
+            console.log(array[i])
+             
+            //Feature 객체에 저장하여 활용 
+            features[i] = new ol.Feature({
+                geometry : new ol.geom.Point(ol.proj.transform([
+                        array[i][3] * 1,
+                        array[i][2] * 1 ],
+                        'EPSG:4326', "EPSG:900913")),
+                title : array[i][0],
+                road : array[i][1]
+            }); // get, set 과 같으며 속성값을 저장함
+             
+             
+            features[i].set("id", "dron1_point_"+(i+1));
+            features[i].setStyle(iconStyle); // 스타일 지정
+            coordinates.push(ol.proj.transform([array[i][3] * 1,array[i][2] * 1 ],'EPSG:4326', "EPSG:900913"));
+        }
+         
+        //라인 저장
+        var line_feature = new ol.Feature({
+            geometry : new ol.geom.LineString(coordinates),
+            id:"dron1_line"
+        }); 
+         
+        line_feature.setStyle(style);
+        features.push(line_feature);
+         
+        var vectorSource = new ol.source.Vector({
+            features : features ,
+            id : "dron1_vector"
+        });
+        /*
+         기존검색결과를 제거하기 위해 키 값 생성
+         */
+        var vectorLayer = new ol.layer.Vector({
+            source : vectorSource,
+            id: "dron1_layer"
+        });
+ 
+        map.getLayers().forEach(function(layer){
+            if(layer.get("id")=="dron1_layer"){
+                map.removeLayer(layer);
+            }
+        });
+        map.addLayer(vectorLayer);
+         
+        var move = function(x, y) {
+            map.getView().setCenter([ x, y ]); // 지도 이동
+            map.getView().setZoom(15); // 줌레벨 설정
+        }
+         
+        /* 클릭 이벤트 제어 */
+        map.on("click", function(evt) {
+            var coordinate = evt.coordinate // 클릭한 지점의 좌표정보
+            var pixel = evt.pixel // 클릭한 지점의 픽셀정보 
+            //선택한 픽셀정보로  feature 체크 
+            map.forEachFeatureAtPixel(pixel, function(feature, layer) {
+                setOverlay(feature);
+            });
+        });
+          
+        //오버레이 설정
+        var setOverlay = function(feature){
+            var title = feature.get("title");
+            var road = feature.get("road");
+            if(title != null&&title.length>0){
+                  
+                var overlayElement= document.createElement("div"); // 오버레이 팝업설정
+                overlayElement.setAttribute("class", "overlayElement");
+                overlayElement.setAttribute("style", "background-color: #3399CC; border: 2px solid white; color:white");
+                overlayElement.setAttribute("onclick", "deleteOverlay('"+feature.get("id")+"')");
+                overlayElement.innerHTML="<p>"+title+"</p>"+"<p>"+road+"</p>";
+                  
+                 
+                //오버레이 객체 생성, html 설정 , 위치설정 
+                var overlayInfo = new ol.Overlay({
+                    id:feature.get("id"),
+                    element:overlayElement,
+                    offset: [0, -70],
+                    position: [feature.get("geometry").getCoordinates()[0],feature.get("geometry").getCoordinates()[1]]
+                });
+                  
+                if(feature.get("id") != null){
+                    map.removeOverlay(map.getOverlayById(feature.get("id")));
+                }
+                map.addOverlay(overlayInfo);
+            }
+        }
+         
+         
+        /**
+            오버레이 삭제 클릭시 삭제 구현
+        */
+        var deleteOverlay = function(id){
+            map.removeOverlay(map.getOverlayById(id));
+            //map.getOverlayById(id).setVisible(false) // hide 처리
+        }
+         
+        // 포인트 추가
+        var addPoint = function(){
+            map.on('click', callback);
+        }
+         
+        var end = function(){
+            map.un('click', callback);
+        }
+         
+        //모든 팝업창 열기
+        var allOpen = function(){
+            map.getLayers().forEach(function(layer){
+                if(layer.get("id")=="dron1_layer"){
+                    layer.getSource().getFeatures().forEach(function(feature){
+                        setOverlay(feature);
+                    });
+                }
+            })   
+        }
+         
+        var overlayList = new Array();
+        //모든창 닫기 
+        //오버레이는 삭제 될때마다 배열이 초기화됨 배열 ID 값을 먼저 받은 뒤 삭제 
+        var allClosed = function(){
+            for(var i=0;i <map.getOverlays().getLength();i++){
+                overlayList.push(map.getOverlays().getArray()[i].getId());
+                //map.removeOverlay(map.getOverlays().getArray()[i]);
+                //map.getOverlays().getArray()[i].setVisible(false) //모든 팝업 하이드
+            }
+            for(var i=0;i <overlayList.length;i++){
+                map.removeOverlay(map.getOverlayById(overlayList[i]));
+            }
+            /*
+            map.getOverlays().getArray().forEach(function(overlay){
+                console.log(overlay.getId());
+                map.removeOverlay(map.getOverlayById(overlay.getId()));
+                //map.removeOverlay(overlay);
+            });
+            */
+        }
+         
+        //레이어 삭제
+        var removePoint = function(dron){
+            map.getLayers().forEach(function(layer){
+                if(layer.get("id")==dron+"_layer"){
+                    map.removeLayer(layer);
+                }
+            });
+        }
+         
+        //이벤트 바인딩 클릭한 지점에 라인 , 포인트 추가
+        var callback = function(evt) {
+            console.log(evt.coordinate);
+             
+            map.getLayers().forEach(function(layer){
+                if(layer.get("id")=="dron1_layer"){
+                    console.log(layer);
+                     
+                    //var coor = ol.proj.transform([129.443,36.494],'EPSG:4326', "EPSG:900913"); 
+                    var coor = evt.coordinate; //클릭한 지점의 좌표값
+                     
+                    var newPoint =  new ol.Feature({
+                        geometry : new ol.geom.Point(coor)
+                    });
+                    //속성정보 추가
+                    //newPoint.set("title","타이틀");
+                    //newPoint.set("road","로드");
+                     
+                     
+                    newPoint.setStyle(iconStyle); // 스타일 지정
+                    layer.getSource().addFeature(newPoint);
+                    layer.getSource().getFeatures().forEach(function(feature){
+                        if(feature.get("id")=="dron1_line"){
+                           console.log(feature);
+                           coordinates.push(coor);
+                           feature.setGeometry(new ol.geom.LineString(coordinates));
+ 
+                        }
+                    });
+                     
+                }
+            });
+        };
+        /* map.on('click', callback);
+        map.un('click', callback); */
+         
+    </script>
+</body>
+</html>
+
+
+-->

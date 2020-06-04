@@ -1,0 +1,50 @@
+version: "3.3"
+services:
+  # Metrics store
+  influxdb:
+    image: influxdb:latest
+    container_name: etri_influxdb
+    ports:
+      - "8083:8083"
+      - "8086:8086"
+    env_file:
+      - 'env.influxdb'
+    volumes:
+      - ./data/influxdb/data:/var/lib/influxdb
+
+  # Metrics UI
+  grafana:
+    image: grafana/grafana
+    container_name: etri_grafana
+    ports:
+      - "3100:3000"
+    depends_on:
+      - influxdb
+    env_file:
+      - 'env.grafana'
+    links:
+      - influxdb
+    volumes:
+      - ./data/grafana/data:/var/lib/grafana
+      - ./data/grafana/provisioning:/etc/grafana/provisioning
+
+  # Trace store and UI
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: etri_jaeger
+    ports:
+      - "14268:14268"
+      - "16686:16686"
+
+  # CB-RESTAPIGW SERVICE
+  cb-restapigw:
+    build:
+      context: ./restapigw
+    container_name: etri_apigw
+    volumes:
+      - ./restapigw/conf:/app/conf
+    ports:
+      - "8000:8000"
+    depends_on:
+      - influxdb
+      - jaeger

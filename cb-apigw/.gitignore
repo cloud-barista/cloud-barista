@@ -1,0 +1,37 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# For REST API G/W
+vendor
+server.rsa.crt
+server.rsa.key
+*.pem
+*.dot
+*.out
+bench_res
+
+*DS_Store
+
+tasks.md
+restapigw/backups
+restapigw/.vscode/
+restapigw/deploy/deprecated/
+restapigw/deploy/data/grafana/data/grafana.db
+restapigw/deploy/data/grafana/data/plugins/
+restapigw/deploy/data/grafana/data/png/
+restapigw/deploy/data/influxdb/data/
+restapigw/deploy/data/influxdb/data/data
+restapigw/deploy-etri/
+restapigw/tests
+restapigw/go.sum
+restapigw/cb-restapigw

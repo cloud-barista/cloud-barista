@@ -1,0 +1,95 @@
+{{define "Footer"}}
+  
+</body>
+</html>
+<script>
+
+    
+    function setNS(nsid){
+        if(nsid){
+            reqUrl = "/SET/NS/"+nsid;
+            console.log(reqUrl);
+            axios.get(reqUrl).then(result=>{
+                var data = result.data
+                console.log(data);
+                location.reload(true);
+             })
+        }else{
+            alert("NameSpace가 등록되어 있지 않습니다.\n등록페이지로 이동합니다.")
+            location.href ="/NS/reg";
+        }
+        
+    } 
+
+    function getNS(){
+        reqURL = CommonURL+"/GET/ns";
+        axios.get(reqURL).then(result=>{
+            console.log(result.data)
+        })
+    }
+    var nsListUrl = CommonURL+"/ns"
+   axios.get(nsListUrl).then(result=>{
+       var data = result.data
+       console.log(data);
+       var res = data.ns
+    //    if (!res){
+    //     alert("NameSpace가 등록되어 있지 않습니다.\n등록페이지로 이동합니다.1")
+    //     location.href ="/NS/reg";
+    //     return;
+    //    }
+       var html = "";
+       var ns = "";
+       if(NAMESPACE){
+        for(var i in res){
+            if(res[i].name){
+                if(NAMESPACE == res[i].name){
+                        html += '<option value="'+res[i].id+'" selected>'+res[i].name+'</option>';
+                        ns = res[i].id;
+                }else{
+                    html += '<option value="'+res[i].id+'">'+res[i].name+'</option>';
+                }   
+            }
+              
+            }
+       }else{
+           if(res){
+            if(res[0].id){
+            for(var i in res){
+                if(i == 0){
+                        html += '<option value="'+res[i].id+'" selected>'+res[i].name+'</option>';
+                        ns = res[i].id;
+                }else{
+                    html += '<option value="'+res[i].id+'">'+res[i].name+'</option>';
+                }   
+            }
+       
+       }else{
+        for(var i in res){
+            if(i == 1){
+                    html += '<option value="'+res[i].id+'" selected>'+res[i].name+'</option>';
+                    ns = res[i].id;
+                }else if(i >1){
+                    html += '<option value="'+res[i].id+'">'+res[i].name+'</option>';
+                }   
+            }
+       }
+           }
+        
+       }
+       
+       $("#name_select").empty();
+       $("#name_select").append(html);
+
+       if(ns){
+           reqUrl = "/SET/NS/"+ns
+           console.log(reqUrl);
+        axios.get(reqUrl).then(result=>{
+            var data = result.data
+            console.log(data);
+        })
+
+       }
+
+   })
+</script>
+{{end}}

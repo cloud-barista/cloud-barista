@@ -1,0 +1,187 @@
+version: "3.3"
+services:
+  # Metrics store
+  influxdb:
+    image: influxdb:latest
+    container_name: cb-restapigw-influxdb
+    ports:
+      - "8083:8083"
+      - "8086:8086"
+    env_file:
+      - './conf/env.influxdb'
+    volumes:
+      - ./data/influxdb/data:/var/lib/influxdb
+
+  # Metrics UI
+  grafana:
+    image: grafana/grafana
+    container_name: cb-restapigw-grafana
+    ports:
+      - "3100:3000"
+    depends_on:
+      - influxdb
+    env_file:
+      - './conf/env.grafana'
+    links:
+      - influxdb
+    volumes:
+      - ./data/grafana/data:/var/lib/grafana
+      - ./data/grafana/provisioning:/etc/grafana/provisioning
+    user: "0"
+
+  # Trace store and UI
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: cb-restapigw-jaeger
+    ports:
+      - "14268:14268"
+      - "16686:16686"
+
+  # Fake API
+#  fake_api:
+#    image: jaxgeller/lwan
+#    container_name: fake_api
+#    volumes:
+#      - ./data/lwan:/lwan/wwwroot
+#    ports:
+#      - "8100:8080"
+
+  # HMAC Server
+#  hmac_site:
+#    build:
+#      context: ./web
+#    container_name: hmac_server
+#    volumes:
+#      - ./web/public:/app/public
+#      - ./web/conf:/app/conf
+#    ports:
+#      - "8010:8010"
+
+  # CB-Spider
+  cb-spider:
+    image: cloudbaristaorg/cb-spider:v0.2.0
+    container_name: cb-spider
+    ports:
+      - "1024:1024"
+    volumes:
+      - ./data/cb-spider/meta_db:/root/go/src/github.com/cloud-barista/cb-spider/meta_db/dat
+#     - ./data/cb-spider/log:/root/go/src/github.com/cloud-barista/cb-spider/log
+    depends_on:
+      - cb-restapigw
+
+
+  # CB-Tumblebug
+  cb-tumblebug:
+    image: cloudbaristaorg/cb-tumblebug:v0.2.0
+    container_name: cb-tumblebug
+    ports:
+      - "1323:1323"
+    depends_on:
+      - cb-restapigw
+      - cb-spider
+    volumes:
+      - ./data/cb-tumblebug/meta_db:/app/meta_db/dat
+#     - ./data/cb-tumblebug/log:/app/log
+    environment:
+      - SPIDER_URL=http://cb-restapigw:8000/spider
+
+# The priority used by Compose to choose which env var value to use:
+# 1. Compose file
+# 2. Shell environment variables
+# 3. Environment file
+# 4. Dockerfile
+# 5. Variable is not defined
+
+  # CB-Dragonfly
+  cb-dragonfly:
+    image: cloudbaristaorg/cb-dragonfly:v0.2.0
+    container_name: cb-dragonfly
+    volumes:
+      - ./conf/cb-dragonfly:/go/src/github.com/cloud-barista/cb-dragonfly/conf
+#     - ./data/cb-dragonfly/log:/go/src/github.com/cloud-barista/cb-dragonfly/log
+    ports:
+      - "8094:8094/udp"
+      - "9090:9090"
+    depends_on:
+#     - cb-restapigw
+      - cb-dragonfly-influxdb
+      - cb-dragonfly-etcd
+    environment:
+      - CBSTORE_ROOT=/go/src/github.com/cloud-barista/cb-dragonfly
+      - CBLOG_ROOT=/go/src/github.com/cloud-barista/cb-dragonfly
+      - CBMON_ROOT=/go/src/github.com/cloud-barista/cb-dragonfly
+      - DRAGONFLY_INFLUXDB_URL=cb-dragonfly-influxdb:8086
+
+
+  # InfluxDB for Dragonfly
+  cb-dragonfly-influxdb:
+    image: influxdb:latest
+    container_name: cb-dragonfly-influxdb
+    ports:
+      - "28083:8083"
+      - "28086:8086"
+    environment:
+#     - PRE_CREATE_DB="cbmon"
+      - INFLUXDB_DB="cbmon"
+      - INFLUXDB_DATA_ENGINE=tsm1
+      - INFLUXDB_REPORTING_DISABLED=false
+      - INFLUXDB_ADMIN_USER=cbmon
+      - INFLUXDB_ADMIN_PASSWORD=password
+      - INFLUXDB_HTTP_AUTH_ENABLED=true
+
+  # etcd for Dragonfly
+  cb-dragonfly-etcd:
+    image: 'bitnami/etcd:3.3.11'
+    container_name: cb-dragonfly-etcd
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes
+      - ETCD_ADVERTISE_CLIENT_URLS=http://cb-dragonfly-etcd:2379
+    ports:
+      - 2379:2379
+      - 2380:2380
+
+  # CB-Webtool
+  cb-webtool:
+    image: cloudbaristaorg/cb-webtool:v0.2.0
+    container_name: cb-webtool
+    ports:
+      - "1234:1234"
+    depends_on:
+      - cb-restapigw
+      - cb-spider
+      - cb-tumblebug
+    environment:
+     #- SPIDER_URL=http://cb-restapigw:8000/spider
+     #- TUMBLE_URL=http://cb-restapigw:8000/tumblebug
+      - API_GW=http://52.78.176.6:8000
+      - SPIDER_URL=http://52.78.176.6:8000/spider
+      - TUMBLE_URL=http://52.78.176.6:8000/tumblebug
+      - DRAGONFLY_URL=http://52.78.176.6:8000/dragonfly
+      - LADYBUG_URL=http://52.78.176.6:8000/ladybug
+      - LoginEmail=admin
+      - LoginPassword=admin
+
+  # CB-RESTAPIGW SERVICE
+  cb-restapigw:
+    image: cloudbaristaorg/cb-restapigw:v0.2.0
+    container_name: cb-restapigw
+    volumes:
+      - ./conf/cb-restapigw:/app/conf
+#     - ./data/cb-restapigw/log:/app/log
+    ports:
+      - "8000:8000"
+    depends_on:
+      - influxdb
+      - grafana
+      - jaeger
+#     - hmac_site
+#     - fake_api
+#     - cb-spider
+#     - cb-tumblebug
+
+        #networks:
+        #  default:
+        #    external:
+        #      name: cboperator_default
+
+

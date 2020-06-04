@@ -1,0 +1,157 @@
+{{define "Header"}}
+<!doctype html>
+<html lang="ko">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.3.1/css/ol.css" type="text/css">
+        
+        <!-- jqvmap CSS -->
+        <link href="/assets/css/jqvmap.css" media="screen" rel="stylesheet" type="text/css"/>
+        <!-- <link href="https://germini.info/js/jqvmap/jqvmap/jqvmap.css" media="screen" rel="stylesheet" type="text/css" /> -->
+        
+        <!-- https://fontawesome.com/cheatsheet -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+   <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+   <!-- <script src="https://germini.info/js/jqvmap/jqvmap/jquery.vmap.js" type="text/javascript"></script> -->
+   <!-- <script src="/assets/js/jquery.vmap.js" type="text/javascript"></script>
+   <script src="/assets/js/maps/jquery.vmap.world.js" type="text/javascript"></script>
+   <script src="/assets/js/jquery.vmap.continents.js" type="text/javascript"></script>
+   <script src="/assets/js/jquery.vmap.sampledata.js" type="text/javascript"></script>
+   <script src="/assets/js/jquery.vmap.programdata.js" type="text/javascript"></script> -->
+   <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.3.1/build/ol.js"></script>
+  
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+        <!-- <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+        <script type="text/javascript" src="http://code.jquery.com/jquery-1.11.3.min.js"></script> -->
+        <!-- jqvmap -->
+        
+       
+       
+    
+
+       
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+        <!-- chart -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.css">
+        <!-- chart -->
+        <!-- Common Script -->
+        <script type="text/javascript" src="/assets/js/common.js"></script>
+        <!-- Common Script -->
+        
+        <link rel="stylesheet" href="/assets/css/custom.css">
+
+        
+
+        <title>Cloud Baristar</title>
+    </head>
+    <script>
+        const CommonURL = "{{ .comURL.TumbleBugURL}}";
+        const SpiderURL = "{{ .comURL.SpiderURL}}"
+        const NAMESPACE ="{{with .LoginInfo}}{{ .NameSpace }}{{end}}";
+        console.log("namespace : ",NAMESPACE)
+        var btn_click_cnt = 1;
+        const DragonFlyURL = "{{ .comURL.DragonFlyURL}}"
+        
+//========== 로딩 바 시작 =========    
+$(document).ready(function(){
+    $('#Ajax_Loading').hide(); //첫 시작시 로딩바를 숨겨준다.
+ })
+ .ajaxStart(function(){
+     $('#Ajax_Loading').show(); //모든 ajax 통신 시작시 로딩바를 보여준다.
+     //$('html').css("cursor", "wait"); //마우스 커서를 로딩 중 커서로 변경
+ })
+ .ajaxStop(function(){
+     $('#Ajax_Loading').hide(); //모든 ajax 통신 종료시 로딩바를 숨겨준다.
+     //$('html').css("cursor", "auto"); //마우스 커서를 원래대로 돌린다
+ });
+//========== 로딩 바 종료 =========
+    //Ajax를 이용하지 않는 통신의 경우 수작업으로 처리하기 위한 함수
+    function AjaxLoadingShow(isShow){
+        try{
+            if(isShow) {
+                $('#Ajax_Loading').show();
+            }else{
+                $('#Ajax_Loading').hide();
+            }
+        }catch(e){
+            alert(e);
+        }
+    }
+
+
+    // 요청 인터셉터
+    axios.interceptors.request.use(function (config) {
+        // 요청 전에 로딩 오버레이 띄우기
+        $('#Ajax_Loading').show();
+        return config;
+    }, function (error) {
+        // 에라 나면 로딩 끄기
+        $('#Ajax_Loading').hide();
+        return Promise.reject(error);
+    });
+
+    // 응답 인터셉터
+    axios.interceptors.response.use(function (response) {
+        // 응답 받으면 로딩 끄기
+        $('#Ajax_Loading').hide();
+        return response;
+    }, function (error) {
+        // 응답 에러 시에도 로딩 끄기
+        $('#Ajax_Loading').hide();
+        return Promise.reject(error);
+    });
+
+    </script>
+    
+        <!-- header -->
+        <header class="header">
+            <nav class="navbar">
+                <a class="navbar-brand" href="/" ><img src="/assets/img/logo.png" alt="Cloud Baristar" style="height:64px;" onclick="getNS();"></a>
+                <ul class="nav px-3">
+                    <li class="nav-item">
+                        <select class="form-control form-control-sm" id="name_select" onchange="setNS(this.value);">
+                            <option>Select nameSpace</option>
+                        </select>
+                    </li>
+                    <li class="nav-item">
+                        <div class="btn-group" role="group">
+                            <button id="btnGroupDrop1" type="button" class="btn btn-dark btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
+                                <a class="dropdown-item" href="/NS/list">네임스페이스 관리</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="/Connection/list">클라우드 연결 관리</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="/Region/list">Region 관리</a>
+                                <a class="dropdown-item" href="/Driver/list">Driver 관리</a>
+                                <a class="dropdown-item" href="/Credential/list">Credential 관리</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="nav-item ">
+                        <a class="text-light" href="#!" onclick="javscript:if(confirm('로그아웃하시겠습니까?')){location.href='/logout';};">
+                            
+                            <strong>{{with .LoginInfo}}{{ .Username }}{{end}}</strong>님
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </header>
+        <!-- //header -->
+        <body>
+            <!-- common methods -->
+            <script type="text/javascript" src="/assets/js/jquery.serialize.object.js"></script>
+            <!-- common methods -->
+
+    <div id = "Ajax_Loading" style="position:absolute;left:50%;top:50%;z-index:100;"><!-- Ajax 로딩바 --><img src="/assets/img/ajax-loader.gif"/></div>
+{{end}}
