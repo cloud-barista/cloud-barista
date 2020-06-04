@@ -159,6 +159,8 @@ If you have any difficulties in using Cloub-Barista, please let us know.
     - ./cleanAll-mcis-mcir-ns-cloud.sh gcp 2 shson       # gcp의 2번 리전에 shson이라는 개발자명으로 제거 테스트 수행
     - ./cleanAll-mcis-mcir-ns-cloud.sh azure 1 shson     # azure의 1번 리전에 shson이라는 개발자명으로 제거 테스트 수행
     - ./cleanAll-mcis-mcir-ns-cloud.sh alibaba 1 shson   # alibaba의 1번 리전에 shson이라는 개발자명으로 제거 테스트 수행
+<details>
+<summary>입출력 예시 보기</summary>
 
 ```
 ~/go/src/github.com/cloud-barista/cb-tumblebug/test/official/sequentialFullTest$ ./testAll-mcis-mcir-ns-cloud.sh aws 1 shson
@@ -458,6 +460,8 @@ Dozing for 1 : 1 (Back to work)
         ]
       }
       ```
+      
+</details>
 
 
 #### [테스트 코드 파일 트리 설명]
