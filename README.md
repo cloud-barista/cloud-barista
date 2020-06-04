@@ -35,7 +35,7 @@ If you have any difficulties in using Cloub-Barista, please let us know.
 3. [실행 준비](#실행-준비)
 4. [문서 및 API 규격](#문서-및-API-규격)
 5. [특이 사항](#특이-사항)
-6. [활용 예시](#활용-예시)
+6. [사용 방법 및 예시](#사용-방법-및-예시)
 
 ***
 
@@ -87,9 +87,9 @@ If you have any difficulties in using Cloub-Barista, please let us know.
   - CB-Tumblebug 기준 테스트 완료된 CSP는 AWS, GCP, Azure, Alibaba 임
   - 현재는 개발 단계의 버전이므로 안정성에는 문제가 발생할 수 있음
 
-## [활용 예시]
+## [사용 방법 및 예시]
 
-### CB-Tumblebug 및 CB-Spider의 REST API를 사용하여 테스트
+### [사용 방법 1] 각 FW의 REST API를 통한 운용
 - CB-Spider API를 통해 클라우드 인프라 연동 정보 등록
    - cloud-barista.github.io/rest-api/v0.2.0/spider/ccim/
 - CB-Tumblebug 멀티 클라우드 네임스페이스 관리 API를 통해서 Namespace 생성
@@ -99,7 +99,7 @@ If you have any difficulties in using Cloub-Barista, please let us know.
 - CB-Tumblebug 멀티 클라우드 인프라 서비스(MCIS) 관리 API를 통해서 MCIS 생성, 조회, 제어, 원격명령수행, 종료
    - cloud-barista.github.io/rest-api/v0.2.0/tumblebug/mcis/
 
-### CB-Tumblebug 스크립트를 통한 테스트 개요
+### [사용 방법 2] CB-Tumblebug 테스트 스크립트를 통한 운용
 - cloud-barista/cb-tumblebug/test/official/
    - 클라우드 인증 정보, 테스트 기본 정보 입력
    - 클라우드정보, Namespace, MCIR, MCIS 등 개별 제어 시험 (개별 시험시, 오브젝트들의 의존성 고려 필요))
