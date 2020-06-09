@@ -31,11 +31,10 @@ If you have any difficulties in using Cloub-Barista, please let us know.
 ## [목    차]
 
 1. [설치 환경](#설치-환경)
-2. [설치 및 실행](#설치-및-실행)
-3. [실행 준비](#실행-준비)
-4. [문서 및 API 규격](#문서-및-API-규격)
-5. [특이 사항](#특이-사항)
-6. [사용 방법 및 예시](#사용-방법-및-예시)
+1. [설치 및 실행](#설치-및-실행)
+1. [API 및 문서](#API-및-문서)
+1. [특이 사항](#특이-사항)
+1. [사용 방법 및 예시](#사용-방법-및-예시)
 
 ***
 
@@ -47,39 +46,39 @@ If you have any difficulties in using Cloub-Barista, please let us know.
 
 - Cloud-Barista 플랫폼 통합 실행 (Docker 이미지 기반)
   - cb-operator 를 통해 Cloud-Barista 전체 FW를 통합 실행할 수 있음
-    - 참고: cloud-barista/cb-operator
+    - 참고: [cloud-barista/cb-operator](/cb-operator/)
 
-- Cloud-Barista 소스 다운로드 및 설치
-  - Cloud-Barista alliance 설치 (CB-Log)
-    - cloud-barista/cb-log README를 참고하여 설치
+- Cloud-Barista 플랫폼 개별 FW 소스 다운로드 및 설치
+  - CB-Log 설치
+    - [cloud-barista/cb-log README를 참고하여 설치](/cb-log/)
   
-  - Cloud-Barista alliance 설치 (CB-Store)
-    - cloud-barista/cb-store README를 참고하여 설치
+  - CB-Store 설치
+    - [cloud-barista/cb-store README를 참고하여 설치](/cb-store/)
 
   - CB-Spider 설치 및 실행
-    - cloud-barista/cb-spider README를 참고하여 설정, 설치
+    - [cloud-barista/cb-spider README를 참고하여 설정, 설치](/cb-spider/)
     - cb-spider 실행 (cb-spider API 서버 실행)
 
   - CB-Tumblebug 설치 및 실행
-    - cloud-barista/cb-tumblebug README를 참고하여 설정, 설치
+    - [cloud-barista/cb-tumblebug README를 참고하여 설정, 설치](/cb-tumblebug/)
       - cb-spider API 서버 주소를 cb-tumblebug의 setup.env에 설정
     - cb-tumblebug 실행 (cb-tumblebug API 서버 실행)
 
   - CB-Dragonfly 설치 및 실행
-    - cloud-barista/cb-dragonfly README를 참고하여 설정, 설치
+    - [cloud-barista/cb-dragonfly README를 참고하여 설정, 설치](/cb-dragonfly/)
     - cb-dragonfly 실행 (cb-dragonfly API 서버 실행)
 
   - CB-Webtool 설치 및 실행
-    - cloud-barista/cb-webtool README를 참고하여 설정, 설치
+    - [cloud-barista/cb-webtool README를 참고하여 설정, 설치](/cb-webtool/)
     - cb-webtool 실행 (cb-webtool GUI 서버 실행)
 
 
 
-## [문서 및 API 규격]
+## [API 및 문서]
 - 문서 통합 Repository
-  - github.com/cloud-barista/docs
+  - [github.com/cloud-barista/docs](https://github.com/cloud-barista/docs)
 - API 규격
-  - github.com/cloud-barista/docs/blob/master/API/User-REST-API(v0.2.0-cappuccino).md
+  - [github.com/cloud-barista/docs/blob/master/technical_docs/API/User-REST-API(v0.2.0-cappuccino).md](https://github.com/cloud-barista/docs/blob/master/technical_docs/API/User-REST-API(v0.2.0-cappuccino).md)
 
 ## [특이 사항]
 - 개발상태: 초기 기능 중심 개발 추진 중 / 기술 개발용 / 상용 활용시 보완필요
@@ -100,17 +99,17 @@ If you have any difficulties in using Cloub-Barista, please let us know.
    - cloud-barista.github.io/rest-api/v0.2.0/tumblebug/mcis/
 
 ### [사용 방법 2] CB-Tumblebug 테스트 스크립트를 통한 운용
-- cloud-barista/cb-tumblebug/test/official/
+- [cloud-barista/cb-tumblebug/test/official/](/cb-tumblebug/test/official/)
    - 클라우드 인증 정보, 테스트 기본 정보 입력
    - 개별 수동 제어: 클라우드정보, Namespace, MCIR, MCIS 등 제어 (개별 시험시, 오브젝트들의 의존성 고려 필요))
    - 통합 자동 제어: 의존성을 고려한 자동 통합 제어 (추천 테스트 방법)
-     - cloud-barista/cb-tumblebug/test/official/sequentialFullTest
+     - [cloud-barista/cb-tumblebug/test/official/sequentialFullTest](/cb-tumblebug/test/official/sequentialFullTest)
 
 #### 1) 클라우드 인증 정보, 테스트 기본 정보 입력
-- cloud-barista/cb-tumblebug/test/official/ 이동
-- credentials.conf  # Cloud 정보 등록을 위한 CSP별 인증정보 (사용자에 맞게 수정 필요)
+- [cloud-barista/cb-tumblebug/test/official/](/cb-tumblebug/test/official/) 이동
+- [credentials.conf](/cb-tumblebug/test/official/credentials.conf)  # Cloud 정보 등록을 위한 CSP별 인증정보 (사용자에 맞게 수정 필요)
    - 기본적인 클라우드 타입 (AWS, GCP, AZURE, ALIBABA)에 대해 템플릿 제공
-- conf.env  # CB-Spider 및 Tumblebug 서버 위치, 클라우드 리젼, 테스트용 이미지명, 테스트용 스팩명 등 테스트 기본 정보 제공
+- [conf.env](/cb-tumblebug/test/official/conf.env)  # CB-Spider 및 Tumblebug 서버 위치, 클라우드 리젼, 테스트용 이미지명, 테스트용 스팩명 등 테스트 기본 정보 제공
    - 특별한 상황이 아니면 수정이 불필요함. (CB-Spider와 CB-TB의 위치가 localhost가 아닌 경우 수정 필요)
    - 클라우드 타입(CSP)별 약 1~3개의 기본 리전이 입력되어 있음
      - 이미지와 스팩은 리전에 의존성이 있는 경우가 많으므로, 리전별로 지정이 필요
@@ -130,7 +129,7 @@ If you have any difficulties in using Cloub-Barista, please let us know.
     - 6.mcis  # MCIS 생성 및 제어 관련 스크립트 모음
 
 ##### [통합 자동 제어] 의존성을 고려한 자동 통합 제어 (추천 테스트 방법)
-- sequentialFullTest 에 포함된 cleanAll-mcis-mcir-ns-cloud.sh 을 수행하면 모든 것을 한번에 제어 및 테스트 가능
+- [sequentialFullTest](/cb-tumblebug/test/official/sequentialFullTest) 에 포함된 [testAll-mcis-mcir-ns-cloud.sh](/cb-tumblebug/test/official/sequentialFullTest/testAll-mcis-mcir-ns-cloud.sh) 을 수행하면 모든 것을 한번에 제어 및 테스트 가능
 ```
 └── sequentialFullTest  # Cloud 정보 등록, NS 생성, MCIR 생성, MCIS 생성까지 한번에 자동 테스트
     ├── cleanAll-mcis-mcir-ns-cloud.sh  # 모든 오브젝트 역으로 제어
@@ -429,10 +428,10 @@ Dozing for 1 : 1 (Back to work)
 #### 3) MCIS 기반 애플리케이션 운용 방법 및 최종 검증
 
   - SSH 원격 커맨드 실행을 통해서 접속 여부 등을 확인 가능
-    - command-mcis.sh  # 생성된 MCIS(다중VM)에 원격 명령 수행
+    - [command-mcis.sh](/cb-tumblebug/test/official/sequentialFullTest/command-mcis.sh)  # 생성된 MCIS(다중VM)에 원격 명령 수행
     - 예시: command-mcis.sh aws 1 shson # aws의 1번 리전에 배치된 MCIS의 모든 VM에 IP 및 Hostname 조회를 수행
   - Nginx를 분산 배치하여, 웹서버 접속 시험이 가능
-    - deploy-nginx-mcis.sh  # 생성된 MCIS(다중VM)에 Nginx 자동 배포
+    - [deploy-nginx-mcis.sh](/cb-tumblebug/test/official/sequentialFullTest/deploy-nginx-mcis.sh)  # 생성된 MCIS(다중VM)에 Nginx 자동 배포
     - 예시: command-mcis.sh aws 1 shson # aws의 1번 리전에 배치된 MCIS의 모든 VM에 Nginx 및 웹페이지 설치 (접속 테스트 가능)
       ```
       ~/go/src/github.com/cloud-barista/cb-tumblebug/test/official/sequentialFullTest$ ./deploy-nginx-mcis.sh aws 1 shson
