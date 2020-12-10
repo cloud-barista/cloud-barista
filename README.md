@@ -2,7 +2,7 @@
 
 The Multi-Cloud Service Platform.
 
-Cloub-Barista consists of multiple frameworks (sub-systems) to accommodate microservice architecture (MSA).
+Cloud-Barista consists of multiple frameworks (sub-systems) to accommodate microservice architecture (MSA).
 
 Main frameworks are as follow,
 
@@ -19,11 +19,11 @@ The frameworks are listed in the root directory.
 
 ```
 [NOTE]
-Cloub-Barista is currently under development. (the latest version is 0.2.0-cappuccino)
+Cloud-Barista is currently under development. (the latest version is 0.2.0-cappuccino)
 So, we do not recommend using the current release in production.
-Please note that the functionalities of Cloub-Barista are not stable and secure yet.
-If you have any difficulties in using Cloub-Barista, please let us know.
-(Open an issue or Join the Cloub-Barista Slack)
+Please note that the functionalities of Cloud-Barista are not stable and secure yet.
+If you have any difficulties in using Cloud-Barista, please let us know.
+(Open an issue or Join the Cloud-Barista Slack)
 ```
 
 ***
