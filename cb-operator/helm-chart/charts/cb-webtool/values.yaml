@@ -1,0 +1,68 @@
+replicaCount: 1
+
+image:
+  repository: cloudbaristaorg/cb-webtool
+  pullPolicy: IfNotPresent
+
+env:
+  - name: API_GW
+    value: "http://cb-restapigw:8000"
+  - name: SPIDER_URL
+    value: "http://cb-spider:1234/spider"
+  - name: TUMBLE_URL
+    value: "http://cb-tumblebug:1323/tumblebug"
+  - name: DRAGONFLY_URL
+    value: "http://cb-restapigw:8000/dragonfly"
+  - name: LADYBUG_URL
+    value: "http://cb-restapigw:8000/ladybug"
+
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "cb-webtool"
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name:
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 1234
+
+ingress:
+  enabled: false
+  annotations: {}
+  hosts:
+    - host: cloud-barista.local
+      paths: ["/*"]
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+

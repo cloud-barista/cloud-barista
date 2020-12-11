@@ -1,0 +1,62 @@
+version: "3.3"
+services:
+
+  # etcd for CB-Dragonfly
+  cb-dragonfly-etcd:
+    image: bitnami/etcd:3.3.11
+    container_name: cb-dragonfly-etcd
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes
+      - ETCD_ADVERTISE_CLIENT_URLS=http://cb-dragonfly-etcd:2379
+    ports:
+      - 2379:2379
+      - 2380:2380
+    restart: always
+
+  # InfluxDB for CB-Dragonfly
+  cb-dragonfly-influxdb:
+    image: influxdb:1.8-alpine
+    container_name: cb-dragonfly-influxdb
+    ports:
+      - 28083:8083
+      - 28086:8086
+    environment:
+      - PRE_CREATE_DB=cbmon
+      - INFLUXDB_DB=cbmon
+      - INFLUXDB_ADMIN_USER=cbmon
+      - INFLUXDB_ADMIN_PASSWORD=password
+      - INFLUXDB_HTTP_AUTH_ENABLED=true
+    restart: always
+
+  # Kapacitor for CB-Dragonfly
+  cb-dragonfly-kapacitor:
+    image: kapacitor:1.5
+    container_name: cb-dragonfly-kapacitor
+    ports:
+      - 9092:9092
+    environment:
+      - KAPACITOR_HOSTNAME=cb-dragonfly-kapacitor
+      - KAPACITOR_INFLUXDB_0_URLS_0=http://cb-dragonfly-influxdb:8086
+      - KAPACITOR_INFLUXDB_0_USERNAME=cbmon
+      - KAPACITOR_INFLUXDB_0_PASSWORD=password
+    depends_on:
+      - cb-dragonfly-influxdb
+    restart: always
+
+  # Chronograf for CB-Dragonfly
+  cb-dragonfly-chronograf:
+    image: chronograf:1.8.4-alpine
+    container_name: cb-dragonfly-chronograf
+    ports:
+      - 8888:8888
+    command:
+      - --influxdb-url=http://cb-dragonfly-influxdb:8086
+      - --influxdb-username=cbmon
+      - --influxdb-password=password
+      - --kapacitor-url=http://cb-dragonfly-kapacitor:9092
+      - --kapacitor-username=cbmon
+      - --kapacitor-password=password
+    depends_on:
+      - cb-dragonfly-etcd
+      - cb-dragonfly-influxdb
+      - cb-dragonfly-kapacitor

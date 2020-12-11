@@ -56,8 +56,8 @@ endpoints:
       - "Testing"
     middleware:
       mw-ratelimit:
-        maxRate: 5
-        clientMaxRate: 10
+        max_rate: 5
+        client_max_rate: 10
         strategy: "ip"  #header #ip
         key: "" #"X-Private-Token"
     backend:
@@ -86,7 +86,7 @@ endpoints:
                   - "products.*.updated_at"
                   - "products.*.vendor"
           mw-ratelimit:
-            maxRate: 1
+            max_rate: 1
             capacity: 1
   - endpoint: "/sequential"
     backend:
@@ -177,15 +177,15 @@ endpoints:
   - endpoint: "/spider/*bypass"
     middleware:
       mw-ratelimit:
-        maxRate: 10
-        clientMaxRate: 5
+        max_rate: 10
+        client_max_rate: 5
         strategy: "ip"
     backend:
       - host: "http://localhost:1024"
         url_pattern: "*bypass"
         middleware:
           mw-ratelimit:
-            maxRate: 2
+            max_rate: 2
             capacity: 5
 
   #################
@@ -194,13 +194,13 @@ endpoints:
   - endpoint: "/tumblebug/*bypass"
     middleware:
       mw-ratelimit:
-        maxRate: 100
-        clientMaxRate: 100
+        max_rate: 100
+        client_max_rate: 100
         strategy: "ip"
     backend:
       - host: "http://localhost:1323"
         url_pattern: "*bypass"
         middleware:
           mw-ratelimit:
-            maxRate: 1
+            max_rate: 1
             capacity: 1

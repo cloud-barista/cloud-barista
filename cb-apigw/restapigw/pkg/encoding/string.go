@@ -23,7 +23,7 @@ const (
 // StringDecoder - 지정한 Reader의 문자열 데이터를 기준으로 Decode 처리
 func StringDecoder(r io.Reader, v *map[string]interface{}) error {
 	data, err := ioutil.ReadAll(r)
-	if err != nil {
+	if nil != err {
 		return err
 	}
 	*(v) = map[string]interface{}{"content": string(data)}

@@ -1,0 +1,118 @@
+{{define "Dashboard_Modal"}}
+
+							<!-- popup Start -->
+							<div class="modal fade layerpopup" id="Life_Reboot" tabindex="-1" role="dialog" aria-hidden="true">
+								<div class="modal-dialog" role="document">
+									<div class="modal-content">
+										
+										<div class="modal-body">
+											<div class="txt">Would you like to reboot MCIS ?</div>
+											<div class="btnbox">
+												<button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+												<button type="button" class="btn_ok" data-dismiss="modal" onclick="life_cycle2('reboot')">OK</button>
+											</div>
+										</div>
+										
+									</div>
+								</div>
+							</div>
+							<!-- //popup Start -->
+	
+							<!-- popup Suspend -->
+							<div class="modal fade layerpopup" id="Life_Suspend" tabindex="-1" role="dialog" aria-hidden="true">
+								<div class="modal-dialog" role="document">
+									<div class="modal-content">
+										
+										<div class="modal-body">
+											<div class="txt">Would you like to suspend MCIS ?</div>
+											<div class="btnbox">
+												<button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+												<button type="button" class="btn_ok" data-dismiss="modal" onclick="life_cycle2('suspend')">OK</button>
+											</div>
+										</div>
+										
+									</div>
+								</div>
+							</div>
+							<!-- //popup Suspend -->
+	
+							<!-- popup Resume -->
+							<div class="modal fade layerpopup" id="Life_Resume" tabindex="-1" role="dialog" aria-hidden="true">
+								<div class="modal-dialog" role="document">
+									<div class="modal-content">
+										
+										<div class="modal-body">
+											<div class="txt">Would you like to resume MCIS ?</div>
+											<div class="btnbox">
+												<button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+												<button type="button" class="btn_ok" data-dismiss="modal" onclick="life_cycle2('resume')">OK</button>
+											</div>
+										</div>
+										
+									</div>
+								</div>
+							</div>
+							<!-- //popup Resume -->
+
+                            <!-- popup Resume -->
+							<div class="modal fade layerpopup" id="Life_Terminate" tabindex="-1" role="dialog" aria-hidden="true">
+								<div class="modal-dialog" role="document">
+									<div class="modal-content">
+										
+										<div class="modal-body">
+											<div class="txt">Would you like to terminate MCIS ?</div>
+											<div class="btnbox">
+												<button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+												<button type="button" class="btn_ok" data-dismiss="modal" onclick="life_cycle2('terminate')">OK</button>
+											</div>
+										</div>
+										
+									</div>
+								</div>
+							</div>
+							<!-- //popup Resume -->
+	
+							<!-- popup Manage -->
+							<div class="modal fade layerpopup" id="n_Manage" tabindex="-1" role="dialog" aria-hidden="true">
+								<div class="modal-dialog" role="document">
+									<div class="modal-content">
+										
+										<div class="modal-body">
+											<div class="txt">Would you like to manage MCIS ?</div>
+											<div class="btnbox">
+												<button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+												<button type="button" class="btn_ok" data-dismiss="modal">OK</button>
+											</div>
+										</div>
+										
+									</div>
+								</div>
+							</div>
+							<!-- //popup Manage -->
+	
+							<!-- popup New -->
+							<div class="modal fade layerpopup" id="n_New" tabindex="-1" role="dialog" aria-hidden="true">
+								<div class="modal-dialog" role="document">
+									<div class="modal-content">
+										
+										<div class="modal-body">
+											<div class="txt">Would you like to create MCIS ?</div>
+											<div class="btnbox">
+												<button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+												<button type="button" class="btn_ok" data-dismiss="modal"  onclick="mcis_add();">OK</button>
+											</div>
+										</div>
+										
+									</div>
+								</div>
+							</div>
+							<!-- //popup New -->
+							<script>
+								function mcis_add(){
+									var mcis_id = $("#mcis_id").val()
+									var mcis_name = $("#mcis_name").val()
+									location.href = "/Manage/MCIS/reg"
+			
+								}
+							</script>
+{{end}}

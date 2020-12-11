@@ -1,97 +1,86 @@
+// Package gin - GIN 기반의 Routing 기능 제공 패키지
 package gin
 
 import (
-	"context"
 	"net/http"
 	"strings"
 
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/config"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/core"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/logging"
+	cors "github.com/cloud-barista/cb-apigw/restapigw/pkg/middlewares/cors/gin"
+	httpsecure "github.com/cloud-barista/cb-apigw/restapigw/pkg/middlewares/httpsecure/gin"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/proxy"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/router"
-	httpServer "github.com/cloud-barista/cb-apigw/restapigw/pkg/transport/http/server"
 	"github.com/gin-gonic/gin"
 )
 
 // ===== [ Constants and Variables ] =====
-
 // ===== [ Types ] =====
 
-// PipeConfig - 서비스  운영에 필요한 Pipeline 을 구성하기 위한 구조
-type PipeConfig struct {
-	Context        context.Context
-	Engine         *gin.Engine
-	Middlewares    []gin.HandlerFunc
-	HandlerFactory HandlerFactory
-	ProxyFactory   proxy.Factory
-	Logger         *logging.Logger
-}
+type (
+	// Option - Server 인스턴스에 옵션을 설정하는 함수 형식
+	Option func(*PipeConfig)
+
+	// PipeConfig - 서비스  운영에 필요한 Pipeline 을 구성하기 위한 구조
+	PipeConfig struct {
+		engine         *router.DynamicRouter
+		middlewares    []gin.HandlerFunc
+		handlerFactory HandlerFactory
+		proxyFactory   proxy.Factory
+		logger         logging.Logger
+	}
+)
 
 // ===== [ Implementations ] =====
 
-// Run - 서비스 설정을 기준으로 Gin Engine 구성 / Route - Endpoint Handler 추가 / HTTP Server 구동
-func (pc PipeConfig) Run(sConf config.ServiceConfig) {
+// createRouter - Gin 기반의 Router 생성
+func (pc *PipeConfig) createRouter(sConf *config.ServiceConfig) http.Handler {
 	if !sConf.Debug {
 		gin.SetMode(gin.ReleaseMode)
-	} else {
-		pc.Logger.Debug("Debug enabled")
 	}
 
-	pc.Engine.Use(pc.Middlewares...)
+	engine := gin.New()
+	engine.Use(gin.Recovery())
 
+	engine.RedirectTrailingSlash = true
+	engine.RedirectFixedPath = true
+	engine.HandleMethodNotAllowed = true
+
+	// CORS Middleware 반영
+	cors.New(sConf.Middleware, engine)
+
+	// HTTPSecure Middleware 반영
+	if err := httpsecure.Register(sConf.Middleware, engine); nil != err {
+		pc.logger.Warning(err)
+	}
+
+	// TODO: 사전 처리되어야할 Middleware 추가는 여기서...
+
+	// 기본 설정
+	engine.Use(pc.middlewares...)
 	if sConf.Debug {
-		// Debug Endpoint Handler 구성
-		pc.registerDebugEndpoints()
+		engine.Any("/__debug/*param", DebugHandler(pc.logger))
 	}
-
-	// Endpoint Handler 구성
-	pc.registerEndpoints(sConf.Endpoints)
-
-	pc.Engine.NoRoute(func(c *gin.Context) {
+	engine.NoRoute(func(c *gin.Context) {
 		c.Header(router.CompleteResponseHeaderName, router.HeaderIncompleteResponseValue)
 	})
 
-	// HTTP Server 환경 초기화
-	httpServer.InitHTTPDefaultTransport(sConf)
-	// Gin Engine을 Handler로 사용하는 HTTP Server 구동
-	if err := httpServer.RunServer(pc.Context, sConf, pc.Engine); err != nil {
-		pc.Logger.Error(err.Error())
-	}
+	return engine
 }
 
-// registerDebugEndpoints - debug 옵션이 활성화된 경우에 `__debug` 로 호출되는 Enpoint Handler 구성
-func (pc PipeConfig) registerDebugEndpoints() {
-	handler := DebugHandler(*pc.Logger)
-	pc.Engine.GET("/__debug/*param", handler)
-	pc.Engine.POST("/__debug/*param", handler)
-	pc.Engine.PUT("/__debug/*param", handler)
+// createEngine - Gin Router Engine 인스턴스 생성
+func (pc *PipeConfig) createEngine(sConf *config.ServiceConfig) {
+	de := &router.DynamicRouter{}
+	de.SetHandler(pc.createRouter(sConf))
+
+	pc.engine = de
 }
 
-// registerEndpoints - 지정한 Endpoint 설정들을 기준으로 Endpoint Handler 구성
-func (pc PipeConfig) registerEndpoints(eConfs []*config.EndpointConfig) {
-	for _, eConf := range eConfs {
-		// Endpoint에 연결되어 동작할 수 있도록 ProxyFactory의 Call chain에 대한 인스턴스 생성 (ProxyStack)
-		proxyStack, err := pc.ProxyFactory.New(eConf)
-		if err != nil {
-			pc.Logger.Error("calling the ProxyFactory", err.Error())
-			continue
-		}
-
-		if eConf.IsBypass {
-			// Bypass case
-			pc.registerGroup(eConf.Endpoint, pc.HandlerFactory(eConf, proxyStack), len(eConf.Backend))
-		} else {
-			// Normal case
-			pc.registerEndpoint(eConf.Method, eConf.Endpoint, pc.HandlerFactory(eConf, proxyStack), len(eConf.Backend))
-		}
-	}
-}
-
-// registerGroup - Bypass인 경우는 Group 단위로 Gin Engine에 Endpoint Handler 등록
-func (pc PipeConfig) registerGroup(path string, handler gin.HandlerFunc, totBackends int) {
-	if totBackends > 1 {
-		pc.Logger.Error("Bypass endpoint must have a single backend! Ignoring", path)
+// registerAPIGroup - Bypass인 경우는 Group 단위로 Gin Engine에 Endpoint Handler 등록
+func (pc PipeConfig) registerAPIGroup(path string, handler gin.HandlerFunc, totBackends int) {
+	if 1 < totBackends {
+		pc.logger.Errorf("[API G/W] Router > Bypass endpoint must have a single backend! Ignoring -> %s", path)
 		return
 	}
 
@@ -99,33 +88,117 @@ func (pc PipeConfig) registerGroup(path string, handler gin.HandlerFunc, totBack
 	suffix := "/" + core.Bypass
 	group := strings.TrimSuffix(path, suffix)
 
-	groupRoute := pc.Engine.Group(group)
+	engine := pc.engine.GetHandler().(*gin.Engine)
+
+	groupRoute := engine.Group(group)
 	groupRoute.Any(suffix, handler)
 }
 
-// registerEndpoint - 지정한 정보를 기준으로 Gin Engine에 Endpoint Handler 등록
-func (pc PipeConfig) registerEndpoint(method, path string, handler gin.HandlerFunc, totBackends int) {
+// registerAPI - 지정한 정보를 기준으로 Gin Engine에 Endpoint Handler 등록
+func (pc PipeConfig) registerAPI(method, path string, handler gin.HandlerFunc, totBackends int) {
 	method = strings.ToTitle(method)
-	if method != http.MethodGet && totBackends > 1 {
-		pc.Logger.Error(method, "endpoints must have a single backend! Ignoring", path)
+	if method != http.MethodGet && 1 < totBackends {
+		pc.logger.Errorf("[API G/W] Router > Method: %s, endpoints must have a single backend! Ignoring -> %s", method, path)
 		return
 	}
+
+	engine := pc.engine.GetHandler().(*gin.Engine)
+
 	switch method {
 	case http.MethodGet:
-		pc.Engine.GET(path, handler)
+		engine.GET(path, handler)
 	case http.MethodPost:
-		pc.Engine.POST(path, handler)
+		engine.POST(path, handler)
 	case http.MethodPut:
-		pc.Engine.PUT(path, handler)
+		engine.PUT(path, handler)
 	case http.MethodPatch:
-		pc.Engine.PATCH(path, handler)
+		engine.PATCH(path, handler)
 	case http.MethodDelete:
-		pc.Engine.DELETE(path, handler)
+		engine.DELETE(path, handler)
 	default:
-		pc.Logger.Error("Unsupported method", method)
+		pc.logger.Errorf("[API G/W] Router > Unsupported method -> %s", method)
 	}
+}
+
+// UpdateEngine - API 변경 적용을 위한 Gin Engine 재 생성
+func (pc *PipeConfig) UpdateEngine(sConf *config.ServiceConfig) {
+	gin := pc.createRouter(sConf)
+	pc.engine.SetHandler(gin)
+}
+
+// Engine - Router 기능을 처리하는 Gin Engine 반환 (http.Handler)
+func (pc *PipeConfig) Engine() http.Handler {
+	return pc.engine
+}
+
+// RegisterAPIs - API Provider (Repository)에서 추출된 API 설정들을 Router로 등록
+func (pc *PipeConfig) RegisterAPIs(sConf *config.ServiceConfig, defs []*config.EndpointConfig) error {
+	pc.logger.Info("[API G/W] Loading API Endpoints")
+
+	for _, def := range defs {
+		// 정보 재구성
+		err := def.AdjustValues(sConf)
+		if nil != err {
+			pc.logger.WithError(err).Error("[API G/W] Router > Can not adjust values for definition")
+		}
+
+		// 활성화된 경우만 적용
+		if def.Active {
+			// Endpoint에 연결되어 동작할 수 있도록 ProxyFactory의 Call chain에 대한 인스턴스 생성 (ProxyStack)
+			proxyStack, err := pc.proxyFactory.New(def)
+			if nil != err {
+				pc.logger.WithError(err).Error("[API G/W] Router > Can not calling the ProxyFactory")
+				continue
+			}
+
+			if def.IsBypass {
+				// Bypass case
+				pc.registerAPIGroup(def.Endpoint, pc.handlerFactory(def, proxyStack), len(def.Backend))
+			} else {
+				// Normal case
+				pc.registerAPI(def.Method, def.Endpoint, pc.handlerFactory(def, proxyStack), len(def.Backend))
+			}
+		}
+	}
+
+	pc.logger.Info("[API G/W] API Endpoints loaded")
+	return nil
 }
 
 // ===== [ Private Functions ] =====
 
 // ===== [ Public Functions ] =====
+
+// WithLogger - Logger 인스턴스 설정
+func WithLogger(logger logging.Logger) Option {
+	return func(pc *PipeConfig) {
+		pc.logger = logger
+	}
+}
+
+// WithHandlerFactory - Route Handler Factory 설정
+func WithHandlerFactory(hf HandlerFactory) Option {
+	return func(pc *PipeConfig) {
+		pc.handlerFactory = hf
+	}
+}
+
+// WithProxyFactory - Proxy Factory 설정
+func WithProxyFactory(pf proxy.Factory) Option {
+	return func(pc *PipeConfig) {
+		pc.proxyFactory = pf
+	}
+}
+
+// New - PipeConfig 인스턴스 생성
+func New(sConf *config.ServiceConfig, opts ...Option) router.Router {
+	pc := PipeConfig{}
+
+	for _, opt := range opts {
+		opt(&pc)
+	}
+
+	pc.createEngine(sConf)
+
+	return &pc
+}

@@ -4,11 +4,8 @@ port: 8000
 #cache_ttl: 3600s
 timeout: 1m
 debug: true
-host: 
-  - "http://localhost:8100"
+router_engine: gin
 middleware:
-  mw-httpcache:
-    enabled: false
   mw-metrics:
     router_enabled: true
     proxy_enabled: true
@@ -17,7 +14,7 @@ middleware:
     expose_metrics: false
     listen_address: 0.0.0.0:9000
     influxdb:
-      address: "http://cb-restapigw-influxdb:8086"
+      address: http://localhost:8086 #"http://cb-restapigw-influxdb:8086"
       database: cbrestapigw
       reporting_period: 11s
       buffer_size: 0
@@ -30,7 +27,7 @@ middleware:
       backend: true
     exporters:
       jaeger:
-        endpoint: http://cb-restapigw-jaeger:14268/api/traces
+        endpoint: http://localhost:14268/api/traces #http://cb-restapigw-jaeger:14268/api/traces
         service_name: cbrestapigw
   mw-cors:
     allow_origins:
@@ -48,136 +45,22 @@ middleware:
       - Content-Length
     max_age: 12h
     allow_credentials: true
-endpoints:
-  ##############
-  # For Fake API Test (collection. header/querystring passing and blacklist)
-  ##############
-  - endpoint: "/splash"
-    except_querystrings:
-    #  - "name"
-    #  - "querystring"
-    except_headers:
-    #  - "Testing"
-    backend:
-      - url_pattern: "/shop/campaigns.json"
-        whitelist:
-          - "campaigns"
-      - url_pattern: "/shop/products.json"
-        middleware:
-          mw-proxy:
-            flatmap_filter:
-              - type: "move"
-                args:
-                  - "products.*.id"
-                  - "products.*.id-"
-              - type: "del"
-                args:
-                  - "products.*.image"
-                  - "products.*.body_html"
-                  - "products.*.created_at"
-                  - "products.*.handle"
-                  - "products.*.product_type"
-                  - "products.*.published_at"
-                  - "products.*.published_scope"
-                  - "products.*.tags"
-                  - "products.*.template_suffix"
-                  - "products.*.updated_at"
-                  - "products.*.vendor"
-  - endpoint: "/sequential"
-    backend:
-      - url_pattern: "/hotels/1.json"
-        whitelist:
-          - "destination_id"
-      - url_pattern: "/destinations/{resp0_destination_id}.json"
-        target: "destinations"
-        middleware:
-          mw-http:
-            return_error_details: "sequential"
-    middleware:
-      mw-proxy:
-        sequential: true
-  - endpoint: "/fail"
-    backend:
-      - url_pattern: "/user/1.json"
-        group: "user"
-        target: "address"
-        middleware:
-          mw-http:
-            return_error_details: "fail_1"
-      - host:
-          - "http://fake_url_that_should_not_resolve.tld"
-        url_pattern: "/"
-        group: "none"
-  - endpoint: "/public"
-    method: GET
-    backend:
-      - host: 
-          - "https://api.github.com"
-        url_pattern: "/users/ccambo"
-        whitelist:
-          - "avatar_url"
-          - "name"
-          - "company"
-          - "blog"
-          - "location"
-          - "mail"
-          - "hireable"
-          - "followers"
-          - "public_repos"
-          - "public_gists"
-        mapping:
-          "blog": "website"
-        group: "github"
-        middleware:
-          mw-httpcache: 
-            enabled: true
-      - host: 
-          - "https://api.bitbucket.org"
-        url_pattern: "/2.0/users/kpacha"
-        whitelist:
-          - "links.avatar"
-          - "display_name"
-          - "website"
-          - "location"
-        mapping: 
-          "display_name": "name"
-        group: "bitbucket"
-  - endpoint: "/github/{user}"
-    method: GET
-    backend:
-      - host:
-          - https://api.github.com
-        url_pattern: "/users/{user}"
-        disable_host_sanitize: true
-  - endpoint: "/collection"
-    method: GET
-    backend:
-      - url_pattern: "/destinations/2.json"
-        wrap_collection_to_json: false
-        is_collection: true
-        mapping:
-          "collection": "data"
-  - endpoint: "/private/custom"
-    backend:
-      - url_pattern: "/user/1.json"
-    middleware:
-      mw-auth:
-        secure_key: "###TEST_SECURE_KEY###"
-        access_ids:
-          - etri
 
-  ##############
-  # For Spider
-  ##############
-  - endpoint: "/spider/*bypass"
-    backend:
-      - host: "http://cb-spider:1024"
-        url_pattern: "*bypass"
+repository:
+  dsn: file://./conf
+  #dsn: cbstore://api/restapigw/conf
 
-  #################
-  # For Tumblebug
-  #################
-  - endpoint: "/tumblebug/*bypass"
-    backend:
-      - host: "http://cb-tumblebug:1323"
-        url_pattern: "*bypass"
+cluster:
+  update_frequency: 30s
+
+admin:
+  port: 8001
+  credentials:
+    algorithm: HS256
+    secret: test
+    basic:
+       users:
+         admin: "test@admin00"
+         tester: "tester@admin00"
+  profiling_enabled: true
+  profiling_public: true

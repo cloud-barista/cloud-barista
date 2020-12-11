@@ -3,15 +3,13 @@
 //      * Cloud-Barista: https://github.com/cloud-barista
 //
 // by CB-Log Team, 2019.08.
-// ref) https://github.com/t-tomalak/logrus-easy-formatter 
+// ref) https://github.com/t-tomalak/logrus-easy-formatter
 
 package cblogformatter
 
 import (
-
 	"fmt"
 
-	"strconv"
 	"strings"
 	"time"
 
@@ -27,7 +25,7 @@ const (
 // Formatter implements logrus.Formatter interface.
 type Formatter struct {
 	TimestampFormat string
-	LogFormat string
+	LogFormat       string
 }
 
 // Format building log message.
@@ -47,11 +45,10 @@ func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 	output = strings.Replace(output, "%time%", entry.Time.Format(timestampFormat), 1)
 
+	if entry.HasCaller() {
+		fileVal := fmt.Sprintf("%s:%d", shortFilePathName(entry.Caller.File), entry.Caller.Line)
+		funcVal := fmt.Sprintf("%s()", entry.Caller.Function)
 
-        if entry.HasCaller() {
-                fileVal := fmt.Sprintf("%s:%d", shortFilePathName(entry.Caller.File), entry.Caller.Line)
-                funcVal := fmt.Sprintf("%s()", entry.Caller.Function)
-		
 		funcInfo := fileVal + ", " + funcVal
 
 		output = strings.Replace(output, "%func%", funcInfo, 1)
@@ -61,18 +58,19 @@ func (f *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 	output = strings.Replace(output, "%msg%", entry.Message, 1)
 
-
-	for k, val := range entry.Data {
-		switch v := val.(type) {
-		case string:
-			output = strings.Replace(output, "%"+k+"%", v, 1)
-		case int:
-			s := strconv.Itoa(v)
-			output = strings.Replace(output, "%"+k+"%", s, 1)
-		case bool:
-			s := strconv.FormatBool(v)
-			output = strings.Replace(output, "%"+k+"%", s, 1)
+	// Key-Value pair 정보 처리 (WithField, WithFields, WithError, ...)
+	if len(entry.Data) > 0 {
+		keyValues := make([]string, 0)
+		for k := range entry.Data {
+			keyValues = append(keyValues, fmt.Sprintf("%s=%v", k, entry.Data[k]))
 		}
+		if len(keyValues) > 0 {
+			output = strings.Replace(output, "%keyvalues%", strings.Join(keyValues, ","), 1)
+		} else {
+			output = strings.Replace(output, "\t[%keyvalues%]", "", 1)
+		}
+	} else {
+		output = strings.Replace(output, "\t[%keyvalues%]", "", 1)
 	}
 
 	return []byte(output), nil

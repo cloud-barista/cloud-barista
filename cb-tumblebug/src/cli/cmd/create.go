@@ -21,7 +21,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/cloud-barista/cb-tumblebug/src/common"
+	"github.com/cloud-barista/cb-tumblebug/src/core/common"
 )
 
 var fileStr string
@@ -45,7 +45,7 @@ to quickly create a Cobra application.`,
 			fmt.Println("file is required")
 		} else {
 			
-			var configuration mcisReq
+			var configuration TbMcisReq
 
     		viper.SetConfigFile(fileStr)
 			if err := viper.ReadInConfig(); err != nil {

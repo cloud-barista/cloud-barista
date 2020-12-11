@@ -6,14 +6,13 @@
 //
 // by CB-Spider Team, 2019.09.
 
-package main
+package restruntime
 
 import (
-	"fmt"
 	"strconv"
 
-	ccim "github.com/cloud-barista/cb-spider/cloud-info-manager/connection-config-info-manager"
 	im "github.com/cloud-barista/cb-spider/cloud-info-manager"
+	ccim "github.com/cloud-barista/cb-spider/cloud-info-manager/connection-config-info-manager"
 	cim "github.com/cloud-barista/cb-spider/cloud-info-manager/credential-info-manager"
 	dim "github.com/cloud-barista/cb-spider/cloud-info-manager/driver-info-manager"
 	rim "github.com/cloud-barista/cb-spider/cloud-info-manager/region-info-manager"
@@ -26,30 +25,29 @@ import (
 
 //================ List of support CloudOS
 func listCloudOS(c echo.Context) error {
-        cblog.Info("call listCloudOS()")
+	cblog.Info("call listCloudOS()")
 
-        infoList := im.ListCloudOS()
+	infoList := im.ListCloudOS()
 
-        var jsonResult struct {
-                Result []string `json:"cloudos"`
-        }
-        jsonResult.Result = infoList
-        return c.JSON(http.StatusOK, &jsonResult)
+	var jsonResult struct {
+		Result []string `json:"cloudos"`
+	}
+	jsonResult.Result = infoList
+	return c.JSON(http.StatusOK, &jsonResult)
 }
-
 
 //================ CloudDriver Handler
 func registerCloudDriver(c echo.Context) error {
 	cblog.Info("call registerCloudDriver()")
 	req := &dim.CloudDriverInfo{}
 	if err := c.Bind(req); err != nil {
-		fmt.Println("Binding error!!!")
+		cblog.Error(err)
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	cldinfoList, err := dim.RegisterCloudDriverInfo(*req)
 	if err != nil {
-		fmt.Println("Register error!!!")
+		cblog.Error(err)
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
@@ -64,14 +62,14 @@ func listCloudDriver(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-        var jsonResult struct {
-                Result []*dim.CloudDriverInfo `json:"driver"`
-        }
-        if infoList == nil {
-                infoList = []*dim.CloudDriverInfo{}
-        }
-        jsonResult.Result = infoList
-        return c.JSON(http.StatusOK, &jsonResult)
+	var jsonResult struct {
+		Result []*dim.CloudDriverInfo `json:"driver"`
+	}
+	if infoList == nil {
+		infoList = []*dim.CloudDriverInfo{}
+	}
+	jsonResult.Result = infoList
+	return c.JSON(http.StatusOK, &jsonResult)
 
 }
 
@@ -94,9 +92,9 @@ func unRegisterCloudDriver(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-        resultInfo := BooleanInfo{
-                Result: strconv.FormatBool(result),
-        }
+	resultInfo := BooleanInfo{
+		Result: strconv.FormatBool(result),
+	}
 
 	return c.JSON(http.StatusOK, &resultInfo)
 }
@@ -126,14 +124,14 @@ func listCredential(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-        var jsonResult struct {
-                Result []*cim.CredentialInfo `json:"credential"`
-        }
-        if infoList == nil {
-                infoList = []*cim.CredentialInfo{}
-        }
-        jsonResult.Result = infoList
-        return c.JSON(http.StatusOK, &jsonResult)
+	var jsonResult struct {
+		Result []*cim.CredentialInfo `json:"credential"`
+	}
+	if infoList == nil {
+		infoList = []*cim.CredentialInfo{}
+	}
+	jsonResult.Result = infoList
+	return c.JSON(http.StatusOK, &jsonResult)
 }
 
 func getCredential(c echo.Context) error {
@@ -155,9 +153,9 @@ func unRegisterCredential(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-        resultInfo := BooleanInfo{
-                Result: strconv.FormatBool(result),
-        }
+	resultInfo := BooleanInfo{
+		Result: strconv.FormatBool(result),
+	}
 
 	return c.JSON(http.StatusOK, &resultInfo)
 }
@@ -187,14 +185,14 @@ func listRegion(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-        var jsonResult struct {
-                Result []*rim.RegionInfo `json:"region"`
-        }
-        if infoList == nil {
-                infoList = []*rim.RegionInfo{}
-        }
-        jsonResult.Result = infoList
-        return c.JSON(http.StatusOK, &jsonResult)
+	var jsonResult struct {
+		Result []*rim.RegionInfo `json:"region"`
+	}
+	if infoList == nil {
+		infoList = []*rim.RegionInfo{}
+	}
+	jsonResult.Result = infoList
+	return c.JSON(http.StatusOK, &jsonResult)
 }
 
 func getRegion(c echo.Context) error {
@@ -216,9 +214,9 @@ func unRegisterRegion(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-        resultInfo := BooleanInfo{
-                Result: strconv.FormatBool(result),
-        }
+	resultInfo := BooleanInfo{
+		Result: strconv.FormatBool(result),
+	}
 
 	return c.JSON(http.StatusOK, &resultInfo)
 }
@@ -248,14 +246,14 @@ func listConnectionConfig(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-        var jsonResult struct {
-                Result []*ccim.ConnectionConfigInfo `json:"connectionconfig"`
-        }
-        if infoList == nil {
-                infoList = []*ccim.ConnectionConfigInfo{}
-        }
-        jsonResult.Result = infoList
-        return c.JSON(http.StatusOK, &jsonResult)
+	var jsonResult struct {
+		Result []*ccim.ConnectionConfigInfo `json:"connectionconfig"`
+	}
+	if infoList == nil {
+		infoList = []*ccim.ConnectionConfigInfo{}
+	}
+	jsonResult.Result = infoList
+	return c.JSON(http.StatusOK, &jsonResult)
 }
 
 func getConnectionConfig(c echo.Context) error {
@@ -277,9 +275,9 @@ func deleteConnectionConfig(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-        resultInfo := BooleanInfo{
-                Result: strconv.FormatBool(result),
-        }
+	resultInfo := BooleanInfo{
+		Result: strconv.FormatBool(result),
+	}
 
 	return c.JSON(http.StatusOK, &resultInfo)
 }

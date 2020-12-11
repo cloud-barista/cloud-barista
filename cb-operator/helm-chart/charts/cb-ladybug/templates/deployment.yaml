@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cb-ladybug.fullname" . }}
+  labels:
+    {{- include "cb-ladybug.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "cb-ladybug.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "cb-ladybug.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "cb-ladybug.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          #ports:
+          #  - name: http
+          #    containerPort: 80
+          #    protocol: TCP
+          env:
+            {{- toYaml .Values.env | nindent 12 }}
+          # livenessProbe:
+          #   httpGet:
+          #     path: /ladybug/
+          #     port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: /ladybug/
+          #     port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+      {{- if .Values.persistence.enabled }}
+          - name: {{ template "cb-ladybug.fullname" . }}
+            mountPath: {{ .Values.ladybug.rootPath }}/meta_db
+      {{- end }}
+          - name: config-volume
+            mountPath: {{ .Values.ladybug.rootPath }}/conf
+      volumes:
+      {{- if .Values.persistence.enabled }}
+      - name: {{ template "cb-ladybug.fullname" . }} #cb-ladybug-persistent-storage
+        persistentVolumeClaim:
+        {{- if .Values.persistence.existingClaim }}
+          claimName: {{ .Values.persistence.existingClaim }}
+        {{- else }}
+          claimName: {{ template "cb-ladybug.fullname" . }}
+        {{- end }}
+      {{- end }}
+      - name: config-volume
+        configMap:
+          name: {{ include "cb-ladybug.fullname" . }}-config
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

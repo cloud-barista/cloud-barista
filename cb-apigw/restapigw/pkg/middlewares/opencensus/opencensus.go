@@ -4,12 +4,12 @@ package opencensus
 import (
 	"bytes"
 	"context"
-	"errors"
 	"sync"
 	"time"
 
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/config"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/core"
+	"github.com/cloud-barista/cb-apigw/restapigw/pkg/errors"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/stats/view"
 	"go.opencensus.io/trace"
@@ -112,7 +112,7 @@ func (c *composableRegister) ExporterFactories(ctx context.Context, conf Config,
 
 	for _, f := range fs {
 		e, err := f(ctx, conf)
-		if err != nil {
+		if nil != err {
 			continue
 		}
 		if ve, ok := e.(view.Exporter); ok {
@@ -129,7 +129,7 @@ func (c *composableRegister) ExporterFactories(ctx context.Context, conf Config,
 
 // Reegister - 지정된 정보를 기준으로 Opencensus 연동 Register에 Views 와 옵션 정보 (Sampling Rate, Reporting Period) 등록 처리
 func (c composableRegister) Register(ctx context.Context, conf Config, vs []*view.View) error {
-	if len(vs) == 0 {
+	if 0 == len(vs) {
 		vs = DefaultViews
 	}
 
@@ -159,9 +159,9 @@ func registerTraceExporter(exporters ...trace.Exporter) {
 func setDefaultSampler(rate int) {
 	var sampler trace.Sampler
 	switch {
-	case rate <= 0:
+	case 0 >= rate:
 		sampler = trace.NeverSample()
-	case rate >= 100:
+	case 100 <= rate:
 		sampler = trace.AlwaysSample()
 	default:
 		sampler = trace.ProbabilitySampler(float64(rate) / 100.0)
@@ -182,7 +182,7 @@ func registerViews(views ...*view.View) error {
 // fromContext - 지정한 Context 기반으로 동작하는 Trace Span 구성 및 반환
 func fromContext(ctx context.Context) *trace.Span {
 	span := trace.FromContext(ctx)
-	if span == nil {
+	if nil == span {
 		span, _ = ctx.Value(ContextKey).(*trace.Span)
 	}
 	return span
@@ -198,7 +198,7 @@ func parseConfig(sConf config.ServiceConfig) (*Config, error) {
 
 	buf := new(bytes.Buffer)
 	yaml.NewEncoder(buf).Encode(tmp)
-	if err := yaml.NewDecoder(buf).Decode(conf); err != nil {
+	if err := yaml.NewDecoder(buf).Decode(conf); nil != err {
 		return nil, err
 	}
 
@@ -210,7 +210,7 @@ func parseConfig(sConf config.ServiceConfig) (*Config, error) {
 // Setup - Opencensus Trace 관련 설정을 검증하고 Exporter들을 Registry에 등록하고 Trace 대상 Layer들 구성
 func Setup(ctx context.Context, sConf config.ServiceConfig, vs ...*view.View) error {
 	cfg, err := parseConfig(sConf)
-	if err != nil {
+	if nil != err {
 		return err
 	}
 
@@ -219,15 +219,16 @@ func Setup(ctx context.Context, sConf config.ServiceConfig, vs ...*view.View) er
 		register.ExporterFactories(ctx, *cfg, exporterFactories)
 
 		err = register.Register(ctx, *cfg, vs)
-		if err != nil {
+		if nil != err {
 			return
 		}
 
-		if cfg.EnabledLayers != nil {
+		if nil != cfg.EnabledLayers {
 			enabledLayers = *cfg.EnabledLayers
 			return
 		}
 
+		// default all layers
 		enabledLayers = EnabledLayers{true, true, true}
 	})
 

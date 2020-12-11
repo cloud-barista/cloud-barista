@@ -1,40 +1,85 @@
-##############################################################
-## Stage 1 - Install Go & Set Go env
-##############################################################
+###################################################
+# Cloud-Barista CB-Dragonfly Module Dockerfile    #
+###################################################
 
-FROM ubuntu:18.04
+# Go 빌드 이미지 버전 및 알파인 OS 버전 정보
+ARG BASE_IMAGE_BUILDER=golang
+ARG GO_VERSION=1.15
+ARG ALPINE_VERSION=3
 
-RUN apt-get update && yes | apt-get install wget &&\
- wget https://dl.google.com/go/go1.13.4.linux-amd64.tar.gz &&\
- tar -C /usr/local -xzf go1.13.4.linux-amd64.tar.gz &&\
- rm go1.13.4.linux-amd64.tar.gz
+###################################################
+# 1. Build CB-Dragonfly binary file
+###################################################
 
-ENV PATH $PATH:/usr/local/go/bin
+FROM ${BASE_IMAGE_BUILDER}:${GO_VERSION}-alpine AS go-builder
 
+ENV CGO_ENABLED=1
+ENV GO111MODULE="on"
+ENV GOOS="linux"
+ENV GOARCH="amd64"
+ENV GOPATH="/go"
 
-##############################################################
-## Stage 2 - Application Set up
-##############################################################
+#ARG GO_FLAGS="-mod=vendor"
+ARG LD_FLAGS="-s -w"
+ARG OUTPUT="bin/cb-dragonfly"
 
-# Clone project to docker
-ADD . /go/src/github.com/cloud-barista/cb-dragonfly
+WORKDIR ${GOPATH}/src/github.com/cloud-barista/cb-dragonfly
+COPY . ./
 
-ENV GOPATH /go/src/github.com/cloud-barista/
+RUN apk add --update gcc
 
-WORKDIR $GOPATH/cb-dragonfly
+RUN apk add --no-cache \
+    bash \
+    build-base \
+    gcc \
+    make \
+    musl-dev \
+    tzdata \
+    librdkafka-dev \
+    pkgconf
 
-# Use bash
-RUN rm /bin/sh && ln -s /bin/bash /bin/sh &&  go mod download && go mod verify
+RUN go build -tags musl ${GO_FLAGS} -ldflags "${LD_FLAGS}" -o ${OUTPUT} -i ./pkg/manager/main \
+    && chmod +x ${OUTPUT}
 
-# Run /bin/bash -c "source /app/conf/setup.env"
-ENV CBSTORE_ROOT $GOPATH/cb-dragonfly
-ENV CBLOG_ROOT $GOPATH/cb-dragonfly
-ENV CBMON_PATH $GOPATH/cb-dragonfly
+###################################################
+# 2. Set up CB-Dragonfly runtime environment
+###################################################
 
-RUN cd $GOPATH/cb-dragonfly/pkg/manager/main;go build -o runMyapp;cp runMyapp $GOPATH/cb-dragonfly
+FROM alpine:${ALPINE_VERSION} AS runtime-alpine
 
-#ENTRYPOINT ["./runMyapp"]
-ENV DRAGONFLY_INFLUXDB_URL 127.0.0.1:8086
-ENTRYPOINT ["./wait-for-it-wrapper.sh"]
+ENV TZ="Asia/Seoul"
 
-EXPOSE 8094/udp 9090
+RUN apk add --no-cache \
+    bash \
+    tzdata \
+    librdkafka-dev \
+    pkgconf \
+    && \
+    cp --remove-destination /usr/share/zoneinfo/${TZ} /etc/localtime \
+    && \
+    echo "${TZ}" > /etc/timezone
+
+###################################################
+# 3. Execute CB-Dragonfly Module
+###################################################
+
+FROM runtime-alpine as cb-dragonfly
+LABEL maintainer="innogrid <dev.cloudbarista@innogrid.com>"
+
+ENV GOPATH="/go"
+ENV CBSTORE_ROOT=${GOPATH}/src/github.com/cloud-barista/cb-dragonfly
+ENV CBLOG_ROOT=${GOPATH}/src/github.com/cloud-barista/cb-dragonfly
+ENV CBMON_ROOT=${GOPATH}/src/github.com/cloud-barista/cb-dragonfly
+
+COPY --from=go-builder ${GOPATH}/src/github.com/cloud-barista/cb-dragonfly/file ${GOPATH}/src/github.com/cloud-barista/cb-dragonfly/file
+
+WORKDIR /opt/cb-dragonfly
+COPY --from=go-builder ${GOPATH}/src/github.com/cloud-barista/cb-dragonfly/bin/cb-dragonfly /opt/cb-dragonfly/bin/cb-dragonfly
+RUN chmod +x /opt/cb-dragonfly/bin/cb-dragonfly \
+    && ln -s /opt/cb-dragonfly/bin/cb-dragonfly /usr/bin
+
+#EXPOSE 8094/udp
+EXPOSE 9090
+EXPOSE 9999
+
+ENTRYPOINT ["cb-dragonfly"]

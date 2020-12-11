@@ -33,7 +33,7 @@ var cblogger *logrus.Logger
 func init() {
 	// cblog is a global variable.
 	cblogger = cblog.GetLogger("AWS Resource Test")
-	cblog.SetLevel("debug")
+	cblog.SetLevel("info")
 }
 
 func handleSecurity() {
@@ -407,7 +407,7 @@ func handleKeyPair() {
 				}
 			case 3:
 				cblogger.Infof("[%s] 키 페어 조회 테스트", keyPairName)
-				result, err := KeyPairHandler.GetKey(irs.IID{NameId: keyPairName})
+				result, err := KeyPairHandler.GetKey(irs.IID{SystemId: keyPairName})
 				if err != nil {
 					cblogger.Infof(keyPairName, " 키 페어 조회 실패 : ", err)
 				} else {
@@ -415,7 +415,7 @@ func handleKeyPair() {
 				}
 			case 4:
 				cblogger.Infof("[%s] 키 페어 삭제 테스트", keyPairName)
-				result, err := KeyPairHandler.DeleteKey(irs.IID{NameId: keyPairName})
+				result, err := KeyPairHandler.DeleteKey(irs.IID{SystemId: keyPairName})
 				if err != nil {
 					cblogger.Infof(keyPairName, " 키 페어 삭제 실패 : ", err)
 				} else {
@@ -526,6 +526,16 @@ func handleVPC() {
 		panic(err)
 	}
 
+	subnetReqInfo := irs.SubnetInfo{
+		IId:       irs.IID{NameId: "AddTest-Subnet"},
+		IPv4_CIDR: "10.0.2.0/24",
+	}
+
+	subnetReqVpcInfo := irs.IID{SystemId: "vpc-00e513fd64a7d9972"}
+
+	cblogger.Debug(subnetReqInfo)
+	cblogger.Debug(subnetReqVpcInfo)
+
 	vpcReqInfo := irs.VPCReqInfo{
 		IId:       irs.IID{NameId: "New-CB-VPC"},
 		IPv4_CIDR: "10.0.0.0/16",
@@ -534,10 +544,12 @@ func handleVPC() {
 				IId:       irs.IID{NameId: "New-CB-Subnet"},
 				IPv4_CIDR: "10.0.1.0/24",
 			},
-			{
-				IId:       irs.IID{NameId: "New-CB-Subnet2"},
-				IPv4_CIDR: "10.0.2.0/24",
-			},
+			/*
+				{
+					IId:       irs.IID{NameId: "New-CB-Subnet2"},
+					IPv4_CIDR: "10.0.2.0/24",
+				},
+			*/
 		},
 		//Id:   "subnet-044a2b57145e5afc5",
 		//Name: "CB-VNet-Subnet", // 웹 도구 등 외부에서 전달 받지 않고 드라이버 내부적으로 자동 구현때문에 사용하지 않음.
@@ -546,6 +558,7 @@ func handleVPC() {
 	}
 
 	reqSubnetId := irs.IID{SystemId: "vpc-04f6de5c2af880978"}
+	reqSubnetId = irs.IID{SystemId: "subnet-0ebd316ff47f07628"}
 
 	for {
 		fmt.Println("VPCHandler Management")
@@ -554,6 +567,8 @@ func handleVPC() {
 		fmt.Println("2. VNetwork Create")
 		fmt.Println("3. VNetwork Get")
 		fmt.Println("4. VNetwork Delete")
+		fmt.Println("5. Add Subnet")
+		fmt.Println("6. Delete Subnet")
 
 		var commandNum int
 		inputCnt, err := fmt.Scan(&commandNum)
@@ -612,6 +627,26 @@ func handleVPC() {
 				} else {
 					cblogger.Infof("[%s] VNetwork 삭제 결과 : [%s]", reqSubnetId, result)
 				}
+
+			case 5:
+				cblogger.Infof("[%s] Subnet 추가 테스트", vpcReqInfo.IId.NameId)
+				result, err := VPCHandler.AddSubnet(subnetReqVpcInfo, subnetReqInfo)
+				if err != nil {
+					cblogger.Infof(reqSubnetId.NameId, " VNetwork 생성 실패 : ", err)
+				} else {
+					cblogger.Infof("VNetwork 생성 결과 : ", result)
+					reqSubnetId = result.IId // 조회 및 삭제를 위해 생성된 ID로 변경
+					spew.Dump(result)
+				}
+
+			case 6:
+				cblogger.Infof("[%s] Subnet 삭제 테스트", reqSubnetId.SystemId)
+				result, err := VPCHandler.RemoveSubnet(subnetReqVpcInfo, reqSubnetId)
+				if err != nil {
+					cblogger.Infof("[%s] Subnet 삭제 실패 : ", reqSubnetId.SystemId, err)
+				} else {
+					cblogger.Infof("[%s] Subnet 삭제 결과 : [%s]", reqSubnetId.SystemId, result)
+				}
 			}
 		}
 	}
@@ -662,7 +697,7 @@ func handleImage() {
 					cblogger.Info("Image 목록 조회 결과")
 					cblogger.Info(result)
 					cblogger.Info("출력 결과 수 : ", len(result))
-					//spew.Dump(result)
+					spew.Dump(result)
 
 					//조회및 삭제 테스트를 위해 리스트의 첫번째 정보의 ID를 요청ID로 자동 갱신함.
 					if result != nil {
@@ -941,8 +976,10 @@ func handleVM() {
 					cblogger.Info("=========== VM 목록 ================")
 					cblogger.Info(vmList)
 					spew.Dump(vmList)
-
-					VmID = vmList[0].IId
+					cblogger.Infof("=========== VM 목록 수 : [%d] ================", len(vmList))
+					if len(vmList) > 0 {
+						VmID = vmList[0].IId
+					}
 				}
 
 			}
@@ -996,8 +1033,10 @@ func handleVMSpec() {
 				if err != nil {
 					cblogger.Error("VMSpec 목록 조회 실패 : ", err)
 				} else {
-					cblogger.Info("VMSpec 목록 조회 결과")
-					spew.Dump(result)
+					cblogger.Debug("VMSpec 목록 조회 결과")
+					//spew.Dump(result)
+					cblogger.Debug(result)
+					cblogger.Infof("전체 목록 개수 : [%d]", len(result))
 				}
 
 				fmt.Println("Finish ListVMSpec()")
@@ -1008,8 +1047,9 @@ func handleVMSpec() {
 				if err != nil {
 					cblogger.Error(reqVMSpec, " VMSpec 정보 조회 실패 : ", err)
 				} else {
-					cblogger.Infof("VMSpec[%s]  정보 조회 결과", reqVMSpec)
-					spew.Dump(result)
+					cblogger.Debugf("VMSpec[%s]  정보 조회 결과", reqVMSpec)
+					//spew.Dump(result)
+					cblogger.Debug(result)
 				}
 				fmt.Println("Finish GetVMSpec()")
 
@@ -1019,13 +1059,14 @@ func handleVMSpec() {
 				if err != nil {
 					cblogger.Error("VMSpec Org 목록 조회 실패 : ", err)
 				} else {
-					cblogger.Info("VMSpec Org 목록 조회 결과")
+					cblogger.Debug("VMSpec Org 목록 조회 결과")
 					//spew.Dump(result)
-					cblogger.Info(result)
+					cblogger.Debug(result)
 					//spew.Dump(result)
 					//fmt.Println(result)
 					//fmt.Println("=========================")
 					//fmt.Println(result)
+					cblogger.Infof("전체 목록 개수 : [%d]", len(result))
 				}
 
 				fmt.Println("Finish ListOrgVMSpec()")
@@ -1036,9 +1077,9 @@ func handleVMSpec() {
 				if err != nil {
 					cblogger.Error(reqVMSpec, " VMSpec Org 정보 조회 실패 : ", err)
 				} else {
-					cblogger.Infof("VMSpec[%s] Org 정보 조회 결과", reqVMSpec)
+					cblogger.Debugf("VMSpec[%s] Org 정보 조회 결과", reqVMSpec)
 					//spew.Dump(result)
-					cblogger.Info(result)
+					cblogger.Debug(result)
 					//fmt.Println(result)
 				}
 				fmt.Println("Finish GetOrgVMSpec()")
@@ -1074,12 +1115,12 @@ func main() {
 	//handleVPC()
 	//handleKeyPair()
 	//handlePublicIP() // PublicIP 생성 후 conf
-	handleSecurity()
+	//handleSecurity()
 	//handleVM()
 
 	//handleImage() //AMI
 	//handleVNic() //Lancard
-	//handleVMSpec()
+	handleVMSpec()
 
 	/*
 		KeyPairHandler, err := setKeyPairHandler()
@@ -1113,6 +1154,7 @@ func getResourceHandler(handlerType string) (interface{}, error) {
 		},
 		RegionInfo: idrv.RegionInfo{
 			Region: config.Aws.Region,
+			Zone:   config.Aws.Zone,
 		},
 	}
 
@@ -1159,6 +1201,7 @@ func setKeyPairHandler() (irs.KeyPairHandler, error) {
 		},
 		RegionInfo: idrv.RegionInfo{
 			Region: config.Aws.Region,
+			Zone:   config.Aws.Zone,
 		},
 	}
 
@@ -1186,6 +1229,7 @@ func setVPCHandler() (irs.VPCHandler, error) {
 		},
 		RegionInfo: idrv.RegionInfo{
 			Region: config.Aws.Region,
+			Zone:   config.Aws.Zone,
 		},
 	}
 
@@ -1216,6 +1260,7 @@ type Config struct {
 		AawsAccessKeyID    string `yaml:"aws_access_key_id"`
 		AwsSecretAccessKey string `yaml:"aws_secret_access_key"`
 		Region             string `yaml:"region"`
+		Zone               string `yaml:"zone"`
 
 		ImageID string `yaml:"image_id"`
 

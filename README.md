@@ -2,14 +2,14 @@
 
 The Multi-Cloud Service Platform.
 
-Cloud-Barista consists of multiple frameworks (sub-systems) to accommodate microservice architecture (MSA).
+Cloud-Barista consists of multiple frameworks (sub-systems) to accommodate microservice architecture.
 
 Main frameworks are as follow,
 
 1. CB-Spider (connects all clouds in a single interface)
 1. CB-Tumblebug (manages multi-cloud resource and provides multi-cloud infra services)
-1. CB-Tumblebug/cb-milkyway (CB-Tumblebug benchmark agent)
-1. CB-Dragonfly (monitors multi-cloud service)
+1. CB-Ladybug (manages multi-cloud applications)
+1. CB-Dragonfly (monitors multi-cloud services)
 1. CB-Waterstrider/cb-webtool (provides a GUI to Cloud-Barista users)
 1. CB-Bridge/cb-operator (operation tool for Cloud-Barista system runtime)
 1. CB-Bridge/cb-store (provides an unified DB interface for meta info of Cloud-Barista)
@@ -17,9 +17,12 @@ Main frameworks are as follow,
 
 The frameworks are listed in the root directory.
 
+This Repository is integrated mirrors for main framework repositories.
+
+
 ```
 [NOTE]
-Cloud-Barista is currently under development. (the latest version is 0.2.0-cappuccino)
+Cloud-Barista is currently under development. (the latest version is 0.3.0-espresso)
 So, we do not recommend using the current release in production.
 Please note that the functionalities of Cloud-Barista are not stable and secure yet.
 If you have any difficulties in using Cloud-Barista, please let us know.
@@ -64,6 +67,10 @@ If you have any difficulties in using Cloud-Barista, please let us know.
       - cb-spider API 서버 주소를 cb-tumblebug의 setup.env에 설정
     - cb-tumblebug 실행 (cb-tumblebug API 서버 실행)
 
+  - CB-Ladybug 설치 및 실행
+    - [cloud-barista/cb-ladybug README를 참고하여 설정, 설치](/cb-ladybug/)
+    - cb-ladybug 실행 (cb-ladybug API 서버 실행)
+
   - CB-Dragonfly 설치 및 실행
     - [cloud-barista/cb-dragonfly README를 참고하여 설정, 설치](/cb-dragonfly/)
     - cb-dragonfly 실행 (cb-dragonfly API 서버 실행)
@@ -78,7 +85,7 @@ If you have any difficulties in using Cloud-Barista, please let us know.
 - 문서 통합 Repository
   - [github.com/cloud-barista/docs](https://github.com/cloud-barista/docs)
 - API 규격
-  - [github.com/cloud-barista/docs/blob/master/technical_docs/API/User-REST-API(v0.2.0-cappuccino).md](https://github.com/cloud-barista/docs/blob/master/technical_docs/API/User-REST-API(v0.2.0-cappuccino).md)
+  - [https://github.com/cloud-barista/docs/blob/master/technical_docs/API/CB-User_REST-API.md](https://github.com/cloud-barista/docs/blob/master/technical_docs/API/CB-User_REST-API.md)
 
 ## [특이 사항]
 - 개발상태: 초기 기능 중심 개발 추진 중 / 기술 개발용 / 상용 활용시 보완필요
@@ -88,15 +95,11 @@ If you have any difficulties in using Cloud-Barista, please let us know.
 
 ## [사용 방법 및 예시]
 
-### [사용 방법 1] 각 FW의 REST API를 통한 운용
+### [사용 방법 1] FW의 REST API를 통한 운용
 - CB-Spider API를 통해 클라우드 인프라 연동 정보 등록
-   - [cloud-barista.github.io/rest-api/v0.2.0/spider/ccim/](https://cloud-barista.github.io/rest-api/v0.2.0/spider/ccim/)
 - CB-Tumblebug 멀티 클라우드 네임스페이스 관리 API를 통해서 Namespace 생성
-   - [cloud-barista.github.io/rest-api/v0.2.0/tumblebug/namespace/](https://cloud-barista.github.io/rest-api/v0.2.0/tumblebug/namespace/)
 - CB-Tumblebug 멀티 클라우드 인프라 자원(MCIR) 관리 API를 통해서 VM 생성을 위한 자원 (MCIR) 생성
-   - [cloud-barista.github.io/rest-api/v0.2.0/tumblebug/mcir/](https://cloud-barista.github.io/rest-api/v0.2.0/tumblebug/mcir/)
 - CB-Tumblebug 멀티 클라우드 인프라 서비스(MCIS) 관리 API를 통해서 MCIS 생성, 조회, 제어, 원격명령수행, 종료
-   - [cloud-barista.github.io/rest-api/v0.2.0/tumblebug/mcis/](https://cloud-barista.github.io/rest-api/v0.2.0/tumblebug/mcis/)
 
 ### [사용 방법 2] CB-Tumblebug 테스트 스크립트를 통한 운용
 - [cloud-barista/cb-tumblebug/test/official/](/cb-tumblebug/test/official/)

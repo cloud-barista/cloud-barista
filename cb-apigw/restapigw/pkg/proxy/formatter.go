@@ -26,8 +26,8 @@ type flatmapFormatter struct {
 
 // flatmapOp - Flatmap 운영을 위한 설정 구조 정의
 type flatmapOp struct {
-	Type string
-	Args [][]string
+	Type string     `yaml:"type"`
+	Args [][]string `yarml:"args"`
 }
 
 // propertyFilter - Reponse Filtering에 사용할 함수 정의
@@ -49,44 +49,44 @@ type EntityFormatter interface {
 // ===== [ Implementations ] =====
 
 // Format - PropertyFilter를 활용하는 EntityFormatter 구현
-func (ef entityFormatter) Format(resEntity Response) Response {
+func (ef entityFormatter) Format(entity Response) Response {
 	// Target 처리
 	if ef.Target != "" {
-		extractTarget(ef.Target, &resEntity)
+		extractTarget(ef.Target, &entity)
 	}
-	if len(resEntity.Data) > 0 {
-		ef.PropertyFilter(&resEntity)
+	if 0 < len(entity.Data) {
+		ef.PropertyFilter(&entity)
 		// Mapping 처리
 		for formerKey, newKey := range ef.Mapping {
-			if v, ok := resEntity.Data[formerKey]; ok {
+			if v, ok := entity.Data[formerKey]; ok {
 				// Collection Wrapping에 대한 정보 재 처리
-				if _, ok := resEntity.Data[core.CollectionTag]; ok {
-					if _, ok := resEntity.Data[core.WrappingTag]; ok {
-						resEntity.Data[core.WrappingTag] = newKey
+				if _, ok := entity.Data[core.CollectionTag]; ok {
+					if _, ok := entity.Data[core.WrappingTag]; ok {
+						entity.Data[core.WrappingTag] = newKey
 					}
 				}
-				resEntity.Data[newKey] = v
-				delete(resEntity.Data, formerKey)
+				entity.Data[newKey] = v
+				delete(entity.Data, formerKey)
 			}
 		}
 	}
-	if ef.Prefix != "" {
-		resEntity.Data = map[string]interface{}{ef.Prefix: resEntity.Data}
+	if "" != ef.Prefix {
+		entity.Data = map[string]interface{}{ef.Prefix: entity.Data}
 	}
-	return resEntity
+	return entity
 }
 
 // Format - Flatmap을 활용하는 FlatmapFormatter 구현
 func (ff flatmapFormatter) Format(entity Response) Response {
 	// Target 처리
-	if ff.Target != "" {
+	if "" != ff.Target {
 		extractTarget(ff.Target, &entity)
 	}
 
 	// Flatmap 처리
 	ff.processOps(&entity)
 
-	if ff.Prefix != "" {
+	if "" != ff.Prefix {
 		entity.Data = map[string]interface{}{ff.Prefix: entity.Data}
 	}
 	return entity
@@ -95,7 +95,7 @@ func (ff flatmapFormatter) Format(entity Response) Response {
 // processOps - Flatmap 설정에 대한 처리
 func (ff flatmapFormatter) processOps(entity *Response) {
 	flatten, err := tree.New(entity.Data)
-	if err != nil {
+	if nil != err {
 		return
 	}
 	for _, op := range ff.Ops {
@@ -188,7 +188,7 @@ func newBlacklistFilter(blacklist []string) propertyFilter {
 	bl := make(map[string][]string, len(blacklist))
 	for _, key := range blacklist {
 		keys := strings.Split(key, ".")
-		if len(keys) > 1 {
+		if 1 < len(keys) {
 			if sub, ok := bl[keys[0]]; ok {
 				bl[keys[0]] = append(sub, keys[1])
 			} else {
@@ -201,10 +201,10 @@ func newBlacklistFilter(blacklist []string) propertyFilter {
 
 	return func(entity *Response) {
 		for k, sub := range bl {
-			if len(sub) == 0 {
+			if 0 == len(sub) {
 				delete(entity.Data, k)
 			} else {
-				if tmp := blacklistFilterSub(entity.Data[k], sub); len(tmp) > 0 {
+				if tmp := blacklistFilterSub(entity.Data[k], sub); 0 < len(tmp) {
 					entity.Data[k] = tmp
 				}
 			}
@@ -229,7 +229,7 @@ func newFlatmapFormatter(bConf *config.BackendConfig) EntityFormatter {
 	if v, ok := bConf.Middleware[MWNamespace]; ok {
 		if e, ok := v.(map[string]interface{}); ok {
 			if vs, ok := e[flatmapFilter].([]interface{}); ok {
-				if len(vs) == 0 {
+				if 0 == len(vs) {
 					return nil
 				}
 				ops := []flatmapOp{}
@@ -254,7 +254,7 @@ func newFlatmapFormatter(bConf *config.BackendConfig) EntityFormatter {
 					}
 					ops = append(ops, op)
 				}
-				if len(ops) == 0 {
+				if 0 == len(ops) {
 					return nil
 				}
 
@@ -269,15 +269,20 @@ func newFlatmapFormatter(bConf *config.BackendConfig) EntityFormatter {
 	return nil
 }
 
-// extractTarget - 지정한 Response에 대해 지정한 Target이 존재하는지를 검증하고 반환 (만일 없다면 빈 데이터로 처리)
-func extractTarget(target string, resEntity *Response) {
-	if tmp, ok := resEntity.Data[target]; ok {
-		resEntity.Data, ok = tmp.(map[string]interface{})
-		if !ok {
-			resEntity.Data = map[string]interface{}{}
+// extractTarget - 지정한 Response에 대해 지정한 Target이 존재하는지를 검증하고 반환 (단, Map 형식이어야 하며, 만일 없거나, 변환 불가이면 빈 데이터로 처리)
+func extractTarget(target string, entity *Response) {
+	for _, part := range strings.Split(target, ".") {
+		if tmp, ok := entity.Data[part]; ok {
+
+			entity.Data, ok = tmp.(map[string]interface{})
+			if !ok {
+				entity.Data = map[string]interface{}{}
+				return
+			}
+		} else {
+			entity.Data = map[string]interface{}{}
+			return
 		}
-	} else {
-		resEntity.Data = map[string]interface{}{}
 	}
 }
 
@@ -285,12 +290,12 @@ func extractTarget(target string, resEntity *Response) {
 
 // NewEntityFormatter - 지정된 Backend 설정을 기준으로 Response 처리에 사용할 EntityFormatter 생성
 func NewEntityFormatter(bConf *config.BackendConfig) EntityFormatter {
-	if ff := newFlatmapFormatter(bConf); ff != nil {
+	if ff := newFlatmapFormatter(bConf); nil != ff {
 		return ff
 	}
 
 	var pf propertyFilter
-	if len(bConf.Whitelist) > 0 {
+	if 0 < len(bConf.Whitelist) {
 		// Response를 대상으로 whitelist 필터링
 		pf = newWhitelistFilter(bConf.Whitelist)
 	} else {

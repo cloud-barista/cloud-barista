@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/cloud-barista/cb-operator/src/common"
 	"github.com/spf13/cobra"
 )
@@ -25,7 +26,7 @@ import (
 var removeCmd = &cobra.Command{
 	Use:   "remove",
 	Short: "Stop and Remove Cloud-Barista System",
-	Long: `Stop and Remove Cloud-Barista System. Stop and Remove Cloud-Barista runtimes and related container images and meta-DB if necessary`,
+	Long:  `Stop and Remove Cloud-Barista System. Stop and Remove Cloud-Barista runtimes and related container images and meta-DB if necessary`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		fmt.Println("\n[Remove Cloud-Barista]\n")
@@ -33,28 +34,42 @@ var removeCmd = &cobra.Command{
 		if common.FileStr == "" {
 			fmt.Println("file is required")
 		} else {
+			common.FileStr = common.GenConfigPath(common.FileStr, common.CB_OPERATOR_MODE)
+			var cmdStr string
+			switch common.CB_OPERATOR_MODE {
+			case common.Mode_Kubernetes:
+				cmdStr = "sudo helm uninstall --namespace " + common.CB_K8s_Namespace + " " + common.CB_Helm_Release_Name
+				common.SysCall(cmdStr)
 
-			cmdStr := ""
-			if volFlag && imgFlag {
-				cmdStr = "sudo docker-compose -f " + common.FileStr + " down -v --rmi all"
-			} else if volFlag {
-				cmdStr = "sudo docker-compose -f " + common.FileStr + " down -v"
-			} else if imgFlag {
-				cmdStr = "sudo docker-compose -f " + common.FileStr + " down --rmi all"
-			} else {
-				cmdStr = "sudo docker-compose -f " + common.FileStr + " down"
+				cmdStr = "sudo kubectl delete pvc cb-spider -n " + common.CB_K8s_Namespace
+				common.SysCall(cmdStr)
+
+				cmdStr = "sudo kubectl delete pvc cb-tumblebug -n " + common.CB_K8s_Namespace
+				common.SysCall(cmdStr)
+
+				cmdStr = "sudo kubectl delete pvc data-cb-dragonfly-etcd-0 -n " + common.CB_K8s_Namespace
+				common.SysCall(cmdStr)
+
+				//fallthrough
+			case common.Mode_DockerCompose:
+				if volFlag && imgFlag {
+					cmdStr = "sudo COMPOSE_PROJECT_NAME=cloud-barista docker-compose -f " + common.FileStr + " down -v --rmi all"
+				} else if volFlag {
+					cmdStr = "sudo COMPOSE_PROJECT_NAME=cloud-barista docker-compose -f " + common.FileStr + " down -v"
+				} else if imgFlag {
+					cmdStr = "sudo COMPOSE_PROJECT_NAME=cloud-barista docker-compose -f " + common.FileStr + " down --rmi all"
+				} else {
+					cmdStr = "sudo COMPOSE_PROJECT_NAME=cloud-barista docker-compose -f " + common.FileStr + " down"
+				}
+
+				//fmt.Println(cmdStr)
+				common.SysCall(cmdStr)
+
+				common.SysCall_docker_compose_ps()
+			default:
+
 			}
-
-			//fmt.Println(cmdStr)
-			common.SysCall(cmdStr)
-
-			fmt.Println("\n[v]Status of Cloud-Barista runtimes")
-			cmdStr = "sudo docker-compose ps"
-			//fmt.Println(cmdStr)
-			common.SysCall(cmdStr)
-
 		}
-
 
 	},
 }
@@ -66,8 +81,8 @@ func init() {
 	rootCmd.AddCommand(removeCmd)
 
 	pf := removeCmd.PersistentFlags()
-	pf.StringVarP(&common.FileStr, "file", "f", "../docker-compose.yaml", "Path to Cloud-Barista Docker-compose file")
-//	cobra.MarkFlagRequired(pf, "file")
+	pf.StringVarP(&common.FileStr, "file", "f", common.Not_Defined, "User-defined configuration file")
+	//	cobra.MarkFlagRequired(pf, "file")
 
 	pf.BoolVarP(&volFlag, "volumes", "v", false, "Remove named volumes declared in the volumes section of the Compose file")
 	pf.BoolVarP(&imgFlag, "images", "i", false, "Remove all images")

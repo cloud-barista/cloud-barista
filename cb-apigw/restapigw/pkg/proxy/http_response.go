@@ -46,7 +46,7 @@ func DefaultHTTPResponseParserFactory(conf HTTPResponseParserConfig) HTTPRespons
 		var data map[string]interface{}
 		err := conf.Decoder(resp.Body, &data)
 		resp.Body.Close()
-		if err != nil {
+		if nil != err {
 			return nil, err
 		}
 

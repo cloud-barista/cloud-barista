@@ -1,0 +1,7 @@
+apiVersion: v2
+name: cb-ladybug
+type: application
+version: 0.3.0
+appVersion: v0.3.0-espresso
+description: CB-Ladybug Helm chart
+

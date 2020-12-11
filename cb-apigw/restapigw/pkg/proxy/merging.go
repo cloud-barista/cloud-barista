@@ -3,7 +3,6 @@ package proxy
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/config"
+	"github.com/cloud-barista/cb-apigw/restapigw/pkg/errors"
 )
 
 // ===== [ Constants and Variables ] =====
@@ -49,18 +49,18 @@ type ResponseCombiner func(int, []*Response) *Response
 // Merge - 지정한 Response에 대한 점진적인 Merging 처리
 func (ima *incrementalMergeAccumulator) Merge(res *Response, err error) {
 	ima.pending--
-	if err != nil {
+	if nil != err {
 		ima.errs = append(ima.errs, err)
-		if ima.data != nil {
+		if nil != ima.data {
 			ima.data.IsComplete = false
 		}
 		return
 	}
-	if res == nil {
+	if nil == res {
 		ima.errs = append(ima.errs, errNullResult)
 		return
 	}
-	if ima.data == nil {
+	if nil == ima.data {
 		ima.data = res
 		return
 	}
@@ -69,11 +69,11 @@ func (ima *incrementalMergeAccumulator) Merge(res *Response, err error) {
 
 // Result - 처리된 Merging 결과 반환
 func (ima *incrementalMergeAccumulator) Result() (*Response, error) {
-	if ima.data == nil {
+	if nil == ima.data {
 		return &Response{Data: make(map[string]interface{}, 0), IsComplete: false}, newMergeError(ima.errs)
 	}
 
-	if ima.pending != 0 || len(ima.errs) != 0 {
+	if 0 != ima.pending || 0 != len(ima.errs) {
 		ima.data.IsComplete = false
 	}
 	return ima.data, newMergeError(ima.errs)
@@ -92,7 +92,7 @@ func (me mergeError) Error() string {
 
 // newMergeError - Merging 처리 중에 발생한 오류들을 하나의 오류로 반환
 func newMergeError(errs []error) error {
-	if len(errs) == 0 {
+	if 0 == len(errs) {
 		return nil
 	}
 	return mergeError{errs}
@@ -103,12 +103,12 @@ func requestPart(ctx context.Context, next Proxy, req *Request, out chan<- *Resp
 	localCtx, cancel := context.WithCancel(ctx)
 
 	res, err := next(localCtx, req)
-	if err != nil {
+	if nil != err {
 		failed <- err
 		cancel()
 		return
 	}
-	if res == nil {
+	if nil == res {
 		failed <- errNullResult
 		cancel()
 		return
@@ -135,13 +135,13 @@ func combineData(backendCount int, reses []*Response) *Response {
 	isComplete := len(reses) == backendCount
 	var mergedResponse *Response
 	for _, res := range reses {
-		if res == nil || res.Data == nil {
+		if nil == res || nil == res.Data {
 			isComplete = false
 			continue
 		}
 
 		isComplete = isComplete && res.IsComplete
-		if mergedResponse == nil {
+		if nil == mergedResponse {
 			mergedResponse = res
 			continue
 		}
@@ -224,11 +224,11 @@ func sequentialMerge(patterns []string, timeout time.Duration, rc ResponseCombin
 	TxLoop:
 		for i, n := range next {
 			// 두번째 부터 전 호출의 결과에서 파라미터 검증
-			if i > 0 {
+			if 0 < i {
 				for _, match := range reMergeKey.FindAllStringSubmatch(patterns[i], -1) {
-					if len(match) > 1 {
+					if 1 < len(match) {
 						rNum, err := strconv.Atoi(match[1])
-						if err != nil || rNum >= i || parts[rNum] == nil {
+						if nil != err || rNum >= i || nil == parts[rNum] {
 							continue
 						}
 						key := "Resp" + match[1] + "_" + match[2]
@@ -238,7 +238,7 @@ func sequentialMerge(patterns []string, timeout time.Duration, rc ResponseCombin
 
 						data := parts[rNum].Data
 						keys := strings.Split(match[2], ".")
-						if len(keys) > 1 {
+						if 1 < len(keys) {
 							for _, k := range keys[:len(keys)-1] {
 								v, ok = data[k]
 								if !ok {
@@ -276,7 +276,7 @@ func sequentialMerge(patterns []string, timeout time.Duration, rc ResponseCombin
 			requestPart(localCtx, n, req, out, errCh)
 			select {
 			case err := <-errCh:
-				if i == 0 {
+				if 0 == i {
 					cancel()
 					return nil, err
 				}
@@ -302,10 +302,10 @@ func sequentialMerge(patterns []string, timeout time.Duration, rc ResponseCombin
 // NewMergeDataChain - 전달된 Endpoint 설정을 기준으로 Backend 갯수에 따라서 Response를 Merging 하는 Proxy Call chain 생성
 func NewMergeDataChain(eConf *config.EndpointConfig) CallChain {
 	totalBackends := len(eConf.Backend)
-	if totalBackends == 0 {
+	if 0 == totalBackends {
 		panic(ErrNoBackends)
 	}
-	if totalBackends == 1 {
+	if 1 == totalBackends {
 		return EmptyChain
 	}
 

@@ -13,11 +13,13 @@ import (
 // ===== [ Implementations ] =====
 
 // ===== [ Private Functions ] =====
+func init() {
+}
 
 // main - Entrypoint
 func main() {
 	rootCmd := cmd.NewRootCmd()
-	if err := rootCmd.Execute(); err != nil {
+	if err := rootCmd.Execute(); nil != err {
 		log.Println("cb-restapigw terminated with error: ", err.Error())
 	}
 }

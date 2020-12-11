@@ -74,21 +74,25 @@ $(document).ready(function(){
             return;
         }
         var url = CommonURL+"/ns"
-       
+        var apiInfo = ApiInfo
+        console.log("apiInfo : ",apiInfo)
         var req = {
-            headers :{
-                 'Content-type': 'application/json',
-                },
+            
             name:username,
             description: description,
             
         }
         console.log(req)
-        axios.post(url,req).then(result=>{
+        axios.post(url,req,{
+            headers :{
+                 'Content-type': 'application/json',
+                 'Authorization': apiInfo,
+                },
+        }).then(result=>{
             console.log(result.data)
             var data = result.data
             console.log("result : ",result)
-            if(result.status == 201){
+            if(result.status == 201 || result.status ==200){
                 alert("등록되었습니다.");
                 location.href = "/NS/list";
             }

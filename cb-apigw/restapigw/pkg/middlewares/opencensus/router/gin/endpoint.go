@@ -91,10 +91,9 @@ func (h *handler) startStats(w gin.ResponseWriter, r *http.Request) (gin.Respons
 		ctx:            ctx,
 		ResponseWriter: w,
 	}
-	if r.Body == nil {
-		// TODO: Handle cases where ContentLength is not set.
+	if nil == r.Body {
 		track.reqSize = -1
-	} else if r.ContentLength > 0 {
+	} else if 0 < r.ContentLength {
 		track.reqSize = r.ContentLength
 	}
 	stats.Record(ctx, ochttp.ServerRequestCount.M(1))
@@ -127,7 +126,7 @@ func HandlerFunc(eConf *config.EndpointConfig, next gin.HandlerFunc, hf propagat
 	if !opencensus.IsRouterEnabled() {
 		return next
 	}
-	if hf == nil {
+	if nil == hf {
 		hf = &b3.HTTPFormat{}
 	}
 	h := &handler{

@@ -1,0 +1,23 @@
+{{- $files := .Files.Glob "files/dashboards/*.json" }}
+{{- if $files }}
+{{- $namespace := include "cb-prometheus.namespace" . -}}
+apiVersion: v1
+kind: ConfigMapList
+items:
+{{- range $path, $_ := $files }}
+{{- $dashboardName := regexReplaceAll "(^.*/)(.*)\\.json$" $path "${2}" }}
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: {{ printf "%s-%s" (include "cb-prometheus.fullname" $) $dashboardName | trunc 63 | trimSuffix "-" }}
+    namespace: {{ $namespace }}
+    labels:
+      {{- if $.Values.grafana.sidecar.dashboards.label }}
+      {{ $.Values.grafana.sidecar.dashboards.label }}: "1"
+      {{- end }}
+      app: {{ template "cb-prometheus.name" $ }}-grafana
+{{ include "cb-prometheus.labels" $ | indent 6 }}
+  data:
+    {{ $dashboardName }}.json: {{ $.Files.Get $path | toJson }}
+{{- end }}
+{{- end }}

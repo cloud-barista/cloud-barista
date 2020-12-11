@@ -1,0 +1,75 @@
+@import '~vuetify/src/styles/settings/_variables.scss';
+
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: $font-size-root;
+  font-weight: map-get($map: $font-weights, $key: 'reqular');
+  line-height: $line-height-root;
+}
+
+h1 {
+  font-size: 48px;
+  font-weight: map-get($map: $font-weights, $key: 'bold');
+  letter-spacing: -1.5;
+}
+
+h2 {
+  font-size: 36px;
+  font-weight: map-get($map: $font-weights, $key: 'light');
+  letter-spacing: -0.5;
+}
+
+h3 {
+  font-size: 18px;
+  font-weight: map-get($map: $font-weights, $key: 'light');
+  letter-spacing: normal;
+}
+
+h4 {
+  font-size: 16px;
+  font-weight: map-get($map: $font-weights, $key: 'light');
+  letter-spacing: normal;
+}
+
+h5 {
+  font-size: 15px;
+  font-weight: map-get($map: $font-weights, $key: 'reqular');
+  letter-spacing: normal;
+}
+
+
+h6 {
+  font-size: 14px;
+  font-weight: map-get($map: $font-weights, $key: 'reqular');
+  letter-spacing: normal;
+}
+
+/**********************************
+ * By Theme
+ **********************************/
+
+.theme--dark {
+  .theme--dark.v-card {
+    background-color: var(--v-background-base, white) !important;
+  }
+  .theme--dark.v-data-table {
+    background-color: var(--v-background-base, white) !important;
+  }
+  .theme--dark.v-footer {
+    background-color: var(--v-background-base, white) !important;
+    .caption {
+      color: white;
+    }
+  }
+}
+.theme--light {
+  .theme--light.v-card {
+    background-color: var(--v-background-base, grey) !important;
+  }
+  .theme--light.v-data-table {
+    background-color: var(--v-background-base, grey) !important;
+  }
+  .theme--light.v-footer {
+    background-color: var(--v-background-base, grey) !important;
+  }
+}

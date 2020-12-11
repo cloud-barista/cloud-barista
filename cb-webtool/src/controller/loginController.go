@@ -18,8 +18,10 @@ type ReqInfo struct {
 func LoginForm(c echo.Context) error {
 	fmt.Println("============== Login Form ===============")
 	comURL := GetCommonURL()
+	apiInfo := AuthenticationHandler()
 	return c.Render(http.StatusOK, "login.html", map[string]interface{}{
-		"comURL": comURL,
+		"comURL":  comURL,
+		"apiInfo": apiInfo,
 	})
 }
 
@@ -58,10 +60,12 @@ func LoginController(c echo.Context) error {
 	store := echosession.FromContext(c)
 	reqInfo := new(ReqInfo)
 	comURL := GetCommonURL()
+	apiInfo := AuthenticationHandler()
 	if err := c.Bind(reqInfo); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
 			"message": "fail",
 			"comURL":  comURL,
+			"apiInfo": apiInfo,
 		})
 	}
 	getUser := strings.TrimSpace(reqInfo.UserName)
@@ -75,6 +79,7 @@ func LoginController(c echo.Context) error {
 			"message": " 정보가 없으니 다시 등록 해라",
 			"status":  "fail",
 			"comURL":  comURL,
+			"apiInfo": apiInfo,
 		})
 	}
 	//result := map[string]string{}
@@ -93,14 +98,16 @@ func LoginController(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]interface{}{
 			"message": "Login Success",
 			//	"nameSpace": result["namespace"],
-			"status": "success",
-			"comURL": comURL,
+			"status":  "success",
+			"comURL":  comURL,
+			"apiInfo": apiInfo,
 		})
 	} else {
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
 			"message": "wrong password of ID",
 			"status":  "fail",
 			"comURL":  comURL,
+			"apiInfo": apiInfo,
 		})
 	}
 
@@ -120,6 +127,7 @@ func LoginController(c echo.Context) error {
 		"message": "success",
 		"status":  "200",
 		"comURL":  comURL,
+		"apiInfo": apiInfo,
 	})
 }
 

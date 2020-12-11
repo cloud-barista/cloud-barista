@@ -27,8 +27,8 @@ var (
 
 // Config - Rate Limit 구성을 위한 Configuration 구조
 type Config struct {
-	MaxRate  float64 `yaml:"maxRate"`
-	Capacity int64   `yaml:"capacity"`
+	MaxRate  float64 `yaml:"max_rate"` // 초당 하용할 요청 수
+	Capacity int64   `yaml:"capacity"` // 초당 허용할 최대 요청 수
 }
 
 // ===== [ Implementations ] =====
@@ -45,7 +45,7 @@ func ParseConfig(mwConf config.MWConfig) *Config {
 
 	buf := new(bytes.Buffer)
 	yaml.NewEncoder(buf).Encode(tmp)
-	if err := yaml.NewDecoder(buf).Decode(conf); err != nil {
+	if err := yaml.NewDecoder(buf).Decode(conf); nil != err {
 		return nil
 	}
 
@@ -55,12 +55,12 @@ func ParseConfig(mwConf config.MWConfig) *Config {
 // NewBackendLimiter - Backend 호출에 대한 Rate Limit 기능을 제공하는 Middleware 생성
 func NewBackendLimiter(bConf *config.BackendConfig) proxy.CallChain {
 	conf := ParseConfig(bConf.Middleware)
-	if conf == nil || conf.MaxRate <= 0 {
+	if nil == conf || 0 >= conf.MaxRate {
 		return proxy.EmptyChain
 	}
 	backendLimiter := ratelimit.NewLimiterWithRate(conf.MaxRate, conf.Capacity)
 	return func(next ...proxy.Proxy) proxy.Proxy {
-		if len(next) > 1 {
+		if 1 < len(next) {
 			panic(proxy.ErrTooManyProxies)
 		}
 		return func(ctx context.Context, req *proxy.Request) (*proxy.Response, error) {

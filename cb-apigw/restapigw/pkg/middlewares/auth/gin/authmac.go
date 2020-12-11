@@ -5,9 +5,10 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"strings"
 	"time"
+
+	"github.com/cloud-barista/cb-apigw/restapigw/pkg/errors"
 )
 
 // ===== [ Constants and Variables ] =====
@@ -42,17 +43,17 @@ func (t token) makeToken() []byte {
 // resolveToken - 전달된 원본 Auth Token을 HMAC Token과 추가 정보로 분리
 func (t token) resolveToken(rawToken string, ids []string) error {
 	tokenBytes, err := hex.DecodeString(rawToken)
-	if err != nil {
+	if nil != err {
 		return err
 	}
 
 	data := bytes.Split(tokenBytes, []byte("||"))
-	if len(data) != 2 || len(data[0]) == 0 || len(data[1]) == 0 {
+	if 2 != len(data) || 0 == len(data[0]) || 0 == len(data[1]) {
 		return errors.New("invalid auth token")
 	}
 
 	tokenInfo := strings.Split(string(data[1]), "|")
-	if len(tokenInfo) != 3 {
+	if 3 != len(tokenInfo) {
 		return errors.New("invalid auth token")
 	}
 
@@ -61,7 +62,7 @@ func (t token) resolveToken(rawToken string, ids []string) error {
 	t.accessKey = tokenInfo[2]
 
 	newToken := t.makeToken()
-	if bytes.Compare(data[0], newToken) != 0 {
+	if 0 != bytes.Compare(data[0], newToken) {
 		return errors.New("invalid auth token")
 	} else if !t.checkDuration() {
 		return errors.New("invalid time limit or expired")
@@ -79,18 +80,18 @@ func (t token) resolveToken(rawToken string, ids []string) error {
 // checkDuration - 현재 시간과 Token에 지정된 Duration 검증
 func (t token) checkDuration() bool {
 	td, err := parseDuration(t.duration)
-	if err != nil {
+	if nil != err {
 		return false
 	}
 
 	ts, err := time.Parse(time.UnixDate, t.timestamp)
-	if err != nil {
+	if nil != err {
 		return false
 	}
 
 	ts = ts.Add(td)
 
-	return ts.Sub(getTime()) >= 0
+	return 0 <= ts.Sub(getTime())
 }
 
 // setTimestamp - Token 구성을 위한 기준 시간 (현재 시간) 설정
@@ -113,7 +114,7 @@ func getTimestamp() string {
 // parseDuration - 유효 액세스 기간을 검증하기 위한 time.Duration 정보 검증
 func parseDuration(duration string) (time.Duration, error) {
 	td, err := time.ParseDuration(duration)
-	if err != nil {
+	if nil != err {
 		return 0, err
 	}
 
@@ -124,17 +125,17 @@ func parseDuration(duration string) (time.Duration, error) {
 
 // ValidateToken - description
 func ValidateToken(secretKey string, rawToken string, ids []string) error {
-	if secretKey == "" {
+	if "" == secretKey {
 		return errors.New("secretKey is required")
 	}
-	if rawToken == "" {
+	if "" == rawToken {
 		return errors.New("rawToken that used to validate is required")
 	}
 
 	hmacToken := token{
 		secretKey: secretKey,
 	}
-	if err := hmacToken.resolveToken(rawToken, ids); err != nil {
+	if err := hmacToken.resolveToken(rawToken, ids); nil != err {
 		return err
 	}
 
@@ -143,13 +144,13 @@ func ValidateToken(secretKey string, rawToken string, ids []string) error {
 
 // CreateToken - HMAC 토큰 생성
 func CreateToken(secretKey string, accessID string, duration string) (string, error) {
-	if secretKey == "" {
+	if "" == secretKey {
 		return "", errors.New("secretKey is required")
 	}
-	if accessID == "" {
+	if "" == accessID {
 		return "", errors.New("accessID is required")
 	}
-	if _, err := parseDuration(duration); err != nil {
+	if _, err := parseDuration(duration); nil != err {
 		return "", err
 	}
 

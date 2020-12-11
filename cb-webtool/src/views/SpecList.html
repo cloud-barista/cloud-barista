@@ -1,0 +1,782 @@
+{{ template "Top" .}}
+<div id="lnb">
+
+    <div class="bg"></div>
+
+    <div class="m_box">
+
+        {{template "Top_box" .}}
+
+        {{template "LNB_popup" .}}
+
+        <!-- menu -->
+        <div class="leftmenu">
+
+            <ul class="nav">
+                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#Operation">Operation</a></li>
+                <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#Setting">Setting</a></li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade" id="Operation">
+                    <ul class="menu">
+                        <li id="Dashboard">
+                            <a href="javascript:void(0);">Dashboard</a>
+                            <ul>
+                                <li id="NS"><a href="/Dashboard/NS">NS</a></li>
+								<li id="Global"><a href="/Dashboard/Global">Global</a></li>
+                            </ul>
+                        </li>
+                        <li id="Manage">
+                            <a href="javascript:void(0);">Manage</a>
+                            <ul>
+                                <li  id="MCIS"><a href="/Manage/MCIS/list">MCIS</a></li>
+								<li id="MC-App"><a href="!#">MC-App</a></li>
+                            </ul>
+                        </li>
+                        <li id="Monitoring">
+                            <a href="javascript:void(0);">Monitoring</a>
+                            <ul>
+                                <li id=""><a href="/Monitoring/MCIS/list">MCIS</a></li>
+								<li><a href="/operation/Monitoring_McApp.html">MC-App</a></li>
+                            </ul>
+                        </li>
+                        <li id="Policy">
+                            <a href="javascript:void(0);">Policy</a>
+                            <ul>
+                                <li><a href="/assets/operation/Policy_Monitoring.html">Monitoring</a></li>
+                                <li><a href="/assets/operation/Policy_Threshold.html">Threshold</a></li>
+                                <li><a href="/assets/operation/Policy_Placement.html">Placement</a></li>
+                            </ul>
+                        </li>
+                        <li id="about">
+                            <a href="javascript:void(0);">About</a>
+                            <ul>
+                                <li><a href="/assets/operation/About.html">About</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="tab-pane fade show active" id="Setting">
+                    <ul class="menu">
+                        <li class="active" id="Resources">
+                            <a href="javascript:void(0);">Resources</a>
+                            <ul>
+                                <li id="net"><a href="/Vpc/list">Network</a></li>
+                                <li id="sg"><a href="/SecurityGroup/list">Security</a></li>
+                                <li id="ssh"><a href="/SSH/list">SSH key</a></li>
+                                <li id="image"><a href="/Image/list">(Server) Image</a></li>
+                                <li id="spec" class="on"><a href="/Spec/list">(Server) Spec</a></li>
+                            </ul>
+                        </li>
+                        <li id="AppRes">
+                            <a href="javascript:void(0);">App Resource</a>
+                            <ul>
+                                <li><a href="/assets/setting/AppResource_Image.html">(Server) Image</a></li>
+                                <li><a href="/assets/setting/AppResource_Pod.html">Pod</a></li>
+                            </ul>
+                        </li>
+                        <li id="cloud">
+                            <a href="javascript:void(0);">Cloud Connections</a>
+                            <ul>
+                                <li><a href="/assets/setting/CloudConnections.html">Cloud Connections</a></li>
+                            </ul>
+                        </li>
+                        <li id="NameSpace">
+                            <a href="javascript:void(0);">NameSpace</a>
+                            <ul>
+                                <li id="NS"><a href="/NameSpace/NS/list">NameSpace</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+        <!-- //menu -->
+
+    </div>
+
+    <div class="bottom"></div>
+    <a href="javascript:;" id="m_close"></a>
+
+</div>
+
+
+{{template "Header" .}}
+
+{{template "Modal" .}}
+
+<!-- contents -->
+<div class="contbox">
+
+    <div class="titlebox">
+        <div class="tit"><img src="/assets/img/common/icon_cont.png" alt="" />Resources / <strong>(Server) Spec</strong></div>
+        <div class="location">Home <span>></span> Setting <span>></span> Resources <span>></span> <strong>(Server)Spec</strong></div>
+    </div>
+
+    
+
+    <!-- list -->
+    <div class="dashboard dashboard_cont">
+
+        <div class="d_box box_m box_w100">
+            <div class="titbox">
+                <div class="tit initial"><strong>Server Spec</strong></div>
+                <div class="top_info">
+                    <ul>
+                        <li>
+                            <a href="javascript:void(0);">Filter</a>
+                            <div class="infobox">
+                                <div class="box">
+                                    <ul>
+                                        <li><a href="javascript:void(0);">Name</a></li>
+                                        <li><a href="javascript:void(0);">CSP Spec</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <a href="javascript:void(0);">Sort</a>
+                            <div class="infobox">
+                                <div class="box">
+                                    <ul>
+                                        <li><a href="javascript:void(0);">Name</a></li>
+                                        <li><a href="javascript:void(0);">CSP Spec</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <a href="javascript:void(0);">Action</a>
+                            <div class="infobox">
+                                <div class="box">
+                                    <ul>
+                                        <li><a href="javascript:void(0);" data-toggle="modal" data-target="#AddBox">Regist</a></li>
+                                        <li><a href="javascript:void(0);" data-toggle="modal" data-target="#UnRegist">UnRegist</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                        <li><a href="javascript:void(0);"><img src="/assets/img/common/icon_question.png" alt="" /></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- popup Regist -->
+            <div class="modal fade layerpopup" id="AddBox" tabindex="-1" role="dialog" aria-hidden="true" id="modal_reg">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+
+                        <div class="modal-body">
+                            <div class="txt">Would you like to register Spec <br />Resource ?</div>
+                            <div class="btnbox">
+                                <button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn_ok register" onclick="goFocus('reg_name')" data-dismiss="modal">OK</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <!-- //popup Regist -->
+
+            <script>
+                $(document).ready(function(){
+                    $('#AddBox .btn_ok.register').click(function(){
+                        $(".dashboard.register_cont").toggleClass("active");
+                        $(".dashboard.server_status").removeClass("view");
+                        $(".dashboard .status_list tbody tr").removeClass("on");
+                    });
+                });
+            </script>
+
+            <!-- popup UnRegist -->
+            <div class="modal fade layerpopup" id="UnRegist" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+
+                        <div class="modal-body">
+                            <div class="txt">Would you like to un-register Spec <br />Resource ?</div>
+                            <div class="btnbox">
+                                <button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn_ok" data-dismiss="modal">OK</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <!-- //popup UnRegist -->
+<!--
+            <script>
+                $(document).ready(function () {
+                    //action register open / table view close
+                    $('#RegistBox .btn_ok.register').click(function () {
+                        $(".dashboard.register_cont").toggleClass("active");
+                        $(".dashboard.server_status").removeClass("view");
+                        $(".dashboard .status_list tbody tr").removeClass("on");
+                        //ok 위치이동
+                        $('#RegistBox').on('hidden.bs.modal', function () {
+                            var offset = $("#CreateBox").offset();
+                            $("#wrap").animate({
+                                scrollTop: offset.top
+                            }, 300);
+                        })
+                    });
+                });
+            </script>
+-->
+            <div class="ds_cont">
+
+                <div class="dataTable status_list">
+                    <table cellpadding="0" cellspacing="0" border="1" summary="">
+                        <colgroup>
+                            <col width="50px">
+                            <col width="">
+                            <col width="">
+                            <col width="">
+                            <col width="60px">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" name="" value="" id="th_chall" title="" /><label for="th_chall"></label></th>
+                                <th>Name</th>
+                                <th>Connenction Name</th>
+                                <th>CSP Spec Name</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="specList">
+                            <tr>
+                                <td class="overlay hidden" data-th=""><input type="checkbox" name="chk" value="" id="td_ch1" title="" /><label for="td_ch1"></label> <span class="ov off"></span></td>
+                                <td class="btn_mtd ovm" data-th="spec Name">aws-spec01 <span class="ov"></span></td>
+                                <td class="overlay hidden" data-th="CP">AWS</td>
+                                <td class="overlay hidden" data-th="os type">Amazon Linux</td>
+                                <td class="overlay hidden" data-th=""><a href="javascript:void(0);"><img src="../img/contents/icon_link.png" class="icon" alt=""/></a></td>    
+                            </tr>
+                            <!--
+                                            <tr>
+												<td class="overlay hidden" data-th=""><input type="checkbox" name="chk" value="" id="td_ch1" title="" /><label for="td_ch1"></label> <span class="ov off"></span></td>
+												<td class="btn_mtd ovm" data-th="Image ID">aws-image01 <span class="ov"></span></td>
+												<td class="overlay hidden" data-th="Image Name">aws-image-01</td>
+												<td class="overlay hidden" data-th="CP">AWS</td>
+												<td class="overlay hidden" data-th="region">ap-northeast-1</td>
+												<td class="overlay hidden" data-th="guestOS">Amazon Linux</td>
+												<td class="overlay hidden" data-th="description">images for aws …</td>
+												<td class="overlay hidden" data-th="status">-</td>
+												<td class="overlay hidden" data-th="Create Date">2020-02-01</td>
+												<td class="overlay hidden" data-th=""><a href="javascript:void(0);"><img src="/assets/img/contents/icon_link.png" class="icon" alt=""/></a></td>
+                                            </tr>
+                                            -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <script>
+                    /* scroll */
+                    $(document).ready(function () {
+                        //checkbox all
+                        $("#th_chall").click(function () {
+                            if ($("#th_chall").prop("checked")) {
+                                $("input[name=chk]").prop("checked", true);
+                            } else {
+                                $("input[name=chk]").prop("checked", false);
+                            }
+                        })
+
+                        //table 스크롤바 제한
+                        $(window).on("load resize", function () {
+                            var vpwidth = $(window).width();
+                            if (vpwidth > 768 && vpwidth < 1800) {
+                                $(".dashboard_cont .dataTable").addClass("scrollbar-inner");
+                                $(".dataTable.scrollbar-inner").scrollbar();
+                            } else {
+                                $(".dashboard_cont .dataTable").removeClass("scrollbar-inner");
+                            }
+                        });
+                    });
+                </script>
+
+<!--
+                <div class="pageing">
+                    <a href="#" class="btn_prev"><span>이전</span></a>
+                    <a href="#" class="active">1</a>
+                    <a href="#">2</a>
+                    <a href="#">3</a>
+                    <a href="#">4</a>
+                    <a href="#">5</a>
+                    <a href="#" class="btn_next"><span>다음</span></a>
+                </div>
+-->
+
+            </div>
+
+        </div>
+
+    </div>
+    <!-- //list -->
+
+
+    <!-- Modify -->
+    <div class="dashboard dashboard_cont server_status" id="info_box">
+
+        <div class="d_box box_m box_w100">
+            <div class="titbox_n">
+                <div class="tit initial"><strong>Server Spec Info</strong></div>
+            </div>
+
+            <div class="ds_cont">
+                <div class="register_box">
+
+                    <div class="top_ipbox">
+                        <div class="ipbox ipbox1">
+                            <ul>
+                                <li class="reg_1">
+                                    <label>specName</label>
+                                    <span class="sbox">
+                                        <input type="text" name="" value="" placeholder="Name / id" class="gray" title="" readonly />
+                                        <a href="javascript:void(0);"><img src="/assets/img/contents/icon_copy.png" class="icon" alt="" /></a>
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="ipbox ipbox2">
+                            <ul>
+                                <li>
+                                    <label>Provider(CP/Region)</label>
+                                    <select class="selectbox w1">
+                                        <option value="1">Selected Provider</option>
+                                    </select>
+                                    <select class="selectbox w2">
+                                        <option value="1">Selected Region</option>
+                                    </select>
+                                </li>
+                                <li>
+                                    <label>Connection</label>
+                                    <select class="selectbox w3">
+                                        <option value="1">Selected ConnectionName</option>
+                                    </select>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="graybox">
+
+                        <div class="g_box">
+                            <div class="g_ipbox g_ipbox1">
+                                <ul>
+                                    <li>
+                                        <label>specId</label>
+                                        <span class="sbox">
+                                            <input type="text" name="" value="" placeholder="id" class="gray" title="" readonly />
+                                            <a href="javascript:void(0);"><img src="../img/contents/icon_copy.png" class="icon" alt="" /></a>
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <label>OS Type</label>
+                                        <input type="text" name="" value="" placeholder="Os type" class="gray" title="" readonly />
+                                    </li>
+                                    <li>
+                                        <div class="w_ipbox">
+                                            <div class="w_l">
+                                                <label>vCPU</label>
+                                                <input type="text" name="" value="" placeholder="" class="gray ip_ws" title="" readonly />
+                                            </div>
+                                            <div class="w_r">
+                                                <label>core</label>
+                                                <input type="text" name="" value="" placeholder="" class="gray ip_ws" title="" readonly />
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="g_ipbox g_ipbox2">
+                                <ul>
+                                    <li>
+                                        <label>Description</label>
+                                        <textarea cols="" rows="" placeholder="Description" class="ta1 gray" title="" readonly></textarea>
+                                    </li>
+                                    <li>
+                                        <label>Memory(GB)</label>
+                                        <input type="text" name="" value="" placeholder="" class="gray ip_ws" title="" readonly />
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="g_ipbox g_ipbox1 g_ipbox3">
+                                <ul>
+                                    <li>
+                                        <div class="w_ipbox">
+                                            <div class="w_l">
+                                                <label>Storage(GB)</label>
+                                                <input type="text" name="" value="" placeholder="" class="gray ip_ws" title="" readonly />
+                                            </div>
+                                            <div class="w_r">
+                                                <label>Max Total(TB)</label>
+                                                <input type="text" name="" value="" placeholder="" class="gray ip_ws" title="" readonly />
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <label>Net bw(Gbps)</label>
+                                        <input type="text" name="" value="" placeholder="" class="gray" title="" readonly />
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="g_ipbox g_ipbox2 g_ipbox4">
+                                <ul>
+                                    <li>
+                                        <div class="w_ipbox">
+                                            <div class="w_l">
+                                                <label>num</label>
+                                                <input type="text" name="" value="" placeholder="" class="gray ip_ws" title="" readonly />
+                                            </div>
+                                            <div class="w_r">
+                                                <label>Max num</label>
+                                                <input type="text" name="" value="" placeholder="" class="gray ip_ws" title="" readonly />
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <label>Ebs bw(Mbps)</label>
+                                        <input type="text" name="" value="" placeholder="" class="gray" title="" readonly />
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="g_ipbox g_ipbox1 g_ipbox3">
+                                <ul>
+                                    <li>
+                                        <label>GPU model</label>
+                                        <input type="text" name="" value="" placeholder="l Gpu model" class="gray" title="" readonly />
+                                    </li>
+                                    <li>
+                                        <label>GPU</label>
+                                        <input type="text" name="" value="" placeholder="" class="gray ip_ws" title="" readonly />
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="g_ipbox g_ipbox2 g_ipbox4">
+                                <ul>
+                                    <li>
+                                        <label>GPU p2p</label>
+                                        <input type="text" name="" value="" placeholder="Gpu p2p" class="gray" title="" readonly />
+                                    </li>
+                                    <li>
+                                        <label>Memory(GB)</label>
+                                        <input type="text" name="" value="" placeholder="" class="gray ip_ws" title="" readonly />
+                                    </li>
+                                    <li>
+                                        <label>keyvalues</label>
+                                        <textarea cols="" rows="" placeholder="display Json Context" class="gray" title="" readonly></textarea>
+                                        <span class="reg_stxt right_a"><a href="#">Import JSON</a></span>
+                                    </li>
+                                </ul>
+                                <span class="b_txt">Help ) Provider 별 Custom 필수 항목 값이 정의 될 수도 있음.</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="btnbox">
+                        <div class="btn_center">
+                            <button name="" value="" class="btn_co btn_cr_b w135 btn_cancel">Cancel</button>
+                            <button name="" value="" class="btn_co btn_cr_g w135 btn_modify">Modify</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+    <!-- //Modify -->
+
+
+    <!-- Register Spec -->
+    <div class="dashboard dashboard_cont register_cont" id="CreateBox">
+
+        <div class="d_box box_m box_w100">
+            <div class="titbox_n">
+                <div class="tit initial cg"><strong>Register Server Spec</strong></div>
+            </div>
+
+            <div class="ds_cont">
+                <div class="register_box reg">
+
+                    <div class="top_ipbox">
+                        <div class="ipbox ipbox1">
+                            <ul>
+                                <li>
+                                    <label><span class="ch">*</span>specName</label>
+                                    <input type="text" name="" value="" placeholder="input name(id)" class="pline" title="" id="reg_name" />
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="ipbox ipbox2">
+                            <ul>
+                                <li>
+                                    <label>Provider(CP/Region)</label>
+                                    <select class="selectbox white pline w1">
+                                        <option value="1">Selected Provider</option>
+                                    </select>
+                                    <select class="selectbox white pline w2">
+                                        <option value="1">Selected Region</option>
+                                    </select>
+                                </li>
+                                <li>
+                                    <label><span class="ch">*</span>Connection</label>
+                                    <select class="selectbox white pline w3">
+                                        <option value="1">Selected ConnectionName</option>
+                                    </select>
+                                </li>
+                                <li class="reg_2">
+                                    <label><span class="ch">*</span>cspImageId</label>
+                                    <input type="text" name="" value="" placeholder="IcspImageId" class="pline ip_w1"
+                                        title="" />
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="graybox">
+
+                        <div class="g_box">
+                            <div class="g_ipbox g_ipbox1">
+                                <ul>
+                                    <li>
+                                        <label><span class="ch">*</span>cspSpecName</label>
+                                        <span class="sbox btn_a">
+                                            <input type="text" name="" value="" placeholder="cspSpecName(id)" class="pline" title="" />
+                                            <span class="reg_stxt"><a href="javascript:void(0);">get</a></span>
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <label>OS Type</label>
+                                        <input type="text" name="" value="" placeholder="Os type" class="pline" title="" />
+                                    </li>
+                                    <li>
+                                        <div class="w_ipbox">
+                                            <div class="w_l">
+                                                <label>vCPU</label>
+                                                <input type="text" name="" value="" placeholder="" class="pline ip_ws" title="" />
+                                            </div>
+                                            <div class="w_r">
+                                                <label>core</label>
+                                                <input type="text" name="" value="" placeholder="" class="pline ip_ws" title="" />
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="g_ipbox g_ipbox2">
+                                <ul>
+                                    <li>
+                                        <label>Description</label>
+                                        <textarea cols="" rows="" placeholder="Description" class="pline ta1" title=""></textarea>
+                                    </li>
+                                    <li>
+                                        <label>Memory(GB)</label>
+                                        <input type="text" name="" value="" placeholder="" class="pline ip_ws" title="" />
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="g_ipbox g_ipbox1 g_ipbox3">
+                                <ul>
+                                    <li>
+                                        <div class="w_ipbox">
+                                            <div class="w_l">
+                                                <label>Storage(GB)</label>
+                                                <input type="text" name="" value="" placeholder="" class="pline ip_ws" title="" />
+                                            </div>
+                                            <div class="w_r">
+                                                <label>Max Total(TB)</label>
+                                                <input type="text" name="" value="" placeholder="" class="pline ip_ws" title="" />
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <label>Net bw(Gbps)</label>
+                                        <input type="text" name="" value="" placeholder="" class="pline" title="" />
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="g_ipbox g_ipbox2 g_ipbox4">
+                                <ul>
+                                    <li>
+                                        <div class="w_ipbox">
+                                            <div class="w_l">
+                                                <label>num</label>
+                                                <input type="text" name="" value="" placeholder="" class="pline ip_ws" title="" />
+                                            </div>
+                                            <div class="w_r">
+                                                <label>Max num</label>
+                                                <input type="text" name="" value="" placeholder="" class="pline ip_ws" title="" />
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <label>Ebs bw(Mbps)</label>
+                                        <input type="text" name="" value="" placeholder="" class="pline" title="" />
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="g_ipbox g_ipbox1 g_ipbox3">
+                                <ul>
+                                    <li>
+                                        <label>GPU model</label>
+                                        <input type="text" name="" value="" placeholder="l Gpu model" class="pline" title="" />
+                                    </li>
+                                    <li>
+                                        <label>GPU</label>
+                                        <input type="text" name="" value="" placeholder="" class="pline ip_ws" title="" />
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="g_ipbox g_ipbox2 g_ipbox4">
+                                <ul>
+                                    <li>
+                                        <label>GPU p2p</label>
+                                        <input type="text" name="" value="" placeholder="Gpu p2p" class="pline" title="" />
+                                    </li>
+                                    <li>
+                                        <label>Memory(GB)</label>
+                                        <input type="text" name="" value="" placeholder="" class="pline ip_ws" title="" />
+                                    </li>
+                                    <li>
+                                        <label>keyvalues</label>
+                                        <textarea cols="" rows="" placeholder="display Json Context" class="pline" title=""></textarea>
+                                        <span class="reg_stxt right_a"><a href="#">Import JSON</a></span>
+                                    </li>
+                                </ul>
+                                <span class="b_txt">Help ) Provider 별 Custom 필수 항목 값이 정의 될 수도 있음.</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="btnbox">
+                        <div class="btn_center">
+                            <button name="" value="" class="btn_co btn_cr_b w135 btn_cancel">Cancel</button>
+                            <button name="" value="" class="btn_co btn_cr_g w135 btn_ok">Ok</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+    <!-- //Register Spec -->
+
+</div>
+<!-- //contents -->
+
+{{template "Footer" .}}
+
+<script>
+    var getList = "{{ .NSList}}";
+    console.log(getList);
+    var getInfo = "{{ .LoginInfo}}";
+    console.log(getInfo);
+    var f = document.Form;
+
+    function check_all(f) {
+        var chk = document.getElementsByName("chk[]");
+
+        for (i = 0; i < chk.length; i++)
+            chk[i].checked = f.chkall.checked;
+    }
+
+    $(document).ready(function () {
+        //alert("reload")
+
+
+        var url = CommonURL + "/ns/" + NAMESPACE + "/resources/spec"
+        var apiInfo = ApiInfo
+        axios.get(url, {
+            headers: {
+                'Authorization': apiInfo
+            }
+        }).then(result => {
+
+            var data = result.data.spec
+            console.log("data : ", data)
+            var html = ""
+            if (data) {
+                for (var i in data) {
+                    html += '<tr>'
+                        + '<td class="overlay hidden" data-th=""><input type="checkbox" name="chk" value="" id="td_ch1" title="" /><label for="td_ch1"></label> <span class="ov off"></span></td>'
+                        + '<td class="btn_mtd ovm" data-th="spec Name">' + data[i].id + '<span class="ov"></span></td>'
+                        + '<td class="overlay hidden" data-th="CP">' + data[i].connectionName + '</td>'
+                        + '<td class="overlay hidden" data-th="os type">' + data[i].cspSpecName + '</td>'
+                        + '<td class="overlay hidden" data-th=""><a href="javascript:void(0);"><img src="/assets/img/contents/icon_link.png" class="icon" alt=""/></a></td>'    
+                        + '</tr>'
+                }
+                $("#specList").empty();
+                $("#specList").append(html);
+            }
+            if (!data) {
+                $("#specList").empty();
+                $("#specList").append("<tr><td colspan='6'>Does not exist.</td></tr>");
+            }
+
+        })
+        $("#sel_del").click(function () {
+            var cnt = 0;
+            var id = "";
+            var apiInfo = ApiInfo;
+            $(".chk").each(function () {
+                if ($(this).is(":checked")) {
+                    //alert("chk");
+                    cnt++;
+                    id = $(this).val();
+
+                }
+            });
+            if (cnt < 1) {
+                alert("Select Delete.");
+                return;
+            }
+            if (cnt == 1) {
+
+                var u = CommonURL + "/ns/" + NAMESPACE + "/resources/spec/" + id
+
+                if (confirm("Delete?")) {
+                    axios.delete(u, {
+                        headers: {
+                            'Content-type': 'application/json',
+                            'Authorization': apiInfo,
+                        }
+                    }).then(result => {
+                        var data = result.data
+                        if (result.status == 200) {
+                            alert("Delete.")
+                            location.reload(true)
+                        }
+                    })
+                }
+            }
+            if (cnt > 1) {
+                alert("Only one delete")
+                return;
+            }
+
+        });
+    })
+</script>

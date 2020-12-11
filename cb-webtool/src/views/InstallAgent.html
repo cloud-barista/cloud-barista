@@ -37,10 +37,30 @@
                             </colgroup>
                             
                             <tbody>
+                                    <tr>
+                                            <th>Cloud Provider<strong class="text-danger">*</strong></th>
+                                            <td>
+                                                <select class="form-control form-control-sm" name="cspType" id="cspType" >
+                                                    <option selected>Select Cloud Provider</option>
+                                                    <option value="AWS">AWS</option>
+                                                    <option value="AZURE">AZURE</option>
+                                                    <option value="ALIBABA">Alibaba</option>
+                                                    <option value="GCP">GCP</option>
+                                                    <option value="CLOUDIT">Cloudit</option>
+                                                    <option value="OPENSTACK">Openstack</option>
+                                                </select>
+                                            </td>
+                                        </tr>
                                 <tr>
                                     <th>MCIS ID<strong class="text-danger">*</strong></th>
                                     <td>
                                         <input class="form-control form-control-sm" type="text" placeholder="input name" name="mcis_id" id="mcis_id" value="{{ .mcis_id }}" readonly />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>NS ID<strong class="text-danger">*</strong></th>
+                                    <td>
+                                        <input class="form-control form-control-sm" type="text" placeholder="input name" name="ns_id" id="ns_id" value="" readonly />
                                     </td>
                                 </tr>
                                 <tr>
@@ -101,17 +121,26 @@ function show_vmSSHInfo(){
     var mcis_id =  $("#mcis_id").val();
     var vm_id = $("#vm_id").val();
     var url = CommonURL+"/ns/"+NAMESPACE+"/mcis/"+mcis_id+"/vm/"+vm_id
-    axios.get(url).then(result=>{
+    var apiInfo = ApiInfo
+    axios.get(url,{
+        headers:{
+            'Authorization': apiInfo
+        }
+    }).then(result=>{
 
         var data = result.data
         var html = ""
         var url2 = CommonURL+"/ns/"+NAMESPACE+"/resources/sshKey"
-        var spec_id = data.ssh_key_id
+        var spec_id = data.sshKeyId
        
         $.ajax({
            url: url2,
            async:false,
            type:'GET',
+           beforeSend : function(xhr){
+            xhr.setRequestHeader("Authorization", apiInfo);
+            xhr.setRequestHeader("Content-type","application/json");
+        },
           
 
        }).done(function(result){
@@ -138,6 +167,7 @@ function show_vmSSHInfo(){
 
 
 $(document).ready(function(){
+    $("#ns_id").val(NAMESPACE)
     show_vmSSHInfo();
     $("#reg_btn").click(function(){
         console.log("reg btn click : ","{{ .comURL.DragonFlyURL}}") 
@@ -147,18 +177,26 @@ $(document).ready(function(){
         //폼의 필수 필드를 검증 함.
         if (!chkFormValidate($("#form"))) return false;
         
-        var obj = $("#form").serialize()
-        //obj.headers = { 'Content-type': 'application/json', }
+        var obj = $("#form").serializeObject()
+        var formData = new FormData(document.getElementById("form"));
+        //obj.headers = { 'Content-type': 'application/json',
+       // 'Authorization': ApiInfo, }
 
         //try{
             //AjaxLoadingShow(true);
-
             //console.log(req)
-            axios.post(url,obj)            
+            //console.log("object : ",obj);
+            axios.post(url,formData,{
+            headers :{
+                 'Content-type': 'multipart/form-data',
+                 'Authorization': ApiInfo,
+                },
+        })            
             .then(result=>{
                 console.log(result.data)
                 var data = result.data
-                if(result.status == 200){
+                //alert(result);
+                if(result.status == 200 || result.status == 201){
                     alert("Monitoring Service Activation is complete.");
                     //location.href = "/Driver/list";
                     location.href = "/dashboard";
@@ -167,6 +205,7 @@ $(document).ready(function(){
                 }
             })
             .catch(function (error) {
+                console.log(error)
                 if (error.response) {
                     // 서버가 2xx 외의 상태 코드를 리턴한 경우
                 //error.response.headers / error.response.status / error.response.data

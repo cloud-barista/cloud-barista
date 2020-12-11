@@ -40,6 +40,7 @@ func NewRootCmd() *cobra.Command {
 	// 옵션 플래그 설정
 	cmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Config file (default is $PWD/conf/cb-restapigw.yaml")
 	cmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "Enable the debug mode")
+	cmd.PersistentFlags().IntVarP(&port, "port", "p", 8000, "Sets a port")
 
 	// Viper 를 사용하는 설정 파서 생성
 	parser = config.MakeParser()

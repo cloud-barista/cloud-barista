@@ -3,9 +3,13 @@ package util
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"github.com/cloud-barista/cb-dragonfly/pkg/types"
 	"net/url"
 	"reflect"
+	"sort"
 	"strconv"
+	"strings"
 )
 
 func StructToMap(i interface{}) (values url.Values) {
@@ -62,4 +66,125 @@ func GetFields(val reflect.Value) []string {
 		fieldArr = append(fieldArr, t.Field(i).Tag.Get("json"))
 	}
 	return fieldArr
+}
+
+func SplitOneStringToTopicsSlice(topicsStrings string) []string {
+	return strings.Split(topicsStrings, "&")[1:]
+}
+
+func MergeTopicsToOneString(topicsSlice []string) string {
+	var combinedTopicString string
+	for _, topic := range topicsSlice {
+		combinedTopicString = fmt.Sprintf("%s&%s", combinedTopicString, topic)
+	}
+	return combinedTopicString
+}
+
+func CalculateNumberOfCollector(topicCount int, maxHostCount int) int {
+	collectorCount := topicCount / maxHostCount
+	if topicCount%maxHostCount != 0 || topicCount == 0 {
+		collectorCount += 1
+	}
+	return collectorCount
+}
+
+func ReturnDiffTopicList(a, b []string) (diff []string) {
+	m := make(map[string]bool)
+	for _, item := range b {
+		m[item] = true
+	}
+	for _, item := range a {
+		if _, ok := m[item]; !ok {
+			diff = append(diff, item)
+		}
+	}
+	return
+}
+
+func GetAllTopicBySort(topicsSlice []string) []string {
+	if len(topicsSlice) == 0 {
+		return []string{}
+	}
+	sort.Slice(topicsSlice, func(i, j int) bool {
+		return topicsSlice[i] < topicsSlice[j]
+	})
+	return topicsSlice[1:]
+}
+
+func MakeCollectorTopicMap(allTopics []string, maxHostCount int) (map[int][]string, []int) {
+
+	if len(allTopics) == 0 {
+		return map[int][]string{}, []int{}
+	}
+
+	collectorTopicMap := map[int][]string{}
+	collectorTopicCnt := []int{}
+	allTopicsLen := len(allTopics)
+	startIdx := 0
+	endIdx := 0
+
+	collectorCount := CalculateNumberOfCollector(allTopicsLen, maxHostCount)
+
+	for collectorCountIdx := 0; collectorCountIdx < collectorCount; collectorCountIdx++ {
+		if allTopicsLen < maxHostCount {
+			endIdx = len(allTopics)
+		} else {
+			endIdx = (collectorCountIdx + 1) * maxHostCount
+		}
+		aTopics := allTopics[startIdx:endIdx]
+		collectorTopicMap[collectorCountIdx] = aTopics
+
+		collectorTopicCnt = append(collectorTopicCnt, len(aTopics))
+
+		startIdx = endIdx
+		allTopicsLen -= maxHostCount
+	}
+	return collectorTopicMap, collectorTopicCnt
+}
+
+func MakeCollectorTopicMapBasedCSP(allTopics []string) map[int][]string {
+
+	if len(allTopics) == 0 {
+		return map[int][]string{}
+	}
+
+	collectorTopicMap := map[int][]string{
+		0: []string{},
+		1: []string{},
+		2: []string{},
+		3: []string{},
+		4: []string{},
+		5: []string{},
+	}
+	for _, topic := range allTopics {
+		splitTopic := strings.Split(topic, "_")
+		cspType := splitTopic[len(splitTopic)-1]
+		switch cspType {
+		case types.ALIBABA:
+			collectorTopicMap[0] = append(collectorTopicMap[0], topic)
+			break
+		case types.AWS:
+			collectorTopicMap[1] = append(collectorTopicMap[1], topic)
+			break
+		case types.AZURE:
+			collectorTopicMap[2] = append(collectorTopicMap[2], topic)
+			break
+		case types.CLOUDIT:
+			collectorTopicMap[3] = append(collectorTopicMap[3], topic)
+			break
+		case types.CLOUDTWIN:
+			collectorTopicMap[4] = append(collectorTopicMap[4], topic)
+			break
+		case types.DOCKER:
+			collectorTopicMap[5] = append(collectorTopicMap[5], topic)
+			break
+		case types.GCP:
+			collectorTopicMap[6] = append(collectorTopicMap[6], topic)
+			break
+		case types.OPENSTACK:
+			collectorTopicMap[7] = append(collectorTopicMap[7], topic)
+			break
+		}
+	}
+	return collectorTopicMap
 }

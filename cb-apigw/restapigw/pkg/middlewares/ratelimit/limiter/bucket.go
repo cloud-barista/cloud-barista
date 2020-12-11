@@ -121,7 +121,7 @@ func (tb *Bucket) adjustAvailableTokens(tick int64) {
 
 // take - 현재 시각을 기준으로 Blocking 없이 TokenBucket에서 지정한 갯수만큼의 토큰을 삭제(사용)하고, 부족한 경우는 토큰이 추가될 때까지의 대기 시간을 반환 (지정한 최대 대기 시간을 초과하는 경우는 즉시 반환)
 func (tb *Bucket) take(now time.Time, count int64, maxWait time.Duration) (time.Duration, bool) {
-	if count <= 0 {
+	if 0 >= count {
 		return 0, true
 	}
 
@@ -131,7 +131,7 @@ func (tb *Bucket) take(now time.Time, count int64, maxWait time.Duration) (time.
 
 	// 사용 가능 토큰이 존재하는 경우는 대기 없이 즉시 반환
 	availableCount := tb.availableTokens - count
-	if availableCount >= 0 {
+	if 0 <= availableCount {
 		tb.availableTokens = availableCount
 		return 0, true
 	}
@@ -151,13 +151,13 @@ func (tb *Bucket) take(now time.Time, count int64, maxWait time.Duration) (time.
 
 // takeAvailable - 현재 시간 기준으로 지정한 갯수의 토큰을 사용하는 것으로 처리하고 사용 가능한 토큰 갯수 반환
 func (tb *Bucket) takeAvailable(now time.Time, count int64) int64 {
-	if count <= 0 {
+	if 0 >= count {
 		return 0
 	}
 
 	// 현재 시각을 기준으로 사용 가능 토큰 갯수 조정
 	tb.adjustAvailableTokens(tb.currentTick(now))
-	if tb.availableTokens <= 0 {
+	if 0 >= tb.availableTokens {
 		return 0
 	}
 
@@ -208,7 +208,7 @@ func (tb *Bucket) TakeMaxDuration(count int64, maxWait time.Duration) (time.Dura
 
 // Wait - TokenBucket 내의 사용 가능한 토큰 갯수를 기준으로 전달된 갯수의 토큰이 사용 가능할 때까지 대기 처리
 func (tb *Bucket) Wait(count int64) {
-	if d := tb.Take(count); d > 0 {
+	if d := tb.Take(count); 0 < d {
 		tb.clock.Sleep(d)
 	}
 }
@@ -216,7 +216,7 @@ func (tb *Bucket) Wait(count int64) {
 // WaitMaxDuration - TokenBucket 내의 사용 가능한 토큰 갯수를 기준으로 전달된 갯수의 토큰이 사용 가능할 떄까지 대기 처리 (최대 대기 시간이 초과되면 토큰을 삭제하고 삭제될 토큰이 없는 경우는 즉시 반환)
 func (tb *Bucket) WaitMaxDuration(count int64, maxWait time.Duration) bool {
 	d, ok := tb.TakeMaxDuration(count, maxWait)
-	if d > 0 {
+	if 0 < d {
 		tb.clock.Sleep(d)
 	}
 	return ok
@@ -269,7 +269,7 @@ func NewBucketWithRateAndClock(rate float64, capacity int64, clock IClock) *Buck
 	for quantum := int64(1); quantum < 1<<50; quantum = nextQuantum(quantum) {
 		// 1초에 소비될 수 있는 비율을 기준으로 토큰이 추가되는 기간을 계산한다.
 		fillInterval := time.Duration(nanosec * float64(quantum) / rate)
-		if fillInterval <= 0 {
+		if 0 >= fillInterval {
 			continue
 		}
 		tb.fillInterval = fillInterval
@@ -297,16 +297,16 @@ func NewBucketWithQuantum(fillInterval time.Duration, capacity, quantum int64) *
 
 // NewBucketWithQuantumAndClock - NewBucketWithQuantum과 동일하며, 운영을 위한 Clock 인터페이스 구현 적용된 TokenBucket 쌩성 (Clock이 지정되지 않으면 시스템 사용)
 func NewBucketWithQuantumAndClock(fillInterval time.Duration, capacity, quantum int64, clock IClock) *Bucket {
-	if clock == nil {
+	if nil == clock {
 		clock = realClock{}
 	}
-	if fillInterval <= 0 {
+	if 0 >= fillInterval {
 		panic("The token bucket fill interval must be positive.")
 	}
-	if capacity <= 0 {
+	if 0 >= capacity {
 		panic("The token bucket capacity must be positive.")
 	}
-	if quantum <= 0 {
+	if 0 >= quantum {
 		panic("The token bucket quantum must be positive.")
 	}
 

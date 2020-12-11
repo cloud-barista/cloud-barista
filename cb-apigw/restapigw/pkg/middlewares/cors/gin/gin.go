@@ -21,7 +21,7 @@ import (
 // New - CORS 구성을 반영한 GIN HandlerFunc 반환
 func New(mConf config.MWConfig, engine *gin.Engine) {
 	conf := corsMw.ParseConfig(mConf)
-	if conf == nil {
+	if nil == conf {
 		return
 	}
 

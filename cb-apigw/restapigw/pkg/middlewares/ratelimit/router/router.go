@@ -19,10 +19,10 @@ const (
 
 // Config - Rate Limit 적용을 위한 Router Middleware Configuration 구조
 type Config struct {
-	MaxRate       int64  `yaml:"maxRate"`
-	ClientMaxRate int64  `yaml:"clientMaxRate"`
-	Strategy      string `yaml:"strategy"`
-	Key           string `yaml:"key"`
+	MaxRate       int64  `yaml:"max_rate"`        // 초당 허용할 요청 수
+	ClientMaxRate int64  `yaml:"client_max_rate"` // 클라이언트별 초당 허용할 요청 수
+	Strategy      string `yaml:"strategy"`        // 클라이언트 식별 방법 ('ip', 'header')
+	Key           string `yaml:"key"`             // 클라이언트를 header로 식별할 경우의 header key 값 (ex. X-Private-Token, ...)
 }
 
 // ===== [ Implementations ] =====
@@ -39,7 +39,7 @@ func ParseConfig(eConf *config.EndpointConfig) *Config {
 
 	buf := new(bytes.Buffer)
 	yaml.NewEncoder(buf).Encode(tmp)
-	if err := yaml.NewDecoder(buf).Decode(&conf); err != nil {
+	if err := yaml.NewDecoder(buf).Decode(&conf); nil != err {
 		return nil
 	}
 

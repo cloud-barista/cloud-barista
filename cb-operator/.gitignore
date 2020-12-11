@@ -1,0 +1,49 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+.DS_Store
+
+docker-compose-mode-files/data/influxdb/data/data/_internal/
+docker-compose-mode-files/data/influxdb/data/data/cbrestapigw/
+docker-compose-mode-files/data/influxdb/data/wal/
+
+*.db
+package.json
+yarn.lock
+
+docker-compose-mode-files/data/grafana/data/
+docker-compose-mode-files/data/grafana/data/plugins/grafana-clock-panel/package.json
+docker-compose-mode-files/data/grafana/data/plugins/grafana-clock-panel/yarn.lock
+docker-compose-mode-files/data/grafana/data/plugins/grafana-simple-json-datasource/package.json
+docker-compose-mode-files/data/grafana/data/plugins/grafana-simple-json-datasource/yarn.lock
+docker-compose-mode-files/data/grafana/data/plugins/natel-plotly-panel/package.json
+docker-compose-mode-files/data/grafana/data/plugins/natel-plotly-panel/yarn.lock
+docker-compose-mode-files/data/influxdb/data/
+
+# need to check
+docker-compose-mode-files/data/influxdb/data/data/_internal/
+docker-compose-mode-files/data/influxdb/data/data/cbrestapigw/_series/
+docker-compose-mode-files/data/influxdb/data/data/cbrestapigw/autogen/
+docker-compose-mode-files/data/influxdb/data/wal/
+
+
+docker-compose-mode-files/data/cb-spider/
+docker-compose-mode-files/data/cb-tumblebug/
+docker-compose-mode-files/data/cb-tumblebug-mysql/
+docker-compose-mode-files/data/cb-ladybug/
+
+# Binary
+src/operator

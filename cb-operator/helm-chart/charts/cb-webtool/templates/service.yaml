@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "cb-webtool"
+  labels:
+    {{- include "cb-webtool.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+{{- if (and (eq .Values.service.type "ClusterIP") (not (empty .Values.service.clusterIP))) }}
+  clusterIP: {{ .Values.service.clusterIP }}
+{{- end }}  
+  ports:
+    - port: {{ .Values.service.port }}
+      protocol: TCP
+      name: http
+      targetPort: 1234
+{{- if (and (eq .Values.service.type "NodePort") (not (empty .Values.service.nodePort))) }}
+      nodePort: {{ .Values.service.nodePort }}
+{{- end }}
+  selector:
+    {{- include "cb-webtool.selectorLabels" . | nindent 4 }}

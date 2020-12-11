@@ -1,0 +1,61 @@
+spider:
+  rootPath: "/root/go/src/github.com/cloud-barista/cb-spider"
+
+replicaCount: 1
+
+image:
+  repository: cloudbaristaorg/cb-spider
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "cb-spider"
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name:
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  restPort: 1024
+  grpcPort: 2048
+
+ingress:
+  enabled: false
+  annotations: {}
+  hosts:
+    - host: cloud-barista.local
+      paths: []
+  tls: []
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+persistence:
+  accessMode: 'ReadWriteMany'
+  enabled: false
+  size: 2Gi
+  # storageClass: '-'
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

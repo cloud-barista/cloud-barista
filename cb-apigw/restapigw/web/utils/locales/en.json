@@ -1,0 +1,14 @@
+{
+  "username": "User ID",
+  "password": "Password",
+  "login": "Login",
+
+  "msgRequired": "Input required.",
+  "msgPassword": "Use 8~16 letters compose with Upper/Lower letters, numbers and special characters.",
+  "msgLogin": "Login progress...",
+  "msgSearch": "Please enter at least 2 characters.",
+
+
+  "errLogin": "Check login information. Please try again",
+  "errNetwork": "A network failure has occurred. Please try again in a few minutes."
+}

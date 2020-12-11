@@ -1,0 +1,42 @@
+var measurement string
+
+var target_type string
+var target_id string
+var where_filter lambda
+
+var event_params string
+var event_interval duration
+var event_duration duration
+
+var metric string
+var alert_math_expression string
+var alert_threshold float
+var warn_event_cnt int
+var critic_event_cnt int
+
+var state_condition lambda
+var warn lambda
+var crit lambda
+
+var alert_event_type string
+var alert_event_name string
+var custom_message string
+var alert_message string
+
+var topic_name string
+
+stream
+    |from()
+        .measurement(measurement)
+        .groupBy([])
+        .where(where_filter)
+    |window()
+        .period(event_duration)
+        .every(event_interval)
+    |stateCount(lambda: state_condition)
+    |alert()
+        .warn(warn)
+        .crit(crit)
+        .id('{{ .TaskName }}')
+        .message(alert_message)
+        .topic(topic_name)

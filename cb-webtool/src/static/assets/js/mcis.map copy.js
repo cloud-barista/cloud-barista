@@ -5,7 +5,12 @@ function getIPStackRegion(ip_address){
     var url = apiUrl+ip_address+"?access_key="+access_key
 
     console.log("api get region url:",url);
-    axios.get(url).then((result)=>{
+    var apiInfo = ApiInfo
+    axios.get(url,{
+        headers:{
+            'Authorization': apiInfo
+        }
+    }).then((result)=>{
         console.log("api get result : ",result);
         var data = result.data
         var lat = data.latitude

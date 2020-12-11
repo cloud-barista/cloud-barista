@@ -38,3 +38,7 @@ deploy/cb-tumblebug/
 deploy-etri/
 deploy/data/cb-spider/0.dat
 deploy/data/cb-tumblebug/0.dat
+deploy/data/cb-log/
+deploy/data/cb-store/
+deploy/data/etcd-volume/
+web/node_modules

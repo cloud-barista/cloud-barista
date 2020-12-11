@@ -45,7 +45,7 @@ func getTime() time.Time {
 // parseDuration - description
 func parseDuration(limitTime string) time.Duration {
 	duration, err := time.ParseDuration(limitTime)
-	if err != nil {
+	if nil != err {
 		return 0
 	}
 
@@ -55,7 +55,7 @@ func parseDuration(limitTime string) time.Duration {
 // checkDuration - description
 func checkDuration(checkTime time.Time, timestamp string, duration time.Duration) bool {
 	ts, err := time.Parse(time.UnixDate, timestamp)
-	if err != nil {
+	if nil != err {
 		return false
 	}
 
@@ -65,7 +65,7 @@ func checkDuration(checkTime time.Time, timestamp string, duration time.Duration
 	log.Printf("Durable timestamp: %v", ts)
 	log.Printf("Difference: %v", checkTime.Sub(ts))
 
-	return ts.Sub(checkTime) >= 0
+	return 0 <= ts.Sub(checkTime)
 }
 
 // makeToken - description
@@ -92,7 +92,7 @@ func getTokenData(token string) [][]byte {
 	log.Printf("received token: [%v]", token)
 
 	tokenBytes, err := hex.DecodeString(token)
-	if err != nil {
+	if nil != err {
 		return [][]byte{}
 	}
 
@@ -129,7 +129,7 @@ func validateToken() echo.HandlerFunc {
 		c.Bind(&newTask)
 
 		var tokenData = getTokenData(newTask.Token)
-		if len(tokenData[0]) == 0 {
+		if 0 == len(tokenData[0]) {
 			newTask.Message = "Token data not founded."
 		}
 
@@ -159,11 +159,11 @@ func loadConfig() {
 	task = config{}
 
 	// Reading
-	if err := viper.ReadInConfig(); err != nil {
+	if err := viper.ReadInConfig(); nil != err {
 		task = config{}
 	}
 	// Unmarshal to struct
-	if err := viper.Unmarshal(&task); err != nil {
+	if err := viper.Unmarshal(&task); nil != err {
 		task = config{}
 	}
 

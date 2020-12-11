@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+	<head>
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="format-detection" content="telephone=no">
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=yes,target-densitydpi=medium-dpi" />
+		<title>CLOUD BARISTA</title>
+		<link rel="stylesheet" href="css/style.css"/>
+
+
+
+	<style type="text/css">
+		body {margin: 0; padding:0;}
+		body * {font-family: 'Malgun Gothic','dotum'; font-size: 12px; color: #000;}
+		.box {  padding: 10px; }
+		table {width: 100%; border-collapse: collapse;}
+		table th, table td {border: 1px solid #aaa; padding:5px 6px;}
+		table th {border-top: 2px solid #333; background: #a7e3ec;}
+		table th:first-child, table td:first-child {border-left: 0 none !important;}
+		table th:last-child, table td:last-child {border-right: 0 none !important;}
+		a {text-decoration: none; color: #333 !important; font-weight:bold; }
+		h1 {margin: 0 0 10px 10px; font-size: 16px;}
+		.title {background: #e3f9fd; font-weight: bold;}
+		.txtC {text-align: center;}
+		.fixed{top: 0; position: fixed; width: auto; display: none; border: none;}
+		.red a {color: red;}
+		.gray {background: #ddd;}
+		.gray * {color: #aaa;}
+		span.txt  { font-weight:bold; color: #1585ed;}
+		span.txt.txt_red  { color: #ff0000;}
+	</style>
+	<script type="text/javascript">
+		var i = 1;
+		function view(date, title, url, notice) {
+			var no = i++;
+			document.write("<tr><td class='txtC'>"+no+"</td><td>"+date+"</td><td>"+title+"</td><td><a href='"+url+"' target='_blank' title='새창열림'>"+url+"</a></td><td>"+notice+"</td></tr>");
+	        	}
+		function title(title) {
+			document.write("<tr><td colspan='5' class='title'>"+title+"</td></tr>");
+		}
+	</script>
+</head>
+<body>
+	<div class="box">
+		<h1 class="txtC"><img src="img/common/img_logo.png" alt="Cloud Barista"/></h1>
+		<table>
+			<colgroup>
+				<col style="width: 5%;">
+				<col style="width: 18%;">
+				<col style="width: auto;">
+				<col style="width: 35%;">
+				<col style="width: 12%;">
+			</colgroup>
+			<thead>
+				<tr>
+					<th>no</th>
+					<th>date</th>
+					<th>title</th>
+					<th>url</th>
+					<th>notice</th>
+				</tr>
+			</thead>
+			<tbody>
+				<script type="text/javascript">
+					title("로그인");
+					view('20-09-05', 'Login ', 'login.html', '완료  - <span class="txt txt_red">09.22 수정완료<span>');
+					title("dashboard");
+					view('20-09-11', 'Dashboard NS', 'operation/Dashboard_Ns.html', '완료  - <span class="txt txt_red">10.07 수정완료<span>');
+					view('20-09-16', 'Dashboard Global', 'operation/Dashboard_Global.html', '완료 - <span class="txt txt_red">10.07 수정완료<span>');
+					title("Manage");
+					view('20-09-16', 'Manage MCIS', 'operation/Manage_Mcis.html', '완료 - <span class="txt txt_red">10.08 수정완료<span>');
+					view('-', 'Manage MC-App', 'operation/Manage_McApp.html', '');
+					title("Monitoring");
+					view('20-09-18', 'Monitoring MCIS', 'operation/Monitoring_Mcis.html', '완료 - <span class="txt txt_red">10.08 수정완료<span>');
+					view('20-09-21', 'Monitoring MC-App', 'operation/Monitoring_McApp.html', '완료 - <span class="txt txt_red">10.08 수정완료<span>');
+					title("Policy");
+					view('20-10-08', 'Policy Monitoring', 'operation/Policy_Monitoring.html', '완료');
+					title("About");
+					view('', '', '', '', '');
+					title("Resources");
+					view('20-09-21', 'Resources Network', 'setting/Resources_Network.html', '완료 - <span class="txt txt_red">10.08 수정완료<span>');
+					view('20-10-06', 'Resources Security', 'setting/Resources_Security.html', '완료 - <span class="txt txt_red">10.08 수정완료<span>');
+					view('20-10-06', 'Resources SSH key', 'setting/Resources_Ssh.html', '완료 - <span class="txt txt_red">10.08 수정완료<span>');
+					view('20-10-07', 'Resources Server Image', 'setting/Resources_Image.html', '완료 - <span class="txt txt_red">10.08 수정완료<span>');
+					view('20-10-07', 'Resources Server Spec', 'setting/Resources_Spec.html', '완료 - <span class="txt txt_red">10.08 수정완료<span>');
+					title("App Resource");
+					view('', '', '', '', '');
+					title("Cloud Connections");
+					view('20-10-12', 'Cloud Connections', 'setting/CloudConnections.html', '완료');
+					view('20-10-12', 'Driver SDK', 'setting/Driver_SDK.html', '완료');
+					view('20-10-12', 'Credential', 'setting/Connections_Credential.html', '완료');
+					view('20-10-12', 'Region', 'setting/Connections_Region.html', '완료');
+					view('20-10-12', 'Region Zone', 'setting/Connections_Region_Zone.html', '완료');
+					title("NameSpace");
+					view('20-10-08', 'NameSpace', 'setting/NameSpace.html', '완료');
+				</script>
+			</tbody>
+		</table>
+	</div>
+</body>
+</html>
+
+

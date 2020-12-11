@@ -288,8 +288,9 @@ func handleImage() {
 			//NameId: "Test OS Image",
 			//SystemId: "vmsg02-asia-northeast1-b",
 			//SystemId: "https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-minimal-1804-bionic-v20200415",
+			SystemId: "https://www.googleapis.com/compute/v1/projects/gce-uefi-images/global/images/centos-7-v20190905",
 			//SystemId: "2076268724445164462", //centos-7-v20190204
-			SystemId: "ubuntu-minimal-1804-bionic-v20200415",
+			//SystemId: "ubuntu-minimal-1804-bionic-v20200415",
 		},
 	}
 
@@ -395,6 +396,18 @@ func handleVPC() {
 			//CidrBlock: "192.168.0.0/16",
 		}
 	*/
+
+	subnetReqInfo := irs.SubnetInfo{
+		IId:       irs.IID{NameId: "addtest-subnet"},
+		IPv4_CIDR: "192.168.5.0/24",
+	}
+
+	subnetReqVpcInfo := irs.IID{SystemId: "vpc-gcp-eu-ns-common"}
+	reqSubnetId := irs.IID{SystemId: "addtest-subnet"}
+	cblogger.Debug(subnetReqInfo)
+	cblogger.Debug(subnetReqVpcInfo)
+	cblogger.Debug(reqSubnetId)
+
 	vpcReqInfo := irs.VPCReqInfo{
 		IId: irs.IID{NameId: "cb-vpc-load-test"},
 		SubnetInfoList: []irs.SubnetInfo{
@@ -433,6 +446,8 @@ func handleVPC() {
 		fmt.Println("2. VPC Create")
 		fmt.Println("3. VPC Get")
 		fmt.Println("4. VPC Delete")
+		fmt.Println("5. Add Subnet")
+		fmt.Println("6. Delete Subnet")
 
 		var commandNum int
 		inputCnt, err := fmt.Scan(&commandNum)
@@ -492,6 +507,26 @@ func handleVPC() {
 					cblogger.Infof("[%s] VPC 삭제 실패 : ", reqVpcId, err)
 				} else {
 					cblogger.Infof("[%s] VPC 삭제 결과 : [%s]", reqVpcId, result)
+				}
+
+			case 5:
+				cblogger.Infof("[%s] Subnet 추가 테스트", vpcReqInfo.IId.NameId)
+				result, err := handler.AddSubnet(subnetReqVpcInfo, subnetReqInfo)
+				if err != nil {
+					cblogger.Infof(reqSubnetId.NameId, " VNetwork 생성 실패 : ", err)
+				} else {
+					cblogger.Infof("VNetwork 생성 결과 : ", result)
+					reqSubnetId = result.IId // 조회 및 삭제를 위해 생성된 ID로 변경
+					spew.Dump(result)
+				}
+
+			case 6:
+				cblogger.Infof("[%s] Subnet 삭제 테스트", reqSubnetId.SystemId)
+				result, err := handler.RemoveSubnet(subnetReqVpcInfo, reqSubnetId)
+				if err != nil {
+					cblogger.Infof("[%s] Subnet 삭제 실패 : ", reqSubnetId.SystemId, err)
+				} else {
+					cblogger.Infof("[%s] Subnet 삭제 결과 : [%s]", reqSubnetId.SystemId, result)
 				}
 			}
 		}
@@ -801,12 +836,14 @@ func handleVM() {
 					ImageIID: irs.IID{
 						NameId: "Test",
 						//SystemId: "ubuntu-minimal-1804-bionic-v20200415",
-						SystemId: "https://www.googleapis.com/compute/v1/projects/gce-uefi-images/global/images/centos-7-v20190204",
+						//SystemId: "https://www.googleapis.com/compute/v1/projects/gce-uefi-images/global/images/centos-7-v20190204",
+						SystemId: "https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1804-bionic-v20200521",
 
 						//NameId:   "projects/ubuntu-os-cloud/global/images/ubuntu-minimal-1804-bionic-v20200415",
 						//SystemId: "projects/ubuntu-os-cloud/global/images/ubuntu-minimal-1804-bionic-v20191024",
 						//SystemId: "2076268724445164462",	//에러
 						//SystemId: "ubuntu-minimal-1804-bionic-v20191024",
+						//https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-1804-bionic-v20200521
 						//NameId:   "https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-minimal-1804-bionic-v20200415",
 						//SystemId: "https://www.googleapis.com/compute/v1/projects/ubuntu-os-cloud/global/images/ubuntu-minimal-1804-bionic-v20200415",
 					},
@@ -929,9 +966,9 @@ func handleVM() {
 
 func main() {
 	cblogger.Info("GCP Resource Test")
-	handleVPC()
+	//handleVPC()
 	//handleVMSpec()
-	//handleImage() //AMI
+	handleImage() //AMI
 	//handleKeyPair()
 	//handleSecurity()
 	//handleVM()

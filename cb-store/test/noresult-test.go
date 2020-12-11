@@ -8,49 +8,48 @@
 package main
 
 import (
-        "fmt"
+	"fmt"
 
-	"github.com/sirupsen/logrus"
-        "github.com/cloud-barista/cb-store"
-        _ "github.com/cloud-barista/cb-store/utils"
+	cbstore "github.com/cloud-barista/cb-store"
 	"github.com/cloud-barista/cb-store/config"
 	icbs "github.com/cloud-barista/cb-store/interfaces"
+	_ "github.com/cloud-barista/cb-store/utils"
+	"github.com/sirupsen/logrus"
 )
 
 var cblog *logrus.Logger
 var store icbs.Store
 
 func init() {
-        cblog = config.Cblogger
+	cblog = config.Cblogger
 	store = cbstore.GetStore()
 }
 
-
 func main() {
 
-        cblog.Info("start test!!")
+	cblog.Info("start test!!")
 
 	keyValue, err := store.Get("/no") // exact match
 
-if keyValue == nil {
-	fmt.Println("Get(): nil")
-	fmt.Printf("Get() error: %v\n", err)
-}else {
-	
-	fmt.Println("=========================== Get(\"/no\")")
-	fmt.Println("<" + keyValue.Key + "> " + keyValue.Value)
-	fmt.Println("===========================")
-}
+	if keyValue == nil {
+		fmt.Println("Get(): nil")
+		fmt.Printf("Get() error: %v\n", err)
+	} else {
 
-        // ## GetList
-        keyValueList, err2 := store.GetList("/no", true) // true = Ascending
+		fmt.Println("=========================== Get(\"/no\")")
+		fmt.Println("<" + keyValue.Key + "> " + keyValue.Value)
+		fmt.Println("===========================")
+	}
+
+	// ## GetList
+	keyValueList, err2 := store.GetList("/no", true) // true = Ascending
 	fmt.Printf("store.GetList() error: %v\n", err2)
 
-        fmt.Println("=========================== GetList(\"/no\", Ascending)")
-        for _, ev := range keyValueList {
-                fmt.Println("<" + ev.Key + "> " + ev.Value)
-        }
-        fmt.Println("===========================")
+	fmt.Println("=========================== GetList(\"/no\", Ascending)")
+	for _, ev := range keyValueList {
+		fmt.Println("<" + ev.Key + "> " + ev.Value)
+	}
+	fmt.Println("===========================")
 
-        cblog.Info("finish test!!")
+	cblog.Info("finish test!!")
 }

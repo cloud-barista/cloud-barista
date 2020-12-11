@@ -572,6 +572,17 @@ func handleVPC() {
 	}
 	handler := ResourceHandler.(irs.VPCHandler)
 
+	subnetReqInfo := irs.SubnetInfo{
+		IId:       irs.IID{NameId: "AddTest-Subnet"},
+		IPv4_CIDR: "192.168.3.0/24",
+	}
+
+	subnetReqVpcInfo := irs.IID{SystemId: "vpc-6wex2mrx1fovfecsl44mx"}
+	reqSubnetId := irs.IID{SystemId: "vsw-6we4h4n4wp9xdtakrno15"}
+	cblogger.Debug(subnetReqInfo)
+	cblogger.Debug(subnetReqVpcInfo)
+	cblogger.Debug(reqSubnetId)
+
 	vpcReqInfo := irs.VPCReqInfo{
 		IId:       irs.IID{NameId: "New-CB-VPC"},
 		IPv4_CIDR: "10.0.0.0/16",
@@ -601,6 +612,8 @@ func handleVPC() {
 		fmt.Println("2. VPC Create")
 		fmt.Println("3. VPC Get")
 		fmt.Println("4. VPC Delete")
+		fmt.Println("5. Add Subnet")
+		fmt.Println("6. Delete Subnet")
 
 		var commandNum int
 		inputCnt, err := fmt.Scan(&commandNum)
@@ -659,6 +672,26 @@ func handleVPC() {
 				} else {
 					cblogger.Infof("[%s] VPC 삭제 결과 : [%s]", reqVpcId, result)
 				}
+
+			case 5:
+				cblogger.Infof("[%s] Subnet 추가 테스트", vpcReqInfo.IId.NameId)
+				result, err := handler.AddSubnet(subnetReqVpcInfo, subnetReqInfo)
+				if err != nil {
+					cblogger.Infof(reqSubnetId.NameId, " VNetwork 생성 실패 : ", err)
+				} else {
+					cblogger.Infof("VNetwork 생성 결과 : ", result)
+					reqSubnetId = result.IId // 조회 및 삭제를 위해 생성된 ID로 변경
+					spew.Dump(result)
+				}
+
+			case 6:
+				cblogger.Infof("[%s] Subnet 삭제 테스트", reqSubnetId.SystemId)
+				result, err := handler.RemoveSubnet(subnetReqVpcInfo, reqSubnetId)
+				if err != nil {
+					cblogger.Infof("[%s] Subnet 삭제 실패 : ", reqSubnetId.SystemId, err)
+				} else {
+					cblogger.Infof("[%s] Subnet 삭제 결과 : [%s]", reqSubnetId.SystemId, result)
+				}
 			}
 		}
 	}
@@ -708,7 +741,7 @@ func handleImage() {
 					cblogger.Info("Image 목록 조회 결과")
 					cblogger.Info(result)
 					cblogger.Info("출력 결과 수 : ", len(result))
-					//spew.Dump(result)
+					spew.Dump(result)
 
 					//조회및 삭제 테스트를 위해 리스트의 첫번째 정보의 ID를 요청ID로 자동 갱신함.
 					if result != nil {
@@ -911,8 +944,8 @@ func handleVM() {
 
 func main() {
 	cblogger.Info("Alibaba Cloud Resource Test")
-	//handleVPC() //VPC
-	handleVMSpec()
+	handleVPC() //VPC
+	//handleVMSpec()
 	//handleImage() //AMI
 	//handleKeyPair()
 	//handleSecurity()

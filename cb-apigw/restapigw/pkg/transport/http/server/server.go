@@ -3,15 +3,17 @@ package server
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/cloud-barista/cb-apigw/restapigw/pkg/admin"
+	"github.com/cloud-barista/cb-apigw/restapigw/pkg/api"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/config"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/core"
+	"github.com/cloud-barista/cb-apigw/restapigw/pkg/errors"
 )
 
 // ===== [ Constants and Variables ] =====
@@ -67,8 +69,24 @@ var (
 
 // ===== [ Types ] =====
 
-// ToHTTPError - 처리 중에 발생한 오류를 StatusCode로 처리하는 함수 정의
-type ToHTTPError func(error) int
+type (
+	// ToHTTPError - 처리 중에 발생한 오류를 StatusCode로 처리하는 함수 정의
+	ToHTTPError func(error) int
+
+	// Server - REST API G/W 운영 서버 구조
+	Server struct {
+		server      *http.Server
+		adminServer *admin.Server
+
+		serviceConfig      config.ServiceConfig
+		currConfiugrations *api.Configuration
+
+		configurationChan chan api.RepoChangedMessage
+		stopChan          chan struct{}
+	}
+)
+
+// ===== [ Implementations ] =====
 
 // ===== [ Private Functions ] =====
 
@@ -81,7 +99,7 @@ func parseTLSVersion(key string) uint16 {
 
 func parseCurveIDs(conf *config.TLSConfig) []tls.CurveID {
 	l := len(conf.CurvePreferences)
-	if l == 0 {
+	if 0 == l {
 		return defaultCurves
 	}
 
@@ -94,7 +112,7 @@ func parseCurveIDs(conf *config.TLSConfig) []tls.CurveID {
 
 func parseCipherSuites(conf *config.TLSConfig) []uint16 {
 	l := len(conf.CipherSuites)
-	if l == 0 {
+	if 0 == l {
 		return defaultCipherSuites
 	}
 
@@ -113,7 +131,7 @@ func DefaultToHTTPError(_ error) int {
 }
 
 // InitHTTPDefaultTransport - 설정 기준으로 단 한번 설정되는 HTTP 설정 초기화
-func InitHTTPDefaultTransport(sConf config.ServiceConfig) {
+func InitHTTPDefaultTransport(sConf *config.ServiceConfig) {
 	onceTransportConfig.Do(func() {
 		http.DefaultTransport = &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
@@ -136,19 +154,19 @@ func InitHTTPDefaultTransport(sConf config.ServiceConfig) {
 }
 
 // RunServer - 지정된 Context와 설정 및 Handler 기반으로 동작하는 HTT Server 구동
-func RunServer(ctx context.Context, sConf config.ServiceConfig, handler http.Handler) error {
+func RunServer(ctx context.Context, sConf *config.ServiceConfig, handler http.Handler) error {
 	done := make(chan error)
 	s := NewServer(sConf, handler)
 
-	if s.TLSConfig == nil {
+	if nil == s.TLSConfig {
 		go func() {
 			done <- s.ListenAndServe()
 		}()
 	} else {
-		if sConf.TLS.PublicKey == "" {
+		if "" == sConf.TLS.PublicKey {
 			return ErrPublicKey
 		}
-		if sConf.TLS.PrivateKey == "" {
+		if "" == sConf.TLS.PrivateKey {
 			return ErrPrivateKey
 		}
 		go func() {
@@ -165,7 +183,7 @@ func RunServer(ctx context.Context, sConf config.ServiceConfig, handler http.Han
 }
 
 // NewServer - 지정한 설정과 http handler 기준으로 동작하는 http server 반환
-func NewServer(sConf config.ServiceConfig, handler http.Handler) *http.Server {
+func NewServer(sConf *config.ServiceConfig, handler http.Handler) *http.Server {
 	return &http.Server{
 		Addr:              fmt.Sprintf(":%d", sConf.Port),
 		Handler:           handler,
@@ -179,7 +197,7 @@ func NewServer(sConf config.ServiceConfig, handler http.Handler) *http.Server {
 
 // ParseTLSConfig - 서비스 설정에 지정된 TLS 설정을 기준으로 tls 모듈에 대한 설정 반환
 func ParseTLSConfig(tlsConf *config.TLSConfig) *tls.Config {
-	if tlsConf == nil {
+	if nil == tlsConf {
 		return nil
 	}
 	if tlsConf.IsDisabled {

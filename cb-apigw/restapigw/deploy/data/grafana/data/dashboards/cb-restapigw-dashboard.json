@@ -2731,7 +2731,7 @@
                     "steppedLine": false,
                     "targets": [
                         {
-                            "alias": "c: $tag_complete, e: $tag_error",
+                            "alias": "complete: $tag_complete, error: $tag_error",
                             "groupBy": [
                                 {
                                     "params": [
@@ -3760,7 +3760,7 @@
                     "steppedLine": false,
                     "targets": [
                         {
-                            "alias": "c: $tag_complete, e: $tag_error",
+                            "alias": "complete: $tag_complete, error: $tag_error",
                             "groupBy": [
                                 {
                                     "params": [

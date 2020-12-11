@@ -41,7 +41,15 @@ services:
       - ./data/lwan:/lwan/wwwroot
     ports:
       - "8100:8080"
-    
+
+  fake_api2:
+    image: jaxgeller/lwan
+    container_name: fake_api2
+    volumes:
+      - ./data/lwan:/lwan/wwwroot
+    ports:
+      - "8200:8080"
+      
   hmac_site:
     build:
       context: ./web

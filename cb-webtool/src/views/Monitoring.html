@@ -252,7 +252,7 @@
      <script>
      $(document).ready(function(){
          var nsid = "{{ .NameSpace}}";
-         var url = CommonURL+"/ns/"+nsid+"/mcis?option=status";
+         var url = CommonURL+"/ns/"+nsid+"/mcis";
          console.log("url :",url);
          show_mcis(url);
      })
@@ -318,8 +318,8 @@
 }
         });
         
-        
-        var url = DragonFlyURL+"/mcis/"+mcis_id+"/vm/"+vm_id+"/metric/"+metric+"/info?periodType="+periodType+"&statisticsCriteria="+statisticsCriteria+"&duration="+duration;
+        var nsid = "{{ .NameSpace}}";
+        var url = DragonFlyURL+"/ns/"+nsid+"/mcis/"+mcis_id+"/vm/"+vm_id+"/metric/"+metric+"/info?periodType="+periodType+"&statisticsCriteria="+statisticsCriteria+"&duration="+duration;
         console.log("Request URL : ",url)
         var html = "";
         $.ajax({
@@ -343,7 +343,12 @@
         }
         
     })
-        // axios.get(url).then(result=>{
+        // var apiInfo = ApiInfo
+    // axios.get(url,{
+    //     headers:{
+    //         'Authorization': apiInfo
+    //     }
+    // })then(result=>{
         //       var data = result.data
         //       console.log("Get Monitoring Data : ",data)
         //       console.log("======== start mapping data ======");

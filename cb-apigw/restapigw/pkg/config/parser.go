@@ -21,23 +21,23 @@ type Parser struct {
 // ===== [ Implementations ] =====
 
 // Parse - Viper lib를 이용해서 지정된 configuration 정보 파싱
-func (p Parser) Parse(configFile string) (ServiceConfig, error) {
+func (p Parser) Parse(configFile string) (*ServiceConfig, error) {
 	p.viper.SetConfigFile(configFile)
 	p.viper.AutomaticEnv()
 	p.viper.SetConfigType("yaml")
 
-	var cfg ServiceConfig
+	var cfg *ServiceConfig
 
 	// Reading
-	if err := p.viper.ReadInConfig(); err != nil {
+	if err := p.viper.ReadInConfig(); nil != err {
 		return cfg, checkErr(err, configFile)
 	}
 	// Unmarshal to struct
-	if err := p.viper.Unmarshal(&cfg); err != nil {
+	if err := p.viper.Unmarshal(&cfg); nil != err {
 		return cfg, checkErr(err, configFile)
 	}
 	// Initialize
-	if err := cfg.Init(); err != nil {
+	if err := cfg.Init(); nil != err {
 		return cfg, CheckErr(err, configFile)
 	}
 	return cfg, nil

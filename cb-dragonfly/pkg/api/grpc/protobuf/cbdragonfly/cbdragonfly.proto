@@ -1,0 +1,439 @@
+syntax = "proto3";
+
+import "gogoproto/gogo.proto";
+
+package cbdragonfly;
+
+//////////////////////////////////
+// 공통 메시지 정의
+//////////////////////////////////
+
+// Empty 메시지 정의
+message Empty {}
+
+// MessageResponse 응답 메시지 정의
+message MessageResponse {
+	string message = 1 [json_name="message", (gogoproto.jsontag) = "message", (gogoproto.moretags) = "yaml:\"message\""];
+}
+
+//////////////////////////////////
+// CB DRAGONFLY GRPC 서비스 정의
+//////////////////////////////////
+
+service MON {
+
+	// TODO: MCIS 모니터링 조회
+	rpc GetMCISMonInfo(VMMCISMonQryRequest) returns (MCISMonInfoResponse) {}
+
+	/*
+	rpc GetMCISMonInitDBInfo(VMMCISMonQryRequest) returns (MCISMonInfoResponse) {}
+	rpc GetMCISMonResetDBInfo(VMMCISMonQryRequest) returns (MCISMonInfoResponse) {}
+	rpc GetMCISMonCpuMInfo(VMMCISMonQryRequest) returns (MCISMonInfoResponse) {}
+	rpc GetMCISMonCpuSInfo(VMMCISMonQryRequest) returns (MCISMonInfoResponse) {}
+	rpc GetMCISMonMemRInfo(VMMCISMonQryRequest) returns (MCISMonInfoResponse) {}
+	rpc GetMCISMonMemWInfo(VMMCISMonQryRequest) returns (MCISMonInfoResponse) {}
+	rpc GetMCISMonFioWInfo(VMMCISMonQryRequest) returns (MCISMonInfoResponse) {}
+	rpc GetMCISMonFioRInfo(VMMCISMonQryRequest) returns (MCISMonInfoResponse) {}
+	rpc GetMCISMonDBWInfo(VMMCISMonQryRequest) returns (MCISMonInfoResponse) {}
+	rpc GetMCISMonDBRInfo(VMMCISMonQryRequest) returns (MCISMonInfoResponse) {}
+	*/
+//	rpc GetMCISMonRttInfo(VMMCISMonQryRequest) returns (RttMCISInfoResponse) {}
+//	rpc GetMCISMonMRttInfo(VMMCISMonQryRequest) returns (MRttMCISInfoResponse) {}
+
+	// VM 온디멘드 모니터링 조회
+	rpc GetVMOnDemandMonCpuInfo(VMOnDemandMonQryRequest) returns (CpuOnDemandInfoResponse) {}
+	rpc GetVMOnDemandMonCpuFreqInfo(VMOnDemandMonQryRequest) returns (CpuFreqOnDemandInfoResponse) {}
+	rpc GetVMOnDemandMonMemoryInfo(VMOnDemandMonQryRequest) returns (MemoryOnDemandInfoResponse) {}
+	rpc GetVMOnDemandMonDiskInfo(VMOnDemandMonQryRequest) returns (DiskOnDemandInfoResponse) {}
+	rpc GetVMOnDemandMonNetworkInfo(VMOnDemandMonQryRequest) returns (NetworkOnDemandInfoResponse) {}
+
+	// VM 모니터링 조회
+	rpc GetVMMonCpuInfo (VMMonQryRequest) returns (CpuInfoResponse) {}
+	rpc GetVMMonCpuFreqInfo (VMMonQryRequest) returns (CpuFreqInfoResponse) {}
+	rpc GetVMMonMemoryInfo (VMMonQryRequest) returns (MemoryInfoResponse) {}
+	rpc GetVMMonDiskInfo (VMMonQryRequest) returns (DiskInfoResponse) {}
+	rpc GetVMMonNetworkInfo (VMMonQryRequest) returns (NetworkInfoResponse) {}
+
+	// VM 최신 모니터링 조회
+//	rpc GetVMLatestMonCpuInfo (VMLatestMonQryRequest) returns (CpuRtInfoResponse) {}
+//	rpc GetVMLatestMonCpuFreqInfo (VMLatestMonQryRequest) returns (CpuFreqRtInfoResponse) {}
+//	rpc GetVMLatestMonMemoryInfo (VMLatestMonQryRequest) returns (MemoryRtInfoResponse) {}
+//	rpc GetVMLatestMonDiskInfo (VMLatestMonQryRequest) returns (DiskRtInfoResponse) {}
+//	rpc GetVMLatestMonNetworkInfo (VMLatestMonQryRequest) returns (NetworkRtInfoResponse) {}
+
+	rpc SetMonConfig (MonitoringConfigRequest) returns (MonitoringConfigResponse) {}
+	rpc GetMonConfig (Empty) returns (MonitoringConfigResponse) {}
+	rpc ResetMonConfig (Empty) returns (MonitoringConfigResponse) {}
+
+	rpc InstallTelegraf (InstallTelegrafRequest) returns (MessageResponse) {}
+}
+
+//////////////////////////////////
+// VM 모니터링 공통 메시지 정의
+//////////////////////////////////
+
+message Tags {
+//	string host_id = 1 [json_name="hostId", (gogoproto.jsontag) = "hostId", (gogoproto.moretags) = "yaml:\"hostId\""];
+	string ns_id = 1 [json_name="nsId", (gogoproto.jsontag) = "nsId", (gogoproto.moretags) = "yaml:\"nsId\""];
+	string mcis_id = 2 [json_name="mcisId", (gogoproto.jsontag) = "mcisId", (gogoproto.moretags) = "yaml:\"mcisId\""];
+	string vm_id = 3 [json_name="vmId", (gogoproto.jsontag) = "vmId", (gogoproto.moretags) = "yaml:\"vmId\""];
+}
+
+message VMMonQryRequest {
+	string ns_id = 1 [json_name="ns_id", (gogoproto.jsontag) = "ns_id", (gogoproto.moretags) = "yaml:\"ns_id\""];
+	string mcis_id = 2 [json_name="mcis_id", (gogoproto.jsontag) = "mcis_id", (gogoproto.moretags) = "yaml:\"mcis_id\""];
+	string vm_id = 3 [json_name="vm_id", (gogoproto.jsontag) = "vm_id", (gogoproto.moretags) = "yaml:\"vm_id\""];
+	string period_type = 4 [json_name="periodType", (gogoproto.jsontag) = "periodType", (gogoproto.moretags) = "yaml:\"periodType\""];
+	string statistics_criteria = 5 [json_name="statisticsCriteria", (gogoproto.jsontag) = "statisticsCriteria", (gogoproto.moretags) = "yaml:\"statisticsCriteria\""];
+	string duration = 6 [json_name="duration", (gogoproto.jsontag) = "duration", (gogoproto.moretags) = "yaml:\"duration\""];
+}
+
+message VMOnDemandMonQryRequest {
+	string ns_id = 1 [json_name="ns_id", (gogoproto.jsontag) = "ns_id", (gogoproto.moretags) = "yaml:\"ns_id\""];
+	string mcis_id = 2 [json_name="mcis_id", (gogoproto.jsontag) = "mcis_id", (gogoproto.moretags) = "yaml:\"mcis_id\""];
+	string vm_id = 3 [json_name="vm_id", (gogoproto.jsontag) = "vm_id", (gogoproto.moretags) = "yaml:\"vm_id\""];
+	string agent_ip = 4 [json_name="agent_ip", (gogoproto.jsontag) = "agent_ip", (gogoproto.moretags) = "yaml:\"agent_ip\""];
+}
+
+message VMMCISMonQryRequest {
+	string ns_id = 1 [json_name="ns_id", (gogoproto.jsontag) = "ns_id", (gogoproto.moretags) = "yaml:\"ns_id\""];
+	string mcis_id = 2 [json_name="mcis_id", (gogoproto.jsontag) = "mcis_id", (gogoproto.moretags) = "yaml:\"mcis_id\""];
+	string vm_id = 3 [json_name="vm_id", (gogoproto.jsontag) = "vm_id", (gogoproto.moretags) = "yaml:\"vm_id\""];
+	string agent_ip = 4 [json_name="agent_ip", (gogoproto.jsontag) = "agent_ip", (gogoproto.moretags) = "yaml:\"agent_ip\""];
+	string metric_name = 5 [json_name="metric_name", (gogoproto.jsontag) = "metric_name", (gogoproto.moretags) = "yaml:\"metric_name\""];
+}
+
+/*message VMLatestMonQryRequest {
+	string ns_id = 1 [json_name="ns_id", (gogoproto.jsontag) = "ns_id", (gogoproto.moretags) = "yaml:\"ns_id\""];
+	string mcis_id = 2 [json_name="mcis_id", (gogoproto.jsontag) = "mcis_id", (gogoproto.moretags) = "yaml:\"mcis_id\""];
+	string vm_id = 3 [json_name="vm_id", (gogoproto.jsontag) = "vm_id", (gogoproto.moretags) = "yaml:\"vm_id\""];
+	string statistics_criteria = 4 [json_name="statisticsCriteria", (gogoproto.jsontag) = "statisticsCriteria", (gogoproto.moretags) = "yaml:\"statisticsCriteria\""];
+}*/
+
+//////////////////////////////////
+// VM 온디멘드 모니터링 메시지 정의
+//////////////////////////////////
+
+message CpuOnDemandInfoResponse {
+	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
+	Tags tags = 2 [json_name="tags", (gogoproto.jsontag) = "tags", (gogoproto.moretags) = "yaml:\"tags\""];
+	string time = 3 [json_name="time", (gogoproto.jsontag) = "time", (gogoproto.moretags) = "yaml:\"time\""];
+	CpuOnDemandInfo values = 4 [json_name="values", (gogoproto.jsontag) = "values", (gogoproto.moretags) = "yaml:\"values\""];
+}
+
+message CpuOnDemandInfo {
+	double cpu_utilization = 1 [json_name="cpu_utilization", (gogoproto.jsontag) = "cpu_utilization", (gogoproto.moretags) = "yaml:\"cpu_utilization\""];
+	double cpu_system = 2 [json_name="cpu_system", (gogoproto.jsontag) = "cpu_system", (gogoproto.moretags) = "yaml:\"cpu_system\""];
+	double cpu_idle = 3 [json_name="cpu_idle", (gogoproto.jsontag) = "cpu_idle", (gogoproto.moretags) = "yaml:\"cpu_idle\""];
+	double cpu_iowait = 4 [json_name="cpu_iowait", (gogoproto.jsontag) = "cpu_iowait", (gogoproto.moretags) = "yaml:\"cpu_iowait\""];
+	double cpu_hintr = 5 [json_name="cpu_hintr", (gogoproto.jsontag) = "cpu_hintr", (gogoproto.moretags) = "yaml:\"cpu_hintr\""];
+	double cpu_sintr = 6 [json_name="cpu_sintr", (gogoproto.jsontag) = "cpu_sintr", (gogoproto.moretags) = "yaml:\"cpu_sintr\""];
+	double cpu_user = 7 [json_name="cpu_user", (gogoproto.jsontag) = "cpu_user", (gogoproto.moretags) = "yaml:\"cpu_user\""];
+	double cpu_nice = 8 [json_name="cpu_nice", (gogoproto.jsontag) = "cpu_nice", (gogoproto.moretags) = "yaml:\"cpu_nice\""];
+	double cpu_steal = 9 [json_name="cpu_steal", (gogoproto.jsontag) = "cpu_steal", (gogoproto.moretags) = "yaml:\"cpu_steal\""];
+	double cpu_guest = 10 [json_name="cpu_guest", (gogoproto.jsontag) = "cpu_guest", (gogoproto.moretags) = "yaml:\"cpu_guest\""];
+	double cpu_guest_nice = 11 [json_name="cpu_guest_nice", (gogoproto.jsontag) = "cpu_guest_nice", (gogoproto.moretags) = "yaml:\"cpu_guest_nice\""];
+}
+
+message CpuFreqOnDemandInfoResponse {
+	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
+	Tags tags = 2 [json_name="tags", (gogoproto.jsontag) = "tags", (gogoproto.moretags) = "yaml:\"tags\""];
+	string time = 3 [json_name="time", (gogoproto.jsontag) = "time", (gogoproto.moretags) = "yaml:\"time\""];
+	CpuFreqOnDemandInfo values = 4 [json_name="values", (gogoproto.jsontag) = "values", (gogoproto.moretags) = "yaml:\"values\""];
+}
+
+message CpuFreqOnDemandInfo {
+	double cpu_speed = 1 [json_name="cpu_speed", (gogoproto.jsontag) = "cpu_speed", (gogoproto.moretags) = "yaml:\"cpu_speed\""];
+}
+
+message MemoryOnDemandInfoResponse {
+	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
+	Tags tags = 2 [json_name="tags", (gogoproto.jsontag) = "tags", (gogoproto.moretags) = "yaml:\"tags\""];
+	string time = 3 [json_name="time", (gogoproto.jsontag) = "time", (gogoproto.moretags) = "yaml:\"time\""];
+	MemoryOnDemandInfo values = 4 [json_name="values", (gogoproto.jsontag) = "values", (gogoproto.moretags) = "yaml:\"values\""];
+}
+
+message MemoryOnDemandInfo {
+	double mem_utilization = 1 [json_name="mem_utilization", (gogoproto.jsontag) = "mem_utilization", (gogoproto.moretags) = "yaml:\"mem_utilization\""];
+	double mem_total = 2 [json_name="mem_total", (gogoproto.jsontag) = "mem_total", (gogoproto.moretags) = "yaml:\"mem_total\""];
+	double mem_used = 3 [json_name="mem_used", (gogoproto.jsontag) = "mem_used", (gogoproto.moretags) = "yaml:\"mem_used\""];
+	double mem_free = 4 [json_name="mem_free", (gogoproto.jsontag) = "mem_free", (gogoproto.moretags) = "yaml:\"mem_free\""];
+	double mem_shared = 5 [json_name="mem_shared", (gogoproto.jsontag) = "mem_shared", (gogoproto.moretags) = "yaml:\"mem_shared\""];
+	double mem_buffers = 6 [json_name="mem_buffers", (gogoproto.jsontag) = "mem_buffers", (gogoproto.moretags) = "yaml:\"mem_buffers\""];
+	double mem_cached = 7 [json_name="mem_cached", (gogoproto.jsontag) = "mem_cached", (gogoproto.moretags) = "yaml:\"mem_cached\""];
+}
+
+message DiskOnDemandInfoResponse {
+	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
+	Tags tags = 2 [json_name="tags", (gogoproto.jsontag) = "tags", (gogoproto.moretags) = "yaml:\"tags\""];
+	string time = 3 [json_name="time", (gogoproto.jsontag) = "time", (gogoproto.moretags) = "yaml:\"time\""];
+	DiskOnDemandInfo values = 4 [json_name="values", (gogoproto.jsontag) = "values", (gogoproto.moretags) = "yaml:\"values\""];
+}
+
+message DiskOnDemandInfo {
+	double disk_free = 1 [json_name="disk_free", (gogoproto.jsontag) = "disk_free", (gogoproto.moretags) = "yaml:\"disk_free\""];
+	double disk_total = 2 [json_name="disk_total", (gogoproto.jsontag) = "disk_total", (gogoproto.moretags) = "yaml:\"disk_total\""];
+	double disk_used = 3 [json_name="disk_used", (gogoproto.jsontag) = "disk_used", (gogoproto.moretags) = "yaml:\"disk_used\""];
+	double disk_utilization = 4 [json_name="disk_utilization", (gogoproto.jsontag) = "disk_utilization", (gogoproto.moretags) = "yaml:\"disk_utilization\""];
+	double kb_read = 5 [json_name="kb_read", (gogoproto.jsontag) = "kb_read", (gogoproto.moretags) = "yaml:\"kb_read\""];
+	double kb_written = 6 [json_name="kb_written", (gogoproto.jsontag) = "kb_written", (gogoproto.moretags) = "yaml:\"kb_written\""];
+	double ops_read = 7 [json_name="ops_read", (gogoproto.jsontag) = "ops_read", (gogoproto.moretags) = "yaml:\"ops_read\""];
+	double ops_write = 8 [json_name="ops_write", (gogoproto.jsontag) = "ops_write", (gogoproto.moretags) = "yaml:\"ops_write\""];
+}
+
+message NetworkOnDemandInfoResponse {
+	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
+	Tags tags = 2 [json_name="tags", (gogoproto.jsontag) = "tags", (gogoproto.moretags) = "yaml:\"tags\""];
+	string time = 3 [json_name="time", (gogoproto.jsontag) = "time", (gogoproto.moretags) = "yaml:\"time\""];
+	NetworkOnDemandInfo values = 4 [json_name="values", (gogoproto.jsontag) = "values", (gogoproto.moretags) = "yaml:\"values\""];
+}
+
+message NetworkOnDemandInfo {
+	double bytes_in = 1 [json_name="bytes_in", (gogoproto.jsontag) = "bytes_in", (gogoproto.moretags) = "yaml:\"bytes_in\""];
+	double bytes_out = 2 [json_name="bytes_out", (gogoproto.jsontag) = "bytes_out", (gogoproto.moretags) = "yaml:\"bytes_out\""];
+	double pkts_in = 3 [json_name="pkts_in", (gogoproto.jsontag) = "pkts_in", (gogoproto.moretags) = "yaml:\"pkts_in\""];
+	double pkts_out = 4 [json_name="pkts_out", (gogoproto.jsontag) = "pkts_out", (gogoproto.moretags) = "yaml:\"pkts_out\""];
+}
+
+//////////////////////////////////
+// MCIS 모니터링 메시지 정의
+//////////////////////////////////
+message MCISMonInfoResponse {
+	string result = 1 [json_name="result", (gogoproto.jsontag) = "result", (gogoproto.moretags) = "yaml:\"result\""];
+	string unit = 2 [json_name="unit", (gogoproto.jsontag) = "unit", (gogoproto.moretags) = "yaml:\"unit\""];
+	string desc = 3 [json_name="desc", (gogoproto.jsontag) = "desc", (gogoproto.moretags) = "yaml:\"desc\""];
+	string elapsed = 4 [json_name="elapsed", (gogoproto.jsontag) = "elapsed", (gogoproto.moretags) = "yaml:\"elapsed\""];
+	string spec_id = 5 [json_name="specid", (gogoproto.jsontag) = "specid", (gogoproto.moretags) = "yaml:\"specid\""];
+}
+
+//////////////////////////////////
+// VM CPU 모니터링 메시지 정의
+//////////////////////////////////
+
+message CpuInfoResponse {
+	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
+	Tags tags = 2 [json_name="tags", (gogoproto.jsontag) = "tags", (gogoproto.moretags) = "yaml:\"tags\""];
+	repeated CpuInfo values = 3 [json_name="values", (gogoproto.jsontag) = "values", (gogoproto.moretags) = "yaml:\"values\""];
+}
+
+message CpuInfo {
+	double cpu_utilization = 1 [json_name="cpu_utilization", (gogoproto.jsontag) = "cpu_utilization", (gogoproto.moretags) = "yaml:\"cpu_utilization\""];
+	double cpu_system = 2 [json_name="cpu_system", (gogoproto.jsontag) = "cpu_system", (gogoproto.moretags) = "yaml:\"cpu_system\""];
+	double cpu_idle = 3 [json_name="cpu_idle", (gogoproto.jsontag) = "cpu_idle", (gogoproto.moretags) = "yaml:\"cpu_idle\""];
+	double cpu_iowait = 4 [json_name="cpu_iowait", (gogoproto.jsontag) = "cpu_iowait", (gogoproto.moretags) = "yaml:\"cpu_iowait\""];
+	double cpu_hintr = 5 [json_name="cpu_hintr", (gogoproto.jsontag) = "cpu_hintr", (gogoproto.moretags) = "yaml:\"cpu_hintr\""];
+	double cpu_sintr = 6 [json_name="cpu_sintr", (gogoproto.jsontag) = "cpu_sintr", (gogoproto.moretags) = "yaml:\"cpu_sintr\""];
+	double cpu_user = 7 [json_name="cpu_user", (gogoproto.jsontag) = "cpu_user", (gogoproto.moretags) = "yaml:\"cpu_user\""];
+	double cpu_nice = 8 [json_name="cpu_nice", (gogoproto.jsontag) = "cpu_nice", (gogoproto.moretags) = "yaml:\"cpu_nice\""];
+	double cpu_steal = 9 [json_name="cpu_steal", (gogoproto.jsontag) = "cpu_steal", (gogoproto.moretags) = "yaml:\"cpu_steal\""];
+	double cpu_guest = 10 [json_name="cpu_guest", (gogoproto.jsontag) = "cpu_guest", (gogoproto.moretags) = "yaml:\"cpu_guest\""];
+	double cpu_guest_nice = 11 [json_name="cpu_guest_nice", (gogoproto.jsontag) = "cpu_guest_nice", (gogoproto.moretags) = "yaml:\"cpu_guest_nice\""];
+	string time = 12 [json_name="time", (gogoproto.jsontag) = "time", (gogoproto.moretags) = "yaml:\"time\""];
+}
+
+//////////////////////////////////
+// VM CPUFREQ 모니터링 메시지 정의
+//////////////////////////////////
+
+message CpuFreqInfoResponse {
+	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
+	Tags tags = 2 [json_name="tags", (gogoproto.jsontag) = "tags", (gogoproto.moretags) = "yaml:\"tags\""];
+	repeated CpuFreqInfo values = 3 [json_name="values", (gogoproto.jsontag) = "values", (gogoproto.moretags) = "yaml:\"values\""];
+}
+
+message CpuFreqInfo {
+	double cpu_speed = 1 [json_name="cpu_speed", (gogoproto.jsontag) = "cpu_speed", (gogoproto.moretags) = "yaml:\"cpu_speed\""];
+	string time = 2 [json_name="time", (gogoproto.jsontag) = "time", (gogoproto.moretags) = "yaml:\"time\""];
+}
+
+//////////////////////////////////
+// VM MEMORY 모니터링 메시지 정의
+//////////////////////////////////
+
+message MemoryInfoResponse {
+	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
+	Tags tags = 2 [json_name="tags", (gogoproto.jsontag) = "tags", (gogoproto.moretags) = "yaml:\"tags\""];
+	repeated MemoryInfo values = 3 [json_name="values", (gogoproto.jsontag) = "values", (gogoproto.moretags) = "yaml:\"values\""];
+}
+
+message MemoryInfo {
+	double mem_utilization = 1 [json_name="mem_utilization", (gogoproto.jsontag) = "mem_utilization", (gogoproto.moretags) = "yaml:\"mem_utilization\""];
+	double mem_total = 2 [json_name="mem_total", (gogoproto.jsontag) = "mem_total", (gogoproto.moretags) = "yaml:\"mem_total\""];
+	double mem_used = 3 [json_name="mem_used", (gogoproto.jsontag) = "mem_used", (gogoproto.moretags) = "yaml:\"mem_used\""];
+	double mem_free = 4 [json_name="mem_free", (gogoproto.jsontag) = "mem_free", (gogoproto.moretags) = "yaml:\"mem_free\""];
+	double mem_shared = 5 [json_name="mem_shared", (gogoproto.jsontag) = "mem_shared", (gogoproto.moretags) = "yaml:\"mem_shared\""];
+	double mem_buffers = 6 [json_name="mem_buffers", (gogoproto.jsontag) = "mem_buffers", (gogoproto.moretags) = "yaml:\"mem_buffers\""];
+	double mem_cached = 7 [json_name="mem_cached", (gogoproto.jsontag) = "mem_cached", (gogoproto.moretags) = "yaml:\"mem_cached\""];
+	string time = 8 [json_name="time", (gogoproto.jsontag) = "time", (gogoproto.moretags) = "yaml:\"time\""];
+}
+
+//////////////////////////////////
+// VM DISK 모니터링 메시지 정의
+//////////////////////////////////
+
+message DiskInfoResponse {
+	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
+	Tags tags = 2 [json_name="tags", (gogoproto.jsontag) = "tags", (gogoproto.moretags) = "yaml:\"tags\""];
+	repeated DiskInfo values = 3 [json_name="values", (gogoproto.jsontag) = "values", (gogoproto.moretags) = "yaml:\"values\""];
+}
+
+message DiskInfo {
+	double free = 1 [json_name="free", (gogoproto.jsontag) = "free", (gogoproto.moretags) = "yaml:\"free\""];
+	double read_bytes = 2 [json_name="read_bytes", (gogoproto.jsontag) = "read_bytes", (gogoproto.moretags) = "yaml:\"read_bytes\""];
+	double read_time = 3 [json_name="read_time", (gogoproto.jsontag) = "read_time", (gogoproto.moretags) = "yaml:\"read_time\""];
+	double reads = 4 [json_name="reads", (gogoproto.jsontag) = "reads", (gogoproto.moretags) = "yaml:\"reads\""];
+	double total = 5 [json_name="total", (gogoproto.jsontag) = "total", (gogoproto.moretags) = "yaml:\"total\""];
+	double used = 6 [json_name="used", (gogoproto.jsontag) = "used", (gogoproto.moretags) = "yaml:\"used\""];
+	double used_percent = 7 [json_name="used_percent", (gogoproto.jsontag) = "used_percent", (gogoproto.moretags) = "yaml:\"used_percent\""];
+	double write_bytes = 8 [json_name="write_bytes", (gogoproto.jsontag) = "write_bytes", (gogoproto.moretags) = "yaml:\"write_bytes\""];
+	double write_time = 9 [json_name="write_time", (gogoproto.jsontag) = "write_time", (gogoproto.moretags) = "yaml:\"write_time\""];
+	double writes = 10 [json_name="writes", (gogoproto.jsontag) = "writes", (gogoproto.moretags) = "yaml:\"writes\""];
+	string time = 11 [json_name="time", (gogoproto.jsontag) = "time", (gogoproto.moretags) = "yaml:\"time\""];
+}
+
+//////////////////////////////////
+// VM NETWORK 모니터링 메시지 정의
+//////////////////////////////////
+
+message NetworkInfoResponse {
+	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
+	Tags tags = 2 [json_name="tags", (gogoproto.jsontag) = "tags", (gogoproto.moretags) = "yaml:\"tags\""];
+	repeated NetworkInfo values = 3 [json_name="values", (gogoproto.jsontag) = "values", (gogoproto.moretags) = "yaml:\"values\""];
+}
+
+message NetworkInfo {
+	double bytes_in = 1 [json_name="bytes_in", (gogoproto.jsontag) = "bytes_in", (gogoproto.moretags) = "yaml:\"bytes_in\""];
+	double bytes_out = 2 [json_name="bytes_out", (gogoproto.jsontag) = "bytes_out", (gogoproto.moretags) = "yaml:\"bytes_out\""];
+	double pkts_in = 3 [json_name="pkts_in", (gogoproto.jsontag) = "pkts_in", (gogoproto.moretags) = "yaml:\"pkts_in\""];
+	double pkts_out = 4 [json_name="pkts_out", (gogoproto.jsontag) = "pkts_out", (gogoproto.moretags) = "yaml:\"pkts_out\""];
+	string time = 5 [json_name="time", (gogoproto.jsontag) = "time", (gogoproto.moretags) = "yaml:\"time\""];
+}
+
+//////////////////////////////////
+// VM CPU 실시간 모니터링 메시지 정의
+//////////////////////////////////
+
+/*message CpuRtInfoResponse {
+	string metric_name = 1 [json_name="metricName", (gogoproto.jsontag) = "metricName", (gogoproto.moretags) = "yaml:\"metricName\""];
+	string time = 2 [json_name="time", (gogoproto.jsontag) = "time", (gogoproto.moretags) = "yaml:\"time\""];
+	CpuRtInfo value = 3 [json_name="value", (gogoproto.jsontag) = "value", (gogoproto.moretags) = "yaml:\"value\""];
+	string vm_id = 4 [json_name="vmId", (gogoproto.jsontag) = "vmId", (gogoproto.moretags) = "yaml:\"vmId\""];
+}
+
+message CpuRtInfo {
+	double cpu_utilization = 1 [json_name="cpu_utilization", (gogoproto.jsontag) = "cpu_utilization", (gogoproto.moretags) = "yaml:\"cpu_utilization\""];
+	double cpu_system = 2 [json_name="cpu_system", (gogoproto.jsontag) = "cpu_system", (gogoproto.moretags) = "yaml:\"cpu_system\""];
+	double cpu_idle = 3 [json_name="cpu_idle", (gogoproto.jsontag) = "cpu_idle", (gogoproto.moretags) = "yaml:\"cpu_idle\""];
+	double cpu_iowait = 4 [json_name="cpu_iowait", (gogoproto.jsontag) = "cpu_iowait", (gogoproto.moretags) = "yaml:\"cpu_iowait\""];
+	double cpu_hintr = 5 [json_name="cpu_hintr", (gogoproto.jsontag) = "cpu_hintr", (gogoproto.moretags) = "yaml:\"cpu_hintr\""];
+	double cpu_sintr = 6 [json_name="cpu_sintr", (gogoproto.jsontag) = "cpu_sintr", (gogoproto.moretags) = "yaml:\"cpu_sintr\""];
+}*/
+
+//////////////////////////////////
+// VM CPUFREQ 실시간 모니터링 메시지 정의
+//////////////////////////////////
+
+/*message CpuFreqRtInfoResponse {
+	string metric_name = 1 [json_name="metricName", (gogoproto.jsontag) = "metricName", (gogoproto.moretags) = "yaml:\"metricName\""];
+	string time = 2 [json_name="time", (gogoproto.jsontag) = "time", (gogoproto.moretags) = "yaml:\"time\""];
+	CpuFreqRtInfo value = 3 [json_name="value", (gogoproto.jsontag) = "value", (gogoproto.moretags) = "yaml:\"value\""];
+	string vm_id = 4 [json_name="vmId", (gogoproto.jsontag) = "vmId", (gogoproto.moretags) = "yaml:\"vmId\""];
+}
+
+message CpuFreqRtInfo {
+	double cpu_speed = 1 [json_name="cpu_speed", (gogoproto.jsontag) = "cpu_speed", (gogoproto.moretags) = "yaml:\"cpu_speed\""];
+}*/
+
+//////////////////////////////////
+// VM MEMORY 실시간 모니터링 메시지 정의
+//////////////////////////////////
+
+/*message MemoryRtInfoResponse {
+	string metric_name = 1 [json_name="metricName", (gogoproto.jsontag) = "metricName", (gogoproto.moretags) = "yaml:\"metricName\""];
+	string time = 2 [json_name="time", (gogoproto.jsontag) = "time", (gogoproto.moretags) = "yaml:\"time\""];
+	MemoryRtInfo value = 3 [json_name="value", (gogoproto.jsontag) = "value", (gogoproto.moretags) = "yaml:\"value\""];
+	string vm_id = 4 [json_name="vmId", (gogoproto.jsontag) = "vmId", (gogoproto.moretags) = "yaml:\"vmId\""];
+}
+
+message MemoryRtInfo {
+	double mem_utilization = 1 [json_name="mem_utilization", (gogoproto.jsontag) = "mem_utilization", (gogoproto.moretags) = "yaml:\"mem_utilization\""];
+	double mem_total = 2 [json_name="mem_total", (gogoproto.jsontag) = "mem_total", (gogoproto.moretags) = "yaml:\"mem_total\""];
+	double mem_used = 3 [json_name="mem_used", (gogoproto.jsontag) = "mem_used", (gogoproto.moretags) = "yaml:\"mem_used\""];
+	double mem_free = 4 [json_name="mem_free", (gogoproto.jsontag) = "mem_free", (gogoproto.moretags) = "yaml:\"mem_free\""];
+	double mem_shared = 5 [json_name="mem_shared", (gogoproto.jsontag) = "mem_shared", (gogoproto.moretags) = "yaml:\"mem_shared\""];
+	double mem_buffers = 6 [json_name="mem_buffers", (gogoproto.jsontag) = "mem_buffers", (gogoproto.moretags) = "yaml:\"mem_buffers\""];
+	double mem_cached = 7 [json_name="mem_cached", (gogoproto.jsontag) = "mem_cached", (gogoproto.moretags) = "yaml:\"mem_cached\""];
+}*/
+
+//////////////////////////////////
+// VM DISK 실시간 모니터링 메시지 정의
+//////////////////////////////////
+
+/*message DiskRtInfoResponse {
+	string metric_name = 1 [json_name="metricName", (gogoproto.jsontag) = "metricName", (gogoproto.moretags) = "yaml:\"metricName\""];
+	string time = 2 [json_name="time", (gogoproto.jsontag) = "time", (gogoproto.moretags) = "yaml:\"time\""];
+	DiskRtInfo value = 3 [json_name="value", (gogoproto.jsontag) = "value", (gogoproto.moretags) = "yaml:\"value\""];
+	string vm_id = 4 [json_name="vmId", (gogoproto.jsontag) = "vmId", (gogoproto.moretags) = "yaml:\"vmId\""];
+}
+
+message DiskRtInfo {
+	double disk_free = 1 [json_name="disk_free", (gogoproto.jsontag) = "disk_free", (gogoproto.moretags) = "yaml:\"disk_free\""];
+	double disk_total = 2 [json_name="disk_total", (gogoproto.jsontag) = "disk_total", (gogoproto.moretags) = "yaml:\"disk_total\""];
+	double disk_used = 3 [json_name="disk_used", (gogoproto.jsontag) = "disk_used", (gogoproto.moretags) = "yaml:\"disk_used\""];
+	double disk_utilization = 4 [json_name="disk_utilization", (gogoproto.jsontag) = "disk_utilization", (gogoproto.moretags) = "yaml:\"disk_utilization\""];
+	double kb_read = 5 [json_name="kb_read", (gogoproto.jsontag) = "kb_read", (gogoproto.moretags) = "yaml:\"kb_read\""];
+	double kb_written = 6 [json_name="kb_written", (gogoproto.jsontag) = "kb_written", (gogoproto.moretags) = "yaml:\"kb_written\""];
+	double ops_read = 7 [json_name="ops_read", (gogoproto.jsontag) = "ops_read", (gogoproto.moretags) = "yaml:\"ops_read\""];
+	double ops_write = 8 [json_name="ops_write", (gogoproto.jsontag) = "ops_write", (gogoproto.moretags) = "yaml:\"ops_write\""];
+}*/
+
+//////////////////////////////////
+// VM NETWRORK 실시간 모니터링 메시지 정의
+//////////////////////////////////
+
+/*message NetworkRtInfoResponse {
+	string metric_name = 1 [json_name="metricName", (gogoproto.jsontag) = "metricName", (gogoproto.moretags) = "yaml:\"metricName\""];
+	string time = 2 [json_name="time", (gogoproto.jsontag) = "time", (gogoproto.moretags) = "yaml:\"time\""];
+	NetworkRtInfo value = 3 [json_name="value", (gogoproto.jsontag) = "value", (gogoproto.moretags) = "yaml:\"value\""];
+	string vm_id = 4 [json_name="vmId", (gogoproto.jsontag) = "vmId", (gogoproto.moretags) = "yaml:\"vmId\""];
+}
+
+message NetworkRtInfo {
+	double bytes_in = 1 [json_name="bytes_in", (gogoproto.jsontag) = "bytes_in", (gogoproto.moretags) = "yaml:\"bytes_in\""];
+	double bytes_out = 2 [json_name="bytes_out", (gogoproto.jsontag) = "bytes_out", (gogoproto.moretags) = "yaml:\"bytes_out\""];
+	double pkts_in = 3 [json_name="pkts_in", (gogoproto.jsontag) = "pkts_in", (gogoproto.moretags) = "yaml:\"pkts_in\""];
+	double pkts_out = 4 [json_name="pkts_out", (gogoproto.jsontag) = "pkts_out", (gogoproto.moretags) = "yaml:\"pkts_out\""];
+}*/
+
+//////////////////////////////////
+// 모니터링 CONFIG 메시지 정의
+//////////////////////////////////
+
+message MonitoringConfigRequest {
+	MonitoringConfigInfo item = 1 [json_name="common", (gogoproto.jsontag) = "common", (gogoproto.moretags) = "yaml:\"common\""];
+}
+
+message MonitoringConfigResponse {
+	MonitoringConfigInfo item = 1 [json_name="common", (gogoproto.jsontag) = "common", (gogoproto.moretags) = "yaml:\"common\""];
+}
+
+message MonitoringConfigInfo {
+	int32 agent_interval = 1 [json_name="agent_interval", (gogoproto.jsontag) = "agent_interval", (gogoproto.moretags) = "yaml:\"agent_interval\""];
+	int32 collector_interval = 2 [json_name="collector_interval", (gogoproto.jsontag) = "collector_interval", (gogoproto.moretags) = "yaml:\"collector_interval\""];
+	int32 max_host_count = 4 [json_name="max_host_count", (gogoproto.jsontag) = "max_host_count", (gogoproto.moretags) = "yaml:\"max_host_count\""];
+	string monitoring_policy = 5 [json_name="monitoring_policy", (gogoproto.jsontag) = "monitoring_policy", (gogoproto.moretags) = "yaml:\"monitoring_policy\""];
+}
+
+//////////////////////////////////
+// Agent 설치 메시지 정의
+//////////////////////////////////
+
+message InstallTelegrafRequest {
+	string ns_id = 1 [json_name="ns_id", (gogoproto.jsontag) = "ns_id", (gogoproto.moretags) = "yaml:\"ns_id\""];
+	string mcis_id = 2 [json_name="mcis_id", (gogoproto.jsontag) = "mcis_id", (gogoproto.moretags) = "yaml:\"mcis_id\""];
+	string vm_id = 3 [json_name="vm_id", (gogoproto.jsontag) = "vm_id", (gogoproto.moretags) = "yaml:\"vm_id\""];
+	string public_ip = 4 [json_name="public_ip", (gogoproto.jsontag) = "public_ip", (gogoproto.moretags) = "yaml:\"public_ip\""];
+	string user_name = 5 [json_name="user_name", (gogoproto.jsontag) = "user_name", (gogoproto.moretags) = "yaml:\"user_name\""];
+	string ssh_key = 6 [json_name="ssh_key", (gogoproto.jsontag) = "ssh_key", (gogoproto.moretags) = "yaml:\"ssh_key\""];
+	string csp_type = 7 [json_name="csp_type", (gogoproto.jsontag) = "csp_type", (gogoproto.moretags) = "yaml:\"csp_type\""];
+}

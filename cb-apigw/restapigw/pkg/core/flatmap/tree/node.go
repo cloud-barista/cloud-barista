@@ -27,7 +27,7 @@ func (n *node) flatten(i interface{}) {
 	switch v := i.(type) {
 	case map[string]interface{}:
 		n.isCollection = false
-		if len(v) == 0 {
+		if 0 == len(v) {
 			n.Value = v
 			break
 		}
@@ -37,7 +37,7 @@ func (n *node) flatten(i interface{}) {
 		}
 	case []interface{}:
 		n.isCollection = true
-		if len(v) == 0 {
+		if 0 == len(v) {
 			n.Value = v
 			break
 		}
@@ -53,7 +53,7 @@ func (n *node) flatten(i interface{}) {
 
 // Add - 지정된 경로에 지정된 값을 설정한 node 구성
 func (n *node) Add(path []string, v interface{}) {
-	if len(path) == 0 {
+	if 0 == len(path) {
 		n.flatten(v)
 		return
 	}
@@ -74,12 +74,12 @@ func (n *node) Add(path []string, v interface{}) {
 func (n *node) Del(path ...string) {
 	lenKs := len(path)
 
-	if lenKs == 0 || n.IsLeaf() {
+	if 0 == lenKs || n.IsLeaf() {
 		return
 	}
 
 	if path[0] == wildcard {
-		if lenKs > 1 {
+		if 1 < lenKs {
 			for _, e := range n.edges {
 				e.n.Del(path[1:]...)
 			}
@@ -95,7 +95,7 @@ func (n *node) Del(path ...string) {
 
 	for i, e := range n.edges {
 		if e.label == path[0] {
-			if lenKs == 1 {
+			if 1 == lenKs {
 				copy(n.edges[i:], n.edges[i+1:])
 				n.edges[len(n.edges)-1] = nil
 				n.edges = n.edges[:len(n.edges)-1]
@@ -112,11 +112,11 @@ func (n *node) Get(path ...string) interface{} {
 	lenKs := len(path)
 	lenEdges := len(n.edges)
 
-	if lenEdges == 0 && lenKs > 0 {
+	if 0 == lenEdges && 0 < lenKs {
 		return nil
 	}
 
-	if lenKs == 0 {
+	if 0 == lenKs {
 		return n.expand()
 	}
 
@@ -138,13 +138,13 @@ func (n *node) Get(path ...string) interface{} {
 
 // IsLeaf - 해당 Node가 말단 Node인지 여부 반환
 func (n *node) IsLeaf() bool {
-	return len(n.edges) == 0
+	return 0 == len(n.edges)
 }
 
 // expand - 해당 Node의 하위 노드들을 반환
 func (n *node) expand() interface{} {
 	children := len(n.edges)
-	if children == 0 {
+	if 0 == children {
 		return n.Value
 	}
 

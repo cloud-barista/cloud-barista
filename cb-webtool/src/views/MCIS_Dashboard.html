@@ -1,0 +1,87 @@
+{{define "Mcis_dashboard"}}
+	<div class="dashboard">
+						
+						<div class="d_box box_m box_m1 box_1m">
+							<div class="titbox">
+								<div class="tit"><strong>Mcis</strong></div>
+								<div class="state color_b"></div>
+							</div>
+							
+							<div class="box_cont">
+								<div class="lbox">
+									<strong id="total_mcis">0</strong>
+									<!-- <strong class="txt_3n">999</strong> -->
+								</div>
+								<div class="rbox">
+									<div class="numbox" id="mcis_numbox">
+										<div class="num bgbox_b"><span>0</span></div>
+										<!-- <div class="num bgbox_b"><span class="txt_3n">999</span></div> -->
+										<div class="num bgbox_r"><span>0</span></div>
+										<div class="num bgbox_g"><span>0</span></div>
+									</div>
+									<div class="txt">Status of Infra Service</div>
+								</div>
+							</div>
+							
+						</div>
+						
+						<div class="d_box box_m box_m2 box_2m">
+							<div class="titbox">
+								<div class="tit"><strong class="stit">Server</strong></div>
+								<div class="state color_b"></div>
+							</div>
+							
+							<div class="box_cont">
+								<div class="lbox">
+									<strong id="total_vm">0</strong>
+								</div>
+								<div class="rbox">
+									<div class="numbox" id="vm_numbox">
+										<div class="num bgbox_b boxrd cursor" onclick="location.href='../operation/Manage_Mcis.html'"><span>0</span></div>
+										<div class="num bgbox_r boxrd cursor" onclick="location.href='../operation/Manage_Mcis.html'"><span>0</span></div>
+										<div class="num bgbox_g boxrd cursor" onclick="location.href='../operation/Manage_Mcis.html'"><span>0</span></div>
+									</div>
+									<div class="txt">Status of Server</div>
+								</div>
+							</div>
+							
+						</div>
+						
+						<div class="d_box box_m box_m4 box_3m">
+							<div class="titbox">
+								<div class="tit"><strong>CP</strong> <span>/</span> connection</div>
+								<div class="state color_r"></div>
+							</div>
+							
+							<div class="box_cont">
+								<div class="lbox" id="dash_2">
+									
+								</div>
+								<div class="cbox">
+									<div class="tcbox">
+										<div class="sc_box scrollbar-inner">
+											<ul id="dash_3">
+												
+											</ul>
+										</div>
+									</div>
+									<div class="txt">Status of Infra Service</div>
+								</div>
+							</div>
+							
+						</div>
+						
+					</div>	
+					<script>
+						$(function() {
+
+							jQuery('.sc_box.scrollbar-inner').scrollbar();
+						});
+						$(document).ready(function(){
+							
+							
+							getConnection();
+	
+						})
+					</script>
+{{end}}

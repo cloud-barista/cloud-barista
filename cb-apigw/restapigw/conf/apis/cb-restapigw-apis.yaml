@@ -1,0 +1,417 @@
+definitions:
+    - name: Splash Test
+      active: true
+      endpoint: /splash
+      hosts:
+        - host: http://localhost:8100
+          weight: 0
+        - host: http://localhost:8200
+          weight: 0
+      method: GET
+      timeout: 2s
+      cache_ttl: 1h0m0s
+      output_encoding: json
+      except_querystrings: []
+      except_headers: []
+      middleware: {}
+      health_check:
+        url: ""
+        timeout: 0s
+      backend:
+        - hosts:
+            - host: http://localhost:8100
+              weight: 3
+            - host: http://localhost:8200
+              weight: 5
+          timeout: 2s
+          method: GET
+          url_pattern: /shop/campaigns.json
+          encoding: json
+          group: ""
+          blacklist: []
+          whitelist:
+            - campaigns
+          mapping: {}
+          is_collection: false
+          wrap_collection_to_json: false
+          target: ""
+          middleware: {}
+          disable_host_sanitize: false
+          lb_mode: wrr
+        - hosts:
+            - host: http://localhost:8100
+              weight: 0
+            - host: http://localhost:8200
+              weight: 0
+          timeout: 2s
+          method: GET
+          url_pattern: /shop/products.json
+          encoding: json
+          group: ""
+          blacklist: []
+          whitelist: []
+          mapping: {}
+          is_collection: false
+          wrap_collection_to_json: false
+          target: ""
+          middleware:
+            mw-proxy:
+                flatmap_filter:
+                    - args:
+                        - products.*.id
+                        - products.*.id-
+                      type: move
+                    - args:
+                        - products.*.image
+                        - products.*.body_html
+                        - products.*.created_at
+                        - products.*.handle
+                        - products.*.product_type
+                        - products.*.published_at
+                        - products.*.published_scope
+                        - products.*.tags
+                        - products.*.template_suffix
+                        - products.*.updated_at
+                        - products.*.vendor
+                      type: del
+          disable_host_sanitize: false
+          lb_mode: rr
+    - name: Sequential Test
+      active: true
+      endpoint: /sequential
+      hosts: []
+      method: GET
+      timeout: 2s
+      cache_ttl: 1h0m0s
+      output_encoding: json
+      except_querystrings: []
+      except_headers: []
+      middleware:
+        mw-proxy:
+            sequential: true
+      health_check:
+        url: ""
+        timeout: 0s
+      backend:
+        - hosts:
+            - host: http://localhost:8100
+              weight: 0
+          timeout: 2s
+          method: GET
+          url_pattern: /hotels/1.json
+          encoding: json
+          group: ""
+          blacklist: []
+          whitelist:
+            - destination_id
+          mapping: {}
+          is_collection: false
+          wrap_collection_to_json: false
+          target: ""
+          middleware: {}
+          disable_host_sanitize: false
+          lb_mode: ""
+        - hosts:
+            - host: http://localhost:8100
+              weight: 0
+          timeout: 2s
+          method: GET
+          url_pattern: /destinations/{{.Resp0_destination_id}}.json
+          encoding: json
+          group: ""
+          blacklist: []
+          whitelist: []
+          mapping: {}
+          is_collection: false
+          wrap_collection_to_json: false
+          target: ""
+          middleware:
+            mw-http:
+                return_error_details: sequential
+          disable_host_sanitize: false
+          lb_mode: ""
+    - name: Fail Test
+      active: true
+      endpoint: /fail
+      hosts: []
+      method: GET
+      timeout: 2s
+      cache_ttl: 1h0m0s
+      output_encoding: json
+      except_querystrings: []
+      except_headers: []
+      middleware: {}
+      health_check:
+        url: ""
+        timeout: 0s
+      backend:
+        - hosts:
+            - host: http://localhost:8100
+              weight: 0
+          timeout: 2s
+          method: GET
+          url_pattern: /user/1.json
+          encoding: json
+          group: user
+          blacklist: []
+          whitelist: []
+          mapping: {}
+          is_collection: false
+          wrap_collection_to_json: false
+          target: address
+          middleware:
+            mw-http:
+                return_error_details: fail_1
+          disable_host_sanitize: false
+          lb_mode: ""
+        - hosts:
+            - host: http://fake_url_that_should_not_resolve.tld
+              weight: 0
+          timeout: 2s
+          method: GET
+          url_pattern: /
+          encoding: json
+          group: none
+          blacklist: []
+          whitelist: []
+          mapping: {}
+          is_collection: false
+          wrap_collection_to_json: false
+          target: ""
+          middleware: {}
+          disable_host_sanitize: false
+          lb_mode: ""
+    - name: Public Test
+      active: true
+      endpoint: /public
+      hosts: []
+      method: GET
+      timeout: 2s
+      cache_ttl: 1h0m0s
+      output_encoding: json
+      except_querystrings: []
+      except_headers: []
+      middleware: {}
+      health_check:
+        url: ""
+        timeout: 0s
+      backend:
+        - hosts:
+            - host: https://api.github.com
+              weight: 0
+          timeout: 2s
+          method: GET
+          url_pattern: /users/ccambo
+          encoding: json
+          group: github
+          blacklist: []
+          whitelist:
+            - avatar_url
+            - name
+            - company
+            - blog
+            - location
+            - mail
+            - hireable
+            - followers
+            - public_repos
+            - public_gists
+          mapping:
+            blog: website
+          is_collection: false
+          wrap_collection_to_json: false
+          target: ""
+          middleware:
+            mw-httpcache:
+                enabled: true
+          disable_host_sanitize: false
+          lb_mode: ""
+        - hosts:
+            - host: https://api.bitbucket.org
+              weight: 0
+          timeout: 2s
+          method: GET
+          url_pattern: /2.0/users/kpacha
+          encoding: json
+          group: bitbucket
+          blacklist: []
+          whitelist:
+            - links.avatar
+            - display_name
+            - website
+            - location
+          mapping:
+            display_name: name
+          is_collection: false
+          wrap_collection_to_json: false
+          target: ""
+          middleware: {}
+          disable_host_sanitize: false
+          lb_mode: ""
+    - name: External(Github) Test
+      active: true
+      endpoint: /github/:user
+      hosts: []
+      method: GET
+      timeout: 2s
+      cache_ttl: 1h0m0s
+      output_encoding: json
+      except_querystrings: []
+      except_headers: []
+      middleware: {}
+      health_check:
+        url: ""
+        timeout: 0s
+      backend:
+        - hosts:
+            - host: https://api.github.com
+              weight: 0
+          timeout: 2s
+          method: GET
+          url_pattern: /users/{{.User}}
+          encoding: json
+          group: ""
+          blacklist: []
+          whitelist: []
+          mapping: {}
+          is_collection: false
+          wrap_collection_to_json: false
+          target: ""
+          middleware: {}
+          disable_host_sanitize: true
+          lb_mode: ""
+    - name: Collection Test
+      active: true
+      endpoint: /collection
+      hosts: []
+      method: GET
+      timeout: 1s
+      cache_ttl: 1h0m0s
+      output_encoding: json
+      except_querystrings: []
+      except_headers: []
+      middleware: {}
+      health_check:
+        url: ""
+        timeout: 0s
+      backend:
+        - hosts:
+            - host: http://localhost:8100
+              weight: 0
+          timeout: 3s
+          method: GET
+          url_pattern: /destinations/2.json
+          encoding: json
+          group: ""
+          blacklist: []
+          whitelist: []
+          mapping:
+            collection: data
+          is_collection: true
+          wrap_collection_to_json: false
+          target: ""
+          middleware: {}
+          disable_host_sanitize: false
+          lb_mode: ""
+    - name: Custom Test
+      active: true
+      endpoint: /private/custom
+      hosts:
+        - host: http://localhost:8100
+          weight: 0
+      method: GET
+      timeout: 2s
+      cache_ttl: 1h0m0s
+      output_encoding: json
+      except_querystrings: []
+      except_headers: []
+      middleware:
+        mw-auth:
+            access_ids:
+                - etri
+            secure_key: '###TEST_SECURE_KEY###'
+      health_check:
+        url: ""
+        timeout: 0s
+      backend:
+        - hosts:
+            - host: http://localhost:8100
+              weight: 0
+          timeout: 2s
+          method: GET
+          url_pattern: /user/1.json
+          encoding: json
+          group: ""
+          blacklist: []
+          whitelist: []
+          mapping: {}
+          is_collection: false
+          wrap_collection_to_json: false
+          target: ""
+          middleware: {}
+          disable_host_sanitize: false
+          lb_mode: ""
+    - name: Spider
+      active: true
+      endpoint: /spider/*bypass
+      hosts: []
+      method: GET
+      timeout: 2s
+      cache_ttl: 1h0m0s
+      output_encoding: json
+      except_querystrings: []
+      except_headers: []
+      middleware: {}
+      health_check:
+        url: ""
+        timeout: 0s
+      backend:
+        - hosts:
+            - host: http://cb-spider:1024
+              weight: 0
+          timeout: 2s
+          method: GET
+          url_pattern: /*bypass
+          encoding: json
+          group: ""
+          blacklist: []
+          whitelist: []
+          mapping: {}
+          is_collection: false
+          wrap_collection_to_json: false
+          target: ""
+          middleware: {}
+          disable_host_sanitize: false
+          lb_mode: ""
+    - name: Tumblebug
+      active: true
+      endpoint: /tumblebug/*bypass
+      hosts: []
+      method: GET
+      timeout: 2s
+      cache_ttl: 1h0m0s
+      output_encoding: json
+      except_querystrings: []
+      except_headers: []
+      middleware: {}
+      health_check:
+        url: ""
+        timeout: 0s
+      backend:
+        - hosts:
+            - host: http://cb-tumblebug:1323
+              weight: 0
+          timeout: 2s
+          method: GET
+          url_pattern: /*bypass
+          encoding: json
+          group: ""
+          blacklist: []
+          whitelist: []
+          mapping: {}
+          is_collection: false
+          wrap_collection_to_json: false
+          target: ""
+          middleware: {}
+          disable_host_sanitize: false
+          lb_mode: ""

@@ -8,26 +8,26 @@
 package main
 
 import (
-        "fmt"
+	"fmt"
 
-	"github.com/sirupsen/logrus"
-        "github.com/cloud-barista/cb-store"
+	cbstore "github.com/cloud-barista/cb-store"
 	"github.com/cloud-barista/cb-store/config"
 	icbs "github.com/cloud-barista/cb-store/interfaces"
+	"github.com/sirupsen/logrus"
 )
 
 var cblog *logrus.Logger
 var store icbs.Store
 
 func init() {
-        cblog = config.Cblogger
-        store = cbstore.GetStore()
+	cblog = config.Cblogger
+	store = cbstore.GetStore()
 }
 
 func main() {
 
-        cblog.Info("start test!!")
-        fmt.Println("===========================initDB")
+	cblog.Info("start test!!")
+	fmt.Println("===========================initDB")
 
 	// ## init data
 	err := store.InitData()
@@ -35,5 +35,5 @@ func main() {
 		cblog.Error(err)
 	}
 
-        cblog.Info("finish test!!")
+	cblog.Info("finish test!!")
 }

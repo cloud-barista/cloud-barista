@@ -65,7 +65,7 @@ func getWithFallback(key string, fallback Render) Render {
 // jsonRender - JSON 포맷에 대한 Render 처리
 func jsonRender(c *gin.Context, res *proxy.Response) {
 	status := c.Writer.Status()
-	if res == nil {
+	if nil == res {
 		c.JSON(status, emptyResponse)
 		return
 	}
@@ -86,7 +86,7 @@ func jsonRender(c *gin.Context, res *proxy.Response) {
 func stringRender(c *gin.Context, res *proxy.Response) {
 	status := c.Writer.Status()
 
-	if res == nil {
+	if nil == res {
 		c.String(status, "")
 		return
 	}
@@ -106,7 +106,7 @@ func stringRender(c *gin.Context, res *proxy.Response) {
 // xmlRender - XML 포맷에 대한 Render 처리
 func xmlRender(c *gin.Context, res *proxy.Response) {
 	status := c.Writer.Status()
-	if res == nil {
+	if nil == res {
 		c.XML(status, nil)
 		return
 	}
@@ -121,7 +121,7 @@ func xmlRender(c *gin.Context, res *proxy.Response) {
 // yamlRender - YAML 포맷에 대한 Render 처리
 func yamlRender(c *gin.Context, res *proxy.Response) {
 	status := c.Writer.Status()
-	if res == nil {
+	if nil == res {
 		c.YAML(status, emptyResponse)
 		return
 	}
@@ -130,7 +130,7 @@ func yamlRender(c *gin.Context, res *proxy.Response) {
 
 // noopRender - 아무 변환도 없는 Render 처리
 func noopRender(c *gin.Context, res *proxy.Response) {
-	if res == nil {
+	if nil == res {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -146,11 +146,11 @@ func noopRender(c *gin.Context, res *proxy.Response) {
 // getRender - Endpoint 설정에 지정된 Backend의 "encoding" 을 기준 Encoding(fallback)을 설정하고 Endpoint 설정의 "output_encoding" 기준으로 운영되는 Render 반환
 func getRender(eConf *config.EndpointConfig) Render {
 	fallback := jsonRender
-	if len(eConf.Backend) == 1 {
+	if 1 == len(eConf.Backend) {
 		fallback = getWithFallback(eConf.Backend[0].Encoding, fallback)
 	}
 
-	if eConf.OutputEncoding == "" {
+	if "" == eConf.OutputEncoding {
 		return fallback
 	}
 

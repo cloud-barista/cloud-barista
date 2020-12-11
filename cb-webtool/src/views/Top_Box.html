@@ -1,0 +1,39 @@
+{{define "Top_box"}}
+
+<div class="topbox">
+    <div class="info">
+        <div class="thumb"><span><img src="/assets/img/contents/img_thumb.jpg" alt=""></span></div>
+        <div class="txt_1">Leonardo DiCaprio</div>
+        <div class="txt_2">
+            
+            <span id="default_namespace"></span>
+            <div class="infobox">
+                <div class="box">
+                    <ul>
+                        <li>
+                            <a href="javascript:void(0);">Select NS</a>
+                            <ul id="name_select">
+                                <li><a href="javascript:void(0);" data-toggle="modal" data-target="#NameSpace">ns_aws_1</a></li>
+                                <li><a href="javascript:void(0);" data-toggle="modal" data-target="#NameSpace">ns_global_2</a></li>
+                                <li><a href="javascript:void(0);" data-toggle="modal" data-target="#NameSpace">ns_gcp_3</a></li>
+                                <li><a href="javascript:void(0);" data-toggle="modal" data-target="#NameSpace">ns_demo_4</a></li>
+                            </ul>	
+                        </li>
+                        <li>
+                            <a href="javascript:void(0);">Add NS</a>
+                            <ul>
+                                <li><a href="javascript:void(0);" data-toggle="modal" data-target="#NewNS">new NS</a></li>
+                                <li><a href="javascript:void(0);" data-toggle="modal" data-target="#ManageNS">Manage NS</a></li>
+                            </ul>	
+                        </li>
+                        <input type="hidden" id="select_namespace" />
+                    </ul>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+    
+
+{{end}}

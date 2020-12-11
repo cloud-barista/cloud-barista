@@ -19,54 +19,58 @@ import (
 
 // ===== [ Types ] =====
 
-// ginResponseWriter - Gin의 ResponseWriter에 Metrics 처리를 위한 구조 정의
-type ginResponseWriter struct {
-	gin.ResponseWriter
-	name  string
-	begin time.Time
-	rm    *metrics.RouterMetrics
-}
+type (
+	// Collector - Metrics 기반의 Collector 구조
+	Collector struct {
+		*metrics.Producer
+	}
 
-// Metrics - gin 기반의 모든 Metrics 를 관리하는 구조 정의
-type Metrics struct {
-	*metrics.Metrics
-}
+	// responseWriter - Gin 의 ResponseWriter에 Metrics 처리를 위한 구조
+	responseWriter struct {
+		gin.ResponseWriter
+		name  string
+		begin time.Time
+		rm    *metrics.RouterMetrics
+	}
+)
 
 // ===== [ Implementations ] =====
 
 // end - gin.ResponseWriter 와 Metrics를 end 시점 처리
-func (grw *ginResponseWriter) end() {
-	duration := time.Since(grw.begin)
-	grw.rm.Counter("response", grw.name, "status", strconv.Itoa(grw.Status()), "count").Inc(1)
-	grw.rm.Histogram("response", grw.name, "size").Update(int64(grw.Size()))
-	grw.rm.Histogram("response", grw.name, "time").Update(int64(duration))
+func (rw *responseWriter) end() {
+	duration := time.Since(rw.begin)
+
+	rw.rm.Counter("response", rw.name, "status", strconv.Itoa(rw.Status()), "count").Inc(1)
+	rw.rm.Histogram("response", rw.name, "size").Update(int64(rw.Size()))
+	rw.rm.Histogram("response", rw.name, "time").Update(int64(duration))
 }
 
 // HandlerFactory - 전달된 HandlerFactory 수행 전에 필요한 Metric 관련 처리를 수행하는 HandlerFactory 구성
-func (m *Metrics) HandlerFactory(hf ginRouter.HandlerFactory, logger logging.Logger) ginRouter.HandlerFactory {
-	if m.Config == nil || !m.Config.RouterEnabled {
+func (c *Collector) HandlerFactory(hf ginRouter.HandlerFactory, log logging.Logger) ginRouter.HandlerFactory {
+	if nil == c.Config || !c.Config.RouterEnabled {
 		return hf
 	}
 
-	return NewHTTPHandlerFactory(m.Router, hf, logger)
+	return NewHTTPHandlerFactory(c.Router, hf, log)
 }
 
 // RunEndpoint - Gin Engine 기반으로 http.Server 구동
-func (m *Metrics) RunEndpoint(ctx context.Context, engine *gin.Engine, logger logging.Logger) {
+func (c *Collector) RunEndpoint(ctx context.Context, engine *gin.Engine, log logging.Logger) {
 	server := &http.Server{
-		Addr:    m.Config.ListenAddress,
+		Addr:    c.Config.ListenAddress,
 		Handler: engine,
 	}
 
 	go func() {
 		// http.Server 실행 및 오류 logging
-		logger.Error(server.ListenAndServe())
+		log.Error(server.ListenAndServe())
 	}()
 
 	go func() {
 		// http.Server 종료 처리
 		<-ctx.Done()
 		// shutting down the stats handler
+		log.Info("[METRICS] shutting down the metrics stats handler.")
 		ctx, cancel := context.WithTimeout(ctx, time.Second)
 		server.Shutdown(ctx)
 		cancel()
@@ -74,8 +78,7 @@ func (m *Metrics) RunEndpoint(ctx context.Context, engine *gin.Engine, logger lo
 }
 
 // NewEngine - Stats 처리를 위한 Endpoint 역할을 담당하는 Gin Engine 생성
-func (m *Metrics) NewEngine(debugMode bool, logger logging.Logger) *gin.Engine {
-	// Sets up the Gin engine for exports the metrics
+func (c *Collector) NewEngine(debugMode bool) *gin.Engine {
 	if debugMode {
 		gin.SetMode(gin.DebugMode)
 	} else {
@@ -88,57 +91,59 @@ func (m *Metrics) NewEngine(debugMode bool, logger logging.Logger) *gin.Engine {
 	engine.RedirectFixedPath = true
 	engine.HandleMethodNotAllowed = true
 
-	engine.GET("/metrics", m.NewExportHandler())
+	engine.GET("/metrics", c.NewExportHandler())
 	return engine
 }
 
 // NewExportHandler - 수집된 Metrics를 JSON 포맷으로 노출하는 go-metrics에서 제공되는 http.Handler 생성
-func (m *Metrics) NewExportHandler() gin.HandlerFunc {
-	return gin.WrapH(gometricsExp.ExpHandler(*m.Registry))
+func (c *Collector) NewExportHandler() gin.HandlerFunc {
+	return gin.WrapH(gometricsExp.ExpHandler(*c.Registry))
 }
 
 // ===== [ Private Functions ] =====
 
 // ===== [ Public Functions ] =====
 
-// NewHTTPHandlerFactory - RouterMetrics 처리를 수행하는 HandlerFactory 생성
-func NewHTTPHandlerFactory(rm *metrics.RouterMetrics, hf ginRouter.HandlerFactory, logger logging.Logger) ginRouter.HandlerFactory {
+// NewHTTPHandlerFactory - Router 단위의 Metrics 처리를 수행하는 HandlerFactory 생성
+func NewHTTPHandlerFactory(rm *metrics.RouterMetrics, hf ginRouter.HandlerFactory, log logging.Logger) ginRouter.HandlerFactory {
 	return func(eConf *config.EndpointConfig, p proxy.Proxy) gin.HandlerFunc {
 		next := hf(eConf, p)
-		// Endpoint 응답관련 Metric 처리기 등록
-		//rm.RegisterResponseWriterMetrics(eConf.Endpoint)
+
 		return func(c *gin.Context) {
 			name := eConf.Endpoint
 			// Bypass인 경우 실제 호출 URL로 처리
 			if eConf.IsBypass {
 				name = c.Request.URL.Path
 			}
+
+			// Endpoint 응답관련 Metric 처리기 등록
 			rm.RegisterResponseWriterMetrics(name)
 
 			// Metric 처리기를 반영한 Gin Response Writer 생성
-			rw := &ginResponseWriter{c.Writer, name, time.Now(), rm}
+			rw := &responseWriter{c.Writer, name, time.Now(), rm}
 			c.Writer = rw
+
 			// Router 연결 Metric 처리
-			rm.Connection()
+			rm.Connection(c.Request.TLS)
 
 			next(c)
 
 			rw.end()
+
 			// Router 종료 Metric 처리
 			rm.Disconnection()
 		}
 	}
 }
 
-// SetupAndRun - Gin 기반으로 동작하는 Metric Producer를 생성하고 Collector 처리를 위한 Gin 기반의 Endpoint Server 구동
-func SetupAndRun(ctx context.Context, sConf config.ServiceConfig, logger logging.Logger) *Metrics {
-	// Metrics Producer 설정 및 생성
-	metricProducer := Metrics{metrics.SetupAndCreate(ctx, sConf, logger)}
+// New -  Metric Collector를 생성하고 Collection 처리를 위한 Endpoint Server 구동
+func New(ctx context.Context, mConf config.MWConfig, log logging.Logger, debugMode bool) *Collector {
+	mc := Collector{metrics.New(ctx, mConf, log)}
 
-	if metricProducer.Config != nil && metricProducer.Config.ExposeMetrics {
-		// Gin 기반 Server 구동 및 Endpoint 처리 설정
-		metricProducer.RunEndpoint(ctx, metricProducer.NewEngine(sConf.Debug, logger), logger)
+	// 설정에 따라서 Metrics에 대한 Endpoint 설정
+	if nil != mc.Config && mc.Config.ExposeMetrics {
+		mc.RunEndpoint(ctx, mc.NewEngine(debugMode), log)
 	}
 
-	return &metricProducer
+	return &mc
 }

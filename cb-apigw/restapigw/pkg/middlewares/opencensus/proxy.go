@@ -36,10 +36,10 @@ func CallChain(tag string, isBypass bool, url string) proxy.CallChain {
 		return proxy.EmptyChain
 	}
 	return func(next ...proxy.Proxy) proxy.Proxy {
-		if len(next) > 1 {
+		if 1 < len(next) {
 			panic(proxy.ErrTooManyProxies)
 		}
-		if len(next) < 1 {
+		if 1 > len(next) {
 			panic(proxy.ErrNotEnoughProxies)
 		}
 
@@ -57,13 +57,13 @@ func CallChain(tag string, isBypass bool, url string) proxy.CallChain {
 			ctx, span = trace.StartSpan(trace.NewContext(ctx, fromContext(ctx)), name)
 			resp, err := next[0](ctx, req)
 			// 응답과 오류 여부에 따른 Trace 정보 설정
-			if err != nil {
+			if nil != err {
 				if err.Error() != errCtxCanceledMsg {
-					if resp != nil {
+					if nil != resp {
 						span.SetStatus(trace.Status{Code: int32(resp.Metadata.StatusCode), Message: err.Error()})
 					} else {
 						if we, ok := err.(core.WrappedError); ok {
-							if tag != "[backend]" {
+							if "[backend]" != tag {
 								//span.SetStatus(trace.Status{Code: 500, Message: err.Error()})
 								span.SetStatus(trace.Status{Code: int32(we.Code()), Message: we.GetError().Error()})
 							} else {
@@ -79,7 +79,7 @@ func CallChain(tag string, isBypass bool, url string) proxy.CallChain {
 					span.AddAttributes(trace.BoolAttribute("canceled", true))
 				}
 			}
-			span.AddAttributes(trace.BoolAttribute(("complete"), resp != nil && resp.IsComplete))
+			span.AddAttributes(trace.BoolAttribute(("complete"), nil != resp && resp.IsComplete))
 			span.End()
 
 			return resp, err
@@ -94,7 +94,7 @@ func ProxyFactory(pf proxy.Factory) proxy.FactoryFunc {
 	}
 	return func(eConf *config.EndpointConfig) (proxy.Proxy, error) {
 		next, err := pf.New(eConf)
-		if err != nil {
+		if nil != err {
 			return next, err
 		}
 		// Endpoint Bypass 검증 및 Flag 설정

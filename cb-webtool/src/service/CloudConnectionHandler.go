@@ -42,6 +42,30 @@ type RESP struct {
 	} `json:"region"`
 }
 
+type ImageRESP struct {
+	Image []struct {
+		id             string         `json:"id"`
+		name           string         `json:"name"`
+		connectionName string         `json:"connectionName"`
+		cspImageId     string         `json:"cspImageId"`
+		cspImageName   string         `json:"cspImageName"`
+		description    string         `json:"description"`
+		guestOS        string         `json:"guestOS"`
+		status         string         `json:"status"`
+		KeyValueList   []KeyValueInfo `json:"KeyValueList"`
+	} `json:"image"`
+}
+type Image struct {
+	id             string         `json:"id"`
+	name           string         `json:"name"`
+	connectionName string         `json:"connectionName"`
+	cspImageId     string         `json:"cspImageId"`
+	cspImageName   string         `json:"cspImageName"`
+	description    string         `json:"description"`
+	guestOS        string         `json:"guestOS"`
+	status         string         `json:"status"`
+	KeyValueList   []KeyValueInfo `json:"KeyValueList"`
+}
 type IPStackInfo struct {
 	IP          string  `json:"ip"`
 	Lat         float64 `json:"latitude"`
@@ -76,92 +100,113 @@ func (mf myFloat64) MarshalJSON() ([]byte, error) {
 func GetConnectionconfig(drivername string) CloudConnectionInfo {
 	url := NameSpaceUrl + "/driver/" + drivername
 
-	resp, err := http.Get(url)
+	// resp, err := http.Get(url)
 
-	if err != nil {
-		fmt.Println("request URL : ", url)
-	}
+	// if err != nil {
+	// 	fmt.Println("request URL : ", url)
+	// }
 
-	defer resp.Body.Close()
+	// defer resp.Body.Close()
+	body := HttpGetHandler(url)
 	nsInfo := CloudConnectionInfo{}
 
-	json.NewDecoder(resp.Body).Decode(&nsInfo)
+	json.NewDecoder(body).Decode(&nsInfo)
 	fmt.Println("nsInfo : ", nsInfo.ID)
 	return nsInfo
+
+}
+func GetImageList() []Image {
+	url := CloudConnectionUrl + "/connectionconfig"
+	// resp, err := http.Get(url)
+	// if err != nil {
+	// 	fmt.Println("request URL : ", url)
+	// }
+
+	// defer resp.Body.Close()
+	body := HttpGetHandler(url)
+	defer body.Close()
+
+	nsInfo := ImageRESP{}
+	json.NewDecoder(body).Decode(&nsInfo)
+	fmt.Println("nsInfo : ", nsInfo.Image[0].id)
+	var info []Image
+	for _, item := range nsInfo.Image {
+		reg := Image{
+			id:             item.id,
+			name:           item.name,
+			connectionName: item.connectionName,
+			cspImageId:     item.cspImageId,
+			cspImageName:   item.cspImageName,
+			description:    item.description,
+			guestOS:        item.guestOS,
+			status:         item.status,
+		}
+		info = append(info, reg)
+	}
+	return info
 
 }
 
 func GetConnectionList() []CloudConnectionInfo {
 	url := CloudConnectionUrl + "/connectionconfig"
-	resp, err := http.Get(url)
-	if err != nil {
-		fmt.Println("request URL : ", url)
-	}
+	// resp, err := http.Get(url)
+	// if err != nil {
+	// 	fmt.Println("request URL : ", url)
+	// }
 
-	defer resp.Body.Close()
+	// defer resp.Body.Close()
+	body := HttpGetHandler(url)
+	defer body.Close()
+
 	nsInfo := map[string][]CloudConnectionInfo{}
-	json.NewDecoder(resp.Body).Decode(&nsInfo)
-	fmt.Println("nsInfo : ", nsInfo["ns"][0].ID)
-	return nsInfo["ns"]
+	json.NewDecoder(body).Decode(&nsInfo)
+	//fmt.Println("nsInfo : ", nsInfo["connectionconfig"][0].ID)
+	return nsInfo["connectionconfig"]
 
 }
 
 func GetDriverReg() []CloudConnectionInfo {
 	url := NameSpaceUrl + "/driver"
-	resp, err := http.Get(url)
-	if err != nil {
-		fmt.Println("request URL : ", url)
-	}
 
-	defer resp.Body.Close()
+	body := HttpGetHandler(url)
+	defer body.Close()
 	nsInfo := map[string][]CloudConnectionInfo{}
-	json.NewDecoder(resp.Body).Decode(&nsInfo)
-	// fmt.Println("nsInfo : ", nsInfo["ns"][0].ID)
-	return nsInfo["ns"]
+	json.NewDecoder(body).Decode(&nsInfo)
+
+	return nsInfo["driver"]
 
 }
 
 func GetCredentialList() []CloudConnectionInfo {
 	url := CloudConnectionUrl + "/credential"
-	resp, err := http.Get(url)
-	if err != nil {
-		fmt.Println("request URL : ", url)
-	}
+	// resp, err := http.Get(url)
+	// if err != nil {
+	// 	fmt.Println("request URL : ", url)
+	// }
 
-	defer resp.Body.Close()
+	// defer resp.Body.Close()
+	body := HttpGetHandler(url)
+	defer body.Close()
 	nsInfo := map[string][]CloudConnectionInfo{}
-	json.NewDecoder(resp.Body).Decode(&nsInfo)
-	// fmt.Println("nsInfo : ", nsInfo["ns"][0].ID)
-	return nsInfo["ns"]
+	json.NewDecoder(body).Decode(&nsInfo)
+	// fmt.Println("nsInfo : ", nsInfo["credential"][0].ID)
+	return nsInfo["credential"]
 
 }
 func GetRegionList() []RegionInfo {
 	url := CloudConnectionUrl + "/region"
 	fmt.Println("=========== Get Start Region List : ", url)
-	resp, err := http.Get(url)
-	//spew.Dump(resp.Body)
-	if err != nil {
-		fmt.Println("request URL : ", url)
-	}
 
-	defer resp.Body.Close()
+	body := HttpGetHandler(url)
+	defer body.Close()
 
-	//bytes, _ := ioutil.ReadAll(resp.Body)
-	//str := string(bytes)
-	//fmt.Println(str.region)
 	nsInfo := RESP{}
-	//spew.Dump(nsInfo)
-	json.NewDecoder(resp.Body).Decode(&nsInfo)
+
+	json.NewDecoder(body).Decode(&nsInfo)
 	var info []RegionInfo
-	// fmt.Println("nsInfo : ", nsInfo["ns"][0].ID)
+
 	for _, item := range nsInfo.Region {
-		// var kv
-		// for i, v := range item.KeyValueInfoList{
-		// 	k := KeyValueInfo{
-		// 		Key: v.Key,
-		// 		Value: v.Value
-		// 	}
-		// }
+
 		reg := RegionInfo{
 			RegionName:   item.RegionName,
 			ProviderName: item.ProviderName,
@@ -175,16 +220,14 @@ func GetRegionList() []RegionInfo {
 
 func GetCredentialReg() []CloudConnectionInfo {
 	url := CloudConnectionUrl + "/credential"
-	resp, err := http.Get(url)
-	if err != nil {
-		fmt.Println("request URL : ", url)
-	}
 
-	defer resp.Body.Close()
+	body := HttpGetHandler(url)
+	defer body.Close()
+
 	nsInfo := map[string][]CloudConnectionInfo{}
-	json.NewDecoder(resp.Body).Decode(&nsInfo)
-	fmt.Println("nsInfo : ", nsInfo["ns"][0].ID)
-	return nsInfo["ns"]
+	json.NewDecoder(body).Decode(&nsInfo)
+	fmt.Println("nsInfo : ", nsInfo["credential"][0].ID)
+	return nsInfo["credential"]
 
 }
 

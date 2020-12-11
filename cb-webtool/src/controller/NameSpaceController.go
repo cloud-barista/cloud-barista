@@ -20,10 +20,12 @@ func NsRegController(c echo.Context) error {
 
 func NsRegForm(c echo.Context) error {
 	comURL := GetCommonURL()
+	apiInfo := AuthenticationHandler()
 	if loginInfo := CallLoginInfo(c); loginInfo.Username != "" {
 		return c.Render(http.StatusOK, "NSRegister.html", map[string]interface{}{
 			"LoginInfo": loginInfo,
 			"comURL":    comURL,
+			"apiInfo":   apiInfo,
 		})
 	}
 	return c.Redirect(http.StatusTemporaryRedirect, "/login")
@@ -33,16 +35,18 @@ func NsRegForm(c echo.Context) error {
 func NsListForm(c echo.Context) error {
 	fmt.Println("=============start NsListForm =============")
 	comURL := GetCommonURL()
+	apiInfo := AuthenticationHandler()
 	loginInfo := CallLoginInfo(c)
 	if loginInfo.Username != "" {
 		fmt.Println("=============start GetNSList =============")
 		nsList := service.GetNSList()
 		fmt.Println("=============start GetNSList =============", nsList)
 		if nsList != nil {
-			return c.Render(http.StatusOK, "NSList.html", map[string]interface{}{
+			return c.Render(http.StatusOK, "NameSpace.html", map[string]interface{}{
 				"LoginInfo": loginInfo,
 				"NSList":    nsList,
 				"comURL":    comURL,
+				"apiInfo":   apiInfo,
 			})
 		} else {
 			return c.Redirect(http.StatusTemporaryRedirect, "/NS/reg")

@@ -22,18 +22,20 @@ import (
 // runFunc - 설정파일의 문법 검증 및 구성 값 출력 및 어플리케이션 구동
 func runFunc(ctx context.Context, cmd *cobra.Command, args []string) {
 	var (
-		sConf config.ServiceConfig
+		sConf *config.ServiceConfig
 		err   error
 	)
 
-	if sConf, err = checkAndLoad(cmd, args); err != nil {
+	if sConf, err = checkAndLoad(cmd, args); nil != err {
 		fmt.Printf("[RUN - ERROR] %s \n", err)
 		os.Exit(1)
 		return
 	}
 
 	// launching the setup process
-	SetupAndRun(ctx, sConf)
+	if err := SetupAndRun(ctx, sConf); nil != err {
+		cmd.PrintErr(err)
+	}
 }
 
 // ===== [ Public Functions ] =====
@@ -49,7 +51,6 @@ func NewRunCmd(ctx context.Context) *cobra.Command {
 		},
 		Example: core.AppName + " run --debug --config config.yaml",
 	}
-	runCmd.PersistentFlags().IntVarP(&port, "port", "p", 0, "Listening port for the http service")
 
 	return &runCmd
 }

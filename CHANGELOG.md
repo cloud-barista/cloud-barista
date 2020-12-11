@@ -1,6 +1,99 @@
 
-# v0.2.0-cappuccino (2020.06.04.)
+# v0.3.0-cappuccino (2020.12.11.)
 
+
+## [cb-spider]
+
+### API Change
+- 관리용 API listAllXXX(), deleteXXX(force=true), deleteCSPXXX() 추가
+  - ref) https://github.com/cloud-barista/cb-spider/issues/228#issuecomment-644536669
+- AWS Region 등록 정보에 Zone 정보 추가
+  - ref) https://github.com/cloud-barista/cb-spider/issues/248
+- Supports gRPC-based GO API for all REST APIs.
+- Supports Web-based AdminWeb Tool for easy management.
+
+### Feature
+- IID에 등록된 자원 ID와 CSP 자원 ID에 대한 맵핑 관계 손상시 관리 기능 추가
+  - ref) https://github.com/cloud-barista/cb-spider/issues/228#issuecomment-644536669
+- Supports CLI for Terminal User.
+- Add spider's 'AdminWeb Tool' for easy resouce managements and corruected IID management.
+- Improved Getting all list of CSP's Image Info.
+- Supports HisCall Log Schema & Call-Log Logger for call logging.
+- Supports MockDriver.
+  - ref) https://github.com/cloud-barista/cb-spider/issues/292
+- Add Experimental Features about distributed Spiders PoC(MEERKAT Project)
+
+
+## [cb-tumblebug]
+
+### API Change
+- MCIS 자동 제어 기능 API 추가
+- 동적 시스템 환경 설정 변경 기능 API 추가
+- MCIS 생성 API의 모니터링 에이전트 자동 배치 옵션 제공
+
+### Feature
+- MCIS 생성시 모니터링 에이전트 자동 배치 기능 추가 
+- MCIS 자동 제어 기능 추가 
+- MCIS 시나리오 테스트 스크립트 추가
+- MCIS 마스터 VM 및 VM IP 정보 제공 기능 추가
+- MCIR VM 사양 패치 및 등록 기능 추가
+- 동적 시스템 환경 설정 변경 기능 추가
+- CB-Spider v0.3.0 연동
+- CB-Dragonfly v0.3.0 연동
+
+### Bug Fix
+- MCIS 종료시 런타임 오류 수정
+
+
+## [cb-dragonfly]
+
+### API Change
+- 최신 모니터링 조회 API 삭제 (온디멘드 모니터링 조회 API로 대체)
+- MCIS 모니터링 조회 API 추가
+- 온디멘드 모니터링 조회 API 추가
+- 알람 이벤트 핸들러 관리 및 알람 관리 API 추가
+
+### Feature
+- Kafka 메세지 큐 기반 부하분산 모듈 지원
+- 모니터링 부하분산 정책 (CSP 별 콜렉터) 추가
+- Windows 환경 설치 자동화 인스톨러 도구 추가
+- 에이전트 메타데이터 관리 기능 추가
+- 에이전트 기반 온디멘드 모니터링 메트릭 지원
+- 에이전트 기반 MCIS 성능 메트릭 지원
+- 모니터링 메트릭 임계치 기반 알람 기능 추가
+- gRPC 서버/클라이언트 개발 및 gRPC 기반 CLI 도구 지원
+
+### Bug Fix
+- 해당사항 없음
+
+
+## [cb-webtool]
+
+### Reflect API changes
+- cb-tumblebug / cb-dragonfly v0.3.0-espresso의 변경된 API 반영
+  - 호환성 테스트 완료 
+
+### Feature
+- 신규 디자인 반영및 구조 변경
+- MCIR (Network / Security / SSH Key / Image / Spec) 기능 추가
+- MCIS 생성 시 모니터링 에이전트 자동 설치
+
+### Bug Fix
+- 최초 로그인 시 NS 목록 조회 오류 메시지 출력 Bug Fix
+
+
+## [cb-operator]
+
+### Feature
+- Add mode-selection feature (#39)
+- Add Helm chart (#40)
+- Add PVC for Cloud-Barista components (#44)
+- Add CB-Ladybug to docker-compose.yaml and Helm chart (#71)
+- Add Prometheus and Grafana to CB Helm chart (#81)
+- Change docker network name (#87)
+
+
+# v0.2.0-cappuccino (2020.06.04.)
 
 ## [cb-spider]
 

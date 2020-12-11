@@ -82,14 +82,20 @@ $(document).ready(function(){
             password : password,
         };
         console.log(req)
-        axios.post("/login/proc",{headers: { 'Content-type': 'application/json', }
+        var apiInfo = ApiInfo
+        axios.post("/login/proc",{headers: { 'Content-type': 'application/json', 'Authorization': apiInfo,}
         ,username:username,password:password }).then(result =>{
             console.log(result);
             if(result.data.status == "success"){
                 alert("Login Success");
                 //location.reload(true);
                 var url = "{{ .comURL.TumbleBugURL}}"+"/ns";
-                axios.get(url).then(result=>{
+                var apiInfo = ApiInfo
+    axios.get(url,{
+        headers:{
+            'Authorization': apiInfo
+        }
+    }).then(result=>{
                     console.log(result.data);
                     var data = result.data.ns;
                     var ns = ""

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cb-webtool
+type: application
+version: 0.3.0
+appVersion: v0.3.0-espresso
+description: cb-webtool Helm chart

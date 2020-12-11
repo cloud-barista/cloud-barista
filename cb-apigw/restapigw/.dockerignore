@@ -1,0 +1,15 @@
+.images
+
+*/node_modules
+*/.nuxt
+*/.vscode
+*/dist
+
+*/.gitignore
+*/.editorconfig
+*/.gitignore
+*/README.md
+
+makefile
+tsconfig.json
+

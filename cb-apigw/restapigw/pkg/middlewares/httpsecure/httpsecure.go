@@ -3,8 +3,8 @@ package httpsecure
 import (
 	"bytes"
 
-	"gopkg.in/yaml.v3"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/config"
+	"gopkg.in/yaml.v3"
 )
 
 // ===== [ Constants and Variables ] =====
@@ -64,7 +64,7 @@ func ParseConfig(mwConf config.MWConfig) *Config {
 
 	buf := new(bytes.Buffer)
 	yaml.NewEncoder(buf).Encode(tmp)
-	if err := yaml.NewDecoder(buf).Decode(conf); err != nil {
+	if err := yaml.NewDecoder(buf).Decode(conf); nil != err {
 		return nil
 	}
 

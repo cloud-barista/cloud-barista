@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cb-restapigw.fullname" . }}-config
+  labels:
+    {{- include "cb-restapigw.labels" .  | nindent 4 }}
+data:
+# cb-restapigw-methodByMethod.yaml: |-
+#   {{ range .Files.Lines "files/conf/cb-restapigw-methodByMethod.yaml" }}
+#   {{ . }}
+#   {{ end }}
+  cb-restapigw.yaml: |-
+    {{ range .Files.Lines "files/conf/cb-restapigw.yaml" }}
+    {{ . }}
+    {{ end }}
+  log_conf.yaml: |-
+    {{ range .Files.Lines "files/conf/log_conf.yaml" }}
+    {{ . }}
+    {{ end }}
+  store_conf.yaml: |-
+    {{ range .Files.Lines "files/conf/store_conf.yaml" }}
+    {{ . }}
+    {{ end }}
+  cb-restapigw-apis.yaml: |-
+    {{ range .Files.Lines "files/conf/apis/cb-restapigw-apis.yaml" }}
+    {{ . }}
+    {{ end }}

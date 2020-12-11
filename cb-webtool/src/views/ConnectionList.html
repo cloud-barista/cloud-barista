@@ -163,7 +163,12 @@ $(document).ready(function(){
     //alert("reload")
      console.log("Spider url : ",SpiderURL);
     var url = SpiderURL+"/connectionconfig";
-    axios.get(url).then(result=>{
+    var apiInfo = ApiInfo
+    axios.get(url,{
+        headers:{
+            'Authorization': apiInfo
+        }
+    }).then(result=>{
         var data = result.data.connectionconfig
         //console.log(data.connectionconfig)
         var html = ""
@@ -196,6 +201,7 @@ $(document).ready(function(){
     $("#sel_del").click(function(){
         var cnt = 0;
         var id = "";
+        var apiInfo = ApiInfo;
 		$(".chk").each(function(){
 			if($(this).is(":checked")){
 				//alert("chk");
@@ -213,7 +219,12 @@ $(document).ready(function(){
             var u = SpiderURL+"/connectionconfig/"+id
            
             if(confirm("Delete it?")){
-             axios.delete(u).then(result=>{
+             axios.delete(u,{
+                headers :{
+                    'Content-type': 'application/json',
+                    'Authorization': apiInfo,
+                    }
+             }).then(result=>{
                  var data = result.data
                  if(result.status == 200){
                      alert("Delete.")

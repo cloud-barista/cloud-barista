@@ -11,7 +11,12 @@ function life_cycle(tag,type, mcis_id,mcis_name,vm_id,vm_name){
         message = vm_name+" "+type+ " complete!."
      }
 
-     axios.get(url).then(result=>{
+     var apiInfo = ApiInfo
+    axios.get(url,{
+        headers:{
+            'Authorization': apiInfo
+        }
+    }).then(result=>{
         var status = result.status
         console.log("result Message : ",result.data.message)
         if(status == 200){
@@ -34,7 +39,12 @@ function life_cycle(tag,type, mcis_id,mcis_name,vm_id,vm_name){
 //         message = vm_name+" suspend complete!."
 //      }
 
-//      axios.get(url).then(result=>{
+//      var apiInfo = ApiInfo
+    // axios.get(url,{
+    //     headers:{
+    //         'Authorization': apiInfo
+    //     }
+    // })then(result=>{
 //         var status = result.status
 //         console.log("result Message : ",result.data.message)
 //         if(status == 200){
@@ -57,7 +67,12 @@ function life_cycle(tag,type, mcis_id,mcis_name,vm_id,vm_name){
 //         message = vm_name+" reboot complete!."
 //      }
 
-//      axios.get(url).then(result=>{
+//      var apiInfo = ApiInfo
+    // axios.get(url,{
+    //     headers:{
+    //         'Authorization': apiInfo
+    //     }
+    // })then(result=>{
 //         var status = result.status
 //         console.log("result Message : ",result.data.message)
 //         if(status == 200){
@@ -80,7 +95,12 @@ function life_cycle(tag,type, mcis_id,mcis_name,vm_id,vm_name){
 //         message = vm_name+" terminate complete!."
 //      }
 
-//      axios.get(url).then(result=>{
+//      var apiInfo = ApiInfo
+    // axios.get(url,{
+    //     headers:{
+    //         'Authorization': apiInfo
+    //     }
+    // })then(result=>{
 //         var status = result.status
 //         console.log("result Message : ",result.data.message)
 //         if(status == 200){

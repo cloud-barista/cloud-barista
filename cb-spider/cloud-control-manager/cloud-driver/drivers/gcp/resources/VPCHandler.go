@@ -21,6 +21,7 @@ import (
 
 	"time"
 
+	call "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/call-log"
 	idrv "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces"
 	irs "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces/resources"
 	"github.com/davecgh/go-spew/spew"
@@ -69,12 +70,32 @@ func (vVPCHandler *GCPVPCHandler) CreateVPC(vpcReqInfo irs.VPCReqInfo) (irs.VPCI
 
 	cblogger.Infof("[%s] VPC 생성 시작", name)
 	cblogger.Info(network)
+
+	// logger for HisCall
+	callogger := call.GetLogger("HISCALL")
+	callLogInfo := call.CLOUDLOGSCHEMA{
+		CloudOS:      call.GCP,
+		RegionZone:   vVPCHandler.Region.Zone,
+		ResourceType: call.VPCSUBNET,
+		ResourceName: vpcReqInfo.IId.NameId,
+		CloudOSAPI:   "Insert()",
+		ElapsedTime:  "",
+		ErrorMSG:     "",
+	}
+	callLogStart := call.Start()
+
 	req, err := vVPCHandler.Client.Networks.Insert(projectID, network).Do()
+	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+
 	if err != nil {
 		cblogger.Errorf("[%s] VPC 생성 실패", name)
 		cblogger.Error(err)
+		callLogInfo.ErrorMSG = err.Error()
+
+		callogger.Info(call.String(callLogInfo))
 		return irs.VPCInfo{}, err
 	}
+	callogger.Info(call.String(callLogInfo))
 
 	cblogger.Infof("[%s] VPC가 정상적으로 생성되고 있습니다 - 리소스 ID : [%d]", name, req.Id)
 	errWait := vVPCHandler.WaitUntilComplete(strconv.FormatUint(req.Id, 10), true)
@@ -337,13 +358,31 @@ func (vVPCHandler *GCPVPCHandler) WaitUntilComplete(resourceId string, isGlobalA
 func (vVPCHandler *GCPVPCHandler) ListVPC() ([]*irs.VPCInfo, error) {
 	projectID := vVPCHandler.Credential.ProjectID
 	//region := vVPCHandler.Region.Region
+	// logger for HisCall
+	callogger := call.GetLogger("HISCALL")
+	callLogInfo := call.CLOUDLOGSCHEMA{
+		CloudOS:      call.GCP,
+		RegionZone:   vVPCHandler.Region.Zone,
+		ResourceType: call.VPCSUBNET,
+		ResourceName: "",
+		CloudOSAPI:   "List()",
+		ElapsedTime:  "",
+		ErrorMSG:     "",
+	}
+	callLogStart := call.Start()
 
 	vpcList, err := vVPCHandler.Client.Networks.List(projectID).Do()
+	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
 
 	if err != nil {
+		callLogInfo.ErrorMSG = err.Error()
+
+		callogger.Info(call.String(callLogInfo))
 
 		return nil, err
 	}
+	callogger.Info(call.String(callLogInfo))
+
 	var vpcInfo []*irs.VPCInfo
 
 	for _, item := range vpcList.Items {
@@ -377,12 +416,30 @@ func (vVPCHandler *GCPVPCHandler) GetVPC(vpcIID irs.IID) (irs.VPCInfo, error) {
 	cblogger.Infof("SystemID : [%s]", systemId)
 	subnetInfoList := []irs.SubnetInfo{}
 
+	// logger for HisCall
+	callogger := call.GetLogger("HISCALL")
+	callLogInfo := call.CLOUDLOGSCHEMA{
+		CloudOS:      call.GCP,
+		RegionZone:   vVPCHandler.Region.Zone,
+		ResourceType: call.VPCSUBNET,
+		ResourceName: vpcIID.SystemId,
+		CloudOSAPI:   "Get()",
+		ElapsedTime:  "",
+		ErrorMSG:     "",
+	}
+	callLogStart := call.Start()
 	infoVPC, err := vVPCHandler.Client.Networks.Get(projectID, systemId).Do()
 	//infoVPC, err := vVPCHandler.Client.Networks.Get(projectID, name).Do()
+	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+
 	if err != nil {
+		callLogInfo.ErrorMSG = err.Error()
+
+		callogger.Info(call.String(callLogInfo))
 		cblogger.Error(err)
 		return irs.VPCInfo{}, err
 	}
+	callogger.Info(call.String(callLogInfo))
 	spew.Dump(infoVPC)
 	if infoVPC.Subnetworks != nil {
 		for _, item := range infoVPC.Subnetworks {
@@ -487,11 +544,28 @@ func (vVPCHandler *GCPVPCHandler) DeleteVPC(vpcID irs.IID) (bool, error) {
 	//cblogger.Info("VPC Deleting....wait 15seconds")
 	//time.Sleep(time.Second * 15)
 	cblogger.Info("[NOW Delete VPC]")
+	// logger for HisCall
+	callogger := call.GetLogger("HISCALL")
+	callLogInfo := call.CLOUDLOGSCHEMA{
+		CloudOS:      call.GCP,
+		RegionZone:   vVPCHandler.Region.Zone,
+		ResourceType: call.VPCSUBNET,
+		ResourceName: vpcID.SystemId,
+		CloudOSAPI:   "Delete()",
+		ElapsedTime:  "",
+		ErrorMSG:     "",
+	}
+	callLogStart := call.Start()
+
 	info, err := vVPCHandler.Client.Networks.Delete(projectID, name).Do()
+	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+
 	//time.Sleep(time.Second * 15)
 	cblogger.Info(info)
 	if err != nil {
 		cblogger.Error(err)
+		callLogInfo.ErrorMSG = err.Error()
+		callogger.Info(call.String(callLogInfo))
 		return false, err
 	}
 
@@ -505,12 +579,141 @@ func (vVPCHandler *GCPVPCHandler) DeleteVPC(vpcID irs.IID) (bool, error) {
 
 	cblogger.Infof("[%s] VPC가 최종 삭제될까지 대기 - 리소스 ID : [%d]", name)
 	errChkVpcStatus := vVPCHandler.WaitUntilComplete(strconv.FormatUint(info.Id, 10), true)
+	callogger.Info(call.String(callLogInfo))
 	if errChkVpcStatus != nil {
+		callLogInfo.ErrorMSG = errChkVpcStatus.Error()
+		callogger.Info(call.String(callLogInfo))
 		cblogger.Errorf("[%s] Subnet 삭제 완료 대기 실패", name)
 		cblogger.Error(errChkVpcStatus)
 		return false, errChkVpcStatus
 	}
 
 	//fmt.Println(info)
+	return true, nil
+}
+
+func (VPCHandler *GCPVPCHandler) AddSubnet(vpcIID irs.IID, subnetInfo irs.SubnetInfo) (irs.VPCInfo, error) {
+	cblogger.Infof("[%s] Subnet 추가 - CIDR : %s", subnetInfo.IId.NameId, subnetInfo.IPv4_CIDR)
+	//resSubnet, errSubnet := VPCHandler.CreateSubnet(vpcIID.SystemId, subnetInfo)
+	_, errSubnet := VPCHandler.CreateSubnet(vpcIID.SystemId, subnetInfo)
+	if errSubnet != nil {
+		cblogger.Error(errSubnet)
+		return irs.VPCInfo{}, errSubnet
+	}
+	//cblogger.Debug(resSubnet)
+
+	return VPCHandler.GetVPC(vpcIID)
+	//return irs.VPCInfo{}, nil
+}
+
+//리턴 값은 구현하지 않고 nil을 리턴함. - 현재 사용되는 곳이 없어서 시간상 누락 시킴.
+func (vVPCHandler *GCPVPCHandler) CreateSubnet(vpcId string, reqSubnetInfo irs.SubnetInfo) (irs.SubnetInfo, error) {
+	cblogger.Info(reqSubnetInfo)
+
+	projectID := vVPCHandler.Credential.ProjectID
+	region := vVPCHandler.Region.Region
+
+	//서브넷 생성
+	vpcNetworkUrl := "https://www.googleapis.com/compute/v1/projects/" + projectID + "/global/networks/" + vpcId
+	subnetName := reqSubnetInfo.IId.NameId
+	cblogger.Infof("생성할 [%s] Subnet이 존재하는지 체크", subnetName)
+
+	// logger for HisCall
+	callogger := call.GetLogger("HISCALL")
+	callLogInfo := call.CLOUDLOGSCHEMA{
+		CloudOS:      call.GCP,
+		RegionZone:   vVPCHandler.Region.Zone,
+		ResourceType: call.VPCSUBNET,
+		ResourceName: reqSubnetInfo.IId.NameId,
+		CloudOSAPI:   "CreateSubnet()",
+		ElapsedTime:  "",
+		ErrorMSG:     "",
+	}
+	callLogStart := call.Start()
+	checkInfo, err := vVPCHandler.Client.Subnetworks.Get(projectID, region, subnetName).Do()
+	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+	if err == nil {
+		callLogInfo.ErrorMSG = err.Error()
+		cblogger.Errorf("이미 [%s] Subnet이 존재함", subnetName)
+		callogger.Info(call.String(callLogInfo))
+		return irs.SubnetInfo{}, errors.New("Already Exist - " + subnetName + " Subnet is exist")
+	}
+	callogger.Info(call.String(callLogInfo))
+	cblogger.Info("Subnet info : ", checkInfo)
+
+	//서브넷 생성
+	subnetWork := &compute.Subnetwork{
+		Name:        subnetName,
+		IpCidrRange: reqSubnetInfo.IPv4_CIDR,
+		Network:     vpcNetworkUrl,
+	}
+	cblogger.Infof("[%s] Subnet 생성시작", subnetName)
+	cblogger.Info(subnetWork)
+
+	infoSubnet, errSubnet := vVPCHandler.Client.Subnetworks.Insert(projectID, region, subnetWork).Do()
+	if errSubnet != nil {
+		cblogger.Error(errSubnet)
+		return irs.SubnetInfo{}, errors.New("Making Subnet Error - " + subnetName)
+	}
+
+	spew.Dump(infoSubnet)
+	//생성된 서브넷이 조회되는데 시간이 필요하기 때문에 홀딩 함.
+	cblogger.Infof("[%s] Subnet 생성 성공 - 리소스 ID : [%d]", subnetName, infoSubnet.Id)
+	errWait := vVPCHandler.WaitUntilComplete(strconv.FormatUint(infoSubnet.Id, 10), false)
+	if errWait != nil {
+		cblogger.Errorf("[%s] Subnet 생성 완료 대기 실패", subnetName)
+		cblogger.Error(errWait)
+		return irs.SubnetInfo{}, errWait
+	}
+
+	cblogger.Infof("[%s] Subnet 생성완료", subnetName)
+	cblogger.Info(infoSubnet)
+
+	//생성된 정보 조회
+	//mappingSubnet() 이용하면 되지만 수정해야 함.
+
+	return irs.SubnetInfo{}, nil
+}
+
+func (vVPCHandler *GCPVPCHandler) RemoveSubnet(vpcIID irs.IID, subnetIID irs.IID) (bool, error) {
+	cblogger.Infof("[%s] VPC의 [%s] Subnet 삭제", vpcIID.SystemId, subnetIID.SystemId)
+
+	projectID := vVPCHandler.Credential.ProjectID
+	region := vVPCHandler.Region.Region
+
+	// logger for HisCall
+	callogger := call.GetLogger("HISCALL")
+	callLogInfo := call.CLOUDLOGSCHEMA{
+		CloudOS:      call.GCP,
+		RegionZone:   vVPCHandler.Region.Zone,
+		ResourceType: call.VPCSUBNET,
+		ResourceName: subnetIID.SystemId,
+		CloudOSAPI:   "CreateVpc()",
+		ElapsedTime:  "",
+		ErrorMSG:     "",
+	}
+	callLogStart := call.Start()
+	infoSubnet, infoSubErr := vVPCHandler.Client.Subnetworks.Delete(projectID, region, subnetIID.SystemId).Do()
+	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+
+	if infoSubErr != nil {
+		callLogInfo.ErrorMSG = infoSubErr.Error()
+
+		callogger.Info(call.String(callLogInfo))
+		cblogger.Error(infoSubErr)
+		return false, infoSubErr
+	}
+	callogger.Info(call.String(callLogInfo))
+	cblogger.Info("Delete subnet result :", infoSubnet)
+
+	//서브넷이 완전히 삭제될때까지 대기
+	cblogger.Infof("[%s] Subnet 삭제 성공 - 리소스 ID : [%d]", subnetIID.SystemId, infoSubnet.Id)
+	errWait := vVPCHandler.WaitUntilComplete(strconv.FormatUint(infoSubnet.Id, 10), false)
+	if errWait != nil {
+		cblogger.Errorf("[%s] Subnet 삭제 완료 대기 실패", subnetIID.SystemId)
+		cblogger.Error(errWait)
+		return false, errWait
+	}
+
 	return true, nil
 }

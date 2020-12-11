@@ -8,12 +8,15 @@ import (
 
 func MornitoringListForm(c echo.Context) error {
 	comURL := GetCommonURL()
+	apiInfo := AuthenticationHandler()
 	if loginInfo := CallLoginInfo(c); loginInfo.Username != "" {
 		namespace := GetNameSpaceToString(c)
-		return c.Render(http.StatusOK, "Monitoring.html", map[string]interface{}{
+		return c.Render(http.StatusOK, "Monitoring_Mcis.html", map[string]interface{}{
+			// return c.Render(http.StatusOK, "Monitoring.html", map[string]interface{}{
 			"LoginInfo": loginInfo,
 			"NameSpace": namespace,
 			"comURL":    comURL,
+			"apiInfo":   apiInfo,
 		})
 
 	}
@@ -24,6 +27,7 @@ func MornitoringListForm(c echo.Context) error {
 
 func AgentRegForm(c echo.Context) error {
 	comURL := GetCommonURL()
+	apiInfo := AuthenticationHandler()
 	mcis_id := c.Param("mcis_id")
 	vm_id := c.Param("vm_id")
 	public_ip := c.Param("public_ip")
@@ -37,6 +41,7 @@ func AgentRegForm(c echo.Context) error {
 			"mcis_id":   mcis_id,
 			"vm_id":     vm_id,
 			"public_ip": public_ip,
+			"apiInfo":   apiInfo,
 		})
 
 	}

@@ -8,35 +8,34 @@
 package main
 
 import (
-        "fmt"
+	"fmt"
 
-	"github.com/sirupsen/logrus"
-        "github.com/cloud-barista/cb-store"
+	cbstore "github.com/cloud-barista/cb-store"
 	"github.com/cloud-barista/cb-store/config"
 	icbs "github.com/cloud-barista/cb-store/interfaces"
+	"github.com/sirupsen/logrus"
 )
 
 var cblog *logrus.Logger
 var store icbs.Store
 
 func init() {
-        cblog = config.Cblogger
+	cblog = config.Cblogger
 	store = cbstore.GetStore()
 }
 
 func main() {
 
-        cblog.Info("start test!!")
+	cblog.Info("start test!!")
 
+	// ## GetList
+	keyValueList, _ := store.GetList("/", true) // true = Ascending
 
-        // ## GetList
-        keyValueList, _ := store.GetList("/", true) // true = Ascending
+	fmt.Println("=========================== GetList(\"/\", Ascending)")
+	for _, ev := range keyValueList {
+		fmt.Println("<" + ev.Key + "> " + ev.Value)
+	}
+	fmt.Println("===========================")
 
-        fmt.Println("=========================== GetList(\"/\", Ascending)")
-        for _, ev := range keyValueList {
-                fmt.Println("<" + ev.Key + "> " + ev.Value)
-        }
-        fmt.Println("===========================")
-
-        cblog.Info("finish test!!")
+	cblog.Info("finish test!!")
 }

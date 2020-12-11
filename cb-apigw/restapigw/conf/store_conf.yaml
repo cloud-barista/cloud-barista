@@ -1,0 +1,16 @@
+#### Config for CB-Store ####
+
+# server type: NUTSDB | ETCD
+# NUTSDB: embedded Key-Value Store on Local Filesystem
+#storetype: NUTSDB
+storetype: ETCD
+
+nutsdb:
+  dbpath: "$CBSTORE_ROOT/deploy/data/cb-store/meta_db/dat"
+  segmentsize: 1048576  # 1048576 1024*1024 (1MB)
+  #segmentsize: 10485760  # 10485760 10*1024*1024 (10MB)
+
+etcd:
+  # etcd server, when ETCD typpe
+  #etcdserverport: "129.254.175.43:2379"
+  etcdserverport: "172.16.238.11:2379,172.16.238.12:2379,172.16.238.13:2379"

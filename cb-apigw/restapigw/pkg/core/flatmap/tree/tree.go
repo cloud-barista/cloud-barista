@@ -122,7 +122,7 @@ func (t *Tree) embeddingEdges(edgesToMove []edgeToMove, destPath []string) {
 
 // Add - Tree 구조에 지정한 Path에 지정한 값 설정
 func (t *Tree) Add(path []string, v interface{}) {
-	if v == nil {
+	if nil == v {
 		return
 	}
 	t.root.Add(path, v)
@@ -143,7 +143,7 @@ func (t *Tree) Move(srcPath, destPath []string) {
 	next := []nodeAndPath{{n: t.root, p: []string{}}}
 
 	prefixLen := len(srcPath)
-	if prefixLen > 1 {
+	if 1 < prefixLen {
 		next = t.collectMoveCandidates(srcPath[:prefixLen-1], next)
 	}
 
@@ -191,7 +191,7 @@ func (t *Tree) Move(srcPath, destPath []string) {
 
 // New - 지정된 정보를 기준으로 새로운 Tree 생성
 func New(v interface{}) (*Tree, error) {
-	if v == nil {
+	if nil == v {
 		return nil, errNoNilValuesAllowed
 	}
 

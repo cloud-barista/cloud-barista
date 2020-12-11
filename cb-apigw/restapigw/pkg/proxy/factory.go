@@ -3,6 +3,7 @@ package proxy
 import (
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/config"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/logging"
+	"github.com/cloud-barista/cb-apigw/restapigw/pkg/sd"
 )
 
 // ===== [ Constants and Variables ] =====
@@ -11,8 +12,9 @@ import (
 
 // defaultFactory - logging과 BackendFactory로 구성된 기본 팩토리 구조
 type defaultFactory struct {
-	backendFactory BackendFactory
-	logger         logging.Logger
+	backendFactory    BackendFactory
+	logger            logging.Logger
+	subscriberFactory sd.SubscriberFactory
 }
 
 // Factory - 지정된 Endpoint 기준으로 Proxy 호출을 위한 함수를 생성하는 팩토리 인터페이스
@@ -47,8 +49,8 @@ func (df defaultFactory) newSingle(eConf *config.EndpointConfig) (Proxy, error) 
 func (df defaultFactory) newStack(bConf *config.BackendConfig) (p Proxy) {
 	p = df.backendFactory(bConf)
 
-	// TODO: Loadbalancer
-
+	// Load Balancer 설정
+	p = NewLoadBalancedChainWithSubscriber(df.subscriberFactory(bConf))(p)
 
 	// Backend 호출을 위한 Request Call chain 구성
 	p = NewRequestBuilderChain(bConf)(p)
@@ -65,7 +67,7 @@ func (df defaultFactory) New(cfg *config.EndpointConfig) (p Proxy, err error) {
 	default:
 		p, err = df.newMulti(cfg)
 	}
-	if err != nil {
+	if nil != err {
 		return
 	}
 
@@ -77,10 +79,12 @@ func (df defaultFactory) New(cfg *config.EndpointConfig) (p Proxy, err error) {
 
 // ===== [ Public Functions ] =====
 
+// NewDefaultFactoryWithSubscriber - 지정된 Subscriber를 활용하는 BackendFactory를 사용하는 ProxyFactory 반환
+func NewDefaultFactoryWithSubscriber(bf BackendFactory, logger logging.Logger, sf sd.SubscriberFactory) Factory {
+	return defaultFactory{bf, logger, sf}
+}
+
 // NewDefaultFactory - 전달된 BackendFactory를 사용하는 기본 ProxyFactory 반환
 func NewDefaultFactory(bf BackendFactory, logger logging.Logger) Factory {
-	return defaultFactory{
-		backendFactory: bf,
-		logger:         logger,
-	}
+	return NewDefaultFactoryWithSubscriber(bf, logger, sd.GetSubscriber)
 }

@@ -3,11 +3,11 @@ package gin
 
 import (
 	"bytes"
-	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/config"
+	"github.com/cloud-barista/cb-apigw/restapigw/pkg/errors"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/logging"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/proxy"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/router"
@@ -47,7 +47,7 @@ func ParseConfig(mwConf config.MWConfig) *Config {
 
 	buf := new(bytes.Buffer)
 	yaml.NewEncoder(buf).Encode(tmp)
-	if err := yaml.NewDecoder(buf).Decode(conf); err != nil {
+	if err := yaml.NewDecoder(buf).Decode(conf); nil != err {
 		return nil
 	}
 
@@ -57,7 +57,7 @@ func ParseConfig(mwConf config.MWConfig) *Config {
 // validateToken - Header로 전달된 Auth Token 검증
 func validateToken(conf *Config, req *http.Request) error {
 	token := req.Header.Get("Authorization")
-	if token == "" {
+	if "" == token {
 		return errors.New("Authorization token not found")
 	}
 
@@ -74,12 +74,13 @@ func TokenValidator(hf ginRouter.HandlerFactory, logger logging.Logger) ginRoute
 		handler := hf(eConf, proxy)
 
 		conf := ParseConfig(eConf.Middleware)
-		if conf == nil {
+		if nil == conf {
 			return handler
 		}
 
 		return func(c *gin.Context) {
-			if err := validateToken(conf, c.Request); err != nil {
+			if err := validateToken(conf, c.Request); nil != err {
+				c.Header(router.CompleteResponseHeaderName, "false")
 				c.Header(router.MessageResponseHeaderName, err.Error())
 				c.AbortWithError(http.StatusUnauthorized, err)
 				return

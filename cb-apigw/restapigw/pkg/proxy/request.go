@@ -27,7 +27,7 @@ type Request struct {
 // GeneratePath - Params의 정보를 이용해서 URLPattern에 존재하는 파라미터 설정을 실제 값으로 변경
 func (r *Request) GeneratePath(urlPattern string) {
 	// 전달된 Path Parameter가 존재하지 않는 경우
-	if len(r.Params) == 0 {
+	if 0 == len(r.Params) {
 		r.Path = urlPattern
 		return
 	}

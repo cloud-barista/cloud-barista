@@ -173,6 +173,7 @@ function check_all(f) {
 $(document).ready(function(){
     //alert("reload")
     $("#sel_del").click(function(){
+        var apiInfo = ApiInfo;
         var cnt = 0;
         var id = "";
 		$(".chk").each(function(){
@@ -190,9 +191,15 @@ $(document).ready(function(){
         if(cnt == 1){
            
             var u = CommonURL+"/ns/"+id
+            console.log("commonurl : ",u)
            
             if(confirm("삭제하시겠습니까?")){
-             axios.delete(u).then(result=>{
+             axios.delete(u,{
+                headers :{
+                    'Content-type': 'application/json',
+                    'Authorization': apiInfo,
+                    }
+             }).then(result=>{
                  var data = result.data
                  console.log("delete result : ",result)
                  if(result.status == 200){

@@ -1,0 +1,38 @@
+/**
+ * Global Scss
+ */
+
+html {
+  overflow-y: hidden !important;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.clearfix {
+  @include clearfix;
+}
+
+
+/**
+ * v-dialog
+ */
+
+.v-dialog-wrapper {
+
+  .v-card>*:first-child:not(.v-btn):not(.v-chip),
+  .v-card>.v-card__progress+*:not(.v-btn):not(.v-chip) {
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+  }
+}
+
+.v-dialog {
+  font-family: 'Roboto', 'Noto Sans KR', sans-serif;
+}
+
+.v-dialog>.v-card>.v-card__title {
+  padding: 10px 24px 10px;
+}

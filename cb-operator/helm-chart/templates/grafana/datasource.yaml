@@ -1,0 +1,17 @@
+{{- $namespace := printf "%s" (include "cb-prometheus.namespace" .) -}}
+{{- $prometheusService := printf "%s" (include "cb-prometheus.server.fullname" .) -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "cb-prometheus.server.fullname" $ }}-grafana-datasource
+  namespace: {{ $namespace }}
+  labels:
+    {{- if $.Values.grafana.sidecar.datasources.label }}
+      {{ $.Values.grafana.sidecar.datasources.label }}: "1"
+      {{- end }}
+      app: {{ template "cb-prometheus.server.fullname" $ }}-grafana
+data:
+{{- range $key, $value := .Values.grafana.sidecar.datasources.configMaps }}
+  {{ $key }}: |-
+{{ $value | replace "#PROMETHEUS_SERVICE" $prometheusService | replace "#NAMESPACE" $namespace | indent 4 }}
+{{- end }}

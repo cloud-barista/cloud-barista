@@ -1,0 +1,77 @@
+tumblebug:
+  rootPath: "/app"
+
+replicaCount: 1
+
+image:
+  repository: cloudbaristaorg/cb-tumblebug
+  pullPolicy: IfNotPresent
+
+env:
+- name: SPIDER_CALL_METHOD
+  value: "GRPC"
+- name: SPIDER_REST_URL
+  value: "http://cb-restapigw:8000/spider"
+- name: DRAGONFLY_REST_URL
+  value: "http://cb-restapigw:8000/dragonfly"
+- name: API_USERNAME
+  value: "default"
+- name: API_PASSWORD
+  value: "default"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "cb-tumblebug"
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name:
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  restPort: 1323
+  grpcPort: 50252
+
+ingress:
+  enabled: false
+  annotations: {}
+  hosts:
+    - host: cloud-barista.local
+      paths: []
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+persistence:
+  accessMode: 'ReadWriteMany'
+  enabled: false
+  size: 2Gi
+  # storageClass: '-'
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+

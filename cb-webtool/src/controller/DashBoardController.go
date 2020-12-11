@@ -19,8 +19,33 @@ type RespPublicIPInfo struct {
 	} `json:"vm"`
 }
 
+func GlobalDashBoard(c echo.Context) error {
+	comURL := GetCommonURL()
+	apiInfo := AuthenticationHandler()
+	nsCnt := service.GetNSCnt()
+	fmt.Println("=========== DashBoard start ==============")
+	if loginInfo := CallLoginInfo(c); loginInfo.Username != "" {
+		nameSpace := GetNameSpaceToString(c)
+		if nameSpace != "" {
+			fmt.Println("Namespace : ", nameSpace)
+			return c.Render(http.StatusOK, "Dashboard_Global.html", map[string]interface{}{
+				"LoginInfo": loginInfo,
+				"NameSpace": nameSpace,
+				"comURL":    comURL,
+				"apiInfo":   apiInfo,
+				"nsCnt":     nsCnt,
+			})
+		} else {
+			return c.Redirect(http.StatusTemporaryRedirect, "/NS/reg")
+		}
+
+	}
+
+	return c.Redirect(http.StatusTemporaryRedirect, "/login")
+}
 func DashBoard(c echo.Context) error {
 	comURL := GetCommonURL()
+	apiInfo := AuthenticationHandler()
 	fmt.Println("=========== DashBoard start ==============")
 	if loginInfo := CallLoginInfo(c); loginInfo.Username != "" {
 		nameSpace := GetNameSpaceToString(c)
@@ -30,6 +55,32 @@ func DashBoard(c echo.Context) error {
 				"LoginInfo": loginInfo,
 				"NameSpace": nameSpace,
 				"comURL":    comURL,
+				"apiInfo":   apiInfo,
+			})
+		} else {
+			return c.Redirect(http.StatusTemporaryRedirect, "/NS/reg")
+		}
+
+	}
+
+	return c.Redirect(http.StatusTemporaryRedirect, "/login")
+}
+
+func NSDashBoard(c echo.Context) error {
+	comURL := GetCommonURL()
+	apiInfo := AuthenticationHandler()
+	nsCnt := service.GetNSCnt()
+	fmt.Println("=========== DashBoard start ==============")
+	if loginInfo := CallLoginInfo(c); loginInfo.Username != "" {
+		nameSpace := GetNameSpaceToString(c)
+		if nameSpace != "" {
+			fmt.Println("Namespace : ", nameSpace)
+			return c.Render(http.StatusOK, "Dashboard_Ns.html", map[string]interface{}{
+				"LoginInfo": loginInfo,
+				"NameSpace": nameSpace,
+				"comURL":    comURL,
+				"apiInfo":   apiInfo,
+				"nsCnt":     nsCnt,
 			})
 		} else {
 			return c.Redirect(http.StatusTemporaryRedirect, "/NS/reg")
@@ -68,6 +119,7 @@ func GeoInfo(c echo.Context) error {
 	var wg sync.WaitGroup
 	nameSpace := GetNameSpaceToString(c)
 	comURL := GetCommonURL()
+	//apiInfo := AuthenticationHandler()
 	tumble_url := comURL.TumbleBugURL
 
 	mcis_id := c.Param("mcis_id")
@@ -75,15 +127,12 @@ func GeoInfo(c echo.Context) error {
 	fmt.Println("===========")
 	fmt.Println("=========== GetGeoINFO ==============")
 	fmt.Println("=========== GetGeoINFO request URL : ", url)
-	resp, err := http.Get(url)
-	if err != nil {
-		fmt.Println("request param : ", url)
-	}
+	body := service.HttpGetHandler(url)
 
-	defer resp.Body.Close()
+	defer body.Close()
 
 	publicIpInfo := RespPublicIPInfo{}
-	json.NewDecoder(resp.Body).Decode(&publicIpInfo)
+	json.NewDecoder(body).Decode(&publicIpInfo)
 	fmt.Println("================mcis ID info ===============")
 	fmt.Println("Public Info : ", publicIpInfo)
 	var ipStackInfo []service.IPStackInfo

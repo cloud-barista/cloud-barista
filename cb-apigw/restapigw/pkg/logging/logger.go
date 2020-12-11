@@ -3,7 +3,6 @@ package logging
 import (
 	"io"
 	"io/ioutil"
-	"os"
 
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/core"
 	cblog "github.com/cloud-barista/cb-log"
@@ -12,12 +11,22 @@ import (
 
 // ===== [ Constants and Variables ] =====
 
+var (
+	// logger - 시스템에서 사용할 기본 생성 Logger
+	logger *Logger = nil
+)
+
 // ===== [ Types ] =====
 
-// Logger - CB-LOG에서 사용하는 "logrus" Logger를 위한 Wrapper 구조
-type Logger struct {
-	*logrus.Logger
-}
+type (
+	// Fields - Logging 처리에 사용할 Field 정보 형식
+	Fields map[string]interface{}
+
+	// Logger - CB-LOG에서 사용하는 "logrus" Logger를 위한 Wrapper 구조
+	Logger struct {
+		*logrus.Logger
+	}
+)
 
 // ===== [ Implementations ] =====
 
@@ -41,18 +50,37 @@ func (l *Logger) SetLogLevel(lv logrus.Level) {
 	l.Logger.SetLevel(lv)
 }
 
+// SetFields - 로그에 사용할 Fields 정보 설정
+func (l *Logger) SetFields(fields Fields) *Logger {
+	l.WithFields(logrus.Fields(fields))
+	return l
+}
+
 // ===== [ Private Functions ] =====
+
+// init - 패키지 초기화
+func init() {
+}
 
 // ===== [ Public Functions ] =====
 
 // NewLogger - 초기화된 Logger의 인스턴스 생성
 func NewLogger() *Logger {
-	// FIXME: CBLOG 경로관련 문제 (현재 경로로 환경변수 설정)
-	if dir, err := os.Getwd(); err == nil {
-		os.Setenv("CBLOG_ROOT", dir)
-	}
-
-	return &Logger{
+	logger = &Logger{
 		Logger: cblog.GetLogger(core.AppName),
 	}
+
+	return logger
+}
+
+// NewLoggerByName - 지정한 이름으로 구성된 Logger 인스턴스 생성
+func NewLoggerByName(name string) *Logger {
+	return &Logger{
+		Logger: cblog.GetLogger(name),
+	}
+}
+
+// GetLogger - 관리되고 있는 Logger 반환
+func GetLogger() *Logger {
+	return logger
 }

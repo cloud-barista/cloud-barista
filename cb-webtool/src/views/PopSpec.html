@@ -116,9 +116,15 @@ $(document).ready(function(){
     var configName = $("#configName_"+vm_cnt+" option:selected").val();
     console.log("configname : ",configName);
     var nsid = NAMESPACE;
+    var apiInfo = ApiInfo
     var specUrl = CommonURL+"/ns/"+nsid+"/resources/spec"
     console.log("specUrl : ",specUrl)
-    axios.get(specUrl).then(result=>{
+    console.log("apiInfo : ",apiInfo)
+    axios.get(specUrl,{
+        headers:{
+            'Authorization': apiInfo
+        }
+    }).then(result=>{
         var res = result.data.spec
         console.log("Spec Result :" ,res);
         var html = "";

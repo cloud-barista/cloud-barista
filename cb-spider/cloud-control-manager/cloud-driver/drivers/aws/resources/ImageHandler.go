@@ -1,5 +1,4 @@
-// Cloud Driver Interface of CB-Spider.
-// The CB-Spider is a sub-Framework of the Cloud-Barista Multi-Cloud Project.
+// Cloud Driver Interface of CB-Spider.  // The CB-Spider is a sub-Framework of the Cloud-Barista Multi-Cloud Project.
 // The CB-Spider Mission is to connect all the clouds with a single interface.
 //
 //      * Cloud-Barista: https://github.com/cloud-barista
@@ -20,7 +19,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	idrv "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces"
 	irs "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces/resources"
+
 	//irs "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces/new-resources"
+	call "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/call-log"
 )
 
 type AwsImageHandler struct {
@@ -30,8 +31,25 @@ type AwsImageHandler struct {
 
 //@TODO : 작업해야 함.
 func (imageHandler *AwsImageHandler) CreateImage(imageReqInfo irs.ImageReqInfo) (irs.ImageInfo, error) {
+	// logger for HisCall
+	callogger := call.GetLogger("HISCALL")
+	callLogInfo := call.CLOUDLOGSCHEMA{
+		CloudOS:      call.AWS,
+		RegionZone:   imageHandler.Region.Zone,
+		ResourceType: call.VMIMAGE,
+		ResourceName: imageReqInfo.IId.NameId,
+		CloudOSAPI:   "-",
+		ElapsedTime:  "",
+		ErrorMSG:     "",
+	}
+	callLogStart := call.Start()
 
-	return irs.ImageInfo{}, nil
+	imageReqInfo.IId.SystemId = imageReqInfo.IId.NameId
+
+	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+	callogger.Info(call.String(callLogInfo))
+
+	return irs.ImageInfo{imageReqInfo.IId, "", "", nil}, nil
 }
 
 //@TODO : 목록이 너무 많기 때문에 amazon 계정으로 공유된 퍼블릭 이미지중 AMI만 조회 함.
@@ -54,10 +72,29 @@ func (imageHandler *AwsImageHandler) ListImage() ([]*irs.ImageInfo, error) {
 			},
 		},
 	}
+
+	// logger for HisCall
+	callogger := call.GetLogger("HISCALL")
+	callLogInfo := call.CLOUDLOGSCHEMA{
+		CloudOS:      call.AWS,
+		RegionZone:   imageHandler.Region.Zone,
+		ResourceType: call.VMIMAGE,
+		ResourceName: "ListImage()",
+		CloudOSAPI:   "DescribeImages",
+		ElapsedTime:  "",
+		ErrorMSG:     "",
+	}
+	callLogStart := call.Start()
+
 	result, err := imageHandler.Client.DescribeImages(input)
 	//spew.Dump(result)	//출력 정보가 너무 많아서 생략
 
+	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+
 	if err != nil {
+		callLogInfo.ErrorMSG = err.Error()
+		callogger.Info(call.String(callLogInfo))
+
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			default:
@@ -70,6 +107,7 @@ func (imageHandler *AwsImageHandler) ListImage() ([]*irs.ImageInfo, error) {
 		}
 		return nil, err
 	}
+	callogger.Info(call.String(callLogInfo))
 
 	//cnt := 0
 	for _, cur := range result.Images {
@@ -94,14 +132,15 @@ func (imageHandler *AwsImageHandler) ListImage() ([]*irs.ImageInfo, error) {
 func ExtractImageDescribeInfo(image *ec2.Image) irs.ImageInfo {
 	//spew.Dump(image)
 	imageInfo := irs.ImageInfo{
-		IId: irs.IID{*image.Name, *image.ImageId},
+		//IId: irs.IID{*image.Name, *image.ImageId},
+		IId: irs.IID{*image.ImageId, *image.ImageId},
 		//Id:     *image.ImageId,
 		//Name:   *image.Name,
 		Status: *image.State,
 	}
 
 	keyValueList := []irs.KeyValue{
-		{Key: "Name", Value: *image.Name},
+		//{Key: "Name", Value: *image.Name}, //20200723-Name이 없는 이미지 존재 - 예)ami-0008a301
 		{Key: "CreationDate", Value: *image.CreationDate},
 		{Key: "Architecture", Value: *image.Architecture},
 		{Key: "OwnerId", Value: *image.OwnerId},
@@ -112,6 +151,9 @@ func ExtractImageDescribeInfo(image *ec2.Image) irs.ImageInfo {
 	}
 
 	// 일부 이미지들은 아래 정보가 없어서 예외 처리 함.
+	if !reflect.ValueOf(image.Name).IsNil() {
+		keyValueList = append(keyValueList, irs.KeyValue{Key: "Name", Value: *image.Name})
+	}
 	if !reflect.ValueOf(image.Description).IsNil() {
 		keyValueList = append(keyValueList, irs.KeyValue{Key: "Description", Value: *image.Description})
 	}
@@ -142,11 +184,28 @@ func (imageHandler *AwsImageHandler) GetImage(imageIID irs.IID) (irs.ImageInfo, 
 		},
 	}
 
+	// logger for HisCall
+	callogger := call.GetLogger("HISCALL")
+	callLogInfo := call.CLOUDLOGSCHEMA{
+		CloudOS:      call.AWS,
+		RegionZone:   imageHandler.Region.Zone,
+		ResourceType: call.VMIMAGE,
+		ResourceName: imageIID.SystemId,
+		CloudOSAPI:   "DescribeImages",
+		ElapsedTime:  "",
+		ErrorMSG:     "",
+	}
+	callLogStart := call.Start()
+
 	result, err := imageHandler.Client.DescribeImages(input)
+	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
 	//spew.Dump(result)
 	cblogger.Info(result)
 
 	if err != nil {
+		callLogInfo.ErrorMSG = err.Error()
+		callogger.Info(call.String(callLogInfo))
+
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			default:
@@ -159,6 +218,7 @@ func (imageHandler *AwsImageHandler) GetImage(imageIID irs.IID) (irs.ImageInfo, 
 		}
 		return irs.ImageInfo{}, err
 	}
+	callogger.Info(call.String(callLogInfo))
 
 	if len(result.Images) > 0 {
 		imageInfo := ExtractImageDescribeInfo(result.Images[0])
@@ -171,5 +231,21 @@ func (imageHandler *AwsImageHandler) GetImage(imageIID irs.IID) (irs.ImageInfo, 
 
 //@TODO : 삭제 API 찾아야 함.
 func (imageHandler *AwsImageHandler) DeleteImage(imageIID irs.IID) (bool, error) {
+	// logger for HisCall
+	callogger := call.GetLogger("HISCALL")
+	callLogInfo := call.CLOUDLOGSCHEMA{
+		CloudOS:      call.AWS,
+		RegionZone:   imageHandler.Region.Zone,
+		ResourceType: call.VMIMAGE,
+		ResourceName: imageIID.SystemId,
+		CloudOSAPI:   "-",
+		ElapsedTime:  "",
+		ErrorMSG:     "",
+	}
+	callLogStart := call.Start()
+
+	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+	callogger.Info(call.String(callLogInfo))
+
 	return false, nil
 }

@@ -3,10 +3,10 @@ package ratelimit
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/core"
+	"github.com/cloud-barista/cb-apigw/restapigw/pkg/errors"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/middlewares/ratelimit/backend"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/middlewares/ratelimit/limiter"
 )
@@ -43,7 +43,7 @@ type RateLimiter struct {
 
 // Allow - Rate Limit 처리를 위해 Bucket에서 Token 사용이 가능한지를 검증하고, 1개의 Token을 사용한다.
 func (rl RateLimiter) Allow() bool {
-	return rl.limiter.TakeAvailable(1) > 0
+	return 0 < rl.limiter.TakeAvailable(1)
 }
 
 // ===== [ Private Functions ] =====

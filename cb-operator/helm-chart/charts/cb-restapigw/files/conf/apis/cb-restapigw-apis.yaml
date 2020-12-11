@@ -1,0 +1,129 @@
+definitions:
+    - name: Spider
+      active: true
+      endpoint: /spider/*bypass
+      hosts: []
+      #method: GET
+      timeout: 2s
+      cache_ttl: 1h0m0s
+      output_encoding: json
+      except_querystrings: []
+      except_headers: []
+      middleware: {}
+      health_check:
+        url: ""
+        timeout: 0s
+      backend:
+        - hosts:
+            - host: http://cb-spider:1024
+              weight: 0
+          timeout: 2s
+          #method: GET
+          url_pattern: /*bypass
+          encoding: json
+          group: ""
+          blacklist: []
+          whitelist: []
+          mapping: {}
+          is_collection: false
+          wrap_collection_to_json: false
+          target: ""
+          middleware: {}
+          disable_host_sanitize: false
+          lb_mode: ""
+    - name: Tumblebug
+      active: true
+      endpoint: /tumblebug/*bypass
+      hosts: []
+      #method: GET
+      timeout: 2s
+      cache_ttl: 1h0m0s
+      output_encoding: json
+      except_querystrings: []
+      except_headers: []
+      middleware: {}
+      health_check:
+        url: ""
+        timeout: 0s
+      backend:
+        - hosts:
+            - host: http://cb-tumblebug:1323
+              weight: 0
+          timeout: 2s
+          #method: GET
+          url_pattern: /*bypass
+          encoding: json
+          group: ""
+          blacklist: []
+          whitelist: []
+          mapping: {}
+          is_collection: false
+          wrap_collection_to_json: false
+          target: ""
+          middleware: {}
+          disable_host_sanitize: false
+          lb_mode: ""
+    - name: Ladybug
+      active: true
+      endpoint: /ladybug/*bypass
+      hosts: []
+      #method: GET
+      timeout: 2s
+      cache_ttl: 1h0m0s
+      output_encoding: json
+      except_querystrings: []
+      except_headers: []
+      middleware: {}
+      health_check:
+        url: ""
+        timeout: 0s
+      backend:
+        - hosts:
+            - host: http://cb-ladybug:8080
+              weight: 0
+          timeout: 2s
+          #method: GET
+          url_pattern: /*bypass
+          encoding: json
+          group: ""
+          blacklist: []
+          whitelist: []
+          mapping: {}
+          is_collection: false
+          wrap_collection_to_json: false
+          target: ""
+          middleware: {}
+          disable_host_sanitize: false
+          lb_mode: ""
+    - name: Dragonfly
+      active: true
+      endpoint: /dragonfly/*bypass
+      hosts: []
+      #method: GET
+      timeout: 2s
+      cache_ttl: 1h0m0s
+      output_encoding: json
+      except_querystrings: []
+      except_headers: []
+      middleware: {}
+      health_check:
+        url: ""
+        timeout: 0s
+      backend:
+        - hosts:
+            - host: http://cb-dragonfly:9090
+              weight: 0
+          timeout: 2s
+          #method: GET
+          url_pattern: /*bypass
+          encoding: json
+          group: ""
+          blacklist: []
+          whitelist: []
+          mapping: {}
+          is_collection: false
+          wrap_collection_to_json: false
+          target: ""
+          middleware: {}
+          disable_host_sanitize: false
+          lb_mode: ""

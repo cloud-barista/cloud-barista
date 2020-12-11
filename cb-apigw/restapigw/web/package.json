@@ -1,0 +1,40 @@
+{
+  "name": "rest-api-gw-admin",
+  "version": "1.0.0",
+  "description": "Cloud-Barista REST API G/W Admin",
+  "author": "ccambomorris",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt-ts",
+    "build": "nuxt-ts build",
+    "generate": "nuxt-ts generate",
+    "start": "nuxt-ts start",
+    "lint": "eslint --ext .js,.vue --ignore-path .gitignore ."
+  },
+  "eslintIgnore": [
+    "~/_modules/module/cb-components.js"
+  ],
+  "dependencies": {
+    "@nuxt/typescript-runtime": "^0.4.0",
+    "@nuxtjs/auth": "^4.9.1",
+    "@nuxtjs/axios": "^5.3.6",
+    "@nuxtjs/vuetify": "^1.0.0",
+    "nuxt": "^2.14.1",
+    "vue-i18n": "^8.20.0",
+    "vuetify-dialog": "^2.0.10",
+    "vuex": "^3.5.1"
+  },
+  "devDependencies": {
+    "@nuxt/typescript-build": "^0.6.0",
+    "@nuxtjs/eslint-config-typescript": "^1.0.0",
+    "@nuxtjs/eslint-module": "^1.0.0",
+    "@types/nuxtjs__auth": "^4.8.4",
+    "babel-eslint": "^10.0.1",
+    "eslint": "^6.1.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-nuxt": ">=0.4.2",
+    "eslint-plugin-prettier": "^3.1.4",
+    "nuxt-property-decorator": "^2.7.2",
+    "vuex-class-component": "^2.3.5"
+  }
+}

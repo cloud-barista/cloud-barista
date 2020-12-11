@@ -4,10 +4,10 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/influxdata/influxdb/client/v2"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/core"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/logging"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/middlewares/metrics"
+	"github.com/influxdata/influxdb/client/v2"
 )
 
 // ===== [ Constants and Variables ] =====
@@ -49,8 +49,8 @@ func latencyPoints(hostname string, now time.Time, histograms map[string]metrics
 		}
 
 		histogramPoint, err := client.NewPoint("requests", tags, newFields(histogram), now)
-		if err != nil {
-			logger.Error("creating histogram point:", err.Error())
+		if nil != err {
+			logger.Error("[METRICS] InfluxDB > Creating histogram point:", err.Error())
 			continue
 		}
 		points = append(points, histogramPoint)
@@ -76,8 +76,8 @@ func routerPoints(hostname string, now time.Time, histograms map[string]metrics.
 		}
 
 		histogramPoint, err := client.NewPoint("router.response-"+params[1], tags, newFields(histogram), now)
-		if err != nil {
-			logger.Error("creating histogram point:", err.Error())
+		if nil != err {
+			logger.Error("[METRICS] InfluxDB > Creating histogram point:", err.Error())
 			continue
 		}
 		points = append(points, histogramPoint)
@@ -96,8 +96,8 @@ func debugPoint(hostname string, now time.Time, histograms map[string]metrics.Hi
 	}
 
 	histogramPoint, err := client.NewPoint("service.debug.GCStats.Pause", tags, newFields(hd), now)
-	if err != nil {
-		logger.Error("creating histogram point:", err.Error())
+	if nil != err {
+		logger.Error("[METRICS] InfluxDB > Creating histogram point:", err.Error())
 		return nil
 	}
 	return histogramPoint
@@ -114,8 +114,8 @@ func runtimePoint(hostname string, now time.Time, histograms map[string]metrics.
 	}
 
 	histogramPoint, err := client.NewPoint("service.runtime.MemStats.PauseNs", tags, newFields(hd), now)
-	if err != nil {
-		logger.Error("creating histogram point:", err.Error())
+	if nil != err {
+		logger.Error("[METRICS] InfluxDB > Creating histogram point:", err.Error())
 		return nil
 	}
 	return histogramPoint
@@ -123,10 +123,10 @@ func runtimePoint(hostname string, now time.Time, histograms map[string]metrics.
 
 // isEmpty - Histogram의 값이 전부 비어있는지 검사
 func isEmpty(histogram metrics.HistogramData) bool {
-	return histogram.Max == 0 && histogram.Min == 0 &&
-		histogram.Mean == .0 && histogram.Stddev == .0 && histogram.Variance == 0 &&
-		(len(histogram.Percentiles) == 0 ||
-			histogram.Percentiles[0] == .0 && histogram.Percentiles[len(histogram.Percentiles)-1] == .0)
+	return 0 == histogram.Max && 0 == histogram.Min &&
+		.0 == histogram.Mean && .0 == histogram.Stddev && 0 == histogram.Variance &&
+		(0 == len(histogram.Percentiles) ||
+			.0 == histogram.Percentiles[0] && .0 == histogram.Percentiles[len(histogram.Percentiles)-1])
 }
 
 // newFields - 지정한 Histogram 정보를 기준으로 Percentiles 생성
@@ -160,10 +160,10 @@ func newFields(h metrics.HistogramData) map[string]interface{} {
 func Points(hostname string, now time.Time, histograms map[string]metrics.HistogramData, logger logging.Logger) []*client.Point {
 	points := latencyPoints(hostname, now, histograms, logger)
 	points = append(points, routerPoints(hostname, now, histograms, logger)...)
-	if p := debugPoint(hostname, now, histograms, logger); p != nil {
+	if p := debugPoint(hostname, now, histograms, logger); nil != p {
 		points = append(points, p)
 	}
-	if p := runtimePoint(hostname, now, histograms, logger); p != nil {
+	if p := runtimePoint(hostname, now, histograms, logger); nil != p {
 		points = append(points, p)
 	}
 	return points

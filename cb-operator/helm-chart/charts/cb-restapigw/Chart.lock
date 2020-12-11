@@ -1,0 +1,12 @@
+dependencies:
+- name: influxdb
+  repository: https://charts.bitnami.com/bitnami
+  version: 0.4.8
+- name: grafana
+  repository: https://kubernetes-charts.storage.googleapis.com
+  version: 5.0.26
+- name: jaeger
+  repository: https://jaegertracing.github.io/helm-charts
+  version: ~0.28.0
+digest: sha256:466fb4903b733bf81ef0f924802c167c40587d562f8ad48898f14954aeffe84d
+generated: "2020-05-25T10:03:39.87266+09:00"

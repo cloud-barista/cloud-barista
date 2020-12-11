@@ -1,0 +1,73 @@
+{{define "LNB_popup"}}
+
+
+
+            <!-- popup NameSpace -->
+            <div class="modal fade layerpopup" id="NameSpace" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        
+                        <div class="modal-body">
+                            <div class="txt">Would you like to move <br />selected NS (Name Space) ?</div>
+                            <div class="btnbox">
+                                <button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn_ok" data-dismiss="modal" onclick="change_namespace()">OK</button>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+            <!-- //popup NameSpace -->
+
+            <!-- popup NewNS -->
+            <div class="modal fade layerpopup" id="NewNS" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        
+                        <div class="modal-body">
+                            <div class="txt">Would you like to new NS (Name Space) ?</div>
+                            <div class="btnbox">
+                                <button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn_ok" data-dismiss="modal">OK</button>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+            <!-- //popup NewNS -->
+
+            <!-- popup ManageNS -->
+            <div class="modal fade layerpopup" id="ManageNS" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        
+                        <div class="modal-body">
+                            <div class="txt"> Would you like to manage <br />NS (Name Space) ?</div>
+                            <div class="btnbox">
+                                <button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn_ok" data-dismiss="modal">OK</button>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+            <!-- //popup ManageNS -->
+            
+     <script>
+     function change_namespace(){
+         var select_namespace = $("#select_namespace").val();
+         console.log("select Namespace : ",select_namespace)
+         if(select_namespace){
+              setNS(select_namespace);
+              
+         }else{
+             alert("Select Namespace!!")
+             return;
+         }
+     }
+     </script>    
+
+{{end}}

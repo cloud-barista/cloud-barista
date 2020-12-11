@@ -1,0 +1,111 @@
+###########################################################################
+# API G/W가 Container가 아닐 경우에 ETCD에 특정 IP로 접근하기 위한 테스트 용도
+# Macbook에서 검증 용도로 사용
+#
+# /etc/hosts 파일 수정
+#   172.16.238.11 etcd-0
+#   172.16.238.12 etcd-1
+#   172.16.238.13 etcd-2
+#
+# Loopback 별칭 적용
+#   $ sudo ifconfig lo0 alias 172.16.238.11
+#   $ sudo ifconfig lo0 alias 172.16.238.12
+#   $ sudo ifconfig lo0 alias 172.16.238.13
+#   * 단, 부팅하면 사라지므로 재 실행해 줘야 함.
+#
+# 테스트를 위한 환경 설정 파일 구성 (.env 파일)
+#   NETWORK_NAME=${NETWORK_NAME:-etcd_net}
+#   NETWORK_CONFIG_SUBNET=172.16.238.0/24
+# 
+#   ETCD_00_NETWORKS_ETCD_NET_ADDRESS=172.16.238.11
+#   ETCD_01_NETWORKS_ETCD_NET_ADDRESS=172.16.238.12
+#   ETCD_02_NETWORKS_ETCD_NET_ADDRESS=172.16.238.13
+#
+#   ENDPOINTS=http://${ETCD_00_NETWORKS_ETCD_NET_ADDRESS}:2379,http://${ETCD_01_NETWORKS_ETCD_NET_ADDRESS}:2379,http://${ETCD_02_NETWORKS_ETCD_NET_ADDRESS}:2379
+###########################################################################
+
+version: "3.3"
+
+networks:
+  etcd_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: ${NETWORK_CONFIG_SUBNET} # docker env subnet
+
+services:
+  etcd-0:
+    networks:
+      etcd_net:
+        ipv4_address: ${ETCD_00_NETWORKS_ETCD_NET_ADDRESS}
+    image: quay.io/coreos/etcd:latest
+    ports:
+      - ${ETCD_00_NETWORKS_ETCD_NET_ADDRESS}:4001:4001
+      - ${ETCD_00_NETWORKS_ETCD_NET_ADDRESS}:2380:2380
+      - ${ETCD_00_NETWORKS_ETCD_NET_ADDRESS}:2379:2379
+    hostname: etcd-0
+    volumes:
+      - ./data/etcd-volume:/etcd-data
+    environment:
+      ETCD_NAME: etcd-0
+      ETCD_DATA_DIR: /etcd-data/etcd0.etcd
+      ETCDCTL_API: 3
+      ETCD_DEBUG: 1
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd-0:2380
+      ETCD_INITIAL_CLUSTER: etcd-0=http://etcd-0:2380,etcd-1=http://etcd-1:2380,etcd-2=http://etcd-2:2380
+      ETCD_INITIAL_CLUSTER_STATE: new
+      ETCD_INITIAL_CLUSTER_TOKEN: etcd-cluster
+      ETCD_LISTEN_CLIENT_URLS: http://${ETCD_00_NETWORKS_ETCD_NET_ADDRESS}:2379,http://${ETCD_00_NETWORKS_ETCD_NET_ADDRESS}:4001
+      ETCD_LISTEN_PEER_URLS: http://${ETCD_00_NETWORKS_ETCD_NET_ADDRESS}:2380
+      ETCD_ADVERTISE_CLIENT_URLS: http://etcd-0:2379,http://etcd-0:4001
+
+  etcd-1:
+    networks:
+      etcd_net:
+        ipv4_address: ${ETCD_01_NETWORKS_ETCD_NET_ADDRESS}
+    image: quay.io/coreos/etcd:latest
+    ports:
+      - ${ETCD_01_NETWORKS_ETCD_NET_ADDRESS}:4001:4001
+      - ${ETCD_01_NETWORKS_ETCD_NET_ADDRESS}:2380:2380
+      - ${ETCD_01_NETWORKS_ETCD_NET_ADDRESS}:2379:2379
+    hostname: etcd-1
+    volumes:
+      - ./data/etcd-volume:/etcd-data
+    environment:
+      ETCD_NAME: etcd-1
+      ETCD_DATA_DIR: /etcd-data/etcd1.etcd
+      ETCDCTL_API: 3
+      ETCD_DEBUG: 1
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd-1:2380
+      ETCD_INITIAL_CLUSTER: etcd-0=http://etcd-0:2380,etcd-1=http://etcd-1:2380,etcd-2=http://etcd-2:2380
+      ETCD_INITIAL_CLUSTER_STATE: new
+      ETCD_INITIAL_CLUSTER_TOKEN: etcd-cluster
+      ETCD_LISTEN_CLIENT_URLS: http://${ETCD_01_NETWORKS_ETCD_NET_ADDRESS}:2379,http://${ETCD_01_NETWORKS_ETCD_NET_ADDRESS}:4001
+      ETCD_LISTEN_PEER_URLS: http://${ETCD_01_NETWORKS_ETCD_NET_ADDRESS}:2380
+      ETCD_ADVERTISE_CLIENT_URLS: http://etcd-1:2379,http://etcd-1:4001
+
+  etcd-2:
+    networks:
+      etcd_net:
+        ipv4_address: ${ETCD_02_NETWORKS_ETCD_NET_ADDRESS}
+    image: quay.io/coreos/etcd:latest
+    ports:
+      - ${ETCD_02_NETWORKS_ETCD_NET_ADDRESS}:4001:4001
+      - ${ETCD_02_NETWORKS_ETCD_NET_ADDRESS}:2380:2380
+      - ${ETCD_02_NETWORKS_ETCD_NET_ADDRESS}:2379:2379
+    hostname: etcd-2
+    volumes:
+      - ./data/etcd-volume:/etcd-data
+    environment:
+      ETCD_NAME: etcd-2
+      ETCD_DATA_DIR: /etcd-data/etcd2.etcd
+      ETCDCTL_API: 3
+      ETCD_DEBUG: 1
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd-2:2380
+      ETCD_INITIAL_CLUSTER: etcd-0=http://etcd-0:2380,etcd-1=http://etcd-1:2380,etcd-2=http://etcd-2:2380
+      ETCD_INITIAL_CLUSTER_STATE: new
+      ETCD_INITIAL_CLUSTER_TOKEN: etcd-cluster
+      ETCD_LISTEN_CLIENT_URLS: http://${ETCD_02_NETWORKS_ETCD_NET_ADDRESS}:2379,http://${ETCD_02_NETWORKS_ETCD_NET_ADDRESS}:4001
+      ETCD_LISTEN_PEER_URLS: http://${ETCD_02_NETWORKS_ETCD_NET_ADDRESS}:2380
+      ETCD_ADVERTISE_CLIENT_URLS: http://etcd-2:2379,http://etcd-2:4001

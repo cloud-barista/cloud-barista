@@ -14,6 +14,7 @@ package cblog
 
 import (
     "os"
+    "strings"
     "io/ioutil"
     "log"
 
@@ -42,6 +43,10 @@ func load(filePath string) ([]byte, error) {
 
 func GetConfigInfos() CBLOGCONFIG {
         cblogRootPath := os.Getenv("CBLOG_ROOT")
+        if cblogRootPath == "" {
+                log.Fatalf("$CBLOG_ROOT is not set!!")
+                os.Exit(1)
+        }
         data, err := load(cblogRootPath + "/conf/log_conf.yaml")
 
         if err != nil {
@@ -54,8 +59,38 @@ func GetConfigInfos() CBLOGCONFIG {
                 log.Fatalf("error: %v", err)
         }
 
+	configInfos.LOGFILEINFO.FILENAME = ReplaceEnvPath(configInfos.LOGFILEINFO.FILENAME)
 	return configInfos
 }
+
+// $ABC/def ==> /abc/def
+func ReplaceEnvPath(str string) string {
+        if strings.Index(str, "$") == -1 {
+                return str
+        }
+
+        // ex) input "$CBSTORE_ROOT/meta_db/dat"
+        strList := strings.Split(str, "/")
+        for n, one := range strList {
+                if strings.Index(one, "$") != -1 {
+                        cbstoreRootPath := os.Getenv(strings.Trim(one, "$"))
+                        if cbstoreRootPath == "" {
+                                log.Fatal(one  +" is not set!")
+                        }
+                        strList[n] = cbstoreRootPath
+                }
+        }
+
+        var resultStr string
+        for _, one := range strList {
+                resultStr = resultStr + one + "/"
+        }
+        // ex) "/root/go/src/github.com/cloud-barista/cb-spider/meta_db/dat/"
+        resultStr = strings.TrimRight(resultStr, "/")
+        resultStr = strings.ReplaceAll(resultStr, "//", "/")
+        return resultStr
+}
+
 
 func GetConfigString(configInfos *CBLOGCONFIG) string {
         d, err := yaml.Marshal(configInfos)

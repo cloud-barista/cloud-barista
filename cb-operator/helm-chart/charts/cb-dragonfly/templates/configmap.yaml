@@ -1,0 +1,28 @@
+{{- define "influxdbName" -}}
+  {{- range $key, $val := .Values.influxdb.env -}}
+    {{- if eq $val.name "INFLUXDB_DB" -}}{{ $val.value | quote }}{{- end -}}
+  {{- end -}}
+{{- end -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cb-dragonfly.fullname" . }}-config
+  labels:
+    {{- include "cb-dragonfly.labels" .  | nindent 4 }}
+data:
+  config.yaml: |-
+    {{ range .Files.Lines "files/conf/config.yaml" }}
+    {{ . }}
+    {{ end }}
+  log_conf.yaml: |-
+    {{ range .Files.Lines "files/conf/log_conf.yaml" }}
+    {{ . }}
+    {{ end }}
+  setup.env: |-
+    {{ range .Files.Lines "files/conf/setup.env" }}
+    {{ . }}
+    {{ end }}
+  store_conf.yaml: |-
+    {{ range .Files.Lines "files/conf/store_conf.yaml" }}
+    {{ . }}
+    {{ end }}

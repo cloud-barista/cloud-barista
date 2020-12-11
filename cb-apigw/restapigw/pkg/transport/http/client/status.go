@@ -3,12 +3,12 @@ package client
 import (
 	"bytes"
 	"context"
-	"errors"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/config"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/core"
+	"github.com/cloud-barista/cb-apigw/restapigw/pkg/errors"
 )
 
 // ===== [ Constants and Variables ] =====
@@ -59,10 +59,10 @@ func (r HTTPResponseError) StatusCode() int {
 
 // DefaultHTTPStatusHandler - Request/Response 기준으로 StatusCode를 처리하는 기본 HTTPStatusHandler
 func DefaultHTTPStatusHandler(ctx context.Context, resp *http.Response) (*http.Response, error) {
-	if resp == nil || (resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated) {
-		if resp != nil {
+	if nil == resp || (resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated) {
+		if nil != resp {
 			msg, err := core.GetResponseString(resp)
-			if err != nil {
+			if nil != err {
 				return nil, ErrInvalidStatusCode
 			}
 
@@ -84,7 +84,7 @@ func GetHTTPStatusHandler(bConf *config.BackendConfig) HTTPStatusHandler {
 	if e, ok := bConf.Middleware[MWNamespace]; ok {
 		if m, ok := e.(map[string]interface{}); ok {
 			if v, ok := m["return_error_details"]; ok {
-				if b, ok := v.(string); ok && b != "" {
+				if b, ok := v.(string); ok && "" != b {
 					return DetailedHTTPStatusHandler(DefaultHTTPStatusHandler, b)
 				}
 			}
@@ -96,12 +96,12 @@ func GetHTTPStatusHandler(bConf *config.BackendConfig) HTTPStatusHandler {
 // DetailedHTTPStatusHandler - Request/Response 기준으로 발생한 오류에 정보를 상세하게 처리하기 위한 HTTPStatusHandler
 func DetailedHTTPStatusHandler(next HTTPStatusHandler, name string) HTTPStatusHandler {
 	return func(ctx context.Context, resp *http.Response) (*http.Response, error) {
-		if r, err := next(ctx, resp); err == nil {
+		if r, err := next(ctx, resp); nil == err {
 			return r, nil
 		}
 
 		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
+		if nil != err {
 			body = []byte{}
 		}
 		resp.Body.Close()

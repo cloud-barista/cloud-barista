@@ -3,10 +3,10 @@ package influxdb
 
 import (
 	"context"
-	"errors"
 	"os"
 	"time"
 
+	"github.com/cloud-barista/cb-apigw/restapigw/pkg/errors"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/logging"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/middlewares/metrics"
 	"github.com/cloud-barista/cb-apigw/restapigw/pkg/middlewares/metrics/influxdb/counter"
@@ -47,8 +47,8 @@ type clientWrapper struct {
 // keepUpdated - 주기적 (ReportingPeriod)으로 Metrics 데이터를 InfluxDB에 반영
 func (cw clientWrapper) keepUpdated(ctx context.Context, ticker <-chan time.Time) {
 	hostname, err := os.Hostname()
-	if err != nil {
-		cw.logger.Error("influxdb resolving the local hostname:", err.Error())
+	if nil != err {
+		cw.logger.Error("[METRICS] InfluxDB > influxdb resolving the local hostname:", err.Error())
 	}
 
 	for {
@@ -61,7 +61,7 @@ func (cw clientWrapper) keepUpdated(ctx context.Context, ticker <-chan time.Time
 		// Collection Function을 호출해서 Metric에 수집되어 있는 Stats에 대한 Snapshot 추출
 		snapshot := cw.stats().(metrics.Stats)
 
-		if shouldSendPoints := len(snapshot.Counters) > 0 || len(snapshot.Gauges) > 0; !shouldSendPoints {
+		if shouldSendPoints := 0 < len(snapshot.Counters) || 0 < len(snapshot.Gauges); !shouldSendPoints {
 			continue
 		}
 
@@ -83,8 +83,8 @@ func (cw clientWrapper) keepUpdated(ctx context.Context, ticker <-chan time.Time
 			bp.AddPoint(p)
 		}
 
-		if err := cw.influxClient.Write(bp); err != nil {
-			cw.logger.Error("writing to influx:", err.Error())
+		if err := cw.influxClient.Write(bp); nil != err {
+			cw.logger.Error("[METRICS] InfluxDB > Writing to influx:", err.Error())
 			cw.buff.Add(bp)
 			continue
 		}
@@ -101,8 +101,8 @@ func (cw clientWrapper) keepUpdated(ctx context.Context, ticker <-chan time.Time
 		})
 		retryBatch.AddPoints(pts)
 
-		if err := cw.influxClient.Write(retryBatch); err != nil {
-			cw.logger.Error("writting to influx:", err.Error())
+		if err := cw.influxClient.Write(retryBatch); nil != err {
+			cw.logger.Error("[METRICS] InfluxDB > Writting to influx:", err.Error())
 			cw.buff.Add(bpPending...)
 			continue
 		}
@@ -117,7 +117,7 @@ func (cw clientWrapper) keepUpdated(ctx context.Context, ticker <-chan time.Time
 func SetupAndRun(ctx context.Context, idbConf Config, collectFunc func() interface{}, logger *logging.Logger) error {
 	// creating a new influxdb client
 
-	if &idbConf == nil || idbConf.Address == "" {
+	if nil == &idbConf || "" == idbConf.Address {
 		return errNoConfig
 	}
 
@@ -128,15 +128,15 @@ func SetupAndRun(ctx context.Context, idbConf Config, collectFunc func() interfa
 		Password: idbConf.Password,
 		Timeout:  10 * time.Second,
 	})
-	if err != nil {
+	if nil != err {
 		return err
 	}
 
 	// InfluxDB Ping 테스트
 	go func() {
 		_, _, err := influxClient.Ping(time.Second)
-		if err != nil {
-			logger.Error("unable to ping the influxdb server:", err.Error())
+		if nil != err {
+			logger.Error("[METRICS] InfluxDB > unable to ping the influxdb server:", err.Error())
 			return
 		}
 	}()
