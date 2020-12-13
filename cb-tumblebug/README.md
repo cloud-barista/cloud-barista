@@ -168,6 +168,7 @@ This may involve a vendored copy of golang.org/x/net/trace.”
 #### 0) 클라우드 인증 정보, 테스트 기본 정보 입력
 - cloud-barista/cb-tumblebug/test/official/ 이동
 - credentials.conf  # Cloud 정보 등록을 위한 CSP별 인증정보 (사용자에 맞게 수정 필요)
+   - credentials.conf.example 을 참고하여 credentials.conf 구성
    - 기본적인 클라우드 타입 (AWS, GCP, AZURE, ALIBABA)에 대해 템플릿 제공
 - conf.env  # CB-Spider 및 Tumblebug 서버 위치, 클라우드 리젼, 테스트용 이미지명, 테스트용 스팩명 등 테스트 기본 정보 제공
    - 특별한 상황이 아니면 수정이 불필요함. (CB-Spider와 CB-TB의 위치가 localhost가 아닌 경우 수정 필요)
