@@ -1,8 +1,8 @@
 # Cloud-Barista 
 
-*The Cloud-Barista is a Multi-Cloud Service Platform SW.* Cloud-Barista consists of multiple frameworks (sub-systems) to accommodate microservice architecture.
+*The Cloud-Barista is a Multi-Cloud Service Platform SW.* Cloud-Barista consists of multiple frameworks (sub-systems) to accommodate microservice architecture. Please take a look [Cloud-Barista Website](https://cloud-barista.github.io/technology/) for a detail decription.
 
-*This repository is a integrated mirror for repository of major frameworks.* This repo reflects the latest release. The repositories are included on the root directory.
+*This repository is a integrated mirror for repository of major frameworks.* This repo reflects the latest release. These repositories are included and listed in the root directory.
 
 Main frameworks or tools are as follow,
 
@@ -91,11 +91,13 @@ Cloud-Barista는 한국에서 시작된 오픈 소스 프로젝트로서
 
   - CB-Tumblebug 설치 및 실행
     - [cloud-barista/cb-tumblebug README를 참고하여 설정, 설치](/cb-tumblebug/)
-      - cb-spider API 서버 주소를 cb-tumblebug의 setup.env에 설정
+      - CB-Spider API 서버 주소를 conf/setup.env 에 설정
+      - CB-Dragonfly API 서버 주소를 conf/setup.env 에 설정
     - cb-tumblebug 실행 (cb-tumblebug API 서버 실행)
 
   - CB-Ladybug 설치 및 실행
     - [cloud-barista/cb-ladybug README를 참고하여 설정, 설치](/cb-ladybug/)
+      - CB-Tumblebug API 서버 주소를 conf/setup.env 에 설정
     - cb-ladybug 실행 (cb-ladybug API 서버 실행)
 
   - CB-Dragonfly 설치 및 실행
@@ -104,6 +106,9 @@ Cloud-Barista는 한국에서 시작된 오픈 소스 프로젝트로서
 
   - CB-Webtool 설치 및 실행
     - [cloud-barista/cb-webtool README를 참고하여 설정, 설치](/cb-webtool/)
+      - CB-Spider API 서버 주소를 conf/setup.env 에 설정
+      - CB-Tumblebug API 서버 주소를 conf/setup.env 에 설정
+      - CB-Dragonfly API 서버 주소를 conf/setup.env 에 설정
     - cb-webtool 실행 (cb-webtool GUI 서버 실행)
 
 
