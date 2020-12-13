@@ -4,30 +4,54 @@ The Multi-Cloud Service Platform.
 
 Cloud-Barista consists of multiple frameworks (sub-systems) to accommodate microservice architecture.
 
+This repository is a integrated mirror for repository of major frameworks. The repositories are included on the root directory.
+
 Main frameworks are as follow,
 
 1. CB-Spider (connects all clouds in a single interface)
-1. CB-Tumblebug (manages multi-cloud resource and provides multi-cloud infra services)
+   https://github.com/cloud-barista/cb-spider
+1. CB-Tumblebug (deploy and manage multi-cloud infrastructures)
+   https://github.com/cloud-barista/cb-tumblebug
 1. CB-Ladybug (manages multi-cloud applications)
+   https://github.com/cloud-barista/cb-ladybug
 1. CB-Dragonfly (monitors multi-cloud services)
-1. CB-Waterstrider/cb-webtool (provides a GUI to Cloud-Barista users)
+   https://github.com/cloud-barista/cb-dragonfly
+1. CB-Waterstrider/cb-webtool (provides web GUI to Cloud-Barista users)
+   https://github.com/cloud-barista/cb-webtool
 1. CB-Bridge/cb-operator (operation tool for Cloud-Barista system runtime)
+   https://github.com/cloud-barista/cb-operator
 1. CB-Bridge/cb-store (provides an unified DB interface for meta info of Cloud-Barista)
+   https://github.com/cloud-barista/cb-store
 1. CB-Bridge/cb-log (provides log system)
-
-The frameworks are listed in the root directory.
-
-This Repository is integrated mirrors for main framework repositories.
+   https://github.com/cloud-barista/cb-log
 
 
 ```
 [NOTE]
-Cloud-Barista is currently under development. (the latest version is 0.3.0-espresso)
+Cloud-Barista is currently under development. (the latest release is 0.3.0-espresso)
 So, we do not recommend using the current release in production.
 Please note that the functionalities of Cloud-Barista are not stable and secure yet.
 If you have any difficulties in using Cloud-Barista, please let us know.
 (Open an issue or Join the Cloud-Barista Slack)
 ```
+
+```
+[NOTE] Localization and Globalization of Cloud-Barista (Cloud-Barista의 현지화 및 세계화)
+As an opensource project initiated by Korean members, 
+we would like to promote participation of Korean contributors during initial stage of this project. 
+So, Cloud-Barista Repo will accept use of Korean language in its early stages.
+On the other hand, we hope this project flourishes regardless of contributor's country eventually.
+So, the maintainers recommend using English at least for the title of Issues, Pull Requests, and Commits, 
+while Cloud-Barista Repo accommodates local languages in the contents of them.
+
+Cloud-Barista는 한국에서 시작된 오픈 소스 프로젝트로서 
+프로젝트의 초기 단계에는 한국 기여자들의 참여를 촉진하고자 합니다. 
+따라서 초기 단계의 Cloud-Barista는 한국어 사용을 받아 들일 것입니다.
+다른 한편으로, 이 프로젝트가 국가에 관계없이 번성하기를 희망합니다.
+따라서 개발 히스토리 관리를 위해 이슈, 풀 요청, 커밋 등의 
+제목에 대해서는 영어 사용을 권장하며, 내용에 대한 한국어 사용은 수용할 것입니다.
+```
+
 
 ***
 
@@ -41,9 +65,9 @@ If you have any difficulties in using Cloud-Barista, please let us know.
 
 ***
 
-## [설치 환경]
+## [실행 환경]
 
-- 리눅스(검증시험: Ubuntu 18.04)
+- Linux (검증시험완료: Ubuntu 18.04)
 
 ## [설치 및 실행]
 
@@ -80,7 +104,6 @@ If you have any difficulties in using Cloud-Barista, please let us know.
     - cb-webtool 실행 (cb-webtool GUI 서버 실행)
 
 
-
 ## [API 및 문서]
 - 문서 통합 Repository
   - [github.com/cloud-barista/docs](https://github.com/cloud-barista/docs)
@@ -88,10 +111,10 @@ If you have any difficulties in using Cloud-Barista, please let us know.
   - [https://github.com/cloud-barista/docs/blob/master/technical_docs/API/CB-User_REST-API.md](https://github.com/cloud-barista/docs/blob/master/technical_docs/API/CB-User_REST-API.md)
 
 ## [특이 사항]
-- 개발상태: 초기 기능 중심 개발 추진 중 / 기술 개발용 / 상용 활용시 보완필요
+- 개발 상태: 기능 우선 개발 추진 중 (상용 활용시 안정화 및 보완 필요)
 - CSP별 연동 검증 상태
   - CB-Tumblebug 기준 테스트 완료된 CSP는 AWS, GCP, Azure, Alibaba 임
-  - 현재는 개발 단계의 버전이므로 안정성에는 문제가 발생할 수 있음
+  - 현재는 개발 단계이므로 기능 안정성에는 문제가 발생할 수 있음 (버그 리포트 기여 환영!)
 
 ## [사용 방법 및 예시]
 
@@ -135,14 +158,14 @@ If you have any difficulties in using Cloud-Barista, please let us know.
 - [sequentialFullTest](/cb-tumblebug/test/official/sequentialFullTest) 에 포함된 [testAll-mcis-mcir-ns-cloud.sh](/cb-tumblebug/test/official/sequentialFullTest/testAll-mcis-mcir-ns-cloud.sh) 을 수행하면 모든 것을 한번에 제어 및 테스트 가능
 ```
 └── sequentialFullTest  # Cloud 정보 등록, NS 생성, MCIR 생성, MCIS 생성까지 한번에 자동 테스트
-    ├── cleanAll-mcis-mcir-ns-cloud.sh  # 모든 오브젝트 역으로 제어
-    ├── command-mcis.sh  # 생성된 MCIS(다중VM)에 원격 명령 수행
-    ├── deploy-nginx-mcis.sh  # 생성된 MCIS(다중VM)에 Nginx 자동 배포
-    ├── executionStatus  # 수행이 진행된 테스트 로그 (testAll 수행시 정보가 추가되며, cleanAll 수행시 정보가 제거됨)
     ├── testAll-mcis-mcir-ns-cloud.sh  # Cloud 정보 등록, NS 생성, MCIR 생성, MCIS 생성까지 한번에 자동 테스트
-    ├── test-cloud.sh
-    ├── test-mcir-ns-cloud.sh
-    └── test-ns-cloud.sh
+    ├── gen-sshKey.sh  # 수행이 진행된 테스트 로그 (MCIS에 접속 가능한 SSH키 파일 생성)  
+    ├── command-mcis.sh  # 생성된 MCIS(다중VM)에 원격 명령 수행
+    ├── deploy-nginx-mcis.sh  # 생성된 MCIS(다중VM)에 Nginx 자동 배포  
+    ├── create-mcis-for-df.sh  # CB-Dragonfly 호스팅을 위한 MCIS 생성        
+    ├── deploy-dragonfly-docker.sh  # MCIS에 CB-Dragonfly 자동 배포 및 환경 자동 설정      
+    ├── cleanAll-mcis-mcir-ns-cloud.sh  # 모든 오브젝트를 생성의 역순으로 삭제
+    └── executionStatus  # 수행이 진행된 테스트 로그 (testAll 수행시 정보가 추가되며, cleanAll 수행시 정보가 제거됨. 진행중인 작업 확인 가능)
 ```
 - 사용 예시
   - 생성 테스트
@@ -472,55 +495,84 @@ Dozing for 1 : 1 (Back to work)
 ```
 ~/go/src/github.com/cloud-barista/cb-tumblebug/test/official$ tree
 .
-├── 0.settingSpider  # 클라우드 정보 등록 관련 스크립트 모음
+├── 1.configureSpider
 │   ├── get-cloud.sh
 │   ├── list-cloud.sh
 │   ├── register-cloud.sh
 │   └── unregister-cloud.sh
-├── 0.settingTB  # 네임스페이스 관련 스크립트 모음
+├── 2.configureTumblebug
+│   ├── check-ns.sh
 │   ├── create-ns.sh
+│   ├── delete-all-config.sh
+│   ├── delete-all-ns.sh
 │   ├── delete-ns.sh
+│   ├── get-config.sh
 │   ├── get-ns.sh
-│   └── list-ns.sh
-├── 1.vNet  # MCIR vNet 생성 관련 스크립트 모음
+│   ├── list-config.sh
+│   ├── list-ns.sh
+│   └── update-config.sh
+├── 3.vNet
 │   ├── create-vNet.sh
 │   ├── delete-vNet.sh
 │   ├── get-vNet.sh
 │   ├── list-vNet.sh
 │   └── spider-get-vNet.sh
-├── 2.securityGroup  # MCIR securityGroup 생성 관련 스크립트 모음
+├── 4.securityGroup
 │   ├── create-securityGroup.sh
 │   ├── delete-securityGroup.sh
 │   ├── get-securityGroup.sh
 │   ├── list-securityGroup.sh
 │   └── spider-get-securityGroup.sh
-├── 3.sshKey  # MCIR sshKey 생성 관련 스크립트 모음
+├── 5.sshKey
 │   ├── create-sshKey.sh
 │   ├── delete-sshKey.sh
+│   ├── force-delete-sshKey.sh
 │   ├── get-sshKey.sh
 │   ├── list-sshKey.sh
 │   ├── spider-delete-sshKey.sh
 │   └── spider-get-sshKey.sh
-├── 4.image  # MCIR image 등록 관련 스크립트 모음
+├── 6.image
+│   ├── fetch-images.sh
 │   ├── get-image.sh
 │   ├── list-image.sh
-│   ├── register-image.sh
+│   ├── lookupImageList.sh
+│   ├── lookupImage.sh
+│   ├── registerImageWithId.sh
+│   ├── registerImageWithInfo.sh
+│   ├── spider-get-imagelist.sh
+│   ├── spider-get-image.sh
+│   ├── test-search-image.sh
+│   ├── unregister-all-images.sh
 │   └── unregister-image.sh
-├── 5.spec  # MCIR spec 등록 관련 스크립트 모음
+├── 7.spec
 │   ├── fetch-specs.sh
+│   ├── filter-specs.sh
 │   ├── get-spec.sh
 │   ├── list-spec.sh
 │   ├── lookupSpecList.sh
 │   ├── lookupSpec.sh
+│   ├── range-filter-specs.sh
 │   ├── register-spec.sh
 │   ├── spider-get-speclist.sh
 │   ├── spider-get-spec.sh
+│   ├── test-sort-specs.sh
+│   ├── test-update-spec.sh
+│   ├── unregister-all-specs.sh
 │   └── unregister-spec.sh
-├── 6.mcis  # MCIS 생성 및 제어 관련 스크립트 모음
+├── 8.mcis
+│   ├── add-vm-to-mcis.sh
+│   ├── create-mcis-no-agent.sh
+│   ├── create-mcis-policy.sh
 │   ├── create-mcis.sh
+│   ├── create-single-vm-mcis.sh
+│   ├── delete-mcis-policy-all.sh
+│   ├── delete-mcis-policy.sh
+│   ├── get-mcis-policy.sh
 │   ├── get-mcis.sh
 │   ├── just-terminate-mcis.sh
+│   ├── list-mcis-policy.sh
 │   ├── list-mcis.sh
+│   ├── list-mcis-status.sh
 │   ├── reboot-mcis.sh
 │   ├── resume-mcis.sh
 │   ├── spider-create-vm.sh
@@ -530,18 +582,43 @@ Dozing for 1 : 1 (Back to work)
 │   ├── status-mcis.sh
 │   ├── suspend-mcis.sh
 │   └── terminate-and-delete-mcis.sh
-├── conf.env  # CB-Spider 및 Tumblebug 서버 위치, 클라우드 리젼, 테스트용 이미지명, 테스트용 스팩명 등 테스트 기본 정보 제공
-├── credentials.conf  # Cloud 정보 등록을 위한 CSP별 인증정보 (사용자에 맞게 수정 필요)
+├── 9.monitoring
+│   ├── get-monitoring-data.sh
+│   └── install-agent.sh
+├── conf.env
+├── credentials.conf
+├── credentials.conf.example
+├── misc
+│   ├── get-conn-config.sh
+│   ├── get-region.sh
+│   ├── list-conn-config.sh
+│   └── list-region.sh
 ├── README.md
-└── sequentialFullTest  # Cloud 정보 등록, NS 생성, MCIR 생성, MCIS 생성까지 한번에 자동 테스트
-    ├── cleanAll-mcis-mcir-ns-cloud.sh  # 모든 오브젝트 역으로 제어
-    ├── command-mcis.sh  # 생성된 MCIS(다중VM)에 원격 명령 수행
-    ├── deploy-nginx-mcis.sh  # 생성된 MCIS(다중VM)에 Nginx 자동 배포
-    ├── executionStatus  # 수행이 진행된 테스트 로그 (testAll 수행시 정보가 추가되며, cleanAll 수행시 정보가 제거됨)
-    ├── testAll-mcis-mcir-ns-cloud.sh  # Cloud 정보 등록, NS 생성, MCIR 생성, MCIS 생성까지 한번에 자동 테스트
+└── sequentialFullTest
+    ├── cb-demo-support
+    ├── cleanAll-mcis-mcir-ns-cloud.sh
+    ├── command-mcis-custom.sh
+    ├── command-mcis.sh
+    ├── create-mcis-for-df.sh
+    ├── deploy-dragonfly-docker.sh
+    ├── deploy-loadMaker-to-mcis.sh
+    ├── deploy-nginx-mcis.sh
+    ├── deploy-nginx-mcis-vm-withGivenName.sh
+    ├── deploy-nginx-mcis-with-loadmaker.sh
+    ├── deploy-spider-docker.sh
+    ├── deploy-tumblebug.sh
+    ├── executionStatus
+    ├── expand-mcis.sh
+    ├── gen-sshKey.sh
+    ├── gen-sshKey-withGivenMcisName.sh
+    ├── sshkey-tmp
+    │   ├── gcp-asia-east1-shson6.pem
+    │   └── gcp-asia-east1-shson6.ppk
+    ├── testAll-mcis-mcir-ns-cloud.sh
     ├── test-cloud.sh
     ├── test-mcir-ns-cloud.sh
     └── test-ns-cloud.sh
+
 ```
 
 </details>
