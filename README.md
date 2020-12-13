@@ -1,8 +1,8 @@
 # Cloud-Barista 
 
-Cloud-Barista is a Multi-Cloud Service Platform SW. Cloud-Barista consists of multiple frameworks (sub-systems) to accommodate microservice architecture.
+*The Cloud-Barista is a Multi-Cloud Service Platform SW.* Cloud-Barista consists of multiple frameworks (sub-systems) to accommodate microservice architecture.
 
-This repository is a integrated mirror for repository of major frameworks. This repo reflects the latest release. The repositories are included on the root directory.
+*This repository is a integrated mirror for repository of major frameworks.* This repo reflects the latest release. The repositories are included on the root directory.
 
 Main frameworks or tools are as follow,
 
@@ -28,15 +28,17 @@ Main frameworks or tools are as follow,
 
 ```
 [NOTE]
+*Development stage of Cloud-Barista"
 Cloud-Barista is currently under development. (the latest release is 0.3.0-espresso)
 So, we do not recommend using the current release in production.
-Please note that the functionalities of Cloud-Barista are not stable and secure yet.
+Please note that the functionalities of Cloud-Barista are not stable and secure yet.g
 If you have any difficulties in using Cloud-Barista, please let us know.
 (Open an issue or Join the Cloud-Barista Slack)
 ```
 
 ```
-[NOTE] Localization and Globalization of Cloud-Barista (Cloud-Barista의 현지화 및 세계화)
+[NOTE] 
+*Localization and Globalization of Cloud-Barista*
 As an opensource project initiated by Korean members, 
 we would like to promote participation of Korean contributors during initial stage of this project. 
 So, Cloud-Barista Repo will accept use of Korean language in its early stages.
@@ -44,6 +46,7 @@ On the other hand, we hope this project flourishes regardless of contributor's c
 So, the maintainers recommend using English at least for the title of Issues, Pull Requests, and Commits, 
 while Cloud-Barista Repo accommodates local languages in the contents of them.
 
+*Cloud-Barista의 현지화 및 세계화*
 Cloud-Barista는 한국에서 시작된 오픈 소스 프로젝트로서 
 프로젝트의 초기 단계에는 한국 기여자들의 참여를 촉진하고자 합니다. 
 따라서 초기 단계의 Cloud-Barista는 한국어 사용을 받아 들일 것입니다.
@@ -130,6 +133,143 @@ Cloud-Barista는 한국에서 시작된 오픈 소스 프로젝트로서
    - 개별 수동 제어: 클라우드정보, Namespace, MCIR, MCIS 등 제어 (개별 시험시, 오브젝트들의 의존성 고려 필요))
    - 통합 자동 제어: 의존성을 고려한 자동 통합 제어 (추천 테스트 방법)
      - [cloud-barista/cb-tumblebug/test/official/sequentialFullTest](/cb-tumblebug/test/official/sequentialFullTest)
+
+
+<details>
+<summary>테스트 스크립트 디렉토리 전체 Tree 보기</summary>
+
+```
+~/go/src/github.com/cloud-barista/cb-tumblebug/test/official$ tree
+.
+├── 1.configureSpider
+│   ├── get-cloud.sh
+│   ├── list-cloud.sh
+│   ├── register-cloud.sh
+│   └── unregister-cloud.sh
+├── 2.configureTumblebug
+│   ├── check-ns.sh
+│   ├── create-ns.sh
+│   ├── delete-all-config.sh
+│   ├── delete-all-ns.sh
+│   ├── delete-ns.sh
+│   ├── get-config.sh
+│   ├── get-ns.sh
+│   ├── list-config.sh
+│   ├── list-ns.sh
+│   └── update-config.sh
+├── 3.vNet
+│   ├── create-vNet.sh
+│   ├── delete-vNet.sh
+│   ├── get-vNet.sh
+│   ├── list-vNet.sh
+│   └── spider-get-vNet.sh
+├── 4.securityGroup
+│   ├── create-securityGroup.sh
+│   ├── delete-securityGroup.sh
+│   ├── get-securityGroup.sh
+│   ├── list-securityGroup.sh
+│   └── spider-get-securityGroup.sh
+├── 5.sshKey
+│   ├── create-sshKey.sh
+│   ├── delete-sshKey.sh
+│   ├── force-delete-sshKey.sh
+│   ├── get-sshKey.sh
+│   ├── list-sshKey.sh
+│   ├── spider-delete-sshKey.sh
+│   └── spider-get-sshKey.sh
+├── 6.image
+│   ├── fetch-images.sh
+│   ├── get-image.sh
+│   ├── list-image.sh
+│   ├── lookupImageList.sh
+│   ├── lookupImage.sh
+│   ├── registerImageWithId.sh
+│   ├── registerImageWithInfo.sh
+│   ├── spider-get-imagelist.sh
+│   ├── spider-get-image.sh
+│   ├── test-search-image.sh
+│   ├── unregister-all-images.sh
+│   └── unregister-image.sh
+├── 7.spec
+│   ├── fetch-specs.sh
+│   ├── filter-specs.sh
+│   ├── get-spec.sh
+│   ├── list-spec.sh
+│   ├── lookupSpecList.sh
+│   ├── lookupSpec.sh
+│   ├── range-filter-specs.sh
+│   ├── register-spec.sh
+│   ├── spider-get-speclist.sh
+│   ├── spider-get-spec.sh
+│   ├── test-sort-specs.sh
+│   ├── test-update-spec.sh
+│   ├── unregister-all-specs.sh
+│   └── unregister-spec.sh
+├── 8.mcis
+│   ├── add-vm-to-mcis.sh
+│   ├── create-mcis-no-agent.sh
+│   ├── create-mcis-policy.sh
+│   ├── create-mcis.sh
+│   ├── create-single-vm-mcis.sh
+│   ├── delete-mcis-policy-all.sh
+│   ├── delete-mcis-policy.sh
+│   ├── get-mcis-policy.sh
+│   ├── get-mcis.sh
+│   ├── just-terminate-mcis.sh
+│   ├── list-mcis-policy.sh
+│   ├── list-mcis.sh
+│   ├── list-mcis-status.sh
+│   ├── reboot-mcis.sh
+│   ├── resume-mcis.sh
+│   ├── spider-create-vm.sh
+│   ├── spider-delete-vm.sh
+│   ├── spider-get-vm.sh
+│   ├── spider-get-vmstatus.sh
+│   ├── status-mcis.sh
+│   ├── suspend-mcis.sh
+│   └── terminate-and-delete-mcis.sh
+├── 9.monitoring
+│   ├── get-monitoring-data.sh
+│   └── install-agent.sh
+├── conf.env
+├── credentials.conf
+├── credentials.conf.example
+├── misc
+│   ├── get-conn-config.sh
+│   ├── get-region.sh
+│   ├── list-conn-config.sh
+│   └── list-region.sh
+├── README.md
+└── sequentialFullTest
+    ├── cb-demo-support
+    ├── cleanAll-mcis-mcir-ns-cloud.sh
+    ├── command-mcis-custom.sh
+    ├── command-mcis.sh
+    ├── create-mcis-for-df.sh
+    ├── deploy-dragonfly-docker.sh
+    ├── deploy-loadMaker-to-mcis.sh
+    ├── deploy-nginx-mcis.sh
+    ├── deploy-nginx-mcis-vm-withGivenName.sh
+    ├── deploy-nginx-mcis-with-loadmaker.sh
+    ├── deploy-spider-docker.sh
+    ├── deploy-tumblebug.sh
+    ├── executionStatus
+    ├── expand-mcis.sh
+    ├── gen-sshKey.sh
+    ├── gen-sshKey-withGivenMcisName.sh
+    ├── sshkey-tmp
+    │   ├── gcp-asia-east1-shson6.pem
+    │   └── gcp-asia-east1-shson6.ppk
+    ├── testAll-mcis-mcir-ns-cloud.sh
+    ├── test-cloud.sh
+    ├── test-mcir-ns-cloud.sh
+    └── test-ns-cloud.sh
+
+```
+
+</details>
+
+
 
 #### 1) 클라우드 인증 정보, 테스트 기본 정보 입력
 - [cloud-barista/cb-tumblebug/test/official/](/cb-tumblebug/test/official/) 이동
@@ -488,137 +628,3 @@ Dozing for 1 : 1 (Back to work)
         ]
       }
       ```
-
-<details>
-<summary>테스트 스크립트 디렉토리 전체 Tree 보기</summary>
-
-```
-~/go/src/github.com/cloud-barista/cb-tumblebug/test/official$ tree
-.
-├── 1.configureSpider
-│   ├── get-cloud.sh
-│   ├── list-cloud.sh
-│   ├── register-cloud.sh
-│   └── unregister-cloud.sh
-├── 2.configureTumblebug
-│   ├── check-ns.sh
-│   ├── create-ns.sh
-│   ├── delete-all-config.sh
-│   ├── delete-all-ns.sh
-│   ├── delete-ns.sh
-│   ├── get-config.sh
-│   ├── get-ns.sh
-│   ├── list-config.sh
-│   ├── list-ns.sh
-│   └── update-config.sh
-├── 3.vNet
-│   ├── create-vNet.sh
-│   ├── delete-vNet.sh
-│   ├── get-vNet.sh
-│   ├── list-vNet.sh
-│   └── spider-get-vNet.sh
-├── 4.securityGroup
-│   ├── create-securityGroup.sh
-│   ├── delete-securityGroup.sh
-│   ├── get-securityGroup.sh
-│   ├── list-securityGroup.sh
-│   └── spider-get-securityGroup.sh
-├── 5.sshKey
-│   ├── create-sshKey.sh
-│   ├── delete-sshKey.sh
-│   ├── force-delete-sshKey.sh
-│   ├── get-sshKey.sh
-│   ├── list-sshKey.sh
-│   ├── spider-delete-sshKey.sh
-│   └── spider-get-sshKey.sh
-├── 6.image
-│   ├── fetch-images.sh
-│   ├── get-image.sh
-│   ├── list-image.sh
-│   ├── lookupImageList.sh
-│   ├── lookupImage.sh
-│   ├── registerImageWithId.sh
-│   ├── registerImageWithInfo.sh
-│   ├── spider-get-imagelist.sh
-│   ├── spider-get-image.sh
-│   ├── test-search-image.sh
-│   ├── unregister-all-images.sh
-│   └── unregister-image.sh
-├── 7.spec
-│   ├── fetch-specs.sh
-│   ├── filter-specs.sh
-│   ├── get-spec.sh
-│   ├── list-spec.sh
-│   ├── lookupSpecList.sh
-│   ├── lookupSpec.sh
-│   ├── range-filter-specs.sh
-│   ├── register-spec.sh
-│   ├── spider-get-speclist.sh
-│   ├── spider-get-spec.sh
-│   ├── test-sort-specs.sh
-│   ├── test-update-spec.sh
-│   ├── unregister-all-specs.sh
-│   └── unregister-spec.sh
-├── 8.mcis
-│   ├── add-vm-to-mcis.sh
-│   ├── create-mcis-no-agent.sh
-│   ├── create-mcis-policy.sh
-│   ├── create-mcis.sh
-│   ├── create-single-vm-mcis.sh
-│   ├── delete-mcis-policy-all.sh
-│   ├── delete-mcis-policy.sh
-│   ├── get-mcis-policy.sh
-│   ├── get-mcis.sh
-│   ├── just-terminate-mcis.sh
-│   ├── list-mcis-policy.sh
-│   ├── list-mcis.sh
-│   ├── list-mcis-status.sh
-│   ├── reboot-mcis.sh
-│   ├── resume-mcis.sh
-│   ├── spider-create-vm.sh
-│   ├── spider-delete-vm.sh
-│   ├── spider-get-vm.sh
-│   ├── spider-get-vmstatus.sh
-│   ├── status-mcis.sh
-│   ├── suspend-mcis.sh
-│   └── terminate-and-delete-mcis.sh
-├── 9.monitoring
-│   ├── get-monitoring-data.sh
-│   └── install-agent.sh
-├── conf.env
-├── credentials.conf
-├── credentials.conf.example
-├── misc
-│   ├── get-conn-config.sh
-│   ├── get-region.sh
-│   ├── list-conn-config.sh
-│   └── list-region.sh
-├── README.md
-└── sequentialFullTest
-    ├── cb-demo-support
-    ├── cleanAll-mcis-mcir-ns-cloud.sh
-    ├── command-mcis-custom.sh
-    ├── command-mcis.sh
-    ├── create-mcis-for-df.sh
-    ├── deploy-dragonfly-docker.sh
-    ├── deploy-loadMaker-to-mcis.sh
-    ├── deploy-nginx-mcis.sh
-    ├── deploy-nginx-mcis-vm-withGivenName.sh
-    ├── deploy-nginx-mcis-with-loadmaker.sh
-    ├── deploy-spider-docker.sh
-    ├── deploy-tumblebug.sh
-    ├── executionStatus
-    ├── expand-mcis.sh
-    ├── gen-sshKey.sh
-    ├── gen-sshKey-withGivenMcisName.sh
-    ├── sshkey-tmp
-    │   ├── gcp-asia-east1-shson6.pem
-    │   └── gcp-asia-east1-shson6.ppk
-    ├── testAll-mcis-mcir-ns-cloud.sh
-    ├── test-cloud.sh
-    ├── test-mcir-ns-cloud.sh
-    └── test-ns-cloud.sh
-
-```
-
-</details>
