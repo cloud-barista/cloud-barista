@@ -116,7 +116,7 @@ Cloud-Barista는 한국에서 시작된 오픈 소스 프로젝트로서
 - 문서 통합 Repository
   - [github.com/cloud-barista/docs](https://github.com/cloud-barista/docs)
 - API 규격
-  - [https://github.com/cloud-barista/docs/blob/master/technical_docs/API/CB-User_REST-API.md](https://github.com/cloud-barista/docs/blob/master/technical_docs/API/CB-User_REST-API.md)
+  - [CB-User_REST-API.md](https://github.com/cloud-barista/docs/blob/master/technical_docs/API/CB-User_REST-API.md)
 
 ## [특이 사항]
 - 개발 상태: 기능 우선 개발 추진 중 (상용 활용시 안정화 및 보완 필요)
