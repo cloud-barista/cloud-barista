@@ -6,21 +6,21 @@ This repository is a integrated mirror for repository of major frameworks. This 
 
 Main frameworks are as follow,
 
-1. CB-Spider (connects all clouds in a single interface)
+- CB-Spider (connects all clouds in a single interface)
   - Uptream repo: https://github.com/cloud-barista/cb-spider
-1. CB-Tumblebug (deploy and manage multi-cloud infrastructures)
+- CB-Tumblebug (deploy and manage multi-cloud infrastructures)
   - Uptream repo: https://github.com/cloud-barista/cb-tumblebug
-1. CB-Ladybug (manages multi-cloud applications)
+- CB-Ladybug (manages multi-cloud applications)
   - Uptream repo: https://github.com/cloud-barista/cb-ladybug
-1. CB-Dragonfly (monitors multi-cloud services)
+- CB-Dragonfly (monitors multi-cloud services)
   - Uptream repo: https://github.com/cloud-barista/cb-dragonfly
-1. CB-Waterstrider/cb-webtool (provides web GUI to Cloud-Barista users)
+- CB-Waterstrider/cb-webtool (provides web GUI to Cloud-Barista users)
   - Uptream repo: https://github.com/cloud-barista/cb-webtool
-1. CB-Bridge/cb-operator (operation tool for Cloud-Barista system runtime)
+- CB-Bridge/cb-operator (operation tool for Cloud-Barista system runtime)
   - Uptream repo: https://github.com/cloud-barista/cb-operator
-1. CB-Bridge/cb-store (provides an unified DB interface for meta info of Cloud-Barista)
+- CB-Bridge/cb-store (provides an unified DB interface for meta info of Cloud-Barista)
   - Uptream repo: https://github.com/cloud-barista/cb-store
-1. CB-Bridge/cb-log (provides log system)
+- CB-Bridge/cb-log (provides log system)
   - Uptream repo: https://github.com/cloud-barista/cb-log
 
 
