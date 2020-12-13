@@ -1,0 +1,59 @@
+@@startuml
+
+header **Cloud-Barista Ladybug** (Espresso version)
+title Remove a node
+hide footbox
+
+actor		"User"			as user			#d1e0ff
+participant	"Webtool"		as webtool		#d1e0ff
+participant	"Ladybug"		as provider
+database	"Ladybug data"	as db
+participant	"Tumblebug"		as tumblebug	#d1e0ff
+participant	"Spider"		as spider		#d1e0ff
+participant	"Control plane"	as mNodes		#eeeeee
+participant	"Worker nodes"	as wNodes		#eeeeee
+
+
+user		->	webtool		: delete a node
+
+activate webtool
+	webtool		->	provider		: DELETE\n/ns/:ns/clusters/:cluster/nodes/:node\n
+
+	activate provider
+
+		provider	-->o	db			: select {control-plane}
+
+		' 1. drain node
+		provider 	->		tumblebug	: drain node (ssh)
+		activate tumblebug
+			tumblebug	-->	mNodes 		: kubectl
+			provider 	<--	tumblebug	: ack (console)
+		deactivate tumblebug
+
+		' 2. delete node
+		provider 	->		tumblebug	: delete node (ssh)
+		activate tumblebug
+			tumblebug	-->	mNodes 		: kubectl
+			provider 	<--	tumblebug	: ack (console)
+		deactivate tumblebug
+
+		' 3. delete vm
+		provider	->	tumblebug		: DELETE\n/mcis
+
+		activate tumblebug
+			tumblebug	-->	spider		: DELETE/vm
+			activate spider
+				tumblebug	<--	spider	: ack
+			deactivate spider
+			tumblebug	-->	provider 	: ack
+		deactivate tumblebug
+
+		provider	->o	db				: delete {node}
+		provider	-->	webtool			: ack {result}
+
+	deactivate provider
+
+	webtool	-->	user	: ack {result}
+deactivate webtool
+
+@@enduml

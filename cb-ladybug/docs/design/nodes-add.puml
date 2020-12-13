@@ -1,0 +1,165 @@
+@@startuml
+
+header **Cloud-Barista Ladybug** (Espresso version)
+title Add nodes
+hide footbox
+
+actor		"User"			as user			#d1e0ff
+participant	"Webtool"		as webtool		#d1e0ff
+participant	"Ladybug"		as provider
+database	"Ladybug data"	as db
+participant	"Tumblebug"		as tumblebug	#d1e0ff
+participant	"Spider"		as spider		#d1e0ff
+participant	"Control plane"	as mNodes		#eeeeee
+participant	"Worker nodes"	as wNodes		#eeeeee
+
+
+user		->	webtool		: add nedes
+
+activate webtool
+	webtool		->	provider		: POST\n/ns/:ns/clusters/:cluster/nodes \n{config,\n workerNodeSpec,\n workerNodeCount}
+
+	activate provider
+
+		provider	<->o	db				: select {control-plane}
+
+		'-- 1. join command
+		provider	->	tumblebug			: get join-command
+		activate tumblebug
+			tumblebug	->	mNodes			: ssh
+			activate mNodes
+				tumblebug	<--	mNodes		: output (console)
+			deactivate mNodes
+			provider	<--	tumblebug		: ack {join-command}
+		deactivate tumblebug
+
+		'-- 2.1. vpc
+		provider	->	tumblebug			: GET\n/ns/:ns/resources/vNet/:vpc
+		activate tumblebug
+			tumblebug	-->	provider		: ack {vpc}
+		deactivate tumblebug
+
+		alt if not exist vpc
+			provider	->	tumblebug		: if exist\nPOST/ns/:ns/resources/vNet
+			activate tumblebug
+				tumblebug	->	spider		: POST /vpc
+				activate spider
+					tumblebug	<--	spider	: ack {vpc}
+				deactivate spider
+				tumblebug	-->	provider	: ack {vpc}
+			deactivate tumblebug
+		end
+
+		'-- 2.2. sg(fw)
+		provider	->	tumblebug			: GET\n/ns/:ns/resources/securityGroup/:sg
+		activate tumblebug
+			tumblebug	-->	provider		: ack {sg}
+		deactivate tumblebug
+
+		alt if not exist security group
+			provider	->	tumblebug		: POST\n/ns/:ns/resources/securityGroup
+			activate tumblebug
+				tumblebug	->	spider		: POST /securitygroup
+				activate spider
+					tumblebug	<--	spider	: ack  {sg}
+				deactivate spider
+				tumblebug	-->	provider	: ack  {sg}
+			deactivate tumblebug
+		end
+
+		'-- 2.3. ssh
+		provider	->	tumblebug			: GET\n/ns/:ns/resources/sshKey/:key
+		activate tumblebug
+			tumblebug	-->	provider		: ack {keypair}
+		deactivate tumblebug
+
+		alt if not exist keypair
+			provider	->	tumblebug		: POST\n/ns/:ns/resources/sshKey
+			activate tumblebug
+				tumblebug	->	spider		: POST /keypair
+				activate spider
+					tumblebug	<--	spider	: ack  {keypair}
+				deactivate spider
+				tumblebug	-->	provider	: ack  {keypair}
+			deactivate tumblebug
+		end
+		
+		'-- 2.4. image
+		provider	->	tumblebug			: GET\n/ns/:ns/resources/image/:image
+		activate tumblebug
+			tumblebug	-->	provider		: ack {image}
+		deactivate tumblebug
+
+		alt if not exist image
+			provider	->	tumblebug 		: POST\n/ns/:ns/resources/image
+			activate tumblebug
+				tumblebug	->	spider		: POST /vmimage
+				activate spider
+					tumblebug	<--	spider	:  ack  {vmimage}
+				deactivate spider
+				tumblebug	-->	provider	: ack  {image}
+			deactivate tumblebug
+		end
+
+		'-- 2.5. spec
+		provider	->	tumblebug			: GET\n/ns/:ns/resources/spec/:spec
+		activate tumblebug
+			tumblebug	-->	provider		: ack {spec}
+		deactivate tumblebug
+
+		alt if not exist spec
+			provider	->	tumblebug 		: POST\n/ns/:ns/resources/spec
+			activate tumblebug
+				tumblebug	->	spider		: POST /spec
+				activate spider
+					tumblebug	<--	spider	: ack  {spec}
+				deactivate spider
+				tumblebug	-->	provider	: ack  {spec}
+			deactivate tumblebug
+		end
+
+		'-- 2.6. mcis
+		loop Create VM
+			provider	->	tumblebug		: POST\n/mcis
+
+			activate tumblebug
+				tumblebug	->o	spider		: POST/vm
+				activate spider
+					tumblebug	<--	spider	: ack {vm}
+				deactivate spider
+				tumblebug	-->	provider 	: ack {vm}
+			deactivate tumblebug
+		end
+
+		loop Provisioning
+			' -- 2.boostrap
+			provider	->	tumblebug		: bootstrap.sh (ssh)
+			activate tumblebug
+				tumblebug	->	wNodes		: ssh
+				activate wNodes
+					tumblebug	<--	wNodes	: output (console)
+				deactivate wNodes
+				provider	<--	tumblebug	: output (console)
+			deactivate tumblebug
+			provider	->	provider		: wait
+
+			' -- 3.provisioning
+			provider	->	tumblebug		: join {join command}
+
+			activate tumblebug
+				tumblebug	->	wNodes		: ssh
+				activate wNodes
+					tumblebug	<--	wNodes	: output (console)
+				deactivate wNodes
+				provider	<--	tumblebug	: output (console)
+			deactivate tumblebug
+		end
+		provider	->o	db					: update {cluster}
+		provider	-->	webtool				: ack {nodes}
+
+	deactivate provider
+
+	webtool	-->	user	: ack {result}
+deactivate webtool
+
+@@enduml
