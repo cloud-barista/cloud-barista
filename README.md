@@ -1,29 +1,27 @@
 # Cloud-Barista 
 
-The Multi-Cloud Service Platform.
+Cloud-Barista is a Multi-Cloud Service Platform SW. Cloud-Barista consists of multiple frameworks (sub-systems) to accommodate microservice architecture.
 
-Cloud-Barista consists of multiple frameworks (sub-systems) to accommodate microservice architecture.
-
-This repository is a integrated mirror for repository of major frameworks. The repositories are included on the root directory.
+This repository is a integrated mirror for repository of major frameworks. This repo reflects the latest release. The repositories are included on the root directory.
 
 Main frameworks are as follow,
 
 1. CB-Spider (connects all clouds in a single interface)
-   https://github.com/cloud-barista/cb-spider
+  - Uptream repo: https://github.com/cloud-barista/cb-spider
 1. CB-Tumblebug (deploy and manage multi-cloud infrastructures)
-   https://github.com/cloud-barista/cb-tumblebug
+  - Uptream repo: https://github.com/cloud-barista/cb-tumblebug
 1. CB-Ladybug (manages multi-cloud applications)
-   https://github.com/cloud-barista/cb-ladybug
+  - Uptream repo: https://github.com/cloud-barista/cb-ladybug
 1. CB-Dragonfly (monitors multi-cloud services)
-   https://github.com/cloud-barista/cb-dragonfly
+  - Uptream repo: https://github.com/cloud-barista/cb-dragonfly
 1. CB-Waterstrider/cb-webtool (provides web GUI to Cloud-Barista users)
-   https://github.com/cloud-barista/cb-webtool
+  - Uptream repo: https://github.com/cloud-barista/cb-webtool
 1. CB-Bridge/cb-operator (operation tool for Cloud-Barista system runtime)
-   https://github.com/cloud-barista/cb-operator
+  - Uptream repo: https://github.com/cloud-barista/cb-operator
 1. CB-Bridge/cb-store (provides an unified DB interface for meta info of Cloud-Barista)
-   https://github.com/cloud-barista/cb-store
+  - Uptream repo: https://github.com/cloud-barista/cb-store
 1. CB-Bridge/cb-log (provides log system)
-   https://github.com/cloud-barista/cb-log
+  - Uptream repo: https://github.com/cloud-barista/cb-log
 
 
 ```
@@ -57,7 +55,7 @@ Cloud-Barista는 한국에서 시작된 오픈 소스 프로젝트로서
 
 ## [목    차]
 
-1. [설치 환경](#설치-환경)
+1. [실행 환경](#실행-환경)
 1. [설치 및 실행](#설치-및-실행)
 1. [API 및 문서](#API-및-문서)
 1. [특이 사항](#특이-사항)
