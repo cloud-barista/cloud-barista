@@ -4,7 +4,7 @@ Cloud-Barista is a Multi-Cloud Service Platform SW. Cloud-Barista consists of mu
 
 This repository is a integrated mirror for repository of major frameworks. This repo reflects the latest release. The repositories are included on the root directory.
 
-Main frameworks are as follow,
+Main frameworks or tools are as follow,
 
 - CB-Spider (connects all clouds in a single interface)
   - Uptream repo: https://github.com/cloud-barista/cb-spider
@@ -18,9 +18,11 @@ Main frameworks are as follow,
   - Uptream repo: https://github.com/cloud-barista/cb-webtool
 - CB-Bridge/cb-operator (operation tool for Cloud-Barista system runtime)
   - Uptream repo: https://github.com/cloud-barista/cb-operator
-- CB-Bridge/cb-store (provides an unified DB interface for meta info of Cloud-Barista)
+- CB-Bridge/cb-apigw (provides a API gateway for Cloud-Barista system)
+  - Uptream repo: https://github.com/cloud-barista/cb-apigw  
+- CB-Bridge/cb-store (provides an unified DB interface for meta info of Cloud-Barista system)
   - Uptream repo: https://github.com/cloud-barista/cb-store
-- CB-Bridge/cb-log (provides log system)
+- CB-Bridge/cb-log (provides log library to Cloud-Barista system)
   - Uptream repo: https://github.com/cloud-barista/cb-log
 
 
