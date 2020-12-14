@@ -31,7 +31,7 @@ Main frameworks or tools are as follow,
 *Development stage of Cloud-Barista"
 Cloud-Barista is currently under development. (the latest release is 0.3.0-espresso)
 So, we do not recommend using the current release in production.
-Please note that the functionalities of Cloud-Barista are not stable and secure yet.g
+Please note that the functionalities of Cloud-Barista are not stable and secure yet.
 If you have any difficulties in using Cloud-Barista, please let us know.
 (Open an issue or Join the Cloud-Barista Slack)
 ```
