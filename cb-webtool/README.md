@@ -29,9 +29,9 @@ cb-webtool은 1.15 이상의 Go 버전이 설치된 다양한 환경에서 실�
 
 ## [의존성]
 cb-webtool은 내부적으로 cb-tumblebug & cb-spider & cb-dragonfly의 개방형 API를 이용하기 때문에 각 서버의 연동이 필요합니다.<br>
-- [https://github.com/cloud-barista/cb-tumblebug](https://github.com/cloud-barista/cb-tumblebug) README 참고하여 설치 및 실행 (검증된 버전 : cb-tumblebug v0.2.9)
-- [https://github.com/cloud-barista/cb-spider](https://github.com/cloud-barista/cb-spider) README 참고하여 설치 및 실행 (검증된 버전 : cb-spider v0.2.8)
-- [https://github.com/cloud-barista/cb-dragonfly](https://github.com/cloud-barista/cb-dragonfly) README 참고하여 설치 및 실행 (검증된 버전 : cb-dragonfly v0.2.8)
+- [https://github.com/cloud-barista/cb-tumblebug](https://github.com/cloud-barista/cb-tumblebug) README 참고하여 설치 및 실행 (검증된 버전 : cb-tumblebug v0.3.0)
+- [https://github.com/cloud-barista/cb-spider](https://github.com/cloud-barista/cb-spider) README 참고하여 설치 및 실행 (검증된 버전 : cb-spider v0.3.0)
+- [https://github.com/cloud-barista/cb-dragonfly](https://github.com/cloud-barista/cb-dragonfly) README 참고하여 설치 및 실행 (검증된 버전 : cb-dragonfly v0.3.0)
 
 <br>
 
