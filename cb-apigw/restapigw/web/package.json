@@ -17,24 +17,24 @@
   "dependencies": {
     "@nuxt/typescript-runtime": "^0.4.0",
     "@nuxtjs/auth": "^4.9.1",
-    "@nuxtjs/axios": "^5.3.6",
-    "@nuxtjs/vuetify": "^1.0.0",
-    "nuxt": "^2.14.1",
-    "vue-i18n": "^8.20.0",
-    "vuetify-dialog": "^2.0.10",
-    "vuex": "^3.5.1"
+    "@nuxtjs/axios": "^5.13.1",
+    "@nuxtjs/vuetify": "^1.11.3",
+    "nuxt": "^2.15.5",
+    "vue-i18n": "^8.24.4",
+    "vuetify-dialog": "^2.0.14",
+    "vuex": "^3.6.2"
   },
   "devDependencies": {
-    "@nuxt/typescript-build": "^0.6.0",
-    "@nuxtjs/eslint-config-typescript": "^1.0.0",
-    "@nuxtjs/eslint-module": "^1.0.0",
-    "@types/nuxtjs__auth": "^4.8.4",
+    "@nuxt/typescript-build": "^1.0.3",
+    "@nuxtjs/eslint-config-typescript": "^5.0.0",
+    "@nuxtjs/eslint-module": "^3.0.2",
+    "@types/nuxtjs__auth": "^4.8.7",
     "babel-eslint": "^10.0.1",
-    "eslint": "^6.1.0",
-    "eslint-config-prettier": "^6.11.0",
-    "eslint-plugin-nuxt": ">=0.4.2",
-    "eslint-plugin-prettier": "^3.1.4",
-    "nuxt-property-decorator": "^2.7.2",
+    "eslint": "^7.26.0",
+    "eslint-config-prettier": "^7.2.0",
+    "eslint-plugin-nuxt": ">=2.0.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "nuxt-property-decorator": "^2.9.1",
     "vuex-class-component": "^2.3.5"
   }
 }
