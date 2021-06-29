@@ -51,24 +51,24 @@ while CB-Tumblebug Repo accommodates local languages in the contents of them.
 
 Main frameworks or tools are as follow,
 
-- CB-Spider (connects all clouds in a single interface)
+- **CB-Spider** (connects all clouds in a single interface)
   - Upstream repo: https://github.com/cloud-barista/cb-spider
-- CB-Tumblebug (manages multi-cloud infrastructures)
+- **CB-Tumblebug** (manages multi-cloud infrastructures)
   - Upstream repo: https://github.com/cloud-barista/cb-tumblebug
-- CB-Ladybug (manages multi-cloud applications)
+- **CB-Ladybug** (manages multi-cloud applications)
   - Upstream repo: https://github.com/cloud-barista/cb-ladybug
-- CB-Dragonfly (monitors multi-cloud services)
+- **CB-Dragonfly** (monitors multi-cloud services)
   - Upstream repo: https://github.com/cloud-barista/cb-dragonfly
-- CB-Waterstrider/cb-webtool (provides Web GUI to Cloud-Barista users)
+- CB-Waterstrider/**cb-webtool** (provides Web GUI to Cloud-Barista users)
   - Upstream repo: https://github.com/cloud-barista/cb-webtool
-- CB-Bridge/cb-operator (operation tool for Cloud-Barista system runtime)
+- CB-Bridge/**cb-operator** (operation tool for Cloud-Barista system runtime)
   - Upstream repo: https://github.com/cloud-barista/cb-operator
-- CB-Bridge/cb-store (provides an unified DB interface for meta info of Cloud-Barista)
+- CB-Bridge/**cb-store** (provides an unified DB interface for meta info of Cloud-Barista)
   - Upstream repo: https://github.com/cloud-barista/cb-store
-- CB-Bridge/cb-log (provides log library to Cloud-Barista system)
+- CB-Bridge/**cb-log** (provides log library to Cloud-Barista system)
   - Upstream repo: https://github.com/cloud-barista/cb-log
 
-[Note] CB-Larva is a special repository that incubates (research and develop) new Multi-Cloud technologies. 
+**[Note]** CB-Larva is a special repository that incubates (research and develop) new Multi-Cloud technologies. 
 CB-Larva includes ongoing Proof of concept (POC) project. Whereas the Souce code of CB-Larva is not released and archived in this repository yet, we encourage people to take a look and contribute to the project.
 - CB-Larva/cb-cladnet (PoC for cloud adaptive network)
   - Upstream repo: https://github.com/cloud-barista/cb-larva/tree/main/poc-cb-net
@@ -89,6 +89,8 @@ CB-Larva includes ongoing Proof of concept (POC) project. Whereas the Souce code
 ## [실행 환경]
 
 - Linux (추천: Ubuntu v18.04)
+
+***
 
 ## [설치 및 실행]
 
@@ -125,6 +127,7 @@ CB-Larva includes ongoing Proof of concept (POC) project. Whereas the Souce code
       - CB-Dragonfly API 서버 주소를 conf/setup.env 에 설정
     - cb-webtool 실행 (cb-webtool GUI 서버 실행)
 
+***
 
 ## [사용 방법 및 예시]
 
@@ -141,9 +144,13 @@ CB-Larva includes ongoing Proof of concept (POC) project. Whereas the Souce code
     - 요구 사항: CB-Tumblebug (필수), CB-Spider (필수), cb-webtool (Web기반 GUI)
 - [멀티 클라우드 쿠버네티스 서비스 사용 방법](https://github.com/cloud-barista/cb-ladybug/tree/master/docs/test#test)
 
+***
+
 ## [API 및 문서]
 - [API 규격](https://github.com/cloud-barista/docs/blob/master/technical_docs/API/CB-User_REST-API.md)
 - [문서 통합 Repository](https://github.com/cloud-barista/docs)
+
+***
 
 ## [특이 사항]
 - 개발 단계: 기능 개발 우선 단계 (상용 활용시 안정화 및 보완 필요)
@@ -152,3 +159,4 @@ CB-Larva includes ongoing Proof of concept (POC) project. Whereas the Souce code
   - CB-Ladybug 기준 테스트 완료된 CSP: AWS, GCP, Azure
   - 현재는 개발 단계이므로 기능 안정성은 낮을 수 있음 (버그 리포트 기여 환영합니다..!)
 
+***
