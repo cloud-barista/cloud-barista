@@ -7,9 +7,44 @@
 
 *The Cloud-Barista is a Multi-Cloud Service Platform SW.* 
 
-Cloud-Barista consists of multiple frameworks (sub-systems) to accommodate microservice architecture. 
+Cloud-Barista consists of multiple frameworks (sub-systems) to accommodate microservice-like architecture. 
 
 Please take a look [Cloud-Barista Website](https://cloud-barista.github.io/technology/) for a detail decription.
+
+<details>
+<summary>Note for developing and using Cloud-Barista</summary>
+
+#### Development stage of Cloud-Barista
+```
+Cloud-Barista is currently under development. (not v1.0 yet)
+We welcome any new suggestions, issues, opinions, and controbutors !
+Please note that the functionalities of Cloud-Barista are not stable and secure yet.
+Becareful if you plan to use the current release in production.
+If you have any difficulties in using Cloud-Barista, please let us know.
+(Open an issue or Join the Cloud-Barista Slack)
+```
+
+#### Localization and Globalization of CB-Tumblebug (CB-Tumblebug의 현지화 및 세계화)
+```
+[English] As an opensource project initiated by Korean members, 
+we would like to promote participation of Korean contributors during initial stage of this project. 
+So, CB-Tumblebug Repo will accept use of Korean language in its early stages.
+On the other hand, we hope this project flourishes regardless of contributor's country eventually.
+So, the maintainers recommend using English at least for the title of Issues, Pull Requests, and Commits, 
+while CB-Tumblebug Repo accommodates local languages in the contents of them.
+```
+
+```
+[한국어] CB-Tumblebug은 한국에서 시작된 오픈 소스 프로젝트로서 
+프로젝트의 초기 단계에는 한국 기여자들의 참여를 촉진하고자 합니다. 
+따라서 초기 단계의 CB-Tumblebug는 한국어 사용을 받아 들일 것입니다.
+다른 한편으로, 이 프로젝트가 국가에 관계없이 번성하기를 희망합니다.
+따라서 개발 히스토리 관리를 위해 이슈, 풀 요청, 커밋 등의 
+제목에 대해서는 영어 사용을 권장하며, 내용에 대한 한국어 사용은 수용할 것입니다.
+```
+
+</details>
+
 
 ---
 *This repository is an integrated archive for repository of major frameworks.* These repositories are included and listed in the root directory. This repo reflects the latest release only.
@@ -34,44 +69,10 @@ Main frameworks or tools are as follow,
   - Upstream repo: https://github.com/cloud-barista/cb-log
 
 [Note] CB-Larva is a special repository that incubates (research and develop) new Multi-Cloud technologies. 
-CB-Larva includes ongoing Proof of concept (POC) project. The Souce code of CB-Larva is not released and archived in this repository yet.
+CB-Larva includes ongoing Proof of concept (POC) project. Whereas the Souce code of CB-Larva is not released and archived in this repository yet, we encourage people to take a look and contribute to the project.
 - CB-Larva/cb-cladnet (PoC for cloud adaptive network)
   - Upstream repo: https://github.com/cloud-barista/cb-larva/tree/main/poc-cb-net
 
-
-<details>
-<summary>Note for developing and using Cloud-Barista</summary>
-
-### Development stage of Cloud-Barista
-```
-Cloud-Barista is currently under development. (not v1.0 yet)
-We welcome any new suggestions, issues, opinions, and controbutors !
-Please note that the functionalities of Cloud-Barista are not stable and secure yet.
-Becareful if you plan to use the current release in production.
-If you have any difficulties in using Cloud-Barista, please let us know.
-(Open an issue or Join the Cloud-Barista Slack)
-```
-
-### Localization and Globalization of CB-Tumblebug (CB-Tumblebug의 현지화 및 세계화)
-```
-[English] As an opensource project initiated by Korean members, 
-we would like to promote participation of Korean contributors during initial stage of this project. 
-So, CB-Tumblebug Repo will accept use of Korean language in its early stages.
-On the other hand, we hope this project flourishes regardless of contributor's country eventually.
-So, the maintainers recommend using English at least for the title of Issues, Pull Requests, and Commits, 
-while CB-Tumblebug Repo accommodates local languages in the contents of them.
-```
-
-```
-[한국어] CB-Tumblebug은 한국에서 시작된 오픈 소스 프로젝트로서 
-프로젝트의 초기 단계에는 한국 기여자들의 참여를 촉진하고자 합니다. 
-따라서 초기 단계의 CB-Tumblebug는 한국어 사용을 받아 들일 것입니다.
-다른 한편으로, 이 프로젝트가 국가에 관계없이 번성하기를 희망합니다.
-따라서 개발 히스토리 관리를 위해 이슈, 풀 요청, 커밋 등의 
-제목에 대해서는 영어 사용을 권장하며, 내용에 대한 한국어 사용은 수용할 것입니다.
-```
-
-</details>
 
 ***
 
@@ -79,9 +80,9 @@ while CB-Tumblebug Repo accommodates local languages in the contents of them.
 
 1. [실행 환경](#실행-환경)
 1. [설치 및 실행](#설치-및-실행)
-1. [API 및 문서](#API-및-문서)
-1. [특이 사항](#특이-사항)
 1. [사용 방법 및 예시](#사용-방법-및-예시)
+1. [API 및 문서](#api-및-문서)
+1. [특이 사항](#특이-사항)
 
 ***
 
@@ -96,11 +97,6 @@ while CB-Tumblebug Repo accommodates local languages in the contents of them.
     - 참고: [cloud-barista/cb-operator](/cb-operator/)
 
 - Cloud-Barista 플랫폼 개별 FW 소스 다운로드 및 설치
-  - CB-Log 설치
-    - [cloud-barista/cb-log README를 참고하여 설치](/cb-log/)
-  
-  - CB-Store 설치
-    - [cloud-barista/cb-store README를 참고하여 설치](/cb-store/)
 
   - CB-Spider 설치 및 실행
     - [cloud-barista/cb-spider README를 참고하여 설정, 설치](/cb-spider/)
@@ -122,7 +118,7 @@ while CB-Tumblebug Repo accommodates local languages in the contents of them.
     - [cloud-barista/cb-dragonfly README를 참고하여 설정, 설치](/cb-dragonfly/)
     - cb-dragonfly 실행 (cb-dragonfly API 서버 실행)
 
-  - CB-Webtool 설치 및 실행
+  - cb-webtool 설치 및 실행
     - [cloud-barista/cb-webtool README를 참고하여 설정, 설치](/cb-webtool/)
       - CB-Spider API 서버 주소를 conf/setup.env 에 설정
       - CB-Tumblebug API 서버 주소를 conf/setup.env 에 설정
@@ -130,24 +126,29 @@ while CB-Tumblebug Repo accommodates local languages in the contents of them.
     - cb-webtool 실행 (cb-webtool GUI 서버 실행)
 
 
-## [API 및 문서]
-- 문서 통합 Repository
-  - [github.com/cloud-barista/docs](https://github.com/cloud-barista/docs)
-- API 규격
-  - [CB-User_REST-API.md](https://github.com/cloud-barista/docs/blob/master/technical_docs/API/CB-User_REST-API.md)
-
-## [특이 사항]
-- 개발 상태: 기능 우선 개발 추진 중 (상용 활용시 안정화 및 보완 필요)
-- CSP별 연동 검증 상태
-  - CB-Tumblebug 기준 테스트 완료된 CSP는 AWS, GCP, Azure, Alibaba, Cloudit 임
-  - CB-Ladybug 기준 테스트 완료된 CSP는 AWS, GCP, Azure 임
-  - 현재는 개발 단계이므로 기능 안정성에는 문제가 발생할 수 있음 (버그 리포트 기여 환영합니다..!)
-
 ## [사용 방법 및 예시]
 
-### [주요 서비스 1] 멀티 클라우드 인프라 서비스 (MCIS)
-- CB-Tumblebug 기반의 [멀티 클라우드 인프라 서비스 사용 방법](https://github.com/cloud-barista/cb-tumblebug#cb-tumblebug-%EA%B8%B0%EB%8A%A5-%EC%82%AC%EC%9A%A9-%EB%B0%A9%EB%B2%95)
+### 주요 서비스 1: 멀티 클라우드 인프라 서비스 (MCIS)
+- [CB-Tumblebug 설정 및 실행](https://github.com/cloud-barista/cb-tumblebug#cb-tumblebug-%EC%86%8C%EC%8A%A4-%EB%B9%8C%EB%93%9C-%EB%B0%8F-%EC%8B%A4%ED%96%89-%EB%B0%A9%EB%B2%95-%EC%83%81%EC%84%B8)
+  - 요구 사항: CB-Spider (필수), CB-Dragonfly (MCIS 모니터링, CB-Tumblebug MCIS 자동 제어 기능 사용시 필요), cb-webtool (Web기반 GUI)
+- [CB-Tumblebug 기반의 멀티 클라우드 인프라 서비스 사용 방법](https://github.com/cloud-barista/cb-tumblebug#cb-tumblebug-%EA%B8%B0%EB%8A%A5-%EC%82%AC%EC%9A%A9-%EB%B0%A9%EB%B2%95)
 - [멀티 클라우드 인프라 유스케이스](https://github.com/cloud-barista/cb-tumblebug/blob/main/README.md#3-%EB%A9%80%ED%8B%B0-%ED%81%B4%EB%9D%BC%EC%9A%B0%EB%93%9C-%EC%9D%B8%ED%94%84%EB%9D%BC-%EC%9C%A0%EC%8A%A4%EC%BC%80%EC%9D%B4%EC%8A%A4)
 
-### [주요 서비스 2] 멀티 클라우드 쿠버네티스 서비스 (MCKS)
-- CB-Ladybug 기반의 [멀티 클라우드 쿠버네티스 서비스 사용 방법](https://github.com/cloud-barista/cb-ladybug/tree/master/docs/test#test)
+### 주요 서비스 2: 멀티 클라우드 쿠버네티스 서비스 (MCKS)
+- [CB-Ladybug 설정 및 실행](https://github.com/cloud-barista/cb-ladybug#getting-started)
+  - 요구 사항: CB-Tumblebug (필수), CB-Spider (필수), cb-webtool (Web기반 GUI)
+- [CB-Ladybug 기반의 멀티 클라우드 쿠버네티스 서비스 사용 방법](https://github.com/cloud-barista/cb-ladybug/tree/master/docs/test#test)
+
+## [API 및 문서]
+- 문서 통합 Repository
+  - [https://github.com/cloud-barista/docs](https://github.com/cloud-barista/docs)
+- API 규격
+  - [CB-REST-API](https://github.com/cloud-barista/docs/blob/master/technical_docs/API/CB-User_REST-API.md)
+
+## [특이 사항]
+- 개발 현황: 기능 우선 개발 (상용 활용시 안정화 및 보완 필요)
+- CSP별 연동 검증 상태
+  - CB-Tumblebug 기준 테스트 완료된 CSP는 AWS, GCP, Azure, Alibaba, Cloudit
+  - CB-Ladybug 기준 테스트 완료된 CSP는 AWS, GCP, Azure
+  - 현재는 개발 단계이므로 기능 안정성은 낮을 수 있음 (버그 리포트 기여 환영합니다..!)
+
