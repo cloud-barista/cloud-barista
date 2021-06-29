@@ -134,14 +134,18 @@ CB-Larva includes ongoing Proof of concept (POC) project. Whereas the Souce code
 ### 주요 서비스 1) 멀티 클라우드 인프라 서비스 (MCIS)
 - 멀티 클라우드 인프라 서비스 환경 구성 
   - [CB-Tumblebug 설정 및 실행](https://github.com/cloud-barista/cb-tumblebug#cb-tumblebug-%EC%86%8C%EC%8A%A4-%EB%B9%8C%EB%93%9C-%EB%B0%8F-%EC%8B%A4%ED%96%89-%EB%B0%A9%EB%B2%95-%EC%83%81%EC%84%B8)
-    - 요구 사항: CB-Spider (필수), CB-Dragonfly (MCIS 모니터링, CB-Tumblebug MCIS 자동 제어 기능 사용시 필요), cb-webtool (Web기반 GUI)
+    - CB-Spider (필수)
+    - CB-Dragonfly (MCIS 모니터링, CB-Tumblebug 자동 제어 기능에 필요)
+    - cb-webtool (Web기반 GUI)
 - [멀티 클라우드 인프라 서비스 사용 방법](https://github.com/cloud-barista/cb-tumblebug#cb-tumblebug-%EA%B8%B0%EB%8A%A5-%EC%82%AC%EC%9A%A9-%EB%B0%A9%EB%B2%95)
 - [멀티 클라우드 인프라 유스케이스](https://github.com/cloud-barista/cb-tumblebug/blob/main/README.md#3-%EB%A9%80%ED%8B%B0-%ED%81%B4%EB%9D%BC%EC%9A%B0%EB%93%9C-%EC%9D%B8%ED%94%84%EB%9D%BC-%EC%9C%A0%EC%8A%A4%EC%BC%80%EC%9D%B4%EC%8A%A4)
 
 ### 주요 서비스 2) 멀티 클라우드 쿠버네티스 서비스 (MCKS)
 - 멀티 클라우드 쿠버네티스 서비스 환경 구성 
   - [CB-Ladybug 설정 및 실행](https://github.com/cloud-barista/cb-ladybug#getting-started)
-    - 요구 사항: CB-Tumblebug (필수), CB-Spider (필수), cb-webtool (Web기반 GUI)
+    - CB-Tumblebug (필수)
+    - CB-Spider (필수)
+    - cb-webtool (Web기반 GUI)
 - [멀티 클라우드 쿠버네티스 서비스 사용 방법](https://github.com/cloud-barista/cb-ladybug/tree/master/docs/test#test)
 
 ***
