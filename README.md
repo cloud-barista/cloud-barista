@@ -69,8 +69,11 @@ Main frameworks or tools are as follow,
   - Upstream repo: https://github.com/cloud-barista/cb-log
 
 **[Note]** CB-Larva is a special repository that incubates (research and develop) new Multi-Cloud technologies. 
-CB-Larva includes ongoing Proof of concept (POC) project. Whereas the Souce code of CB-Larva is not released and archived in this repository yet, we encourage people to take a look and contribute to the project.
-- CB-Larva/cb-cladnet (PoC for cloud adaptive network)
+CB-Larva explores interesting ideas and shows the possibility of those (i.e., Proof of Concept (POC)). 
+That's why we encourage you to take a look and contribute to the special repository.
+Please note that the source code of CB-Larva would not be released and archived in this repository for the time being. 
+
+- CB-Larva/cb-cladnet (POC for the cloud adaptive network)
   - Upstream repo: https://github.com/cloud-barista/cb-larva/tree/main/poc-cb-net
 
 
