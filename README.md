@@ -128,27 +128,27 @@ CB-Larva includes ongoing Proof of concept (POC) project. Whereas the Souce code
 
 ## [사용 방법 및 예시]
 
-### 주요 서비스 1: 멀티 클라우드 인프라 서비스 (MCIS)
-- [CB-Tumblebug 설정 및 실행](https://github.com/cloud-barista/cb-tumblebug#cb-tumblebug-%EC%86%8C%EC%8A%A4-%EB%B9%8C%EB%93%9C-%EB%B0%8F-%EC%8B%A4%ED%96%89-%EB%B0%A9%EB%B2%95-%EC%83%81%EC%84%B8)
-  - 요구 사항: CB-Spider (필수), CB-Dragonfly (MCIS 모니터링, CB-Tumblebug MCIS 자동 제어 기능 사용시 필요), cb-webtool (Web기반 GUI)
-- [CB-Tumblebug 기반의 멀티 클라우드 인프라 서비스 사용 방법](https://github.com/cloud-barista/cb-tumblebug#cb-tumblebug-%EA%B8%B0%EB%8A%A5-%EC%82%AC%EC%9A%A9-%EB%B0%A9%EB%B2%95)
+### 주요 서비스 1) 멀티 클라우드 인프라 서비스 (MCIS)
+- 멀티 클라우드 인프라 서비스 환경 구성 
+  - [CB-Tumblebug 설정 및 실행](https://github.com/cloud-barista/cb-tumblebug#cb-tumblebug-%EC%86%8C%EC%8A%A4-%EB%B9%8C%EB%93%9C-%EB%B0%8F-%EC%8B%A4%ED%96%89-%EB%B0%A9%EB%B2%95-%EC%83%81%EC%84%B8)
+    - 요구 사항: CB-Spider (필수), CB-Dragonfly (MCIS 모니터링, CB-Tumblebug MCIS 자동 제어 기능 사용시 필요), cb-webtool (Web기반 GUI)
+- [멀티 클라우드 인프라 서비스 사용 방법](https://github.com/cloud-barista/cb-tumblebug#cb-tumblebug-%EA%B8%B0%EB%8A%A5-%EC%82%AC%EC%9A%A9-%EB%B0%A9%EB%B2%95)
 - [멀티 클라우드 인프라 유스케이스](https://github.com/cloud-barista/cb-tumblebug/blob/main/README.md#3-%EB%A9%80%ED%8B%B0-%ED%81%B4%EB%9D%BC%EC%9A%B0%EB%93%9C-%EC%9D%B8%ED%94%84%EB%9D%BC-%EC%9C%A0%EC%8A%A4%EC%BC%80%EC%9D%B4%EC%8A%A4)
 
-### 주요 서비스 2: 멀티 클라우드 쿠버네티스 서비스 (MCKS)
-- [CB-Ladybug 설정 및 실행](https://github.com/cloud-barista/cb-ladybug#getting-started)
-  - 요구 사항: CB-Tumblebug (필수), CB-Spider (필수), cb-webtool (Web기반 GUI)
-- [CB-Ladybug 기반의 멀티 클라우드 쿠버네티스 서비스 사용 방법](https://github.com/cloud-barista/cb-ladybug/tree/master/docs/test#test)
+### 주요 서비스 2) 멀티 클라우드 쿠버네티스 서비스 (MCKS)
+- 멀티 클라우드 쿠버네티스 서비스 환경 구성 
+  - [CB-Ladybug 설정 및 실행](https://github.com/cloud-barista/cb-ladybug#getting-started)
+    - 요구 사항: CB-Tumblebug (필수), CB-Spider (필수), cb-webtool (Web기반 GUI)
+- [멀티 클라우드 쿠버네티스 서비스 사용 방법](https://github.com/cloud-barista/cb-ladybug/tree/master/docs/test#test)
 
 ## [API 및 문서]
-- 문서 통합 Repository
-  - [https://github.com/cloud-barista/docs](https://github.com/cloud-barista/docs)
-- API 규격
-  - [CB-REST-API](https://github.com/cloud-barista/docs/blob/master/technical_docs/API/CB-User_REST-API.md)
+- [API 규격](https://github.com/cloud-barista/docs/blob/master/technical_docs/API/CB-User_REST-API.md)
+- [문서 통합 Repository](https://github.com/cloud-barista/docs)
 
 ## [특이 사항]
-- 개발 현황: 기능 우선 개발 (상용 활용시 안정화 및 보완 필요)
-- CSP별 연동 검증 상태
-  - CB-Tumblebug 기준 테스트 완료된 CSP는 AWS, GCP, Azure, Alibaba, Cloudit
-  - CB-Ladybug 기준 테스트 완료된 CSP는 AWS, GCP, Azure
+- 개발 단계: 기능 개발 우선 단계 (상용 활용시 안정화 및 보완 필요)
+- CSP 연동 검증 상태
+  - CB-Tumblebug 기준 테스트 완료된 CSP: AWS, GCP, Azure, Alibaba, Cloudit
+  - CB-Ladybug 기준 테스트 완료된 CSP: AWS, GCP, Azure
   - 현재는 개발 단계이므로 기능 안정성은 낮을 수 있음 (버그 리포트 기여 환영합니다..!)
 
