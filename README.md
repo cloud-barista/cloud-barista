@@ -88,7 +88,7 @@ CB-Larva includes ongoing Proof of concept (POC) project. Whereas the Souce code
 
 ## [실행 환경]
 
-- Linux (검증시험완료: Ubuntu 18.04)
+- Linux (추천: Ubuntu v18.04)
 
 ## [설치 및 실행]
 
