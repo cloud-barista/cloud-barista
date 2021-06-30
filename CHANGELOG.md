@@ -1,8 +1,48 @@
 
+# v0.4.0 (Cafe Mocha) (2021.06.30.)
+
+## [CB-Spider]
+
+- ChangeLog: https://github.com/cloud-barista/cb-spider/blob/master/CHANGELOG.md
+- API reference: https://github.com/cloud-barista/cb-spider/wiki/CB-Spider-User-Interface
+
+## [CB-Tumblebug]
+
+- ChangeLog: https://github.com/cloud-barista/cb-tumblebug/blob/main/CHANGELOG.md#v040-cafemocha-20210630
+- API reference: https://cloud-barista.github.io/cb-tumblebug-api-web/?url=https://raw.githubusercontent.com/cloud-barista/cb-tumblebug/main/src/api/rest/docs/v0.4.0.yaml
+
+## [CB-Dragonfly]
+
+- ChangeLog: https://github.com/cloud-barista/cb-dragonfly/blob/master/CHANGELOG.md
+- API reference: https://documenter.getpostman.com/view/7454078/TzkyLKJy
+
+## [CB-Ladybug]
+
+* ChangeLog: https://github.com/cloud-barista/cb-ladybug/blob/master/CHANGELOG.md#v040-cafemocha-20210630
+* API reference: https://cloud-barista.github.io/cb-ladybug-api-web/?url=https://raw.githubusercontent.com/cloud-barista/cb-ladybug/master/src/docs/v0.4.0.yaml
+
+## [cb-webtool]
+
+- ChangeLog: https://github.com/cloud-barista/cb-webtool/blob/master/CHANGELOG.md
+
+## [cb-operator]
+
+- ChangeLog: https://github.com/cloud-barista/cb-operator/blob/master/CHANGELOG.md
+
+## [cb-log]
+
+- ChangeLog: https://github.com/cloud-barista/cb-log/blob/master/CHANGELOG.md
+
+## [cb-store]
+
+- ChangeLog: https://github.com/cloud-barista/cb-store/blob/master/CHANGELOG.md
+
+
+
 # v0.3.0-espresso (2020.12.14.)
 
 
-## [cb-spider]
+## [CB-Spider]
 
 ### API Change
 - 관리용 API listAllXXX(), deleteXXX(force=true), deleteCSPXXX() 추가
@@ -24,7 +64,7 @@
 - Add Experimental Features about distributed Spiders PoC(MEERKAT Project)
 
 
-## [cb-tumblebug]
+## [CB-Tumblebug]
 
 ### API Change
 - MCIS 자동 제어 기능 API 추가
@@ -45,7 +85,7 @@
 - MCIS 종료시 런타임 오류 수정
 
 
-## [cb-dragonfly]
+## [CB-Dragonfly]
 
 ### API Change
 - 최신 모니터링 조회 API 삭제 (온디멘드 모니터링 조회 API로 대체)
@@ -67,7 +107,7 @@
 - 해당사항 없음
 
 
-## [cb-ladybug]
+## [CB-Ladybug]
 
 ### API Change
 - 클러스터 생성 기능 API 추가
@@ -106,7 +146,7 @@
 
 # v0.2.0-cappuccino (2020.06.04.)
 
-## [cb-spider]
+## [CB-Spider]
 
 ### API Change
 - CloudO 목록 제공 API 추가
@@ -126,7 +166,7 @@
 ### Bug Fix
 
 
-## [cb-tumblebug]
+## [CB-Tumblebug]
 
 ### API Change
 - MCIS 통합 원격 커맨드 기능 API 추가
@@ -147,7 +187,7 @@
 - MCIS 라이프사이클 오류 개선
 
 
-## [cb-ladybug]
+## [CB-Ladybug]
 
 ### API Change
 - 클러스터 생성 기능 API 추가
@@ -158,7 +198,7 @@
 - 노드 정보 조회 기능 API 추가
 
 
-## [cb-dragonfly]
+## [CB-Dragonfly]
 
 ### API Change
 - CB-Dragonfly agent_TTL 환경설정 변수 추가
