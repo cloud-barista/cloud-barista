@@ -9,15 +9,23 @@ image:
 
 env:
 - name: SPIDER_CALL_METHOD
-  value: "GRPC"
+  value: "REST"
 - name: SPIDER_REST_URL
-  value: "http://cb-restapigw:8000/spider"
+  value: "http://cb-spider:1024/spider"
 - name: DRAGONFLY_REST_URL
-  value: "http://cb-restapigw:8000/dragonfly"
+  value: "http://cb-dragonfly:9090/dragonfly"
 - name: API_USERNAME
   value: "default"
 - name: API_PASSWORD
   value: "default"
+- name: AUTOCONTROL_DURATION_MS
+  value: "10000"
+- name: SELF_ENDPOINT
+  value: "localhost:1323"
+- name: GOLANG_PROTOBUF_REGISTRATION_CONFLICT
+  value: "ignore"
+- name: API_DOC_PATH
+  value: "/app/src/api/rest/docs/swagger.json"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -63,11 +71,11 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
-persistence:
-  accessMode: 'ReadWriteMany'
-  enabled: false
-  size: 2Gi
-  # storageClass: '-'
+# persistence:
+#   accessMode: 'ReadWriteMany'
+#   enabled: false
+#   size: 2Gi
+#   # storageClass: '-'
 
 nodeSelector: {}
 

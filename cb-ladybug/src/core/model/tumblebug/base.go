@@ -6,9 +6,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/astaxie/beego/validation"
+	"github.com/beego/beego/v2/core/validation"
 	"github.com/cloud-barista/cb-ladybug/src/core/model"
+	"github.com/cloud-barista/cb-ladybug/src/utils/app"
+	"github.com/cloud-barista/cb-ladybug/src/utils/config"
 	"github.com/go-resty/resty/v2"
+
+	logger "github.com/sirupsen/logrus"
 )
 
 type KeyValue struct {
@@ -21,23 +25,61 @@ type Model struct {
 	namespace string
 }
 
-// 결과 처리
-func (m *Model) response(resp *resty.Response, err error) error {
-	if err != nil {
-		return err
+func (self *Model) execute(method string, url string, body interface{}, result interface{}) (bool, error) {
+
+	// validation
+	if err := self.validate(validation.Validation{}); err != nil {
+		return false, err
 	}
+
+	resp, err := app.ExecutHTTP(method, *config.Config.TumblebugUrl+url, body, result)
+	if err != nil {
+		return false, err
+	}
+
+	// response check
 	if resp.StatusCode() > 300 && resp.StatusCode() != http.StatusNotFound {
-		fmt.Println(fmt.Sprintf("[Error Response] %d, url=%s, resp=%s", resp.StatusCode(), resp.Request.URL, resp))
+		logger.Warnf("Tumblebug : statusCode=%d, url=%s, body=%s", resp.StatusCode(), resp.Request.URL, resp)
 		status := model.Status{}
 		json.Unmarshal(resp.Body(), &status)
-		return errors.New(status.Message)
+		// message > message 로 리턴되는 경우가 있어서 한번더 unmarshal 작업
+		if json.Valid([]byte(status.Message)) {
+			json.Unmarshal([]byte(status.Message), &status)
+		}
+		return false, errors.New(status.Message)
 	}
-	return nil
+
+	if method == http.MethodGet && resp.StatusCode() == http.StatusNotFound {
+		logger.Infof("Not found data (status=404, method=%s, url=%s)", method, url)
+		return false, nil
+	}
+
+	return true, nil
+
 }
 
-func (m *Model) validate(valid validation.Validation) error {
-	valid.Required(m.namespace, "namespace")
-	valid.Required(m.Name, "name")
+// // 결과 처리
+// func (self *Model) response(resp *resty.Response, err error) error {
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if resp.StatusCode() > 300 && resp.StatusCode() != http.StatusNotFound {
+// 		logger.Warnf("statusCode=%d, url=%s, body=%s", resp.StatusCode(), resp.Request.URL, resp)
+// 		status := model.Status{}
+// 		json.Unmarshal(resp.Body(), &status)
+// 		// message > message 로 리턴되는 경우가 있어서 한번더 unmarshal 작업
+// 		if json.Valid([]byte(status.Message)) {
+// 			json.Unmarshal([]byte(status.Message), &status)
+// 		}
+// 		return errors.New(status.Message)
+
+// 	}
+// 	return nil
+// }
+
+func (self *Model) validate(valid validation.Validation) error {
+	valid.Required(self.namespace, "namespace")
+	valid.Required(self.Name, "name")
 	if valid.HasErrors() {
 		for _, err := range valid.Errors {
 			return errors.New(fmt.Sprintf("[%s]%s", err.Key, err.Error()))
@@ -47,7 +89,7 @@ func (m *Model) validate(valid validation.Validation) error {
 }
 
 // status :200 , body = {message: "Cannot find ..." }  형태의 response 에러처리
-func (m *Model) hasResponseMessage(resp *resty.Response) error {
+func (self *Model) hasResponseMessage(resp *resty.Response) error {
 	var d map[string]interface{}
 	json.Unmarshal(resp.Body(), &d)
 	if d["message"] != nil {

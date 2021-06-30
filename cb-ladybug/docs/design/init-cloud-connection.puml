@@ -1,4 +1,4 @@
-@@startuml
+@startuml
 
 header Cloud-Barista
 title Initialize cloud connection info.
@@ -51,4 +51,4 @@ deactivate tumblebug
 ' //-- namespace
 
 
-@@enduml
+@enduml

@@ -18,3 +18,4 @@
 pkg
 conf/
 conf/*.env
+conf/setup.env

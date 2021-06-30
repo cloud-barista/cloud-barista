@@ -2,11 +2,12 @@ version: "3.3"
 services:
   # Metrics store
   influxdb:
-    image: influxdb:latest
+    # 21/03/15 - DB V2 구조 변경으로 기존 버전 연결 문제 발생: 1.8.4 버전으로 고정해서 처리, 향후 Influx관련 코드를 v2에 맞도록 처리할 필요 있음.
+    image: influxdb:1.8.4
     container_name: cb-restapigw-influxdb
     ports:
-      - "8083:8083"
-      - "8086:8086"
+      - "0.0.0.0:8083:8083"
+      - "0.0.0.0:8086:8086"
     env_file:
       - './conf/env.influxdb'
     volumes:
@@ -14,10 +15,10 @@ services:
 
   # Metrics UI
   grafana:
-    image: grafana/grafana
+    image: grafana/grafana:7.4.5
     container_name: cb-restapigw-grafana
     ports:
-      - "3100:3000"
+      - "0.0.0.0:3100:3000"
     depends_on:
       - influxdb
     env_file:
@@ -34,28 +35,36 @@ services:
     image: jaegertracing/all-in-one:latest
     container_name: cb-restapigw-jaeger
     ports:
-      - "14268:14268"
-      - "16686:16686"
+      - "0.0.0.0:14268:14268"
+      - "0.0.0.0:16686:16686"
 
   # Fake API
-#  fake_api:
-#    image: jaxgeller/lwan
-#    container_name: fake_api
-#    volumes:
-#      - ./data/lwan:/lwan/wwwroot
-#    ports:
-#      - "8100:8080"
+  # fake_api:
+  #   image: jaxgeller/lwan
+  #   container_name: fake_api
+  #   volumes:
+  #     - ./data/lwan:/lwan/wwwroot
+  #   ports:
+  #     - "8100:8080"
 
+  # fake_api2:
+  #   image: jaxgeller/lwan
+  #   container_name: fake_api2
+  #   volumes:
+  #     - ./data/lwan:/lwan/wwwroot
+  #   ports:
+  #     - "8200:8080"
+      
   # HMAC Server
-#  hmac_site:
-#    build:
-#      context: ./web
-#    container_name: hmac_server
-#    volumes:
-#      - ./web/public:/app/public
-#      - ./web/conf:/app/conf
-#    ports:
-#      - "8010:8010"
+  # hmac_site:
+  #   build:
+  #     context: ./web
+  #   container_name: hmac_server
+  #   volumes:
+  #     - ./web/public:/app/public
+  #     - ./web/conf:/app/conf
+  #   ports:
+  #     - "8010:8010"
 
 # The priority used by Compose to choose which env var value to use:
 # 1. Compose file
@@ -66,147 +75,156 @@ services:
 
   # CB-Spider
   cb-spider:
-    image: cloudbaristaorg/cb-spider:v0.3.0-espresso
+    image: cloudbaristaorg/cb-spider:0.4.0
     container_name: cb-spider
     ports:
-      - "1024:1024"
-      - "2048:2048"
+      - "0.0.0.0:1024:1024"
+      - "0.0.0.0:2048:2048"
+      - "0.0.0.0:4096:4096"
     volumes:
-      - ./conf/cb-spider:/root/go/src/github.com/cloud-barista/cb-spider/conf
-      - ./data/cb-spider/meta_db:/root/go/src/github.com/cloud-barista/cb-spider/meta_db/dat
-      - ./data/cb-spider/log:/root/go/src/github.com/cloud-barista/cb-spider/log
+      - ./conf/cb-spider/:/root/go/src/github.com/cloud-barista/cb-spider/conf/
+      - ./data/cb-spider/meta_db/:/root/go/src/github.com/cloud-barista/cb-spider/meta_db/
+      - ./data/cb-spider/log/:/root/go/src/github.com/cloud-barista/cb-spider/log/
     depends_on:
       - cb-restapigw
+    environment:
+      - LOCALHOST=OFF
+      - PLUGIN_SW=OFF
+      - MEERKAT=OFF
 
 
   # CB-Tumblebug
   cb-tumblebug:
-    image: cloudbaristaorg/cb-tumblebug:v0.3.0-espresso
+    image: cloudbaristaorg/cb-tumblebug:0.4.0
     container_name: cb-tumblebug
     ports:
-      - "1323:1323"
-      - "50252:50252"
+      - "0.0.0.0:1323:1323"
+      - "0.0.0.0:50252:50252"
     depends_on:
       - cb-restapigw
       - cb-spider
-#     - cb-tumblebug-mysql
+      # - cb-tumblebug-mysql
     volumes:
-      - ./conf/cb-tumblebug:/app/conf
-      - ./data/cb-tumblebug/meta_db:/app/meta_db/dat
-      - ./data/cb-tumblebug/log:/app/log
+      - ./conf/cb-tumblebug/:/app/conf/
+      - ./data/cb-tumblebug/meta_db/:/app/meta_db/
+      - ./data/cb-tumblebug/log/:/app/log/
     environment:
-      - SPIDER_CALL_METHOD=GRPC
-      - SPIDER_REST_URL=http://cb-restapigw:8000/spider
-      - DRAGONFLY_REST_URL=http://cb-restapigw:8000/dragonfly
+      - SPIDER_CALL_METHOD=REST
+      - SPIDER_REST_URL=http://cb-spider:1024/spider
+      - DRAGONFLY_REST_URL=http://cb-dragonfly:9090/dragonfly
       - API_USERNAME=default
       - API_PASSWORD=default
-#     - DB_URL=cb-tumblebug-mysql:3306
-#     - DB_DATABASE=cb_tumblebug
-#     - DB_USER=cb_tumblebug
-#     - DB_PASSWORD=cb_tumblebug
-#     - GODEBUG=netdns=go
+      - AUTOCONTROL_DURATION_MS=10000
+      - SELF_ENDPOINT=localhost:1323
+      - GOLANG_PROTOBUF_REGISTRATION_CONFLICT=ignore
+      - API_DOC_PATH=/app/src/api/rest/docs/swagger.json
+      # - DB_URL=cb-tumblebug-mysql:3306
+      # - DB_DATABASE=cb_tumblebug
+      # - DB_USER=cb_tumblebug
+      # - DB_PASSWORD=cb_tumblebug
+      # - GODEBUG=netdns=go
 
-# cb-tumblebug-mysql:
-#   image: mysql
-#   container_name: cb-tumblebug-mysql
-#   ports:
-#     - "3306:3306" # 접근 포트 설정 (컨테이너 외부:컨테이너 내부)
-#   environment: # -e 옵션
-#     MYSQL_ROOT_PASSWORD: "cloud-barista"  # MYSQL 패스워드 설정 옵션
-#     MYSQL_DATABASE: cb_tumblebug
-#     MYSQL_USER: cb_tumblebug
-#     MYSQL_PASSWORD: cb_tumblebug
-#   command: # 명령어 실행
-#     - --character-set-server=utf8mb4
-#     - --collation-server=utf8mb4_unicode_ci
-#     - --default-authentication-plugin=mysql_native_password
-#   volumes:
-#     - ./data/cb-tumblebug-mysql:/var/lib/mysql
+  # cb-tumblebug-mysql:
+  #   image: mysql
+  #   container_name: cb-tumblebug-mysql
+  #   ports:
+  #     - "3306:3306" # 접근 포트 설정 (컨테이너 외부:컨테이너 내부)
+  #   environment: # -e 옵션
+  #     MYSQL_ROOT_PASSWORD: "cloud-barista"  # MYSQL 패스워드 설정 옵션
+  #     MYSQL_DATABASE: cb_tumblebug
+  #     MYSQL_USER: cb_tumblebug
+  #     MYSQL_PASSWORD: cb_tumblebug
+  #   command: # 명령어 실행
+  #     - --character-set-server=utf8mb4
+  #     - --collation-server=utf8mb4_unicode_ci
+  #     - --default-authentication-plugin=mysql_native_password
+  #   volumes:
+  #     - ./data/cb-tumblebug-mysql:/var/lib/mysql
 
-# cb-phpmyadmin:
-#   image: phpmyadmin/phpmyadmin
-#   container_name: cb-phpmyadmin
-#   ports:
-#     - 80:80
-#   environment: # -e 옵션
-#     PMA_HOSTS: cb-tumblebug-mysql
-#     PMA_PORTS: 3306
-#     PMA_USER: cb_tumblebug
-#     PMA_PASSWORD: cb_tumblebug
-#   links:
-#     - cb-tumblebug-mysql
-#   depends_on:
-#     - cb-tumblebug-mysql
+  # cb-phpmyadmin:
+  #   image: phpmyadmin/phpmyadmin
+  #   container_name: cb-phpmyadmin
+  #   ports:
+  #     - 80:80
+  #   environment: # -e 옵션
+  #     PMA_HOSTS: cb-tumblebug-mysql
+  #     PMA_PORTS: 3306
+  #     PMA_USER: cb_tumblebug
+  #     PMA_PASSWORD: cb_tumblebug
+  #   links:
+  #     - cb-tumblebug-mysql
+  #   depends_on:
+  #     - cb-tumblebug-mysql
 
   cb-tumblebug-phpliteadmin:
     image: acttaiwan/phpliteadmin
-#   image: jihoons/phpliteadmin
     container_name: cb-tumblebug-phpliteadmin
     ports:
-      - 2015:2015
+      - 0.0.0.0:2015:2015
     volumes:
       - ./data/cb-tumblebug/meta_db:/db
 
   # CB-Ladybug
   cb-ladybug:
-    image: cloudbaristaorg/cb-ladybug:v0.3.0-espresso
+    image: cloudbaristaorg/cb-ladybug:0.4.0
     container_name: cb-ladybug
     ports:
-      - "8080:8080"
+      - "0.0.0.0:8080:8080"
     depends_on:
       - cb-restapigw
       - cb-spider
       - cb-tumblebug
     volumes:
-      - ./conf/cb-ladybug:/app/conf
-      - ./data/cb-ladybug/meta_db:/app/meta_db/dat
-      - ./data/cb-ladybug/log:/app/log
+      - ./conf/cb-ladybug/:/app/conf/
+      - ./data/cb-ladybug/meta_db/:/app/meta_db/
+      - ./data/cb-ladybug/log/:/app/log/
     environment:
 #     - CBLOG_ROOT=/app
 #     - CBSTORE_ROOT=/app
 #     - APP_ROOT=/app
-      - SPIDER_URL=http://cb-restapigw:8000/spider
-      - TUMBLEBUG_URL=http://cb-restapigw:8000/tumblebug
+      - SPIDER_URL=http://cb-spider:1024/spider
+      - TUMBLEBUG_URL=http://cb-tumblebug:1323/tumblebug
       - BASE_PATH=/ladybug
       - API_USERNAME=default
       - API_PASSWORD=default
 
  # CB-Dragonfly
   cb-dragonfly:
-    image: cloudbaristaorg/cb-dragonfly:v0.3.0-espresso
+    image: cloudbaristaorg/cb-dragonfly:0.4.0
     container_name: cb-dragonfly
     volumes:
-      - ./conf/cb-dragonfly:/go/src/github.com/cloud-barista/cb-dragonfly/conf
-      - ./data/cb-dragonfly/log:/go/src/github.com/cloud-barista/cb-dragonfly/log
+      - ./conf/cb-dragonfly/:/go/src/github.com/cloud-barista/cb-dragonfly/conf/
+      - ./data/cb-dragonfly/meta_db/:/go/src/github.com/cloud-barista/cb-dragonfly/meta_db/
+      - ./data/cb-dragonfly/log/:/go/src/github.com/cloud-barista/cb-dragonfly/log/
     ports:
-      - 9090:9090
-      - 9999:9999
+      - 0.0.0.0:9090:9090
+      - 0.0.0.0:9999:9999
     depends_on:
 #     - cb-restapigw
       - cb-dragonfly-zookeeper
       - cb-dragonfly-kafka
       - cb-dragonfly-influxdb
       - cb-dragonfly-kapacitor
-    environment:
-      - CBSTORE_ROOT=/go/src/github.com/cloud-barista/cb-dragonfly
-      - CBLOG_ROOT=/go/src/github.com/cloud-barista/cb-dragonfly
-      - CBMON_ROOT=/go/src/github.com/cloud-barista/cb-dragonfly
-#     - DRAGONFLY_INFLUXDB_URL=cb-dragonfly-influxdb:8086
-#   restart: always
+    # environment:
+    #   - CBSTORE_ROOT=/go/src/github.com/cloud-barista/cb-dragonfly
+    #   - CBLOG_ROOT=/go/src/github.com/cloud-barista/cb-dragonfly
+    #   - CBMON_ROOT=/go/src/github.com/cloud-barista/cb-dragonfly
+    #   - DRAGONFLY_INFLUXDB_URL=cb-dragonfly-influxdb:8086
+    # restart: always
     security_opt:
       - no-new-privileges
-    networks:
-      cb-dragonfly:
-        aliases:
-          - cb-dragonfly
+#    networks:
+#      cb-dragonfly:
+#        aliases:
+#          - cb-dragonfly
 
   # InfluxDB for CB-Dragonfly
   cb-dragonfly-influxdb:
     image: influxdb:1.8-alpine
     container_name: cb-dragonfly-influxdb
     ports:
-      - 28083:8083
-      - 28086:8086
+      - 0.0.0.0:28083:8083
+      - 0.0.0.0:28086:8086
     environment:
       - PRE_CREATE_DB=cbmon
       - INFLUXDB_DB=cbmon
@@ -214,22 +232,22 @@ services:
       - INFLUXDB_ADMIN_PASSWORD=password
       - INFLUXDB_HTTP_AUTH_ENABLED=true
 #   restart: always
-    networks:
-      cb-dragonfly:
-        aliases:
-          - cb-dragonfly-influxdb
+#    networks:
+#      cb-dragonfly:
+#        aliases:
+#          - cb-dragonfly-influxdb
 
   # zookeeper for CB-Dragonfly
   cb-dragonfly-zookeeper:
     image: wurstmeister/zookeeper
     container_name: cb-dragonfly-zookeeper
     ports:
-      - 2181:2181
+      - 0.0.0.0:2181:2181
 #   restart: always
-    networks:
-      cb-dragonfly:
-        aliases:
-          - cb-dragonfly-zookeeper
+#    networks:
+#      cb-dragonfly:
+#        aliases:
+#          - cb-dragonfly-zookeeper
 
   # kafka for CB-Dragonfly
   cb-dragonfly-kafka:
@@ -247,19 +265,19 @@ services:
     volumes:
         - /var/run/docker.sock:/var/run/docker.sock
     ports:
-      - 9092:9092
+      - 0.0.0.0:9092:9092
 #   restart: always
-    networks:
-      cb-dragonfly:
-        aliases:
-          - cb-dragonfly-kafka
+#    networks:
+#      cb-dragonfly:
+#        aliases:
+#          - cb-dragonfly-kafka
 
   # Kapacitor for CB-Dragonfly
   cb-dragonfly-kapacitor:
     image: kapacitor:1.5
     container_name: cb-dragonfly-kapacitor
     ports:
-      - 29092:9092
+      - 0.0.0.0:29092:9092
     environment:
       - KAPACITOR_HOSTNAME=cb-dragonfly-kapacitor
       - KAPACITOR_INFLUXDB_0_URLS_0=http://cb-dragonfly-influxdb:8086
@@ -268,17 +286,17 @@ services:
     depends_on:
       - cb-dragonfly-influxdb
 #   restart: always
-    networks:
-      cb-dragonfly:
-        aliases:
-          - cb-dragonfly-kapacitor
+#    networks:
+#      cb-dragonfly:
+#        aliases:
+#          - cb-dragonfly-kapacitor
 
   # CB-Webtool
   cb-webtool:
-    image: cloudbaristaorg/cb-webtool:v0.3.0-espresso
+    image: cloudbaristaorg/cb-webtool:0.4.0
     container_name: cb-webtool
     ports:
-      - "1234:1234"
+      - "0.0.0.0:1234:1234"
     depends_on:
       - cb-restapigw
       - cb-spider
@@ -287,23 +305,23 @@ services:
      #- SPIDER_URL=http://cb-restapigw:8000/spider
      #- TUMBLE_URL=http://cb-restapigw:8000/tumblebug
       - API_GW=http://cb-restapigw:8000
-      - SPIDER_URL=http://cb-restapigw:8000/spider
-      - TUMBLE_URL=http://cb-restapigw:8000/tumblebug
-      - DRAGONFLY_URL=http://cb-restapigw:8000/dragonfly
-      - LADYBUG_URL=http://cb-restapigw:8000/ladybug
+      - SPIDER_URL=http://cb-spider:1024/spider
+      - TUMBLE_URL=http://cb-tumblebug:1323/tumblebug
+      - DRAGONFLY_URL=http://cb-dragonfly:9090/dragonfly
+      - LADYBUG_URL=http://cb-ladybug:8080/ladybug
       - LoginEmail=admin
       - LoginPassword=admin
 
   # CB-RESTAPIGW SERVICE
   cb-restapigw:
-    image: cloudbaristaorg/cb-restapigw:v0.3.0-espresso
+    image: cloudbaristaorg/cb-restapigw:0.4.0
     container_name: cb-restapigw
     volumes:
       - ./conf/cb-restapigw:/app/conf
 #     - ./data/cb-restapigw/log:/app/log
     ports:
-      - "8000:8000"
-      - "8001:8001"
+      - "0.0.0.0:8000:8000"
+      - "0.0.0.0:8001:8001"
     depends_on:
       - influxdb
       - grafana
@@ -318,5 +336,5 @@ services:
         #    external:
         #      name: cboperator_default
 
-networks:
-  cb-dragonfly:
+#networks:
+#  cb-dragonfly:

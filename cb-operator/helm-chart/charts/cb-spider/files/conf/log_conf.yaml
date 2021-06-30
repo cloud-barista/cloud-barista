@@ -12,7 +12,7 @@ cblog:
 
 ## Config for File Output ##
 logfileinfo:
-  filename: ./log/cblogs.log
+  filename: $CBSPIDER_ROOT/log/cb-spider.log
   maxsize: 10 # megabytes
   maxbackups: 50
   maxage: 31 # days

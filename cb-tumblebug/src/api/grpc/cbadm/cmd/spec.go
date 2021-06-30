@@ -16,7 +16,7 @@ import (
 
 // ===== [ Public Functions ] =====
 
-// NewSpecCmd - Spec 관리 기능을 수행하는 Cobra Command 생성
+// NewSpecCmd : "cbadm spec *" (for CB-Tumblebug)
 func NewSpecCmd() *cobra.Command {
 
 	specCmd := &cobra.Command{
@@ -27,18 +27,24 @@ func NewSpecCmd() *cobra.Command {
 
 	//  Adds the commands for application.
 	specCmd.AddCommand(NewSpecWithInfoCreateCmd())
+	specCmd.AddCommand(NewSpecWithIdCreateCmd())
 	specCmd.AddCommand(NewSpecListCmd())
+	specCmd.AddCommand(NewSpecListIdCmd())
 	specCmd.AddCommand(NewSpecListCspCmd())
 	specCmd.AddCommand(NewSpecGetCmd())
 	specCmd.AddCommand(NewSpecGetCspCmd())
 	specCmd.AddCommand(NewSpecDeleteCmd())
+	specCmd.AddCommand(NewSpecDeleteAllCmd())
 	specCmd.AddCommand(NewSpecFetchCmd())
 	specCmd.AddCommand(NewSpecFilterCmd())
+	specCmd.AddCommand(NewSpecFilterByRangeCmd())
+	specCmd.AddCommand(NewSpecSortCmd())
+	specCmd.AddCommand(NewSpecUpdateCmd())
 
 	return specCmd
 }
 
-// NewSpecWithInfoCreateCmd - Spec 생성 기능을 수행하는 Cobra Command 생성
+// NewSpecWithInfoCreateCmd : "cbadm spec create"
 func NewSpecWithInfoCreateCmd() *cobra.Command {
 
 	createWithInfoCmd := &cobra.Command{
@@ -65,7 +71,34 @@ func NewSpecWithInfoCreateCmd() *cobra.Command {
 	return createWithInfoCmd
 }
 
-// NewSpecListCmd - Spec 목록 기능을 수행하는 Cobra Command 생성
+// NewSpecWithIdCreateCmd : "cbadm spec create-id"
+func NewSpecWithIdCreateCmd() *cobra.Command {
+
+	createWithIdCmd := &cobra.Command{
+		Use:   "create-id",
+		Short: "This is create-id command for spec",
+		Long:  "This is create-id command for spec",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger := logger.NewLogger()
+			readInDataFromFile()
+			if inData == "" {
+				logger.Error("failed to validate --indata parameter")
+				return
+			}
+			logger.Debug("--indata parameter value : \n", inData)
+			logger.Debug("--infile parameter value : ", inFile)
+
+			SetupAndRun(cmd, args)
+		},
+	}
+
+	createWithIdCmd.PersistentFlags().StringVarP(&inData, "indata", "d", "", "input string data")
+	createWithIdCmd.PersistentFlags().StringVarP(&inFile, "infile", "f", "", "input file path")
+
+	return createWithIdCmd
+}
+
+// NewSpecListCmd : "cbadm spec list"
 func NewSpecListCmd() *cobra.Command {
 
 	listCmd := &cobra.Command{
@@ -89,7 +122,31 @@ func NewSpecListCmd() *cobra.Command {
 	return listCmd
 }
 
-// NewSpecListCspCmd - CSP Spec 목록 기능을 수행하는 Cobra Command 생성
+// NewSpecListIdCmd : "cbadm spec list-id"
+func NewSpecListIdCmd() *cobra.Command {
+
+	listIdCmd := &cobra.Command{
+		Use:   "list-id",
+		Short: "This is list-id command for spec",
+		Long:  "This is list-id command for spec",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger := logger.NewLogger()
+			if nameSpaceID == "" {
+				logger.Error("failed to validate --ns parameter")
+				return
+			}
+			logger.Debug("--ns parameter value : ", nameSpaceID)
+
+			SetupAndRun(cmd, args)
+		},
+	}
+
+	listIdCmd.PersistentFlags().StringVarP(&nameSpaceID, "ns", "", "", "namespace id")
+
+	return listIdCmd
+}
+
+// NewSpecListCspCmd : "cbadm spec list-csp"
 func NewSpecListCspCmd() *cobra.Command {
 
 	listCspCmd := &cobra.Command{
@@ -113,7 +170,7 @@ func NewSpecListCspCmd() *cobra.Command {
 	return listCspCmd
 }
 
-// NewSpecGetCmd - Spec 조회 기능을 수행하는 Cobra Command 생성
+// NewSpecGetCmd : "cbadm spec get"
 func NewSpecGetCmd() *cobra.Command {
 
 	getCmd := &cobra.Command{
@@ -143,7 +200,7 @@ func NewSpecGetCmd() *cobra.Command {
 	return getCmd
 }
 
-// NewSpecGetCspCmd - CSP Spec 조회 기능을 수행하는 Cobra Command 생성
+// NewSpecGetCspCmd : "cbadm spec get-csp"
 func NewSpecGetCspCmd() *cobra.Command {
 
 	getCspCmd := &cobra.Command{
@@ -156,24 +213,24 @@ func NewSpecGetCspCmd() *cobra.Command {
 				logger.Error("failed to validate --cc parameter")
 				return
 			}
-			if specName == "" {
+			if cspSpecName == "" {
 				logger.Error("failed to validate --spec parameter")
 				return
 			}
 			logger.Debug("--cc parameter value : ", connConfigName)
-			logger.Debug("--spec parameter value : ", specName)
+			logger.Debug("--spec parameter value : ", cspSpecName)
 
 			SetupAndRun(cmd, args)
 		},
 	}
 
 	getCspCmd.PersistentFlags().StringVarP(&connConfigName, "cc", "", "", "connection name")
-	getCspCmd.PersistentFlags().StringVarP(&specName, "spec", "", "", "spec name")
+	getCspCmd.PersistentFlags().StringVarP(&cspSpecName, "spec", "", "", "csp spec name")
 
 	return getCspCmd
 }
 
-// NewSpecDeleteCmd - Spec 삭제 기능을 수행하는 Cobra Command 생성
+// NewSpecDeleteCmd : "cbadm spec delete"
 func NewSpecDeleteCmd() *cobra.Command {
 
 	deleteCmd := &cobra.Command{
@@ -209,7 +266,37 @@ func NewSpecDeleteCmd() *cobra.Command {
 	return deleteCmd
 }
 
-// NewSpecFetchCmd - Spec Fetch 기능을 수행하는 Cobra Command 생성
+// NewSpecDeleteAllCmd : "cbadm spec delete-all"
+func NewSpecDeleteAllCmd() *cobra.Command {
+
+	deleteAllCmd := &cobra.Command{
+		Use:   "delete-all",
+		Short: "This is delete-all command for spec",
+		Long:  "This is delete-all command for spec",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger := logger.NewLogger()
+			if nameSpaceID == "" {
+				logger.Error("failed to validate --ns parameter")
+				return
+			}
+			if force == "" {
+				logger.Error("failed to validate --force parameter")
+				return
+			}
+			logger.Debug("--ns parameter value : ", nameSpaceID)
+			logger.Debug("--force parameter value : ", force)
+
+			SetupAndRun(cmd, args)
+		},
+	}
+
+	deleteAllCmd.PersistentFlags().StringVarP(&nameSpaceID, "ns", "", "", "namespace id")
+	deleteAllCmd.PersistentFlags().StringVarP(&force, "force", "", "false", "force flag")
+
+	return deleteAllCmd
+}
+
+// NewSpecFetchCmd : "cbadm spec fetch"
 func NewSpecFetchCmd() *cobra.Command {
 
 	fetchCmd := &cobra.Command{
@@ -218,22 +305,28 @@ func NewSpecFetchCmd() *cobra.Command {
 		Long:  "This is fetch command for spec",
 		Run: func(cmd *cobra.Command, args []string) {
 			logger := logger.NewLogger()
+			if connConfigName == "" {
+				logger.Error("failed to validate --cc parameter")
+				return
+			}
 			if nameSpaceID == "" {
 				logger.Error("failed to validate --ns parameter")
 				return
 			}
+			logger.Debug("--cc parameter value : ", connConfigName)
 			logger.Debug("--ns parameter value : ", nameSpaceID)
 
 			SetupAndRun(cmd, args)
 		},
 	}
 
+	fetchCmd.PersistentFlags().StringVarP(&connConfigName, "cc", "", "", "connection name")
 	fetchCmd.PersistentFlags().StringVarP(&nameSpaceID, "ns", "", "", "namespace id")
 
 	return fetchCmd
 }
 
-// NewSpecFilterCmd
+// NewSpecFilterCmd : "cbadm spec filter"
 func NewSpecFilterCmd() *cobra.Command {
 
 	filterCmd := &cobra.Command{
@@ -266,4 +359,109 @@ func NewSpecFilterCmd() *cobra.Command {
 	filterCmd.PersistentFlags().StringVarP(&inFile, "infile", "f", "", "input file path")
 
 	return filterCmd
+}
+
+// NewSpecFilterByRangeCmd : "cbadm spec filter-by-range"
+func NewSpecFilterByRangeCmd() *cobra.Command {
+
+	filterByRangeCmd := &cobra.Command{
+		Use:   "filter-by-range",
+		Short: "This is filter-by-range command for spec",
+		Long:  "This is filter-by-range command for spec",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger := logger.NewLogger()
+			/*
+				if nameSpaceID == "" {
+					logger.Error("failed to validate --ns parameter")
+					return
+				}
+				logger.Debug("--ns parameter value : ", nameSpaceID)
+			*/
+			readInDataFromFile()
+			if inData == "" {
+				logger.Error("failed to validate --indata parameter")
+				return
+			}
+			logger.Debug("--indata parameter value : \n", inData)
+			logger.Debug("--infile parameter value : ", inFile)
+
+			SetupAndRun(cmd, args)
+		},
+	}
+
+	//filterByRangeCmd.PersistentFlags().StringVarP(&nameSpaceID, "ns", "", "", "namespace id")
+	filterByRangeCmd.PersistentFlags().StringVarP(&inData, "indata", "d", "", "input string data")
+	filterByRangeCmd.PersistentFlags().StringVarP(&inFile, "infile", "f", "", "input file path")
+
+	return filterByRangeCmd
+}
+
+// NewSpecSortCmd : "cbadm spec sort"
+func NewSpecSortCmd() *cobra.Command {
+
+	sortCmd := &cobra.Command{
+		Use:   "sort",
+		Short: "This is sort command for spec",
+		Long:  "This is sort command for spec",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger := logger.NewLogger()
+			/*
+				if nameSpaceID == "" {
+					logger.Error("failed to validate --ns parameter")
+					return
+				}
+				logger.Debug("--ns parameter value : ", nameSpaceID)
+			*/
+			readInDataFromFile()
+			if inData == "" {
+				logger.Error("failed to validate --indata parameter")
+				return
+			}
+			logger.Debug("--indata parameter value : \n", inData)
+			logger.Debug("--infile parameter value : ", inFile)
+
+			SetupAndRun(cmd, args)
+		},
+	}
+
+	//sortCmd.PersistentFlags().StringVarP(&nameSpaceID, "ns", "", "", "namespace id")
+	sortCmd.PersistentFlags().StringVarP(&inData, "indata", "d", "", "input string data")
+	sortCmd.PersistentFlags().StringVarP(&inFile, "infile", "f", "", "input file path")
+
+	return sortCmd
+}
+
+// NewSpecUpdateCmd : "cbadm spec update"
+func NewSpecUpdateCmd() *cobra.Command {
+
+	updateCmd := &cobra.Command{
+		Use:   "update",
+		Short: "This is update command for spec",
+		Long:  "This is update command for spec",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger := logger.NewLogger()
+			/*
+				if nameSpaceID == "" {
+					logger.Error("failed to validate --ns parameter")
+					return
+				}
+				logger.Debug("--ns parameter value : ", nameSpaceID)
+			*/
+			readInDataFromFile()
+			if inData == "" {
+				logger.Error("failed to validate --indata parameter")
+				return
+			}
+			logger.Debug("--indata parameter value : \n", inData)
+			logger.Debug("--infile parameter value : ", inFile)
+
+			SetupAndRun(cmd, args)
+		},
+	}
+
+	//updateCmd.PersistentFlags().StringVarP(&nameSpaceID, "ns", "", "", "namespace id")
+	updateCmd.PersistentFlags().StringVarP(&inData, "indata", "d", "", "input string data")
+	updateCmd.PersistentFlags().StringVarP(&inFile, "infile", "f", "", "input file path")
+
+	return updateCmd
 }

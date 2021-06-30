@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/sirupsen/logrus"
+	"github.com/cloud-barista/cb-dragonfly/pkg/util"
 	"google.golang.org/grpc"
 
 	pb "github.com/cloud-barista/cb-dragonfly/pkg/api/grpc/protobuf/cbdragonfly"
@@ -15,14 +15,14 @@ func StartGRPCServer() {
 	grpcPort := config.GetInstance().GetGrpcConfig().Port
 	tcpConn, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", grpcPort))
 	if err != nil {
-		logrus.Error("failed to listen server address: ", err)
+		util.GetLogger().Error("failed to listen server address: ", err)
 		return
 	}
 	grpcServer := grpc.NewServer()
 	pb.RegisterMONServer(grpcServer, MonitoringService{})
 	err = grpcServer.Serve(tcpConn)
 	if err != nil {
-		logrus.Error("failed to run grpc server: ", err)
+		util.GetLogger().Error("failed to run grpc server: ", err)
 		return
 	}
 }

@@ -207,6 +207,9 @@ service CCM {
 	rpc DeleteVPC (VPCQryRequest) returns (BooleanResponse) {}
 	rpc ListAllVPC (VPCAllQryRequest) returns (AllResourceInfoResponse) {}
 	rpc DeleteCSPVPC (CSPVPCQryRequest) returns (BooleanResponse) {}
+	rpc AddSubnet (SubnetAddRequest) returns (VPCInfoResponse) {}
+	rpc RemoveSubnet (SubnetQryRequest) returns (BooleanResponse) {}
+	rpc RemoveCSPSubnet (CSPSubnetQryRequest) returns (BooleanResponse) {}
 
 	rpc CreateSecurity (SecurityCreateRequest) returns (SecurityInfoResponse) {}
 	rpc ListSecurity (SecurityAllQryRequest) returns (ListSecurityInfoResponse) {}
@@ -386,6 +389,24 @@ message CSPVPCQryRequest {
 	string id = 2 [json_name="Id", (gogoproto.jsontag) = "Id", (gogoproto.moretags) = "yaml:\"Id\""];
 }
 
+message SubnetAddRequest {
+	string connection_name = 1 [json_name="ConnectionName", (gogoproto.jsontag) = "ConnectionName", (gogoproto.moretags) = "yaml:\"ConnectionName\""];     
+	string vpc_name = 2 [json_name="VPCName", (gogoproto.jsontag) = "VPCName", (gogoproto.moretags) = "yaml:\"VPCName\""];
+	SubnetCreateInfo item = 3 [json_name="ReqInfo", (gogoproto.jsontag) = "ReqInfo", (gogoproto.moretags) = "yaml:\"ReqInfo\""];     
+}
+
+message SubnetQryRequest {
+	string connection_name = 1 [json_name="ConnectionName", (gogoproto.jsontag) = "ConnectionName", (gogoproto.moretags) = "yaml:\"ConnectionName\""];  
+	string vpc_name = 2 [json_name="VPCName", (gogoproto.jsontag) = "VPCName", (gogoproto.moretags) = "yaml:\"VPCName\""];
+	string subnet_name = 3 [json_name="SubnetName", (gogoproto.jsontag) = "SubnetName", (gogoproto.moretags) = "yaml:\"SubnetName\""];
+	string force = 4 [json_name="force", (gogoproto.jsontag) = "force", (gogoproto.moretags) = "yaml:\"force\""];
+}
+
+message CSPSubnetQryRequest {
+	string connection_name = 1 [json_name="ConnectionName", (gogoproto.jsontag) = "ConnectionName", (gogoproto.moretags) = "yaml:\"ConnectionName\""];  
+	string vpc_name = 2 [json_name="VPCName", (gogoproto.jsontag) = "VPCName", (gogoproto.moretags) = "yaml:\"VPCName\""];
+	string id = 3 [json_name="Id", (gogoproto.jsontag) = "Id", (gogoproto.moretags) = "yaml:\"Id\""];
+}
 
 //////////////////////////////////
 // Security 메시지 정의
@@ -412,7 +433,8 @@ message SecurityRuleInfo {
 	string from_port = 1 [json_name="FromPort", (gogoproto.jsontag) = "FromPort", (gogoproto.moretags) = "yaml:\"FromPort\""];
 	string to_port = 2 [json_name="ToPort", (gogoproto.jsontag) = "ToPort", (gogoproto.moretags) = "yaml:\"ToPort\""];
 	string ip_protocol = 3 [json_name="IPProtocol", (gogoproto.jsontag) = "IPProtocol", (gogoproto.moretags) = "yaml:\"IPProtocol\""];     
-	string direction = 4 [json_name="Direction", (gogoproto.jsontag) = "Direction", (gogoproto.moretags) = "yaml:\"Direction\""]; 
+	string direction = 4 [json_name="Direction", (gogoproto.jsontag) = "Direction", (gogoproto.moretags) = "yaml:\"Direction\""];
+	string cidr = 5 [json_name="CIDR", (gogoproto.jsontag) = "CIDR", (gogoproto.moretags) = "yaml:\"CIDR\""];  
 }
 
 message SecurityCreateRequest {
@@ -535,7 +557,9 @@ message VMInfo {
 	string vm_boot_disk = 17 [json_name="VMBootDisk", (gogoproto.jsontag) = "VMBootDisk", (gogoproto.moretags) = "yaml:\"VMBootDisk\""];
 	string vm_block_disk = 18 [json_name="VMBlockDisk", (gogoproto.jsontag) = "VMBlockDisk", (gogoproto.moretags) = "yaml:\"VMBlockDisk\""];
 
-	repeated KeyValue key_value_list = 19 [json_name="KeyValueList", (gogoproto.jsontag) = "KeyValueList", (gogoproto.moretags) = "yaml:\"KeyValueList\""];
+	string ssh_access_point = 19 [json_name="SSHAccessPoint", (gogoproto.jsontag) = "SSHAccessPoint", (gogoproto.moretags) = "yaml:\"SSHAccessPoint\""];
+
+	repeated KeyValue key_value_list = 20 [json_name="KeyValueList", (gogoproto.jsontag) = "KeyValueList", (gogoproto.moretags) = "yaml:\"KeyValueList\""];
 }
 
 message VMRegionInfo {

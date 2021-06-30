@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/astaxie/beego/validation"
 	"github.com/cloud-barista/cb-ladybug/src/core/model"
-	"github.com/cloud-barista/cb-ladybug/src/utils/config"
-	"github.com/go-resty/resty/v2"
+
+	logger "github.com/sirupsen/logrus"
 )
 
 type TVM struct {
@@ -21,70 +20,36 @@ func NewTVm(ns string, mcisName string) *TVM {
 	}
 }
 
-func (tvm *TVM) GET() (bool, error) {
-	// validation
-	if err := tvm.validate(validation.Validation{}); err != nil {
-		return false, err
-	}
+func (self *TVM) GET() (bool, error) {
 
-	conf := config.Config
-	resp, err := resty.New().R().
-		SetBasicAuth(conf.Username, conf.Password).
-		SetResult(&tvm.VM).
-		Get(conf.TumblebugUrl + fmt.Sprintf("/ns/%s/mcis/%s/vm/%s", tvm.namespace, tvm.Name, tvm.VM.Name))
+	return self.execute(http.MethodGet, fmt.Sprintf("/ns/%s/mcis/%s/vm/%s", self.namespace, self.Name, self.VM.Name), nil, &self.VM)
 
-	if e := tvm.response(resp, err); e != nil {
-		return false, e
-	}
-	if resp.StatusCode() == http.StatusNotFound {
-		return false, nil
-	}
-
-	return true, nil
 }
 
-func (tvm *TVM) POST() error {
-	// validation
-	if err := tvm.validate(validation.Validation{}); err != nil {
+func (self *TVM) POST() error {
+
+	_, err := self.execute(http.MethodPost, fmt.Sprintf("/ns/%s/mcis/%s/vm", self.namespace, self.Name), self.VM, &self.VM)
+	if err != nil {
 		return err
-	}
-
-	conf := config.Config
-	resp, err := resty.New().R().
-		SetBasicAuth(conf.Username, conf.Password).
-		SetBody(tvm.VM).
-		SetResult(&tvm.VM).
-		Post(conf.TumblebugUrl + fmt.Sprintf("/ns/%s/mcis/%s/vm", tvm.namespace, tvm.Name))
-
-	if e := tvm.response(resp, err); e != nil {
-		return e
 	}
 
 	return nil
+
 }
 
-func (tvm *TVM) DELETE() error {
-	// validation
-	if err := tvm.validate(validation.Validation{}); err != nil {
-		return err
-	}
+func (self *TVM) DELETE() error {
 
-	exist, err := tvm.GET()
+	exist, err := self.GET()
 	if err != nil {
 		return err
 	}
 	if exist {
-		conf := config.Config
-		resp, err := resty.New().R().
-			SetBasicAuth(conf.Username, conf.Password).
-			SetResult(TumblebugResult{}).
-			Delete(conf.TumblebugUrl + fmt.Sprintf("/ns/%s/mcis/%s/vm/%s", tvm.namespace, tvm.Name, tvm.VM.Name))
-
-		if err = tvm.response(resp, err); err != nil {
+		_, err := self.execute(http.MethodDelete, fmt.Sprintf("/ns/%s/mcis/%s/vm/%s", self.namespace, self.Name, self.VM.Name), nil, model.Status{})
+		if err != nil {
 			return err
 		}
 	} else {
-		fmt.Println(fmt.Sprintf("delete VM skip (name=%s, cause=not found)", tvm.VM.Name))
+		logger.Infof("delete VM skip (name=%s, cause=not found)", self.VM.Name)
 	}
 
 	return nil

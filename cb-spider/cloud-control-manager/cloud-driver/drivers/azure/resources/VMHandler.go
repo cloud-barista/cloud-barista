@@ -157,12 +157,13 @@ func (vmHandler *AzureVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, e
 		LoggingError(hiscallInfo, err)
 		return irs.VMInfo{}, err
 	}
+	LoggingInfo(hiscallInfo, start)
+
 	err = future.WaitForCompletionRef(vmHandler.Ctx, vmHandler.Client.Client)
 	if err != nil {
 		LoggingError(hiscallInfo, err)
 		return irs.VMInfo{}, err
 	}
-	LoggingInfo(hiscallInfo, start)
 
 	vm, err = vmHandler.Client.Get(vmHandler.Ctx, vmHandler.Region.ResourceGroup, vmReqInfo.IId.NameId, compute.InstanceView)
 	if err != nil {
@@ -255,7 +256,7 @@ func (vmHandler *AzureVMHandler) TerminateVM(vmIID irs.IID) (irs.VMStatus, error
 		return irs.Failed, err
 	}
 	osDiskName := vmInfo.VMBootDisk
-
+/* Detach may not be required for dynamic public IP mode. by powerkim. 2021.04.30.
 	// TODO: nested flow 개선
 	// VNic에서 PublicIP 연결해제
 	vNicDetachStatus, err := DetachVNic(vmHandler, vmInfo)
@@ -263,6 +264,7 @@ func (vmHandler *AzureVMHandler) TerminateVM(vmIID irs.IID) (irs.VMStatus, error
 		LoggingError(hiscallInfo, err)
 		return vNicDetachStatus, err
 	}
+*/
 
 	// VM 삭제
 	start := call.Start()
@@ -271,12 +273,13 @@ func (vmHandler *AzureVMHandler) TerminateVM(vmIID irs.IID) (irs.VMStatus, error
 		LoggingError(hiscallInfo, err)
 		return irs.Failed, err
 	}
+	LoggingInfo(hiscallInfo, start)
+
 	err = future.WaitForCompletionRef(vmHandler.Ctx, vmHandler.Client.Client)
 	if err != nil {
 		LoggingError(hiscallInfo, err)
 		return irs.Failed, err
 	}
-	LoggingInfo(hiscallInfo, start)
 
 	// TODO: nested flow 개선
 	// VNic 삭제
@@ -580,7 +583,8 @@ func CreatePublicIP(vmHandler *AzureVMHandler, vmReqInfo irs.VMReqInfo) (irs.IID
 		},
 		PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
 			PublicIPAddressVersion:   network.IPVersion("IPv4"),
-			PublicIPAllocationMethod: network.IPAllocationMethod("Static"),
+			//PublicIPAllocationMethod: network.IPAllocationMethod("Static"),
+			PublicIPAllocationMethod: network.IPAllocationMethod("Dynamic"),
 			IdleTimeoutInMinutes:     to.Int32Ptr(4),
 		},
 		Location: &vmHandler.Region.Region,

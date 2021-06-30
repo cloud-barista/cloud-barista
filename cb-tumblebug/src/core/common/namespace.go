@@ -29,14 +29,20 @@ type NsInfo struct {
 func NsValidation() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			fmt.Printf("%v\n", "[API request!]")
+			fmt.Printf("%v\n", "[Handle API Request]")
 			nsId := c.Param("nsId")
 			if nsId == "" {
 				return next(c)
 			}
-			check, _, err := LowerizeAndCheckNs(nsId)
 
-			if check == false || err != nil {
+			err := CheckString(nsId)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusNotFound, "The first character of name must be a lowercase letter, and all following characters must be a dash, lowercase letter, or digit, except the last character, which cannot be a dash.")
+			}
+
+			check, err := CheckNs(nsId)
+
+			if !check || err != nil {
 				return echo.NewHTTPError(http.StatusNotFound, "Not valid namespace")
 			}
 			return next(c)
@@ -45,11 +51,18 @@ func NsValidation() echo.MiddlewareFunc {
 }
 
 func CreateNs(u *NsReq) (NsInfo, error) {
-	check, lowerizedName, err := LowerizeAndCheckNs(u.Name)
+	err := CheckString(u.Name)
+	if err != nil {
+		temp := NsInfo{}
+		CBLog.Error(err)
+		return temp, err
+	}
+
+	check, err := CheckNs(u.Name)
 
 	if check {
 		temp := NsInfo{}
-		err := fmt.Errorf("CreateNs(); The namespace " + lowerizedName + " already exists.")
+		err := fmt.Errorf("CreateNs(); The namespace " + u.Name + " already exists.")
 		return temp, err
 	}
 
@@ -61,8 +74,8 @@ func CreateNs(u *NsReq) (NsInfo, error) {
 
 	content := NsInfo{}
 	//content.Id = GenUuid()
-	content.Id = lowerizedName
-	content.Name = lowerizedName
+	content.Id = u.Name
+	content.Name = u.Name
 	content.Description = u.Description
 
 	// TODO here: implement the logic
@@ -87,10 +100,16 @@ func GetNs(id string) (NsInfo, error) {
 
 	res := NsInfo{}
 
-	check, lowerizedId, err := LowerizeAndCheckNs(id)
+	err := CheckString(id)
+	if err != nil {
+		temp := NsInfo{}
+		CBLog.Error(err)
+		return temp, err
+	}
+	check, err := CheckNs(id)
 
-	if check == false {
-		errString := "The namespace " + lowerizedId + " does not exist."
+	if !check {
+		errString := "The namespace " + id + " does not exist."
 		//mapA := map[string]string{"message": errString}
 		//mapB, _ := json.Marshal(mapA)
 		err := fmt.Errorf(errString)
@@ -103,8 +122,8 @@ func GetNs(id string) (NsInfo, error) {
 		return temp, err
 	}
 
-	fmt.Println("[Get namespace] " + lowerizedId)
-	key := "/ns/" + lowerizedId
+	fmt.Println("[Get namespace] " + id)
+	key := "/ns/" + id
 	fmt.Println(key)
 
 	keyValue, err := CBStore.Get(key)
@@ -116,7 +135,11 @@ func GetNs(id string) (NsInfo, error) {
 	fmt.Println("<" + keyValue.Key + "> \n" + keyValue.Value)
 	fmt.Println("===============================================")
 
-	json.Unmarshal([]byte(keyValue.Value), &res)
+	err = json.Unmarshal([]byte(keyValue.Value), &res)
+	if err != nil {
+		CBLog.Error(err)
+		return res, err
+	}
 	return res, nil
 }
 
@@ -136,7 +159,11 @@ func ListNs() ([]NsInfo, error) {
 		res := []NsInfo{}
 		for _, v := range keyValue {
 			tempObj := NsInfo{}
-			json.Unmarshal([]byte(v.Value), &tempObj)
+			err = json.Unmarshal([]byte(v.Value), &tempObj)
+			if err != nil {
+				CBLog.Error(err)
+				return nil, err
+			}
 			res = append(res, tempObj)
 		}
 		return res, nil
@@ -145,38 +172,81 @@ func ListNs() ([]NsInfo, error) {
 	return nil, nil // When err == nil && keyValue == nil
 }
 
-func ListNsId() []string {
+func AppendIfMissing(slice []string, i string) []string {
+	for _, ele := range slice {
+		if ele == i {
+			return slice
+		}
+	}
+	return append(slice, i)
+}
 
-	fmt.Println("[List ns]")
+func ListNsId() ([]string, error) {
+
+	//fmt.Println("[List ns]")
 	key := "/ns"
-	fmt.Println(key)
-
-	keyValue, _ := CBStore.GetList(key, true)
+	//fmt.Println(key)
 
 	var nsList []string
-	for _, v := range keyValue {
-		//if !strings.Contains(v.Key, "vm") {
-		//nsList = append(nsList, strings.TrimPrefix(v.Key, "/ns/"))
-		//}
-		if !strings.Contains(v.Key, "mcis") && !strings.Contains(v.Key, "cpu") && !strings.Contains(v.Key, "resources") {
-			nsList = append(nsList, strings.TrimPrefix(v.Key, "/ns/"))
-		}
 
+	// Implementation Option 1
+	// keyValue, _ := CBStore.GetList(key, true)
+
+	// r, _ := regexp.Compile("/ns/[a-z]([-a-z0-9]*[a-z0-9])?$")
+
+	// for _, v := range keyValue {
+
+	// 	if v.Key == "" {
+	// 		continue
+	// 	}
+
+	// 	filtered := r.FindString(v.Key)
+
+	// 	if filtered != v.Key {
+	// 		continue
+	// 	} else {
+	// 		trimmedString := strings.TrimPrefix(v.Key, "/ns/")
+	// 		nsList = AppendIfMissing(nsList, trimmedString)
+	// 	}
+	// }
+	// EOF of Implementation Option 1
+
+	// Implementation Option 2
+	keyValue, err := CBStore.GetList(key, true)
+	keyValue = cbstore_utils.GetChildList(keyValue, key)
+
+	if err != nil {
+		CBLog.Error(err)
+		return nil, err
 	}
-	for _, v := range nsList {
-		fmt.Println("<" + v + "> \n")
+	if keyValue != nil {
+		for _, v := range keyValue {
+			trimmedString := strings.TrimPrefix(v.Key, "/ns/")
+			nsList = append(nsList, trimmedString)
+		}
 	}
-	fmt.Println("===============================================")
-	return nsList
+	// EOF of Implementation Option 2
+
+	//for _, v := range nsList {
+	//	fmt.Println("<" + v + "> \n")
+	//}
+	//fmt.Println("===============================================")
+	return nsList, nil
 
 }
 
-func DelNs(Id string) error {
+func DelNs(id string) error {
 
-	check, lowerizedId, err := LowerizeAndCheckNs(Id)
+	err := CheckString(id)
+	if err != nil {
+		CBLog.Error(err)
+		return err
+	}
 
-	if check == false {
-		errString := "The namespace " + lowerizedId + " does not exist."
+	check, err := CheckNs(id)
+
+	if !check {
+		errString := "The namespace " + id + " does not exist."
 		err := fmt.Errorf(errString)
 		return err
 	}
@@ -186,8 +256,8 @@ func DelNs(Id string) error {
 		return err
 	}
 
-	fmt.Println("[Delete ns] " + lowerizedId)
-	key := "/ns/" + lowerizedId
+	fmt.Println("[Delete ns] " + id)
+	key := "/ns/" + id
 	fmt.Println(key)
 
 	mcisList := GetChildIdList(key + "/mcis")
@@ -207,7 +277,7 @@ func DelNs(Id string) error {
 		len(securityGroupList)+
 		len(specList)+
 		len(sshKeyList) > 0 {
-		errString := "Cannot delete NS " + lowerizedId + ", which is not empty. There exists at least one MCIS or one of resources."
+		errString := "Cannot delete NS " + id + ", which is not empty. There exists at least one MCIS or one of resources."
 		errString += " \n len(mcisList): " + strconv.Itoa(len(mcisList))
 		errString += " \n len(imageList): " + strconv.Itoa(len(imageList))
 		errString += " \n len(vNetList): " + strconv.Itoa(len(vNetList))
@@ -236,7 +306,10 @@ func DelNs(Id string) error {
 func DelAllNs() error {
 	fmt.Printf("DelAllNs() called;")
 
-	nsIdList := ListNsId()
+	nsIdList, err := ListNsId()
+	if err != nil {
+		return err
+	}
 
 	if len(nsIdList) == 0 {
 		return nil
@@ -251,29 +324,27 @@ func DelAllNs() error {
 	return nil
 }
 
-func LowerizeAndCheckNs(Id string) (bool, string, error) {
+func CheckNs(id string) (bool, error) {
 
-	if Id == "" {
+	if id == "" {
 		err := fmt.Errorf("CheckNs failed; nsId given is null.")
-		return false, "", err
+		return false, err
 	}
 
-	lowerizedId := GenId(Id)
+	err := CheckString(id)
+	if err != nil {
+		CBLog.Error(err)
+		return false, err
+	}
 
-	fmt.Println("[Check ns] " + lowerizedId)
+	//fmt.Println("[Check ns] " + lowerizedId)
 
-	key := "/ns/" + lowerizedId
+	key := "/ns/" + id
 	//fmt.Println(key)
 
 	keyValue, _ := CBStore.Get(key)
-	/*
-		if err != nil {
-			CBLog.Error(err)
-			return false, err
-		}
-	*/
 	if keyValue != nil {
-		return true, lowerizedId, nil
+		return true, nil
 	}
-	return false, lowerizedId, nil
+	return false, nil
 }

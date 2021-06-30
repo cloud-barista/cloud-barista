@@ -38,15 +38,20 @@ type TbMcisCreateRequest struct {
 
 // TbMcisReq - MCIS 생성 요청 구조 정의
 type TbMcisReq struct {
-	Name           string    `yaml:"name" json:"name"`
-	Vm             []TbVmReq `yaml:"vm" json:"vm"`
-	Placement_algo string    `yaml:"placement_algo" json:"placement_algo"`
-	Description    string    `yaml:"description" json:"description"`
+	Name            string    `yaml:"name" json:"name"`
+	InstallMonAgent string    `yaml:"installMonAgent" json:"installMonAgent"`
+	Label           string    `yaml:"label" json:"label"`
+	PlacementAlgo   string    `yaml:"placementAlgo" json:"placementAlgo"`
+	Description     string    `yaml:"description" json:"description"`
+	Vm              []TbVmReq `yaml:"vm" json:"vm"`
 }
 
 // TbVmReq - MCIS VM 생성 요청 구조 정의
 type TbVmReq struct {
 	Name             string   `yaml:"name" json:"name"`
+	VmGroupSize      string   `yaml:"vmGroupSize" json:"vmGroupSize"`
+	Label            string   `yaml:"label" json:"label"`
+	Description      string   `yaml:"description" json:"description"`
 	ConnectionName   string   `yaml:"connectionName" json:"connectionName"`
 	SpecId           string   `yaml:"specId" json:"specId"`
 	ImageId          string   `yaml:"imageId" json:"imageId"`
@@ -56,7 +61,6 @@ type TbVmReq struct {
 	SshKeyId         string   `yaml:"sshKeyId" json:"sshKeyId"`
 	VmUserAccount    string   `yaml:"vmUserAccount" json:"vmUserAccount"`
 	VmUserPassword   string   `yaml:"vmUserPassword" json:"vmUserPassword"`
-	Description      string   `yaml:"description" json:"description"`
 }
 
 // TbVmCreateRequest - MCIS VM 생성 요청 구조 Wrapper 정의
@@ -66,38 +70,47 @@ type TbVmCreateRequest struct {
 	Item   TbVmInfo `yaml:"mcisvm" json:"mcisvm"`
 }
 
+// TbVmGroupCreateRequest - MCIS VM 그룹 생성 요청 구조 Wrapper 정의
+type TbVmGroupCreateRequest struct {
+	NsId   string  `yaml:"nsId" json:"nsId"`
+	McisId string  `yaml:"mcisId" json:"mcisId"`
+	Item   TbVmReq `yaml:"groupvm" json:"groupvm"`
+}
+
 // TbVmInfo - MCIS VM 구조 정의
 type TbVmInfo struct {
-	Id               string   `yaml:"id" json:"id"`
-	Name             string   `yaml:"name" json:"name"`
-	ConnectionName   string   `yaml:"connectionName" json:"connectionName"`
-	SpecId           string   `yaml:"specId" json:"specId"`
-	ImageId          string   `yaml:"imageId" json:"imageId"`
-	VNetId           string   `yaml:"vNetId" json:"vNetId"`
-	SubnetId         string   `yaml:"subnetId" json:"subnetId"`
-	SecurityGroupIds []string `yaml:"securityGroupIds" json:"securityGroupIds"`
-	SshKeyId         string   `yaml:"sshKeyId" json:"sshKeyId"`
-	VmUserAccount    string   `yaml:"vmUserAccount" json:"vmUserAccount"`
-	VmUserPassword   string   `yaml:"vmUserPassword" json:"vmUserPassword"`
-	Description      string   `yaml:"description" json:"description"`
+	Id               string      `yaml:"id" json:"id"`
+	Name             string      `yaml:"name" json:"name"`
+	VmGroupId        string      `yaml:"vmGroupId" json:"vmGroupId"`
+	Location         GeoLocation `yaml:"location" json:"location"`
+	Status           string      `yaml:"status" json:"status"`
+	TargetStatus     string      `yaml:"targetStatus" json:"targetStatus"`
+	TargetAction     string      `yaml:"targetAction" json:"targetAction"`
+	MonAgentStatus   string      `yaml:"monAgentStatus" json:"monAgentStatus"`
+	SystemMessage    string      `yaml:"systemMessage" json:"systemMessage"`
+	CreatedTime      string      `yaml:"createdTime" json:"createdTime"`
+	Label            string      `yaml:"label" json:"label"`
+	Description      string      `yaml:"description" json:"description"`
+	Region           RegionInfo  `yaml:"region" json:"region"`
+	PublicIP         string      `yaml:"publicIP" json:"publicIP"`
+	SSHPort          string      `yaml:"sshPort" json:"sshPort"`
+	PublicDNS        string      `yaml:"publicDNS" json:"publicDNS"`
+	PrivateIP        string      `yaml:"privateIP" json:"privateIP"`
+	PrivateDNS       string      `yaml:"privateDNS" json:"privateDNS"`
+	VMBootDisk       string      `yaml:"vmBootDisk" json:"vmBootDisk"`
+	VMBlockDisk      string      `yaml:"vmBlockDisk" json:"vmBlockDisk"`
+	ConnectionName   string      `yaml:"connectionName" json:"connectionName"`
+	SpecId           string      `yaml:"specId" json:"specId"`
+	ImageId          string      `yaml:"imageId" json:"imageId"`
+	VNetId           string      `yaml:"vNetId" json:"vNetId"`
+	SubnetId         string      `yaml:"subnetId" json:"subnetId"`
+	SecurityGroupIds []string    `yaml:"securityGroupIds" json:"securityGroupIds"`
+	SshKeyId         string      `yaml:"sshKeyId" json:"sshKeyId"`
+	VmUserAccount    string      `yaml:"vmUserAccount" json:"vmUserAccount"`
+	VmUserPassword   string      `yaml:"vmUserPassword" json:"vmUserPassword"`
 
-	Location GeoLocation `yaml:"location" json:"location"`
-
-	// 2. Provided by CB-Spider
-	Region      RegionInfo `yaml:"region" json:"region"`
-	PublicIP    string     `yaml:"publicIP" json:"publicIP"`
-	PublicDNS   string     `yaml:"publicDNS" json:"publicDNS"`
-	PrivateIP   string     `yaml:"privateIP" json:"privateIP"`
-	PrivateDNS  string     `yaml:"privateDNS" json:"privateDNS"`
-	VMBootDisk  string     `yaml:"vmBootDisk" json:"vmBootDisk"`
-	VMBlockDisk string     `yaml:"vmBlockDisk" json:"vmBlockDisk"`
-
-	// 3. Required by CB-Tumblebug
-	Status       string `yaml:"status" json:"status"`
-	TargetStatus string `yaml:"targetStatus" json:"targetStatus"`
-	TargetAction string `yaml:"targetAction" json:"targetAction"`
-
-	CspViewVmDetail SpiderVMInfo `yaml:"cspViewVmDetail" json:"cspViewVmDetail"`
+	// StartTime 필드가 공백일 경우 json 객체 복사할 때 time format parsing 에러 방지
+	// CspViewVmDetail  SpiderVMInfo `yaml:"cspViewVmDetail" json:"cspViewVmDetail"`
 }
 
 // GeoLocation - 위치 정보 구조 정의
@@ -146,6 +159,7 @@ type SpiderVMInfo struct { // Spider
 	PrivateDNS        string     `yaml:"PrivateDNS" json:"PrivateDNS"`
 	VMBootDisk        string     `yaml:"VMBootDisk" json:"VMBootDisk"`
 	VMBlockDisk       string     `yaml:"VMBlockDisk" json:"VMBlockDisk"`
+	SSHAccessPoint    string     `yaml:"SSHAccessPoint" json:"SSHAccessPoint"`
 	KeyValueList      []KeyValue `yaml:"KeyValueList" json:"KeyValueList"`
 }
 
@@ -157,23 +171,23 @@ type McisRecommendCreateRequest struct {
 
 // McisRecommendReq - MCIS 추천 요청 구조 정의
 type McisRecommendReq struct {
-	Vm_req          []TbVmRecommendReq `yaml:"vm_req" json:"vm_req"`
-	Placement_algo  string             `yaml:"placement_algo" json:"placement_algo"`
-	Placement_param []KeyValue         `yaml:"placement_param" json:"placement_param"`
-	Max_result_num  string             `yaml:"max_result_num" json:"max_result_num"`
+	VmReq          []TbVmRecommendReq `yaml:"vmReq" json:"vmReq"`
+	PlacementAlgo  string             `yaml:"placementAlgo" json:"placementAlgo"`
+	PlacementParam []KeyValue         `yaml:"placementParam" json:"placementParam"`
+	MaxResultNum   string             `yaml:"maxResultNum" json:"maxResultNum"`
 }
 
 // McisRecommendReq - MCIS VM 추천 요청 구조 정의
 type TbVmRecommendReq struct {
-	Request_name   string `yaml:"request_name" json:"request_name"`
-	Max_result_num string `yaml:"max_result_num" json:"max_result_num"`
+	RequestName  string `yaml:"requestName" json:"requestName"`
+	MaxResultNum string `yaml:"maxResultNum" json:"maxResultNum"`
 
-	Vcpu_size   string `yaml:"vcpu_size" json:"vcpu_size"`
-	Memory_size string `yaml:"memory_size" json:"memory_size"`
-	Disk_size   string `yaml:"disk_size" json:"disk_size"`
+	VcpuSize   string `yaml:"vcpuSize" json:"vcpuSize"`
+	MemorySize string `yaml:"memorySize" json:"memorySize"`
+	DiskSize   string `yaml:"diskSize" json:"diskSize"`
 
-	Placement_algo  string     `yaml:"placement_algo" json:"placement_algo"`
-	Placement_param []KeyValue `yaml:"placement_param" json:"placement_param"`
+	PlacementAlgo  string     `yaml:"placementAlgo" json:"placementAlgo"`
+	PlacementParam []KeyValue `yaml:"placementParam" json:"placementParam"`
 }
 
 // McisCmdCreateRequest - MCIS 명령 실행 요청 구조 Wrapper 정의
@@ -185,12 +199,12 @@ type McisCmdCreateRequest struct {
 
 // McisCmdReq - MCIS 명령 실행 요청 구조 정의
 type McisCmdReq struct {
-	Mcis_id   string `yaml:"mcis_id" json:"mcis_id"`
-	Vm_id     string `yaml:"vm_id" json:"vm_id"`
-	Ip        string `yaml:"ip" json:"ip"`
-	User_name string `yaml:"user_name" json:"user_name"`
-	Ssh_key   string `yaml:"ssh_key" json:"ssh_key"`
-	Command   string `yaml:"command" json:"command"`
+	McisId   string `yaml:"mcisId" json:"mcisId"`
+	VmId     string `yaml:"vmId" json:"vmId"`
+	Ip       string `yaml:"ip" json:"ip"`
+	UserName string `yaml:"userName" json:"userName"`
+	SshKey   string `yaml:"sshKey" json:"sshKey"`
+	Command  string `yaml:"command" json:"command"`
 }
 
 // McisCmdVmCreateRequest - MCIS VM 명령 실행 요청 구조 Wrapper 정의
@@ -199,6 +213,95 @@ type McisCmdVmCreateRequest struct {
 	McisId string     `yaml:"mcisId" json:"mcisId"`
 	VmId   string     `yaml:"vmId" json:"vmId"`
 	Item   McisCmdReq `yaml:"cmd" json:"cmd"`
+}
+
+// McisPolicyCreateRequest - MCIS Policy 생성 요청 구조 Wrapper 정의
+type McisPolicyCreateRequest struct {
+	NsId   string         `yaml:"nsId" json:"nsId"`
+	McisId string         `yaml:"mcisId" json:"mcisId"`
+	Item   McisPolicyInfo `yaml:"ReqInfo" json:"ReqInfo"`
+}
+
+// AutoCondition - MCIS AutoCondition 요청 구조 정의
+type AutoCondition struct {
+	Metric           string   `yaml:"metric" json:"metric"`
+	Operator         string   `yaml:"operator" json:"operator"`
+	Operand          string   `yaml:"operand" json:"operand"`
+	EvaluationPeriod string   `yaml:"evaluationPeriod" json:"evaluationPeriod"`
+	EvaluationValue  []string `yaml:"evaluationValue" json:"evaluationValue"`
+}
+
+// AutoAction - MCIS AutoAction 요청 구조 정의
+type AutoAction struct {
+	ActionType    string     `yaml:"actionType" json:"actionType"`
+	Vm            TbVmInfo   `yaml:"vm" json:"vm"`
+	PostCommand   McisCmdReq `yaml:"postCommand" json:"postCommand"`
+	PlacementAlgo string     `yaml:"placementAlgo" json:"placementAlgo"`
+}
+
+// Policy - MCIS Policy 요청 구조 정의
+type Policy struct {
+	AutoCondition AutoCondition `yaml:"autoCondition" json:"autoCondition"`
+	AutoAction    AutoAction    `yaml:"autoAction" json:"autoAction"`
+	Status        string        `yaml:"status" json:"status"`
+}
+
+// McisPolicyInfo - MCIS Policy 정보 구조 정의
+type McisPolicyInfo struct {
+	Name   string   `yaml:"Name" json:"Name"`
+	Id     string   `yaml:"Id" json:"Id"`
+	Policy []Policy `yaml:"policy" json:"policy"`
+
+	ActionLog   string `yaml:"actionLog" json:"actionLog"`
+	Description string `yaml:"description" json:"description"`
+}
+
+// McisRecommendVmCreateRequest - MCIS VM 추천 요청 구조 Wrapper 정의
+type McisRecommendVmCreateRequest struct {
+	NsId string         `yaml:"nsId" json:"nsId"`
+	Item DeploymentPlan `yaml:"plan" json:"plan"`
+}
+
+// DeploymentPlan - DeploymentPlan 요청 구조 정의
+type DeploymentPlan struct {
+	Filter   FilterInfo   `yaml:"filter" json:"filter"`
+	Priority PriorityInfo `yaml:"priority" json:"priority"`
+	Limit    string       `yaml:"limit" json:"limit"`
+}
+
+// FilterInfo - FilterInfo 요청 구조 정의
+type FilterInfo struct {
+	Policy []FilterCondition `yaml:"policy" json:"policy"`
+}
+
+// FilterCondition - FilterCondition 요청 구조 정의
+type FilterCondition struct {
+	Metric    string      `yaml:"metric" json:"metric"`
+	Condition []Operation `yaml:"condition" json:"condition"`
+}
+
+// Operation - Operation 요청 구조 정의
+type Operation struct {
+	Operator string `yaml:"operator" json:"operator"`
+	Operand  string `yaml:"operand" json:"operand"`
+}
+
+// PriorityInfo - PriorityInfo 요청 구조 정의
+type PriorityInfo struct {
+	Policy []PriorityCondition `yaml:"policy" json:"policy"`
+}
+
+// PriorityCondition - PriorityCondition 요청 구조 정의
+type PriorityCondition struct {
+	Metric    string            `yaml:"metric" json:"metric"`
+	Weight    string            `yaml:"weight" json:"weight"`
+	Parameter []ParameterKeyVal `yaml:"parameter" json:"parameter"`
+}
+
+// ParameterKeyVal - ParameterKeyVal 요청 구조 정의
+type ParameterKeyVal struct {
+	Key string   `yaml:"key" json:"key"`
+	Val []string `yaml:"val" json:"val"`
 }
 
 // ===== [ Implementatiom ] =====
@@ -286,7 +389,7 @@ func (m *MCISApi) GetJWTToken() (string, error) {
 func (m *MCISApi) SetConfigPath(configFile string) error {
 	logger := logger.NewLogger()
 
-	// Viper 를 사용하는 설정 파서 생성
+	// Make new config parser that uses Viper library
 	parser := config.MakeParser()
 
 	var (
@@ -470,15 +573,40 @@ func (m *MCISApi) ListMcis(doc string) (string, error) {
 }
 
 // ListMcisByParam - MCIS 목록
-func (m *MCISApi) ListMcisByParam(nameSpaceID string, option string) (string, error) {
+func (m *MCISApi) ListMcisByParam(nameSpaceID string) (string, error) {
 	if m.requestMCIS == nil {
 		return "", errors.New("The Open() function must be called")
 	}
 
 	holdType, _ := m.GetInType()
 	m.SetInType("json")
-	m.requestMCIS.InData = `{"nsId":"` + nameSpaceID + `", "option":"` + option + `"}`
+	m.requestMCIS.InData = `{"nsId":"` + nameSpaceID + `"}`
 	result, err := m.requestMCIS.ListMcis()
+	m.SetInType(holdType)
+
+	return result, err
+}
+
+// ListMcisId - MCIS 목록
+func (m *MCISApi) ListMcisId(doc string) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	m.requestMCIS.InData = doc
+	return m.requestMCIS.ListMcisId()
+}
+
+// ListMcisIdByParam - MCIS 목록
+func (m *MCISApi) ListMcisIdByParam(nameSpaceID string) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	holdType, _ := m.GetInType()
+	m.SetInType("json")
+	m.requestMCIS.InData = `{"nsId":"` + nameSpaceID + `"}`
+	result, err := m.requestMCIS.ListMcisId()
 	m.SetInType(holdType)
 
 	return result, err
@@ -504,6 +632,31 @@ func (m *MCISApi) ControlMcisByParam(nameSpaceID string, mcisID string, action s
 	m.SetInType("json")
 	m.requestMCIS.InData = `{"nsId":"` + nameSpaceID + `", "mcisId":"` + mcisID + `", "action":"` + action + `"}`
 	result, err := m.requestMCIS.ControlMcis()
+	m.SetInType(holdType)
+
+	return result, err
+}
+
+// ListMcisStatus - MCIS 상태 목록
+func (m *MCISApi) ListMcisStatus(doc string) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	m.requestMCIS.InData = doc
+	return m.requestMCIS.ListMcisStatus()
+}
+
+// ListMcisStatusByParam - MCIS 상태 목록
+func (m *MCISApi) ListMcisStatusByParam(nameSpaceID string) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	holdType, _ := m.GetInType()
+	m.SetInType("json")
+	m.requestMCIS.InData = `{"nsId":"` + nameSpaceID + `"}`
+	result, err := m.requestMCIS.ListMcisStatus()
 	m.SetInType(holdType)
 
 	return result, err
@@ -554,6 +707,31 @@ func (m *MCISApi) GetMcisInfoByParam(nameSpaceID string, mcisID string) (string,
 	m.SetInType("json")
 	m.requestMCIS.InData = `{"nsId":"` + nameSpaceID + `", "mcisId":"` + mcisID + `"}`
 	result, err := m.requestMCIS.GetMcisInfo()
+	m.SetInType(holdType)
+
+	return result, err
+}
+
+// ListMcisVmId - MCIS 정보 조회
+func (m *MCISApi) ListMcisVmId(doc string) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	m.requestMCIS.InData = doc
+	return m.requestMCIS.ListMcisVmId()
+}
+
+// ListMcisVmIdByParam - MCIS 정보 조회
+func (m *MCISApi) ListMcisVmIdByParam(nameSpaceID string, mcisID string) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	holdType, _ := m.GetInType()
+	m.SetInType("json")
+	m.requestMCIS.InData = `{"nsId":"` + nameSpaceID + `", "mcisId":"` + mcisID + `"}`
+	result, err := m.requestMCIS.ListMcisVmId()
 	m.SetInType(holdType)
 
 	return result, err
@@ -633,6 +811,35 @@ func (m *MCISApi) CreateMcisVMByParam(req *TbVmCreateRequest) (string, error) {
 	}
 	m.requestMCIS.InData = string(j)
 	result, err := m.requestMCIS.CreateMcisVM()
+	m.SetInType(holdType)
+
+	return result, err
+}
+
+// CreateMcisVMGroup - MCIS VM 그룹 생성
+func (m *MCISApi) CreateMcisVMGroup(doc string) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	m.requestMCIS.InData = doc
+	return m.requestMCIS.CreateMcisVMGroup()
+}
+
+// CreateMcisVMGroupByParam - MCIS VM 생성
+func (m *MCISApi) CreateMcisVMGroupByParam(req *TbVmGroupCreateRequest) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	holdType, _ := m.GetInType()
+	m.SetInType("json")
+	j, err := json.Marshal(req)
+	if err != nil {
+		return "", err
+	}
+	m.requestMCIS.InData = string(j)
+	result, err := m.requestMCIS.CreateMcisVMGroup()
 	m.SetInType(holdType)
 
 	return result, err
@@ -738,18 +945,18 @@ func (m *MCISApi) DeleteMcisVMByParam(nameSpaceID string, mcisID string, vmID st
 	return result, err
 }
 
-// RecommandMcis - MCIS 추천
-func (m *MCISApi) RecommandMcis(doc string) (string, error) {
+// RecommendMcis - MCIS 추천
+func (m *MCISApi) RecommendMcis(doc string) (string, error) {
 	if m.requestMCIS == nil {
 		return "", errors.New("The Open() function must be called")
 	}
 
 	m.requestMCIS.InData = doc
-	return m.requestMCIS.RecommandMcis()
+	return m.requestMCIS.RecommendMcis()
 }
 
-// RecommandMcisByParam - MCIS 추천
-func (m *MCISApi) RecommandMcisByParam(req *McisRecommendCreateRequest) (string, error) {
+// RecommendMcisByParam - MCIS 추천
+func (m *MCISApi) RecommendMcisByParam(req *McisRecommendCreateRequest) (string, error) {
 	if m.requestMCIS == nil {
 		return "", errors.New("The Open() function must be called")
 	}
@@ -761,7 +968,36 @@ func (m *MCISApi) RecommandMcisByParam(req *McisRecommendCreateRequest) (string,
 		return "", err
 	}
 	m.requestMCIS.InData = string(j)
-	result, err := m.requestMCIS.RecommandMcis()
+	result, err := m.requestMCIS.RecommendMcis()
+	m.SetInType(holdType)
+
+	return result, err
+}
+
+// RecommendVM - MCIS VM 추천
+func (m *MCISApi) RecommendVM(doc string) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	m.requestMCIS.InData = doc
+	return m.requestMCIS.RecommendVM()
+}
+
+// RecommendVMByParam - MCIS VM 추천
+func (m *MCISApi) RecommendVMByParam(req *McisRecommendVmCreateRequest) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	holdType, _ := m.GetInType()
+	m.SetInType("json")
+	j, err := json.Marshal(req)
+	if err != nil {
+		return "", err
+	}
+	m.requestMCIS.InData = string(j)
+	result, err := m.requestMCIS.RecommendVM()
 	m.SetInType(holdType)
 
 	return result, err
@@ -825,7 +1061,6 @@ func (m *MCISApi) CmdMcisVmByParam(req *McisCmdVmCreateRequest) (string, error) 
 	return result, err
 }
 
-// jmlee
 // InstallAgentToMcis -  MCIS Agent 설치
 func (m *MCISApi) InstallAgentToMcis(doc string) (string, error) {
 	if m.requestMCIS == nil {
@@ -1004,6 +1239,135 @@ func (m *MCISApi) CheckVmByParam(nameSpaceID string, mcisID string, vmID string)
 	m.SetInType("json")
 	m.requestMCIS.InData = `{"nsId":"` + nameSpaceID + `", "mcisId":"` + mcisID + `", "vmId":"` + vmID + `"}`
 	result, err := m.requestMCIS.CheckVm()
+	m.SetInType(holdType)
+
+	return result, err
+}
+
+// CreateMcisPolicy - Policy 생성
+func (m *MCISApi) CreateMcisPolicy(doc string) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	m.requestMCIS.InData = doc
+	return m.requestMCIS.CreateMcisPolicy()
+}
+
+// CreateMcisPolicyByParam - Policy 생성
+func (m *MCISApi) CreateMcisPolicyByParam(req *McisPolicyCreateRequest) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	holdType, _ := m.GetInType()
+	m.SetInType("json")
+	j, err := json.Marshal(req)
+	if err != nil {
+		return "", err
+	}
+	m.requestMCIS.InData = string(j)
+	result, err := m.requestMCIS.CreateMcisPolicy()
+	m.SetInType(holdType)
+
+	return result, err
+}
+
+// ListMcisPolicy - Policy 목록
+func (m *MCISApi) ListMcisPolicy(doc string) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	m.requestMCIS.InData = doc
+	return m.requestMCIS.ListMcisPolicy()
+}
+
+// ListMcisPolicyByParam - Policy 목록
+func (m *MCISApi) ListMcisPolicyByParam(nameSpaceID string) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	holdType, _ := m.GetInType()
+	m.SetInType("json")
+	m.requestMCIS.InData = `{"nsId":"` + nameSpaceID + `"}`
+	result, err := m.requestMCIS.ListMcisPolicy()
+	m.SetInType(holdType)
+
+	return result, err
+}
+
+// GetMcisPolicy - Policy 조회
+func (m *MCISApi) GetMcisPolicy(doc string) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	m.requestMCIS.InData = doc
+	return m.requestMCIS.GetMcisPolicy()
+}
+
+// GetMcisPolicyByParam - Policy 조회
+func (m *MCISApi) GetMcisPolicyByParam(nameSpaceID string, mcisID string) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	holdType, _ := m.GetInType()
+	m.SetInType("json")
+	m.requestMCIS.InData = `{"nsId":"` + nameSpaceID + `", "mcisId":"` + mcisID + `"}`
+	result, err := m.requestMCIS.GetMcisPolicy()
+	m.SetInType(holdType)
+
+	return result, err
+}
+
+// DeleteMcisPolicy - Policy 삭제
+func (m *MCISApi) DeleteMcisPolicy(doc string) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	m.requestMCIS.InData = doc
+	return m.requestMCIS.DeleteMcisPolicy()
+}
+
+// DeleteMcisPolicyByParam - Policy 삭제
+func (m *MCISApi) DeleteMcisPolicyByParam(nameSpaceID string, mcisID string) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	holdType, _ := m.GetInType()
+	m.SetInType("json")
+	m.requestMCIS.InData = `{"nsId":"` + nameSpaceID + `", "mcisId":"` + mcisID + `"}`
+	result, err := m.requestMCIS.DeleteMcisPolicy()
+	m.SetInType(holdType)
+
+	return result, err
+}
+
+// DeleteAllMcisPolicy - Policy 전체 삭제
+func (m *MCISApi) DeleteAllMcisPolicy(doc string) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	m.requestMCIS.InData = doc
+	return m.requestMCIS.DeleteAllMcisPolicy()
+}
+
+// DeleteAllMcisPolicyByParam - Policy 전체 삭제
+func (m *MCISApi) DeleteAllMcisPolicyByParam(nameSpaceID string) (string, error) {
+	if m.requestMCIS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	holdType, _ := m.GetInType()
+	m.SetInType("json")
+	m.requestMCIS.InData = `{"nsId":"` + nameSpaceID + `"}`
+	result, err := m.requestMCIS.DeleteAllMcisPolicy()
 	m.SetInType(holdType)
 
 	return result, err

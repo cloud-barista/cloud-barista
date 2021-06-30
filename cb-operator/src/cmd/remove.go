@@ -1,18 +1,3 @@
-/*
-Copyright © 2020 NAME HERE <EMAIL ADDRESS>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package cmd
 
 import (
@@ -29,29 +14,33 @@ var removeCmd = &cobra.Command{
 	Long:  `Stop and Remove Cloud-Barista System. Stop and Remove Cloud-Barista runtimes and related container images and meta-DB if necessary`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		fmt.Println("\n[Remove Cloud-Barista]\n")
+		fmt.Println("\n[Remove Cloud-Barista]")
+		fmt.Println()
 
 		if common.FileStr == "" {
 			fmt.Println("file is required")
 		} else {
-			common.FileStr = common.GenConfigPath(common.FileStr, common.CB_OPERATOR_MODE)
+			common.FileStr = common.GenConfigPath(common.FileStr, common.CBOperatorMode)
 			var cmdStr string
-			switch common.CB_OPERATOR_MODE {
-			case common.Mode_Kubernetes:
-				cmdStr = "sudo helm uninstall --namespace " + common.CB_K8s_Namespace + " " + common.CB_Helm_Release_Name
+			switch common.CBOperatorMode {
+			case common.ModeKubernetes:
+				cmdStr = "sudo helm uninstall --namespace " + common.CBK8sNamespace + " " + common.CBHelmReleaseName
 				common.SysCall(cmdStr)
 
-				cmdStr = "sudo kubectl delete pvc cb-spider -n " + common.CB_K8s_Namespace
+				cmdStr = "sudo kubectl delete pvc cb-spider -n " + common.CBK8sNamespace
 				common.SysCall(cmdStr)
 
-				cmdStr = "sudo kubectl delete pvc cb-tumblebug -n " + common.CB_K8s_Namespace
+				cmdStr = "sudo kubectl delete pvc cb-tumblebug -n " + common.CBK8sNamespace
 				common.SysCall(cmdStr)
 
-				cmdStr = "sudo kubectl delete pvc data-cb-dragonfly-etcd-0 -n " + common.CB_K8s_Namespace
+				cmdStr = "sudo kubectl delete pvc cb-ladybug -n " + common.CBK8sNamespace
+				common.SysCall(cmdStr)
+
+				cmdStr = "sudo kubectl delete pvc cb-dragonfly -n " + common.CBK8sNamespace
 				common.SysCall(cmdStr)
 
 				//fallthrough
-			case common.Mode_DockerCompose:
+			case common.ModeDockerCompose:
 				if volFlag && imgFlag {
 					cmdStr = "sudo COMPOSE_PROJECT_NAME=cloud-barista docker-compose -f " + common.FileStr + " down -v --rmi all"
 				} else if volFlag {
@@ -65,7 +54,7 @@ var removeCmd = &cobra.Command{
 				//fmt.Println(cmdStr)
 				common.SysCall(cmdStr)
 
-				common.SysCall_docker_compose_ps()
+				common.SysCallDockerComposePs()
 			default:
 
 			}
@@ -81,7 +70,7 @@ func init() {
 	rootCmd.AddCommand(removeCmd)
 
 	pf := removeCmd.PersistentFlags()
-	pf.StringVarP(&common.FileStr, "file", "f", common.Not_Defined, "User-defined configuration file")
+	pf.StringVarP(&common.FileStr, "file", "f", common.NotDefined, "User-defined configuration file")
 	//	cobra.MarkFlagRequired(pf, "file")
 
 	pf.BoolVarP(&volFlag, "volumes", "v", false, "Remove named volumes declared in the volumes section of the Compose file")

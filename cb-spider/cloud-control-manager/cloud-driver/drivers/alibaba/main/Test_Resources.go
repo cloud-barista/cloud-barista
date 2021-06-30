@@ -28,7 +28,7 @@ var cblogger *logrus.Logger
 func init() {
 	// cblog is a global variable.
 	cblogger = cblog.GetLogger("AlibabaCloud Resource Test")
-	cblog.SetLevel("info")
+	cblog.SetLevel("debug")
 }
 
 /*
@@ -339,9 +339,9 @@ func handleSecurity() {
 	//config := readConfigFile()
 	//VmID := config.Aws.VmID
 
-	securityName := "CB-SecurityTestIcmp"
+	securityName := "CB-SecurityTestCidr"
 	securityId := "sg-6wedru4yb4m6qqfvd3sj"
-	vpcId := "vpc-6wei16ufuimfcct41o0xh"
+	vpcId := "vpc-0jl4l19l51gn2exrohgci"
 
 	for {
 		fmt.Println("Security Management")
@@ -381,44 +381,61 @@ func handleSecurity() {
 					IId:    irs.IID{NameId: securityName},
 					VpcIID: irs.IID{SystemId: vpcId},
 					SecurityRules: &[]irs.SecurityRuleInfo{ //보안 정책 설정
+						//CIDR 테스트
 						{
-							FromPort:   "20",
-							ToPort:     "22",
+							FromPort:   "30",
+							ToPort:     "30",
 							IPProtocol: "tcp",
 							Direction:  "inbound",
-						},
-
-						{
-							FromPort:   "80",
-							ToPort:     "80",
-							IPProtocol: "tcp",
-							Direction:  "inbound",
+							CIDR:       "10.13.1.10/32",
 						},
 						{
-							FromPort:   "8080",
-							ToPort:     "8080",
-							IPProtocol: "tcp",
-							Direction:  "inbound",
-						},
-						{
-							FromPort:   "-1",
-							ToPort:     "-1",
-							IPProtocol: "icmp",
-							Direction:  "inbound",
-						},
-
-						{
-							FromPort:   "443",
-							ToPort:     "443",
+							FromPort:   "40",
+							ToPort:     "40",
 							IPProtocol: "tcp",
 							Direction:  "outbound",
+							CIDR:       "10.13.1.10/32",
 						},
-						{
-							FromPort:   "8443",
-							ToPort:     "9999",
-							IPProtocol: "tcp",
-							Direction:  "outbound",
-						},
+						/*
+							{
+								FromPort:   "20",
+								ToPort:     "22",
+								IPProtocol: "tcp",
+								Direction:  "inbound",
+							},
+
+							{
+								FromPort:   "80",
+								ToPort:     "80",
+								IPProtocol: "tcp",
+								Direction:  "inbound",
+							},
+							{
+								FromPort:   "8080",
+								ToPort:     "8080",
+								IPProtocol: "tcp",
+								Direction:  "inbound",
+							},
+							{
+								FromPort:   "-1",
+								ToPort:     "-1",
+								IPProtocol: "icmp",
+								Direction:  "inbound",
+							},
+
+							{
+								FromPort:   "443",
+								ToPort:     "443",
+								IPProtocol: "tcp",
+								Direction:  "outbound",
+							},
+							{
+								FromPort:   "8443",
+								ToPort:     "9999",
+								IPProtocol: "tcp",
+								Direction:  "outbound",
+							},
+						*/
 						/*
 							{
 								//FromPort:   "8443",
@@ -435,6 +452,7 @@ func handleSecurity() {
 					cblogger.Infof(securityName, " Security 생성 실패 : ", err)
 				} else {
 					cblogger.Infof("[%s] Security 생성 결과 : [%v]", securityName, result)
+					securityId = result.IId.SystemId
 					spew.Dump(result)
 				}
 
@@ -574,7 +592,7 @@ func handleVPC() {
 
 	subnetReqInfo := irs.SubnetInfo{
 		IId:       irs.IID{NameId: "AddTest-Subnet"},
-		IPv4_CIDR: "192.168.3.0/24",
+		IPv4_CIDR: "10.0.3.0/24",
 	}
 
 	subnetReqVpcInfo := irs.IID{SystemId: "vpc-6wex2mrx1fovfecsl44mx"}
@@ -638,7 +656,8 @@ func handleVPC() {
 					// 내부적으로 1개만 존재함.
 					//조회및 삭제 테스트를 위해 리스트의 첫번째 서브넷 ID를 요청ID로 자동 갱신함.
 					if result != nil {
-						reqVpcId = result[0].IId // 조회 및 삭제를 위해 생성된 ID로 변경
+						reqVpcId = result[0].IId    // 조회 및 삭제를 위해 생성된 ID로 변경
+						subnetReqVpcInfo = reqVpcId //Subnet 추가/삭제 테스트용
 					}
 				}
 
@@ -677,9 +696,9 @@ func handleVPC() {
 				cblogger.Infof("[%s] Subnet 추가 테스트", vpcReqInfo.IId.NameId)
 				result, err := handler.AddSubnet(subnetReqVpcInfo, subnetReqInfo)
 				if err != nil {
-					cblogger.Infof(reqSubnetId.NameId, " VNetwork 생성 실패 : ", err)
+					cblogger.Infof(reqSubnetId.NameId, " Subnet 추가 실패 : ", err)
 				} else {
-					cblogger.Infof("VNetwork 생성 결과 : ", result)
+					cblogger.Infof("Subnet 추가 결과 : ", result)
 					reqSubnetId = result.IId // 조회 및 삭제를 위해 생성된 ID로 변경
 					spew.Dump(result)
 				}
@@ -824,20 +843,27 @@ func handleVM() {
 
 			case 1:
 				vmReqInfo := irs.VMReqInfo{
-					IId:               irs.IID{NameId: "mcloud-barista-vm-test"},
-					ImageIID:          irs.IID{SystemId: "aliyun_2_1903_x64_20G_alibase_20200324.vhd"},
-					VpcIID:            irs.IID{SystemId: "vpc-6wei16ufuimfcct41o0xh"},
-					SubnetIID:         irs.IID{SystemId: "vsw-6wed4dlmdg2ac1urdfn3p"},
-					SecurityGroupIIDs: []irs.IID{{SystemId: "sg-6we0rxnoai067qbkdkgw"}, {SystemId: "sg-6weeb9xaodr65g7bq10c"}},
-					VMSpecName:        "ecs.t5-lc2m1.nano",
-					KeyPairIID:        irs.IID{SystemId: "CB-KeyPairTest123123"},
+					IId: irs.IID{NameId: "mcloud-barista-vm-test"},
+					//ImageIID: irs.IID{SystemId: "aliyun_3_x64_20G_alibase_20210425.vhd"},
+					//ImageIID: irs.IID{SystemId: "aliyun_2_1903_x64_20G_alibase_20200324.vhd"},
+					//ImageIID:  irs.IID{SystemId: "ubuntu_18_04_x64_20G_alibase_20210318.vhd"},
+					ImageIID: irs.IID{SystemId: "ubuntu_18_04_x64_20G_alibase_20210420.vhd"},
+					//VpcIID:    irs.IID{SystemId: "vpc-0jl4l19l51gn2exrohgci"},
+					//SubnetIID: irs.IID{SystemId: "vsw-0jlj155cbwhjumtipnm6d"},
+					SubnetIID: irs.IID{SystemId: "vsw-0jlj177cbwhjumtipnm6d"}, //없는 Subnet 테스트
+					//SecurityGroupIIDs: []irs.IID{{SystemId: "sg-6we0rxnoai067qbkdkgw"}, {SystemId: "sg-6weeb9xaodr65g7bq10c"}},
+					SecurityGroupIIDs: []irs.IID{{SystemId: "sg-0jlcxdq9lpyi67vzuft1"}},
+					//VMSpecName:        "ecs.t5-lc2m1.nano",
+					VMSpecName: "ecs.g6.large", //cn-wulanchabu 리전
+					KeyPairIID: irs.IID{SystemId: "CB-KeyPairTest123123"},
 					//VMUserId:          "root", //root만 가능
-					VMUserPasswd: "Cbuser!@#", //대문자 소문자 모두 사용되어야 함. 그리고 숫자나 특수 기호 중 하나가 포함되어야 함.
+					//VMUserPasswd: "Cbuser!@#", //대문자 소문자 모두 사용되어야 함. 그리고 숫자나 특수 기호 중 하나가 포함되어야 함.
 				}
 
 				vmInfo, err := vmHandler.StartVM(vmReqInfo)
 				if err != nil {
 					//panic(err)
+					cblogger.Error("VM 생성 실패 - 실패 이유")
 					cblogger.Error(err)
 				} else {
 					cblogger.Info("VM 생성 완료!!", vmInfo)
@@ -944,12 +970,14 @@ func handleVM() {
 
 func main() {
 	cblogger.Info("Alibaba Cloud Resource Test")
-	handleVPC() //VPC
+	cblogger.Debug("Debug mode")
+
+	//handleVPC() //VPC
 	//handleVMSpec()
 	//handleImage() //AMI
-	//handleKeyPair()
 	//handleSecurity()
-	//handleVM()
+	//handleKeyPair()
+	handleVM()
 
 	//handlePublicIP() // PublicIP 생성 후 conf
 

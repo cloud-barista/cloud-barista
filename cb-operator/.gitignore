@@ -44,6 +44,7 @@ docker-compose-mode-files/data/cb-spider/
 docker-compose-mode-files/data/cb-tumblebug/
 docker-compose-mode-files/data/cb-tumblebug-mysql/
 docker-compose-mode-files/data/cb-ladybug/
+docker-compose-mode-files/data/cb-dragonfly/
 
 # Binary
 src/operator

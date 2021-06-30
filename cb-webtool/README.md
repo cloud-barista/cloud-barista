@@ -23,15 +23,15 @@ cb-webtool은 Multi-Cloud Project의 일환으로 다양한 클라우드를 cb-w
   - [[cb-webtool 실행-reflex 방식]](#cb-webtool-실행-reflex-방식)
 ***
 ## [설치 환경]
-cb-webtool은 1.15 이상의 Go 버전이 설치된 다양한 환경에서 실행 가능하지만 최종 동작을 검증한 OS는 Ubuntu 18.0.4입니다.
+cb-webtool은 1.16 이상의 Go 버전이 설치된 다양한 환경에서 실행 가능하지만 최종 동작을 검증한 OS는 Ubuntu 18.0.4입니다.
 
 <br>
 
 ## [의존성]
 cb-webtool은 내부적으로 cb-tumblebug & cb-spider & cb-dragonfly의 개방형 API를 이용하기 때문에 각 서버의 연동이 필요합니다.<br>
-- [https://github.com/cloud-barista/cb-tumblebug](https://github.com/cloud-barista/cb-tumblebug) README 참고하여 설치 및 실행 (검증된 버전 : cb-tumblebug v0.3.0)
-- [https://github.com/cloud-barista/cb-spider](https://github.com/cloud-barista/cb-spider) README 참고하여 설치 및 실행 (검증된 버전 : cb-spider v0.3.0)
-- [https://github.com/cloud-barista/cb-dragonfly](https://github.com/cloud-barista/cb-dragonfly) README 참고하여 설치 및 실행 (검증된 버전 : cb-dragonfly v0.3.0)
+- [https://github.com/cloud-barista/cb-tumblebug](https://github.com/cloud-barista/cb-tumblebug) README 참고하여 설치 및 실행 (검증된 버전 : cb-tumblebug v0.2.9)
+- [https://github.com/cloud-barista/cb-spider](https://github.com/cloud-barista/cb-spider) README 참고하여 설치 및 실행 (검증된 버전 : cb-spider v0.2.8)
+- [https://github.com/cloud-barista/cb-dragonfly](https://github.com/cloud-barista/cb-dragonfly) README 참고하여 설치 및 실행 (검증된 버전 : cb-dragonfly v0.2.8)
 
 <br>
 
@@ -40,11 +40,12 @@ cb-webtool은 내부적으로 cb-tumblebug & cb-spider & cb-dragonfly의 개방�
   - `$ sudo apt update`
   - `$ sudo apt install git`
 
-- Go 1.15 이상의 버전 설치<br>
-  go mod 기반의 설치로 바뀌면서 Go 1.15 이상의 버전이 필요합니다.<br>
-  2020년 12월 기준으로 apt install golang으로는 구 버전이 설치되기 때문에 https://golang.org/doc/install 사이트에서 1.15 이상의 버전을 직접 설치해야 합니다.<br>
-  - `$ wget https://golang.org/dl/go1.15.4.linux-amd64.tar.gz`
-  - `$ sudo tar -C /usr/local -xzf go1.15.4.linux-amd64.tar.gz`
+- Go 1.16 이상의 버전 설치<br>
+  go mod 기반의 설치로 바뀌면서 Go 1.16 이상의 버전이 필요합니다.<br>
+
+  2021년 6월 기준으로 apt install golang으로는 구 버전이 설치되기 때문에 https://golang.org/doc/install 사이트에서 1.16 이상의 버전을 직접 설치해야 합니다.<br>
+  - `$ wget https://golang.org/dl/go1.16.4.linux-amd64.tar.gz`
+  - `$ sudo tar -C /usr/local -xzf go1.16.4.linux-amd64.tar.gz`
 
 - Go 환경 설정  
   - `$ echo "export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin" >> ~/.bashrc`
@@ -52,7 +53,7 @@ cb-webtool은 내부적으로 cb-tumblebug & cb-spider & cb-dragonfly의 개방�
   - `$ source ~/.bashrc`
   - `$ go version`
   ```
-      go version go1.15.4 linux/amd64
+      go version go1.16.4 linux/amd64
   ```
 
  - cb-webtool 설치

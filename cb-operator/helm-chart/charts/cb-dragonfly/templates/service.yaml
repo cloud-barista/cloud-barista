@@ -20,7 +20,7 @@ spec:
     - port: {{ .Values.service.grpcPort }}
       protocol: TCP
       name: grpc
-      targetPort: 50254
+      targetPort: 9999
 {{- if (and (eq .Values.service.type "NodePort") (not (empty .Values.service.grpcNodePort))) }}
       nodePort: {{ .Values.service.grpcNodePort }}
 {{- end }}

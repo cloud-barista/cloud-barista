@@ -37,7 +37,7 @@ func GetMCISRealtimeMonInfo(nsId string, mcisId string) (interface{}, error) {
 // GetMCISCommonMonInfos ...
 func GetMCISCommonMonInfo(nsId string, mcisId string, vmId string, agentIp string, metricName string) (*CBMCISMetric, int, error) {
 	// MCIS Get 요청 API 생성
-	resp, err := http.Get(fmt.Sprintf("http://%s:8080/cb-dragonfly/mcis/metric/%s", agentIp, metricName))
+	resp, err := http.Get(fmt.Sprintf("http://%s:%d/cb-dragonfly/mcis/metric/%s", agentIp, AgentPort, metricName))
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.New("agent server is closed")
 	}
@@ -45,6 +45,13 @@ func GetMCISCommonMonInfo(nsId string, mcisId string, vmId string, agentIp strin
 
 	var metricData CBMCISMetric
 	body, err := ioutil.ReadAll(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		var errmsg map[string]interface{}
+		json.Unmarshal(body, &errmsg)
+		return nil, resp.StatusCode, errors.New(errmsg["message"].(string))
+	}
+
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
@@ -62,7 +69,7 @@ func GetMCISMonRTTInfo(nsId string, mcisId string, vmId string, agentIp string, 
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
-	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:8080/cb-dragonfly/mcis/metric/%s", agentIp, Rtt), bytes.NewBuffer(payload))
+	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/cb-dragonfly/mcis/metric/%s", agentIp, AgentPort, Rtt), bytes.NewBuffer(payload))
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
@@ -77,6 +84,13 @@ func GetMCISMonRTTInfo(nsId string, mcisId string, vmId string, agentIp string, 
 
 	var metricData CBMCISMetric
 	body, err := ioutil.ReadAll(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		var errmsg map[string]interface{}
+		json.Unmarshal(body, &errmsg)
+		return nil, resp.StatusCode, errors.New(errmsg["message"].(string))
+	}
+
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
@@ -94,7 +108,7 @@ func GetMCISMonMRTTInfo(nsId string, mcisId string, vmId string, agentIp string,
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
-	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:8080/cb-dragonfly/mcis/metric/%s", agentIp, Mrtt), bytes.NewBuffer(payload))
+	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/cb-dragonfly/mcis/metric/%s", agentIp, AgentPort, Mrtt), bytes.NewBuffer(payload))
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
@@ -112,6 +126,13 @@ func GetMCISMonMRTTInfo(nsId string, mcisId string, vmId string, agentIp string,
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
+
+	if resp.StatusCode != http.StatusOK {
+		var errmsg map[string]interface{}
+		json.Unmarshal(body, &errmsg)
+		return nil, resp.StatusCode, errors.New(errmsg["message"].(string))
+	}
+
 	err = json.Unmarshal(body, &metricData)
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
@@ -134,7 +155,7 @@ func (mc *MCISMetric) GetMCISMonMRTTInfo(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, err)
 	}
 
-	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:8080/cb-dragonfly/mcis/metric/%s", mc.parameter.agent_ip, mc.parameter.mcis_metric), bytes.NewBuffer(payload))
+	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/cb-dragonfly/mcis/metric/%s", mc.parameter.agent_ip, AgentPort, mc.parameter.mcis_metric), bytes.NewBuffer(payload))
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err)
 	}

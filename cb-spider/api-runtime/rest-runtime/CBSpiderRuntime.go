@@ -9,11 +9,13 @@
 package restruntime
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"time"
 
-	"os"
 	"net/http"
+	"os"
+
 	"github.com/chyeh/pubip"
 
 	cr "github.com/cloud-barista/cb-spider/api-runtime/common-runtime"
@@ -22,11 +24,31 @@ import (
 	"github.com/sirupsen/logrus"
 
 	// REST API (echo)
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+
+	// echo-swagger middleware
+	_ "github.com/cloud-barista/cb-spider/api-runtime/rest-runtime/docs"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 var cblog *logrus.Logger
+
+// @title CB-Spider REST API
+// @version latest
+// @description CB-Spider REST API
+
+// @contact.name API Support
+// @contact.url http://cloud-barista.github.io
+// @contact.email contact-to-cloud-barista@googlegroups.com
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:1024
+// @BasePath /spider
+
+// @securityDefinitions.basic BasicAuth
 
 func init() {
 	cblog = config.Cblogger
@@ -35,9 +57,10 @@ func init() {
 	cr.MiddleStartTime = currentTime.Format("2006.01.02.15:04:05")
 	cr.ShortStartTime = fmt.Sprintf("T%02d:%02d:%02d", currentTime.Hour(), currentTime.Minute(), currentTime.Second())
 	cr.HostIPorName = getHostIPorName()
+	cr.ServicePort = ":1024"
 }
 
-// REST API Return struct for boolena type
+// REST API Return struct for boolean type
 type BooleanInfo struct {
 	Result string // true or false
 }
@@ -52,9 +75,20 @@ type route struct {
 	function     echo.HandlerFunc
 }
 
+// JSON Simple message struct
+type SimpleMsg struct {
+	Message string `json:"message" example:"Any message"`
+}
+
 func getHostIPorName() string {
-	if os.Getenv("LOCALHOST") ==  "ON" {
+	if os.Getenv("LOCALHOST") == "ON" {
 		return "localhost"
+	}
+
+	// temporary trick for shared public IP Host or VirtualBox VM, etc.
+	// user can setup spider server's IP manually.
+	if os.Getenv("LOCALHOST") != "OFF" {
+		return os.Getenv("LOCALHOST")
 	}
 
 	ip, err := pubip.Get()
@@ -77,6 +111,12 @@ func RunServer() {
 		//----------root
 		{"GET", "", aw.SpiderInfo},
 		{"GET", "/", aw.SpiderInfo},
+
+		//----------Swagger
+		{"GET", "/swagger/*", echoSwagger.WrapHandler},
+
+		//----------EndpointInfo
+		{"GET", "/endpointinfo", endpointInfo},
 
 		//----------CloudOS
 		{"GET", "/cloudos", listCloudOS},
@@ -124,6 +164,10 @@ func RunServer() {
 		{"GET", "/vpc", listVPC},
 		{"GET", "/vpc/:Name", getVPC},
 		{"DELETE", "/vpc/:Name", deleteVPC},
+		//-- for subnet
+		{"POST", "/vpc/:VPCName/subnet", addSubnet},
+		{"DELETE", "/vpc/:VPCName/subnet/:SubnetName", removeSubnet},
+		{"DELETE", "/vpc/:VPCName/cspsubnet/:Id", removeCSPSubnet},
 		//-- for management
 		{"GET", "/allvpc", listAllVPC},
 		{"DELETE", "/cspvpc/:Id", deleteCSPVPC},
@@ -194,13 +238,10 @@ func RunServer() {
 		{"GET", "/adminweb/vm/:ConnectConfig", aw.VM},
 		{"GET", "/adminweb/vmmgmt/:ConnectConfig", aw.VMMgmt},
 
-		{"GET", "/adminweb/vmimage/:ConnectConfig", aw.VMImage},		
+		{"GET", "/adminweb/vmimage/:ConnectConfig", aw.VMImage},
 		{"GET", "/adminweb/vmspec/:ConnectConfig", aw.VMSpec},
 	}
 	//======================================= setup routes
-
-	// rest's service port, now fixed.
-	cr.ServicePort = ":1024"
 
 	// Run API Server
 	ApiServer(routes)
@@ -215,6 +256,23 @@ func ApiServer(routes []route) {
 	e.Use(middleware.CORS())
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+
+	API_USERNAME := os.Getenv("API_USERNAME")
+	API_PASSWORD := os.Getenv("API_PASSWORD")
+
+	if API_USERNAME != "" && API_PASSWORD != "" {
+		cblog.Info("**** Rest Auth Enabled ****")
+		e.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+			// Be careful to use constant time comparison to prevent timing attacks
+			if subtle.ConstantTimeCompare([]byte(username), []byte(API_USERNAME)) == 1 &&
+				subtle.ConstantTimeCompare([]byte(password), []byte(API_PASSWORD)) == 1 {
+				return true, nil
+			}
+			return false, nil
+		}))
+	} else {
+		cblog.Info("**** Rest Auth Disabled ****")
+	}
 
 	for _, route := range routes {
 		// /driver => /spider/driver
@@ -234,7 +292,7 @@ func ApiServer(routes []route) {
 
 	// for spider logo
 	cbspiderRoot := os.Getenv("CBSPIDER_ROOT")
-	e.File("/spider/adminweb/images/logo.png", cbspiderRoot + "/api-runtime/rest-runtime/admin-web/images/cb-spider-circle-logo.png")
+	e.File("/spider/adminweb/images/logo.png", cbspiderRoot+"/api-runtime/rest-runtime/admin-web/images/cb-spider-circle-logo.png")
 
 	e.HideBanner = true
 	e.HidePort = true
@@ -246,20 +304,41 @@ func ApiServer(routes []route) {
 
 //================ API Info
 func apiInfo(c echo.Context) error {
-        cblog.Info("call apiInfo()")
+	cblog.Info("call apiInfo()")
 
-	apiInfo :=  "api info"
+	apiInfo := "api info"
 	return c.String(http.StatusOK, apiInfo)
 }
 
-func spiderBanner(){
+//================ Endpoint Info
+func endpointInfo(c echo.Context) error {
+	cblog.Info("call endpointInfo()")
+
+	endpointInfo := fmt.Sprintf("\n  <CB-Spider> Multi-Cloud Infrastructure Federation Framework\n")
+	adminWebURL := "http://" + cr.HostIPorName + cr.ServicePort + "/spider/adminweb"
+	endpointInfo += fmt.Sprintf("     - AdminWeb: %s\n", adminWebURL)
+	restEndPoint := "http://" + cr.HostIPorName + cr.ServicePort + "/spider"
+	endpointInfo += fmt.Sprintf("     - REST API: %s\n", restEndPoint)
+	// swaggerURL := "http://" + cr.HostIPorName + cr.ServicePort + "/spider/swagger/index.html"
+	// endpointInfo += fmt.Sprintf("     - Swagger : %s\n", swaggerURL)
+	gRPCServer := "grpc://" + cr.HostIPorName + cr.GoServicePort
+	endpointInfo += fmt.Sprintf("     - Go   API: %s\n", gRPCServer)
+
+	return c.String(http.StatusOK, endpointInfo)
+}
+
+func spiderBanner() {
 	fmt.Println("\n  <CB-Spider> Multi-Cloud Infrastructure Federation Framework")
 
-	// AdminWeb 
-        adminWebURL := "http://" + cr.HostIPorName + cr.ServicePort + "/spider/adminweb"
-        fmt.Printf("     - AdminWeb: %s\n", adminWebURL)
+	// AdminWeb
+	adminWebURL := "http://" + cr.HostIPorName + cr.ServicePort + "/spider/adminweb"
+	fmt.Printf("     - AdminWeb: %s\n", adminWebURL)
 
-	// REST API EndPoint 
-        restEndPoint := "http://" + cr.HostIPorName + cr.ServicePort + "/spider"
-        fmt.Printf("     - REST API: %s\n", restEndPoint)
+	// REST API EndPoint
+	restEndPoint := "http://" + cr.HostIPorName + cr.ServicePort + "/spider"
+	fmt.Printf("     - REST API: %s\n", restEndPoint)
+
+	// Swagger
+	// swaggerURL := "http://" + cr.HostIPorName + cr.ServicePort + "/spider/swagger/index.html"
+	// fmt.Printf("     - Swagger : %s\n", swaggerURL)
 }

@@ -1,0 +1,441 @@
+{{template "Top" .}}
+{{template "LNB" .}}
+{{template "Header" .}}
+{{template "Modal" .}}
+				
+				<!-- contents -->
+				<div class="contbox">
+					
+					<div class="titlebox">
+						<div class="tit"><img src="/assets/img/common/icon_cont.png" alt=""/>Dashboard / <strong>Global</strong></div>
+						<div class="location">Home  <span>></span>  Operation  <span>></span>  Dashboard  <span>></span>  <strong>Global</strong></div>
+					</div>
+					
+					<div class="dashboard">
+						
+						<div class="d_box box_1">
+							<div class="titbox">
+								<div class="tit"><strong>Mcis</strong> <span>/</span> server</div>
+								<div class="state color_b"></div>
+							</div>
+							
+							<div class="box_cont">
+								<div class="lbox" id="dash_1">
+									<strong>8</strong> <span>/</span> 20 <span>/</span> 6
+								</div>
+								<div class="rbox">
+									<div class="numbox">
+										<div class="num bgbox_b cursor" onclick="location.href='../operation/Manage_Mcis.html'"><span id="run_cnt">5</span></div>
+										<div class="num bgbox_g cursor" onclick="location.href='../operation/Manage_Mcis.html'"><span id="stop_cnt">2</span></div>
+									</div>
+									<div class="txt">Status of Infra Service</div>
+								</div>
+							</div>
+							
+						</div>
+						
+						<div class="d_box box_2">
+							<div class="titbox">
+								<div class="tit"><strong>NS</strong></div>
+								<div class="state color_b"></div>
+							</div>
+							
+							<div class="num_txt"><span class="cursor" onclick="location.href='/NameSpace/NS/list'">{{ .nsCnt}}</span></div>
+							
+						</div>
+						
+						<div class="d_box box_3">
+							<div class="titbox">
+								<div class="tit"><strong>CP</strong> <span>/</span> connection</div>
+								<div class="state color_r"></div>
+							</div>
+							
+							<div class="box_cont">
+								<div class="lbox">
+									<strong>7</strong> <span>/</span> 8
+								</div>
+								<div class="cbox">
+									<div class="tcbox">
+										<div class="sc_box scrollbar-inner">
+											<ul>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>AWS(3)</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>AZ(2)</span></a></li>
+												<li class="bg_r"><a href="../operation/Manage_Mcis.html"><span>ALI</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>GCP</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>AWS(3)</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>AZ(2)</span></a></li>
+												<li class="bg_r"><a href="../operation/Manage_Mcis.html"><span>ALI</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>GCP</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>AWS(3)</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>AZ(2)</span></a></li>
+												<li class="bg_r"><a href="../operation/Manage_Mcis.html"><span>ALI</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>GCP</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>AWS(3)</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>AWS(3)</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>AZ(2)</span></a></li>
+												<li class="bg_r"><a href="../operation/Manage_Mcis.html"><span>ALI</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>GCP</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>AWS(3)</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>AZ(2)</span></a></li>
+												<li class="bg_r"><a href="../operation/Manage_Mcis.html"><span>ALI</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>GCP</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>AWS(3)</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>AZ(2)</span></a></li>
+												<li class="bg_r"><a href="../operation/Manage_Mcis.html"><span>ALI</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>GCP</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>AWS(3)</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>AZ(2)</span></a></li>
+												<li class="bg_r"><a href="../operation/Manage_Mcis.html"><span>ALI</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>GCP</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>AWS(3)</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>AZ(2)</span></a></li>
+												<li class="bg_r"><a href="../operation/Manage_Mcis.html"><span>ALI</span></a></li>
+												<li class="bg_b"><a href="../operation/Manage_Mcis.html"><span>GCP</span></a></li>
+												<li class="bg_y"><a href="../operation/Manage_Mcis.html"><span>CLIT</span></a></li>
+												<li class="bg_g"><a href="../operation/Manage_Mcis.html"><span>OPS</span></a></li>
+												<li class="bg_n"><span></span></li>
+												<li class="bg_n"><span></span></li>
+											</ul>
+										</div>
+									</div>
+									<div class="txt">Status of Infra Service</div>
+								</div>
+							</div>
+							
+						</div>
+						
+					</div>
+					<script>
+						$(function() {
+							jQuery('.sc_box.scrollbar-inner').scrollbar();
+						});
+					</script>
+					
+					<div class="dashboard dashboard_cont">
+						
+						<div class="d_box box_b1 box_w100">
+							<div class="titbox">
+								<div class="tit initial"><strong>Service List for Total</strong></div>
+								<div class="top_info">
+									<ul>
+										<li>
+											<a href="javascript:void(0);">Filter</a>
+											<div class="infobox">
+												<div class="box">
+													<p>NS name</p>
+													<ul>
+														<li><a href="javascript:void(0);">name</a></li>
+														<li><a href="javascript:void(0);">status</a></li>
+														<li><a href="javascript:void(0);">Description</a></li>
+														<li><a href="javascript:void(0);">Server name</a></li>
+													</ul>
+												</div>
+											</div>
+										</li>
+										<li>
+											<a href="javascript:void(0);">Sort</a>
+											<div class="infobox">
+												<div class="box">
+													<ul>
+														<li><a href="javascript:void(0);">name</a></li>
+														<li><a href="javascript:void(0);">status</a></li>
+													</ul>
+												</div>
+											</div>
+										</li>
+										<li>
+											<a href="javascript:void(0);">Action</a>
+											<div class="infobox">
+												<div class="box">
+													<ul>
+														<li>
+															<strong>Life Cycle</strong>
+															<ul>
+																<li><a href="javascript:void(0);" data-toggle="modal" data-target="#Life_Start">Start</a></li>
+																<li><a href="javascript:void(0);" data-toggle="modal" data-target="#Life_Suspend">Suspend</a></li>
+																<li><a href="javascript:void(0);" data-toggle="modal" data-target="#Life_Resume">Resume</a></li>
+																<li><a href="javascript:void(0);">Reboot</a></li>
+																<li><a href="javascript:void(0);">Terminate</a></li>
+															</ul>
+														</li>
+														<li class="divider"></li>
+														<li>
+															<strong>Manage</strong>
+															<ul>
+																<li><a href="javascript:void(0);" data-toggle="modal" data-target="#n_Manage">Manage</a></li>
+																<li><a href="javascript:void(0);" data-toggle="modal" data-target="#n_New">New</a></li>
+															</ul>
+														</li>
+													</ul>
+												</div>
+											</div>
+										</li>
+										<li><a href="javascript:void(0);"><img src="../img/common/icon_question.png" alt=""/></a></li>
+									</ul>
+								</div>
+							</div>	
+	
+							<!-- popup Start -->
+							<div class="modal fade layerpopup" id="Life_Start" tabindex="-1" role="dialog" aria-hidden="true">
+								<div class="modal-dialog" role="document">
+									<div class="modal-content">
+										
+										<div class="modal-body">
+											<div class="txt">Would you like to start MCIS ?</div>
+											<div class="btnbox">
+												<button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+												<button type="button" class="btn_ok" data-dismiss="modal">OK</button>
+											</div>
+										</div>
+										
+									</div>
+								</div>
+							</div>
+							<!-- //popup Start -->	
+	
+							<!-- popup Suspend -->
+							<div class="modal fade layerpopup" id="Life_Suspend" tabindex="-1" role="dialog" aria-hidden="true">
+								<div class="modal-dialog" role="document">
+									<div class="modal-content">
+										
+										<div class="modal-body">
+											<div class="txt">Would you like to suspend MCIS ?</div>
+											<div class="btnbox">
+												<button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+												<button type="button" class="btn_ok" data-dismiss="modal">OK</button>
+											</div>
+										</div>
+										
+									</div>
+								</div>
+							</div>
+							<!-- //popup Suspend -->
+	
+							<!-- popup Resume -->
+							<div class="modal fade layerpopup" id="Life_Resume" tabindex="-1" role="dialog" aria-hidden="true">
+								<div class="modal-dialog" role="document">
+									<div class="modal-content">
+										
+										<div class="modal-body">
+											<div class="txt">Would you like to resume MCIS ?</div>
+											<div class="btnbox">
+												<button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+												<button type="button" class="btn_ok" data-dismiss="modal">OK</button>
+											</div>
+										</div>
+										
+									</div>
+								</div>
+							</div>
+							<!-- //popup Resume -->
+	
+							<!-- popup Manage -->
+							<div class="modal fade layerpopup" id="n_Manage" tabindex="-1" role="dialog" aria-hidden="true">
+								<div class="modal-dialog" role="document">
+									<div class="modal-content">
+										
+										<div class="modal-body">
+											<div class="txt">Would you like to manage MCIS ?</div>
+											<div class="btnbox">
+												<button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+												<button type="button" class="btn_ok" data-dismiss="modal">OK</button>
+											</div>
+										</div>
+										
+									</div>
+								</div>
+							</div>
+							<!-- //popup Manage -->
+	
+							<!-- popup New -->
+							<div class="modal fade layerpopup" id="n_New" tabindex="-1" role="dialog" aria-hidden="true">
+								<div class="modal-dialog" role="document">
+									<div class="modal-content">
+										
+										<div class="modal-body">
+											<div class="txt">Would you like to create MCIS ?</div>
+											<div class="btnbox">
+												<button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+												<button type="button" class="btn_ok" data-dismiss="modal">OK</button>
+											</div>
+										</div>
+										
+									</div>
+								</div>
+							</div>
+							<!-- //popup New -->
+							
+							
+							<div class="ds_cont">
+								
+								<div class="s_list">
+									
+									<div class="stitle"><strong>NS1</strong> <span class="bar">I</span>  Name Space descriptions</div>
+								
+									<div class="areabox dbinfo cursor active" ondblclick="location.href='../operation/Manage_Mcis.html'">
+										<div class="box">
+											
+											<div class="top">
+												<div class="txtbox">
+													<div class="tit">MCIS-t01</div>
+													<div class="txt"><span class="bgbox_b"></span>Available 01</div>
+												</div>
+												<div class="state color_b"></div>
+											</div>
+											
+											<div class="numbox">infra <strong class="color_b">10</strong> <span class="line">(</span> <span class="num color_b">7</span> <span class="line">/</span> <span class="num color_g">1</span> <span class="line">/</span> <span class="num color_y">2</span> <span class="line">/</span> <span class="num color_r">1</span><span class="line">)</span></div>
+											
+											<div class="numinfo">
+												<div class="num">server (8)</div>
+												<div class="num">container (2)</div>
+											</div>
+											
+											<div class="shotbox">
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>1</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>2</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>3</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>4</span></a></div>
+												<div class="shot bgbox_y"><a href="javascript:void(0);"><span>5</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>6</span></a></div>
+												<div class="shot bgbox_y"><a href="javascript:void(0);"><span>7</span></a></div>
+												<div class="shot bgbox_g"><a href="javascript:void(0);"><span>8</span></a></div>
+												<div class="shot bgbox_r"><a href="javascript:void(0);"><span>9</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>10</span></a></div>
+											</div>
+											
+										</div>
+										
+									</div>
+									
+									<div class="areabox dbinfo cursor" ondblclick="location.href='../operation/Manage_Mcis.html'">
+										<div class="box">
+											
+											<div class="top">
+												<div class="txtbox">
+													<div class="tit">MCIS-t01</div>
+													<div class="txt"><span class="bgbox_b"></span>Available 01</div>
+												</div>
+												<div class="state color_b"></div>
+											</div>
+											
+											<div class="numbox">infra <strong class="color_b">9</strong> <span class="line">(</span> <span class="num color_b">7</span> <span class="line">/</span> <span class="num color_g">1</span> <span class="line">/</span> <span class="num color_y">1</span><span class="line">)</span></div>
+											
+											<div class="numinfo">
+												<div class="num">server (8)</div>
+												<div class="num">container (1)</div>
+											</div>
+											
+											<div class="shotbox">
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>1</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>2</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>3</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>4</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>5</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>6</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>7</span></a></div>
+												<div class="shot bgbox_g"><a href="javascript:void(0);"><span>8</span></a></div>
+												<div class="shot bgbox_y"><a href="javascript:void(0);"><span>9</span></a></div>
+											</div>
+											
+										</div>
+										
+									</div>
+									
+									<div class="areabox">
+										<div class="box">
+											<a href="../operation/Manage_Create_Mcis.html" class="btn_add"><span>+</span></a>
+										</div>
+										
+									</div>
+								
+									<div class="stitle"><strong>NS2</strong> <span class="bar">I</span>  Name Space descriptions</div>
+								
+									<div class="areabox dbinfo cursor" ondblclick="location.href='../operation/Manage_Mcis.html'">
+										<div class="box">
+											
+											<div class="top">
+												<div class="txtbox">
+													<div class="tit">MCIS-t01</div>
+													<div class="txt"><span class="bgbox_b"></span>Available 01</div>
+												</div>
+												<div class="state color_b"></div>
+											</div>
+											
+											<div class="numbox">infra <strong class="color_b">10</strong> <span class="line">(</span> <span class="num color_b">7</span> <span class="line">/</span> <span class="num color_g">1</span> <span class="line">/</span> <span class="num color_y">2</span> <span class="line">/</span> <span class="num color_r">1</span><span class="line">)</span></div>
+											
+											<div class="numinfo">
+												<div class="num">server (8)</div>
+												<div class="num">container (2)</div>
+											</div>
+											
+											<div class="shotbox">
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>1</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>2</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>3</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>4</span></a></div>
+												<div class="shot bgbox_y"><a href="javascript:void(0);"><span>5</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>6</span></a></div>
+												<div class="shot bgbox_y"><a href="javascript:void(0);"><span>7</span></a></div>
+												<div class="shot bgbox_g"><a href="javascript:void(0);"><span>8</span></a></div>
+												<div class="shot bgbox_r"><a href="javascript:void(0);"><span>9</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>10</span></a></div>
+											</div>
+											
+										</div>
+										
+									</div>
+								
+									<div class="areabox dbinfo cursor" ondblclick="location.href='../operation/Manage_Mcis.html'">
+										<div class="box">
+											
+											<div class="top">
+												<div class="txtbox">
+													<div class="tit">MCIS-t01</div>
+													<div class="txt"><span class="bgbox_b"></span>Available 01</div>
+												</div>
+												<div class="state color_b"></div>
+											</div>
+											
+											<div class="numbox">infra <strong class="color_b">9</strong> <span class="line">(</span> <span class="num color_b">7</span> <span class="line">/</span> <span class="num color_g">1</span> <span class="line">/</span> <span class="num color_y">1</span><span class="line">)</span></div>
+											
+											<div class="numinfo">
+												<div class="num">server (8)</div>
+												<div class="num">container (1)</div>
+											</div>
+											
+											<div class="shotbox">
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>1</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>2</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>3</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>4</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>5</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>6</span></a></div>
+												<div class="shot bgbox_b"><a href="javascript:void(0);"><span>7</span></a></div>
+												<div class="shot bgbox_g"><a href="javascript:void(0);"><span>8</span></a></div>
+												<div class="shot bgbox_y"><a href="javascript:void(0);"><span>9</span></a></div>
+											</div>
+											
+										</div>
+										
+									</div>
+									
+									<div class="areabox">
+										<div class="box">
+											<a href="../operation/Manage_Create_Mcis.html" class="btn_add"><span>+</span></a>
+										</div>
+										
+									</div>
+									
+								</div>
+								
+							</div>
+							
+						</div>
+						
+					</div>
+					
+					
+				</div>
+				<!-- //contents -->
+
+{{template "Footer" .}}			

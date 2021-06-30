@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/astaxie/beego/validation"
-	"github.com/cloud-barista/cb-ladybug/src/utils/config"
-	"github.com/go-resty/resty/v2"
+	"github.com/cloud-barista/cb-ladybug/src/core/model"
+	logger "github.com/sirupsen/logrus"
 )
 
 type Image struct {
@@ -32,73 +31,33 @@ func NewImage(ns string, name string, conf string) *Image {
 	}
 }
 
-func (image *Image) GET() (bool, error) {
-	// validation
-	if err := image.validate(validation.Validation{}); err != nil {
-		return false, err
-	}
+func (self *Image) GET() (bool, error) {
 
-	conf := config.Config
-	resp, err := resty.New().R().
-		SetBasicAuth(conf.Username, conf.Password).
-		SetBody(fmt.Sprintf(`{"connectionName" : "%s"}`, image.Config)).
-		SetResult(&image).
-		Get(conf.TumblebugUrl + fmt.Sprintf("/ns/%s/resources/image/%s", image.namespace, image.Name))
-
-	if e := image.response(resp, err); e != nil {
-		return false, e
-	}
-	if resp.StatusCode() == http.StatusNotFound {
-		return false, nil
-	}
-
-	return true, nil
+	return self.execute(http.MethodGet, fmt.Sprintf("/ns/%s/resources/image/%s", self.namespace, self.Name), fmt.Sprintf(`{"connectionName" : "%s"}`, self.Config), &self)
 }
 
-func (image *Image) POST() error {
-	// validation
-	if err := image.validate(validation.Validation{}); err != nil {
+func (self *Image) POST() error {
+
+	_, err := self.execute(http.MethodPost, fmt.Sprintf("/ns/%s/resources/image?action=registerWithInfo", self.namespace), self, &self)
+	if err != nil {
 		return err
 	}
-
-	conf := config.Config
-	resp, err := resty.New().R().
-		SetBasicAuth(conf.Username, conf.Password).
-		SetBody(image).
-		SetResult(&image).
-		Post(conf.TumblebugUrl + fmt.Sprintf("/ns/%s/resources/image?action=registerWithInfo", image.namespace))
-
-	if e := image.response(resp, err); e != nil {
-		return e
-	}
-
 	return nil
 }
 
-func (image *Image) DELETE(ns string) error {
-	// validation
-	if err := image.validate(validation.Validation{}); err != nil {
-		return err
-	}
+func (self *Image) DELETE(ns string) error {
 
-	exist, err := image.GET()
+	exist, err := self.GET()
 	if err != nil {
 		return err
 	}
 	if exist {
-		conf := config.Config
-		resp, err := resty.New().R().
-			SetBasicAuth(conf.Username, conf.Password).
-			SetBody(fmt.Sprintf(`{"connectionName" : "%s"}`, image.Config)).
-			SetResult(TumblebugResult{}).
-			Delete(conf.TumblebugUrl + fmt.Sprintf("/ns/%s/resources/image/%s", image.namespace, image.Name))
-
-		if e := image.response(resp, err); e != nil {
-			return e
+		_, err := self.execute(http.MethodDelete, fmt.Sprintf("/ns/%s/resources/image/%s", self.namespace, self.Name), fmt.Sprintf(`{"connectionName" : "%s"}`, self.Config), model.Status{})
+		if err != nil {
+			return err
 		}
-
 	} else {
-		fmt.Println(fmt.Sprintf("delete image skip (name=%s, cause=not found)", image.Name))
+		logger.Infof("delete image skip (name=%s, cause=not found)", self.Name)
 	}
 	return nil
 }

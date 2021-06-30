@@ -2,8 +2,8 @@
 # -----------------------------------------------------------------
 # usage
 if [ "$#" -lt 1 ]; then 
-	echo "cluster-delete.sh [GCP/AWS] <clsuter name>"
-	echo "    ./cluster-delete.sh GCP cb-cluster"
+	echo "./cluster-delete.sh <namespace> <clsuter name>"
+	echo "./cluster-delete.sh cb-ladybug-ns cb-cluster"
 	exit 0; 
 fi
 
@@ -17,40 +17,30 @@ c_CT="Content-Type: application/json"
 # -----------------------------------------------------------------
 # parameter
 
-# 1. CSP
-if [ "$#" -gt 0 ]; then v_CSP="$1"; else	v_CSP="${CSP}"; fi
-if [ "${v_CSP}" == "" ]; then 
-	read -e -p "Cloud ? [AWS(default) or GCP] : "  v_CSP
+# 1. namespace
+if [ "$#" -gt 0 ]; then v_NAMESPACE="$1"; else	v_NAMESPACE="${NAMESPACE}"; fi
+if [ "${v_NAMESPACE}" == "" ]; then 
+	read -e -p "Namespace ? : " v_NAMESPACE
 fi
-if [ "${v_CSP}" == "" ]; then v_CSP="AWS"; fi
-if [ "${v_CSP}" != "GCP" ] && [ "${v_CSP}" != "AWS" ]; then echo "[ERROR] missing <cloud>"; exit -1;fi
-
-# PREFIX
-if [ "${v_CSP}" == "GCP" ]; then 
-	v_PREFIX="cb-gcp"
-else
-	v_PREFIX="cb-aws"
-fi
+if [ "${v_NAMESPACE}" == "" ]; then echo "[ERROR] missing <namespace>"; exit -1; fi
 
 # 2. Cluster Name
-if [ "$#" -gt 1 ]; then v_CLUSTER_NAME="$2"; else	v_METHOD="${CLUSTER_NAME}"; fi
+if [ "$#" -gt 1 ]; then v_CLUSTER_NAME="$2"; else	v_CLUSTER_NAME="${CLUSTER_NAME}"; fi
 if [ "${v_CLUSTER_NAME}" == "" ]; then 
 	read -e -p "Cluster name  ? : "  v_CLUSTER_NAME
 fi
 if [ "${v_CLUSTER_NAME}" == "" ]; then echo "[ERROR] missing <cluster name>"; exit -1; fi
 
 
-NM_NAMESPACE="${v_PREFIX}-namespace"
-c_URL_LADYBUG_NS="${c_URL_LADYBUG}/ns/${NM_NAMESPACE}"
+c_URL_LADYBUG_NS="${c_URL_LADYBUG}/ns/${v_NAMESPACE}"
 
 
 # ------------------------------------------------------------------------------
 # print info.
 echo ""
 echo "[INFO]"
-echo "- Prefix                     is '${v_PREFIX}'"
-echo "- Cuseter name               is '${v_CLUSTER_NAME}'"
-echo "- Namespace                  is '${NM_NAMESPACE}'"
+echo "- Namespace                  is '${v_NAMESPACE}'"
+echo "- Cluster name               is '${v_CLUSTER_NAME}'"
 
 
 # ------------------------------------------------------------------------------

@@ -1,5 +1,47 @@
+# v0.4.0-CafeMocha (2021.06.30.)
 
-# v0.3.0-espresso (Staging 2020.12.03.)
+### API Change 
+Ref) [API ChangeLog](https://github.com/cloud-barista/cb-tumblebug/discussions/416)
+
+- Add VMGroup parameter in create MCIS API
+- Add Private IP parameter in get MCIS status API
+- Add MCIS Refine option in MCIS action (get) API
+- Add verifiedUserName parameter in get spec API
+- Add API for ListResourceId, ListMcisId, ListVmId 
+- Add TB object control API
+- Add inspectResources API
+- Change API style: snakeCase to camelCase
+
+
+### Feature
+Ref) [Supported cloud service providers](https://github.com/cloud-barista/cb-tumblebug/discussions/429)
+
+- Add VM group feature to request multiple VMs simply [#413](https://github.com/cloud-barista/cb-tumblebug/pull/413)
+- Provide SystemMessage to vm status object [#475](https://github.com/cloud-barista/cb-tumblebug/pull/475)
+- Enhance and expedite mcis lifecycle handling [#625](https://github.com/cloud-barista/cb-tumblebug/pull/625)
+- Add MCIS Refine feature [#572](https://github.com/cloud-barista/cb-tumblebug/pull/572)
+- Add feature for general TB object retrieve [#417](https://github.com/cloud-barista/cb-tumblebug/pull/417)
+- Add initial code for mcis and vm plan with location-based algo [#511](https://github.com/cloud-barista/cb-tumblebug/pull/511)
+- Add inspectVMs function [#505](https://github.com/cloud-barista/cb-tumblebug/pull/505)
+- Expedite auto agent installation [#448](https://github.com/cloud-barista/cb-tumblebug/pull/448)
+- Enhance ssh username verification performance [#423](https://github.com/cloud-barista/cb-tumblebug/pull/423) 
+- Add WeaveScope deployment script [#419](https://github.com/cloud-barista/cb-tumblebug/pull/419)
+- Add jitsi video conference automation [#476](https://github.com/cloud-barista/cb-tumblebug/pull/476)
+- Add script for deploying web game server [#609](https://github.com/cloud-barista/cb-tumblebug/pull/609)
+
+### Bug Fix
+- Enhance error handing for provisioning and cmd phases [#435](https://github.com/cloud-barista/cb-tumblebug/pull/435)
+- Fix agent installation bug and script update [#437](https://github.com/cloud-barista/cb-tumblebug/pull/437)
+- Fix initial failed status in MCIS provisioning [#467](https://github.com/cloud-barista/cb-tumblebug/pull/467)
+- Fix list object key parsing bug [#607](https://github.com/cloud-barista/cb-tumblebug/pull/607)
+- Patch gRPC API [#536](https://github.com/cloud-barista/cb-tumblebug/pull/536)
+
+### Note
+- Default development environment: Go v1.16 
+
+***
+
+# v0.3.0-espresso (2020.12.03.)
 
 ### API Change
 - MCIS 자동 제어 기능 API 추가
@@ -17,7 +59,7 @@
 ### Bug Fix
 - MCIS 종료시 런타임 오류 수정
 
-
+***
 
 # v0.2.0-cappuccino (2020.06.02.)
 
@@ -39,7 +81,7 @@
 ### Bug Fix
 - MCIS 라이프사이클 오류 개선
 
-
+***
 
 # v0.1.0-americano (2019.12.23.)
 

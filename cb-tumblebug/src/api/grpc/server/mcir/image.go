@@ -97,6 +97,28 @@ func (s *MCIRService) ListImage(ctx context.Context, req *pb.ResourceAllQryReque
 	return resp, nil
 }
 
+// ListImageId
+func (s *MCIRService) ListImageId(ctx context.Context, req *pb.ResourceAllQryRequest) (*pb.ListIdResponse, error) {
+	logger := logger.NewLogger()
+
+	logger.Debug("calling MCIRService.ListImageId()")
+
+	resourceList, err := mcir.ListResourceId(req.NsId, req.ResourceType)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.ListImageId()")
+	}
+
+	// MCIR 객체에서 GRPC 메시지로 복사
+	var grpcObj []string
+	err = gc.CopySrcToDest(&resourceList, &grpcObj)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.ListImageId()")
+	}
+
+	resp := &pb.ListIdResponse{IdList: grpcObj}
+	return resp, nil
+}
+
 // GetImage - Image 조회
 func (s *MCIRService) GetImage(ctx context.Context, req *pb.ResourceQryRequest) (*pb.TbImageInfoResponse, error) {
 	logger := logger.NewLogger()
@@ -155,12 +177,45 @@ func (s *MCIRService) FetchImage(ctx context.Context, req *pb.FetchImageQryReque
 
 	logger.Debug("calling MCIRService.FetchImage()")
 
-	connConfigCount, ImageCount, err := mcir.FetchImages(req.NsId)
-	if err != nil {
-		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.FetchImage()")
+	var connConfigCount, imageCount uint
+	var err error
+
+	if req.ConnectionName == "!all" {
+		connConfigCount, imageCount, err = mcir.FetchImagesForAllConnConfigs(req.NsId)
+		if err != nil {
+			return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.FetchImage()")
+		}
+	} else {
+		connConfigCount = 1
+		imageCount, err = mcir.FetchImagesForConnConfig(req.ConnectionName, req.NsId)
+		if err != nil {
+			return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.FetchImage()")
+		}
 	}
 
-	resp := &pb.MessageResponse{Message: "Fetched " + fmt.Sprint(ImageCount) + " Images (from " + fmt.Sprint(connConfigCount) + " connConfigs)"}
+	resp := &pb.MessageResponse{Message: "Fetched " + fmt.Sprint(imageCount) + " images (from " + fmt.Sprint(connConfigCount) + " connConfigs)"}
+	return resp, nil
+}
+
+// SearchImage - Image 검색
+func (s *MCIRService) SearchImage(ctx context.Context, req *pb.SearchImageQryRequest) (*pb.ListTbImageInfoResponse, error) {
+	logger := logger.NewLogger()
+
+	logger.Debug("calling MCIRService.SearchImage()")
+
+	content, err := mcir.SearchImage(req.NsId, req.Keywords...)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.SearchImage()")
+	}
+
+	// MCIR 객체에서 GRPC 메시지로 복사
+	var grpcObj []*pb.TbImageInfo
+	err = gc.CopySrcToDest(&content, &grpcObj)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.SearchImage()")
+	}
+
+	resp := &pb.ListTbImageInfoResponse{Items: grpcObj}
 	return resp, nil
 }
 

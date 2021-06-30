@@ -1,0 +1,127 @@
+{{template "OperationTop" .}}
+<div id="lnb">
+			
+	<div class="bg"></div>
+		
+	<div class="m_box">
+		
+		{{template "TopBox" .}}
+
+		{{template "LNBPopup" .}}
+		
+        <!-- menu -->
+		{{template "MenuLeft" .}}
+		<!-- //menu -->	
+	</div>
+	
+	
+	<div class="bottom"></div>
+	<a href="javascript:;" id="m_close"></a>
+	
+</div>
+{{template "Header" .}}
+{{template "Modal" .}}
+				<script>
+			
+				</script>
+				<!-- contents -->
+				<div class="contbox">
+					
+					<input type="hidden" name="mcis_id"  value="{{ .McksID}}" id="mcis_id" />
+					
+					<div class="titlebox">
+						<div class="tit"><img src="/assets/img/common/icon_cont.png" />Manage / <strong>MCKS</strong></div>
+						<div class="location">Home  <span>></span>  Operation  <span>></span>  Manage  <span>></span>  <strong>MCKS</strong></div>
+					</div>
+						
+					
+					<!-- Node list -->
+					<div class="dashboard dashboard_cont">
+						
+						<div class="d_box box_m box_w100">
+							<div class="titbox line_none">
+								<div class="tit initial"><strong>Extend Nodes</strong> [ {{ .McksID }} / {{ .McksName }} ]</div>
+								
+								<div class="step_box">
+									<div class="on">STEP 1 <div class="bar"></div></div>
+									<div>STEP 2 <div class="bar"></div></div>
+									<div>STEP 3 <div class="bar"></div></div>
+								</div>
+
+							</div>
+							
+							
+							<div class="ds_cont">
+								
+								<div class="area_cont">
+
+									<div class="box">
+																				
+										<div class="create_box">
+											
+											<div class="create_top">
+											
+												
+												<!-- Nodes -->
+												<div class="servers_box">
+													<div class="title">Nodes</div>
+													
+													<div class="list">
+	
+														<ul id="node_list">
+															{{ $length := len .NodeList.Items }} 
+															{{ if eq $length 0 }}
+															<tr>
+																<td class="overlay hidden" data-th="" colspan="8">No Data</td>
+															</tr>
+															{{ end }}
+															{{range $nodeIndex, $nodeInfo := .NodeList.Items}}
+															
+															<li>
+																<div class="server server_on bgbox_g">
+																	<div class="icon"></div>
+																	<div class="txt" alt="{{$nodeInfo.Role}}">{{$nodeIndex}} : {{$nodeInfo.Name}}  </div>																													
+																</div>
+															</li>														
+
+															{{ end }}
+															
+														</ul>
+													</div>													
+													
+												</div>
+												<!-- //nodes -->												
+
+												<div>
+													<span class="text-center" id="nodeRegistResult">&nbsp;</span>
+												</div>
+
+												{{template "NodeConfigure" .}}
+												
+											</div>
+											<!-- button -->
+											<div class="btnbox spec_select_box">
+												<div class="btnbox spec_select_box">
+													<div class="btn_right">
+														<button type="button" name="" value="" class="btn_done btn_co btn_cr_g" onclick="nodeDone_btn();"><span>DONE</span></button> 
+														<button type="button" name="" value="" class="btn_clear btn_co btn_cr_b">CLEAR</button> 
+														
+													</div>
+												</div>
+											</div>
+											<!-- //button -->											
+										</div>
+									</div>									
+								</div>								
+							</div>
+							
+						</div>
+						
+					</div>
+					<!-- //list -->
+					
+				</div>
+				<!-- //contents -->				
+				<script src="/assets/js/operation/manages/mcksmng/mcksnodecreate.js"></script>
+
+{{template "Footer" .}}			

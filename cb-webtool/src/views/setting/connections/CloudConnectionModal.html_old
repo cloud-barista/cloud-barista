@@ -1,0 +1,302 @@
+{{define "CloudConnectionModal"}}
+	<!-- 3개의 파일로 나누어 cloud 폴더 아래로 이동 -->
+					<!-- popup add Region -->
+					<div class="modal fade layerpopup" id="Add_Region" tabindex="-1" role="dialog" aria-hidden="true">
+						<div class="modal-dialog" role="document">
+							<div class="modal-content">
+								
+								<div class="modal-body">
+									<div class="txt">Would you like to register <br />Add Region?</div>
+									<div class="btnbox">
+										<button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+										<button type="button" class="btn_ok btn_add" data-toggle="modal" data-target="#Add_Region_Register">OK</button>
+									</div>
+								</div>
+								
+							</div>
+						</div>
+					</div>
+					<!-- //popup add Region -->
+	
+					<!-- popup add Region register -->					
+					<div class="modal fade register_add" id="Add_Region_Register" tabindex="-1" role="dialog" aria-hidden="true">
+						
+						<div class="modal-dialog" role="document">
+							<div class="modal-content">
+								
+								<div class="modal-body">
+									<div class="pop-body">
+										
+										<div class="title_box">
+											<div class="title">Add Region</div>
+										</div>
+										
+										<div class="pop-cont">
+											
+											<div class="pop_ipbox">
+												<ul>
+													<li class="p_ip1">
+														<label><span class="ch">*</span>Name</label>
+														<input type="text" id="RegionMoalRegionName" name="" value="" placeholder="input Name" class="pline w_ip1" title="" />
+													</li>
+													<li class="p_ip1">
+														<label><span class="ch">*</span>Provider (CP)</label>
+														<select id="RegionModalProviderName" class="selectbox white pline w_ip1" required>
+															<option>Select Provider</option>
+															{{ range $item := .CloudOSList}}	
+															<option value="{{ $item }}">{{ $item }}</option>
+															{{ end }}															
+														</select>
+														<!-- <input type="text" name="" value="" placeholder="" class="pline w_ip1" title="" /> -->
+													</li>
+													<li class="p_ip1">
+														<label><span class="ch">*</span>Region ID</label>
+														<input type="text" id="RegionModalRegionID"name="" value="" placeholder="input Region" class="pline w_ip1" title="" />
+														<!-- Provider의 실제 region id -->
+														<!-- TODO : Region 목록을 해당 provider에서 가져오면 select로 바꿀 것.-->
+														<!-- <select class="selectbox white pline w_ip1">
+															<option value="1">Selected Region</option>
+														</select> -->
+													</li>
+													<li class="p_ip1">
+														<label><span class="ch">*</span>Zone ID</label>
+														<input type="text" id="RegionModalZoneID" name="" value="" placeholder="input Zone" class="pline w_ip1" title="" />
+														<!-- Provider의 실제 region의 zone id -->
+														<!-- TODO : Zone 목록을 해당 provider에서 가져오면 select로 바꿀 것.-->
+														<!-- <select class="selectbox white pline w_ip1">
+															<option value="1">Selected Zone</option>
+														</select> -->
+													</li>
+												</ul>
+											</div>
+						
+										</div>
+										
+									</div>
+									
+									<div class="btnbox">
+										<div class="btn_right">
+											<button name="" value="" class="btn_co btn_cr_g" onclick='saveNewRegion()'><span>OK</span></button> 
+											<button name="" value="" class="btn_cancel btn_co btn_cr_b" data-dismiss="modal">Cancel</button> 
+										</div>
+									</div>
+								</div>
+								
+							</div>
+							
+						</div>
+													
+					</div>
+					<!-- //popup add Region register -->
+					
+	
+					<!-- popup add Credential -->
+					<div class="modal fade layerpopup" id="Add_Credential" tabindex="-1" role="dialog" aria-hidden="true">
+						<div class="modal-dialog" role="document">
+							<div class="modal-content">
+								
+								<div class="modal-body">
+									<div class="txt">Would you like to register <br />Add Credential?</div>
+									<div class="btnbox">
+										<button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+										<button type="button" class="btn_ok btn_add" data-toggle="modal" data-target="#Add_Credential_Register">OK</button>
+									</div>
+								</div>
+								
+							</div>
+						</div>
+					</div>
+					<!-- //popup add Credential -->
+	
+					<!-- popup add Credential register -->					
+					<div class="modal fade register_add" id="Add_Credential_Register" tabindex="-1" role="dialog" aria-hidden="true">
+						
+						<div class="modal-dialog" role="document">
+							<div class="modal-content">
+								
+								<div class="modal-body">
+									<div class="pop-body">
+										
+										<div class="title_box">
+											<div class="title">Add Credential</div>
+										</div>
+										
+										<div class="pop-cont">
+											
+											<div class="pop_ipbox">
+												<ul>
+													<li class="p_ip1">
+														<label><span class="ch">*</span>Name</label>
+														<input type="text" name="" value="" placeholder="input Name" class="pline w_ip1" title="" />
+													</li>
+													<li class="p_ip1">
+														<label><span class="ch">*</span>Provider (CP)</label>
+														<select id="CredentialModalProviderName" class="selectbox white pline w_ip1" required>
+															<!--
+															<option value="" disabled selected hidden>Selected Provider (CP)</option>
+															<option value="aws">AWS</option>
+															<option value="gcp">GCP</option>
+															<option value="azure">AZURE</option>
+															<option value="alibaba">ALIBABA</option>
+															-->
+														</select>
+														<!-- <input type="text" name="" value="" placeholder="" class="pline w_ip1" title="" /> -->
+													</li>
+													<li class="p_ip1">
+														<label><span class="ch">*</span>Key[0]</label>
+														<input type="text" name="credential_keys" value="" placeholder="input Key" class="pline w_ip1" title="" />
+													</li>
+													<li class="p_ip1">
+														<label><span class="ch">*</span>Value[0]</label>
+														<input type="text" name="credential_values" value="" placeholder="input Value" class="pline w_ip1" title="" />
+													</li>
+													<li class="p_ip1">
+														<label><span class="ch">*</span>Key[1]</label>
+														<input type="text" name="credential_keys" value="" placeholder="input Key" class="pline w_ip1" title="" />
+													</li>
+													<li class="p_ip1">
+														<label><span class="ch">*</span>Value[1]</label>
+														<input type="text" name="credential_values" value="" placeholder="input Value" class="pline w_ip1" title="" />
+													</li>
+													<li class="p_ip1 hide" id="kv_gcp_key">
+														<label><span class="ch">*</span>Key[2]</label>
+														<input type="text" name="credential_keys" value="" placeholder="input Key" class="pline w_ip1" title="" />
+													</li>
+													<li class="p_ip1 hide" id="kv_gcp_value">
+														<label><span class="ch">*</span>Value[2]</label>
+														<input type="text" name="credential_values" value="" placeholder="input Value" class="pline w_ip1" title="" />
+													</li>
+													<li class="p_ip1 hide" id="kv_azure_key">
+														<label><span class="ch">*</span>Key[3]</label>
+														<input type="text" name="credential_keys" value="" placeholder="input Key" class="pline w_ip1" title="" />
+													</li>
+													<li class="p_ip1 hide" id="kv_azure_value">
+														<label><span class="ch">*</span>Value[3]</label>
+														<input type="text" name="credential_values" value="" placeholder="input Value" class="pline w_ip1" title="" />
+													</li>
+													<li class="p_ip1 hide">
+														<label><span class="ch">*</span>Key / Value</label>
+														<input type="text" name="credential_keys" id="" value="" placeholder="input Key" class="pline w_ip1" title="" />
+														<input type="text" name="credential_values" id="" value="" placeholder="input Value" class="pline w_ip1" title="" />
+													</li>
+												</ul>
+											</div>
+						
+										</div>
+										
+									</div>
+									
+									<div class="btnbox">
+										<div class="btn_right">
+											<button name="" value="" class="btn_co btn_cr_g"><span>OK</span></button> 
+											<button name="" value="" class="btn_cancel btn_co btn_cr_b" data-dismiss="modal">Cancel</button> 
+										</div>
+									</div>
+								</div>
+								
+							</div>
+							
+						</div>
+													
+					</div>
+					<!-- //popup add Credential register -->
+	
+					<!-- popup add Driver -->
+					<div class="modal fade layerpopup" id="Add_Driver" tabindex="-1" role="dialog" aria-hidden="true">
+						<div class="modal-dialog" role="document">
+							<div class="modal-content">
+								
+								<div class="modal-body">
+									<div class="txt">Would you like to register <br />Add Driver?</div>
+									<div class="btnbox">
+										<button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+										<button type="button" class="btn_ok btn_add" data-toggle="modal" data-target="#Add_Driver_Register">OK</button>
+									</div>
+								</div>
+								
+							</div>
+						</div>
+					</div>
+					<!-- //popup add Driver -->
+	
+					<!-- popup add Driver register -->					
+					<div class="modal fade register_add" id="Add_Driver_Register" tabindex="-1" role="dialog" aria-hidden="true">
+						
+						<div class="modal-dialog" role="document">
+							<div class="modal-content">
+								
+								<div class="modal-body">
+									<div class="pop-body">
+										
+										<div class="title_box">
+											<div class="title">Add Driver</div>
+										</div>
+										
+										<div class="pop-cont">
+											
+											<div class="pop_ipbox">
+												<ul>
+													<li class="p_ip1">
+														<label><span class="ch">*</span>Name</label>
+														<input type="text" name="" value="" placeholder="input Name" class="pline w_ip1" title="" />
+													</li>
+													<li class="p_ip1">
+														<label><span class="ch">*</span>Provider (CP)</label>
+														<select id="DriverModalProviderName" class="selectbox white pline w_ip1" required>
+															<!--
+															<option value="" disabled selected hidden>Selected Provider (CP)</option>
+															<option value="aws">AWS</option>
+															<option value="gcp">GCP</option>
+															<option value="azure">AZURE</option>
+															<option value="alibaba">ALIBABA</option>
+															-->
+														</select>
+														<!-- <input type="text" name="" value="" placeholder="" class="pline w_ip1" title="" /> -->
+													</li>
+													<li class="p_ip1">
+														<label><span class="ch">*</span>LibFileName</label>
+														<input type="text" name="credential_keys" value="" placeholder="input Driver Lib File Name" class="pline w_ip1" title="" />
+														<!-- <select class="selectbox white pline w_ip1">
+															<option value="1">Selected Driver</option>
+														</select> -->
+													</li>
+												</ul>
+											</div>
+						
+										</div>
+										
+									</div>
+									
+									<div class="btnbox">
+										<div class="btn_right">
+											<button name="" value="" class="btn_co btn_cr_g"><span>OK</span></button> 
+											<button name="" value="" class="btn_cancel btn_co btn_cr_b" data-dismiss="modal">Cancel</button> 
+										</div>
+									</div>
+								</div>
+								
+							</div>
+							
+						</div>
+													
+					</div>
+					<!-- //popup add Driver register -->
+
+
+					<!-- id/pw required -->
+					<div class="modal fade" id="required" tabindex="-1" role="dialog" aria-hidden="true">
+						<div class="modal-dialog" role="document">
+							<div class="modal-content">
+								
+								<div class="modal-body">
+									<div class="txt">필수항목을 입력바랍니다.</div>
+									<div class="btnbox">
+										<button type="button" class="btn_ok" data-toggle="modal" data-target="#Add_Region_Register">OK</button>
+									</div>
+								</div>                    
+							</div>
+						</div>                    
+					</div>
+					<!-- //required -->
+
+{{end}}

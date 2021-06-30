@@ -1,0 +1,25 @@
+{{define "LoginFooter"}}
+<div class="login_footer">
+               
+    <div class="infobox">
+        
+        <div class="tit">Cloud-Barista Community</div>
+        <div class="listbox">
+            <div class="linkbox">
+                <p>Homepage :</p>
+                <div class="txt"><a href="https://cloud-barista.github.io" target="_blank">https://cloud-barista.github.io</a></div>
+            </div>
+            <div class="linkbox">
+                <p>GitHub :</p>
+                <div class="txt"><a href="https://github.com/cloud-barista" target="_blank">https://github.com/cloud-barista</a></div>
+            </div>
+        </div>
+        <div class="linkbox">
+            <p>E-mail :</p>
+            <div class="txt"><a href="mailto:contact-to-cloud-barista@googlegroups.com" target="_blank">contact-to-cloud-barista@googlegroups.com</a></div>
+        </div>
+        
+    </div>
+    
+</div>
+{{end}}

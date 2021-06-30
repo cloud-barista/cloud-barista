@@ -3,7 +3,7 @@
 ##############################################################
 
 #FROM golang:alpine AS builder
-FROM golang:1.15.3 AS builder
+FROM golang:1.16 AS builder
 
 ENV GO111MODULE on
 
@@ -26,7 +26,7 @@ RUN GOOS=linux go build -tags cb-spider -o cb-spider -v
 ## Stage 2 - Application Setup
 ##############################################################
 
-FROM ubuntu:latest
+FROM ubuntu:latest as prod
 
 RUN apt update
 
@@ -37,7 +37,7 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 WORKDIR /root/go/src/github.com/cloud-barista/cb-spider
 
-#COPY --from=builder /go/src/github.com/cloud-barista/cb-spider/cloud-driver-libs/* /root/go/src/github.com/cloud-barista/cb-spider/cloud-driver-libs/
+COPY --from=builder /go/src/github.com/cloud-barista/cb-spider/cloud-driver-libs/ /root/go/src/github.com/cloud-barista/cb-spider/cloud-driver-libs/
 
 COPY --from=builder /go/src/github.com/cloud-barista/cb-spider/conf/* /root/go/src/github.com/cloud-barista/cb-spider/conf/
 
@@ -50,7 +50,9 @@ COPY --from=builder /go/src/github.com/cloud-barista/cb-spider/api-runtime/rest-
 ENV CBSPIDER_ROOT /root/go/src/github.com/cloud-barista/cb-spider
 ENV CBSTORE_ROOT /root/go/src/github.com/cloud-barista/cb-spider
 ENV CBLOG_ROOT /root/go/src/github.com/cloud-barista/cb-spider
+ENV LOCALHOST OFF
 ENV PLUGIN_SW OFF
+ENV MEERKAT OFF
 
 ENTRYPOINT [ "/root/go/src/github.com/cloud-barista/cb-spider/api-runtime/cb-spider" ]
 

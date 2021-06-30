@@ -6,7 +6,7 @@ import (
 
 	"github.com/cloud-barista/cb-dragonfly/pkg/api/grpc/common"
 	pb "github.com/cloud-barista/cb-dragonfly/pkg/api/grpc/protobuf/cbdragonfly"
-	"github.com/cloud-barista/cb-dragonfly/pkg/core/metric"
+	"github.com/cloud-barista/cb-dragonfly/pkg/types"
 )
 
 type MonitoringRequest struct {
@@ -79,16 +79,16 @@ func (monReq *MonitoringRequest) GetVMMonInfo(metricName string, vmMonQueryReque
 	var resp interface{}
 	var err error
 
-	switch metricName {
-	case metric.Cpu:
+	switch types.Metric(metricName) {
+	case types.Cpu:
 		resp, err = monReq.Client.GetVMMonCpuInfo(ctx, &vmMonQueryRequest)
-	case metric.CpuFreqency:
+	case types.CpuFrequency:
 		resp, err = monReq.Client.GetVMMonCpuFreqInfo(ctx, &vmMonQueryRequest)
-	case metric.Memory:
+	case types.Memory:
 		resp, err = monReq.Client.GetVMMonMemoryInfo(ctx, &vmMonQueryRequest)
-	case metric.Disk:
+	case types.Disk:
 		resp, err = monReq.Client.GetVMMonDiskInfo(ctx, &vmMonQueryRequest)
-	case metric.Network:
+	case types.Network:
 		resp, err = monReq.Client.GetVMMonNetworkInfo(ctx, &vmMonQueryRequest)
 	}
 
@@ -107,16 +107,16 @@ func (monReq *MonitoringRequest) GetVMOnDemandMonInfo(metricName string, vmMonQu
 	var resp interface{}
 	var err error
 
-	switch metricName {
-	case metric.Cpu:
+	switch types.Metric(metricName) {
+	case types.Cpu:
 		resp, err = monReq.Client.GetVMOnDemandMonCpuInfo(ctx, &vmMonQueryRequest)
-	case metric.CpuFreqency:
+	case types.CpuFrequency:
 		resp, err = monReq.Client.GetVMOnDemandMonCpuFreqInfo(ctx, &vmMonQueryRequest)
-	case metric.Memory:
+	case types.Memory:
 		resp, err = monReq.Client.GetVMOnDemandMonMemoryInfo(ctx, &vmMonQueryRequest)
-	case metric.Disk:
+	case types.Disk:
 		resp, err = monReq.Client.GetVMOnDemandMonDiskInfo(ctx, &vmMonQueryRequest)
-	case metric.Network:
+	case types.Network:
 		resp, err = monReq.Client.GetVMOnDemandMonNetworkInfo(ctx, &vmMonQueryRequest)
 	}
 

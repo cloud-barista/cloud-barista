@@ -1,4 +1,4 @@
-@@startuml
+@startuml
 
 header Cloud-Barista
 title objects
@@ -24,6 +24,13 @@ object gcpCredential #WhiteSmoke {
 	private_key
 	client_email
 }
+object azureCredential #WhiteSmoke {
+	client_id
+	client_secret
+	tenant_id	
+	subscription_id
+}
+
 object config #WhiteSmoke {
 }
 object vm #WhiteSmoke {
@@ -31,6 +38,7 @@ object vm #WhiteSmoke {
 ' }
 awsCredential	--|>	credential
 gcpCredential	--|>	credential
+azureCredential	--|>	credential
 config			-->		credential
 config			-->		region
 
@@ -65,9 +73,12 @@ mcis	*-->	vm
 ' # ladybug ----------------
 object cluster {
 	+name
+	+status
 	+namespace
 	+mcis
 	+clusterConfig
+	+cpLeader
+	+networkCni
 	+uid
 }
 object kubernetesCluster {
@@ -85,12 +96,24 @@ object kubernetesConfiguration {
 }
 object node  {
 	+name
-	+role
+	+credential
 	+public-ip
+	+role
 	+spec
+	+cps
 	+uid
 	cluster-uid
 }
+object controlPlane  {
+	role = "control-plane"
+}
+object workerNode  {
+	role = "worker"
+}
+
+controlPlane	--|>	node
+workerNode		--|>	node
+
 
 object clusterConfig  {
 }
@@ -113,23 +136,21 @@ node				..		vm
 kubeConfig		--|>	clusterConfig
 
 
+'' # ladybug controller ----------------
+'object clusterDeployment #GreenYellow {
+'	+namespace
+'	+mcis
+'	+controlPlaneCount
+'	+wokrerCount
+'}
+'object nodeSet #GreenYellow {
+'	+replicas
+'}
 
 
-' # ladybug controller ----------------
-object clusterDeployment #GreenYellow {
-	+namespace
-	+mcis
-	+controlPlaneCount
-	+wokrerCount
-}
-object nodeSet #GreenYellow {
-	+replicas
-}
+'clusterDeployment	-->		cluster
+'clusterDeployment	..>		mcis
+'nodeSet				*-->	node
+'nodeSet				..		clusterDeployment
 
-
-clusterDeployment	-->		cluster
-clusterDeployment	..>		mcis
-nodeSet				*-->	node
-nodeSet				..		clusterDeployment
-
-@@enduml
+@enduml

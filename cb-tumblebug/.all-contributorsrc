@@ -1,0 +1,143 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "jihoon-seo",
+      "name": "Jihoon Seo",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/46767780?v=4",
+      "profile": "https://jihoon-seo.github.io",
+      "contributions": [
+        "code",
+        "review"
+      ]
+    },
+    {
+      "login": "hermitkim1",
+      "name": "Yunkon (Alvin) Kim ",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/7975459?v=4",
+      "profile": "https://github.com/hermitkim1",
+      "contributions": [
+        "code",
+        "review"
+      ]
+    },
+    {
+      "login": "seokho-son",
+      "name": "Seokho Son",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/5966944?v=4",
+      "profile": "https://seokho-son.github.io/",
+      "contributions": [
+        "maintenance"
+      ]
+    },
+    {
+      "login": "jmleefree",
+      "name": "jmleefree",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/64775292?v=4",
+      "profile": "https://github.com/jmleefree",
+      "contributions": [
+        "code"
+      ]
+    },
+    {
+      "login": "powerkimhub",
+      "name": "ByoungSeob Kim",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/46367962?v=4",
+      "profile": "http://www.powerkim.co.kr",
+      "contributions": [
+        "ideas"
+      ]
+    },
+    {
+      "login": "sykim-etri",
+      "name": "Sooyoung Kim",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/25163268?v=4",
+      "profile": "https://github.com/sykim-etri",
+      "contributions": [
+        "bug"
+      ]
+    },
+    {
+      "login": "dongjae",
+      "name": "KANG DONG JAE",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5770239?v=4",
+      "profile": "https://github.com/dongjae",
+      "contributions": [
+        "ideas"
+      ]
+    },
+    {
+      "login": "Youngwoo-Jung",
+      "name": "Youngwoo-Jung",
+      "avatar_url": "https://avatars.githubusercontent.com/u/5266479?v=4",
+      "profile": "http://www.etri.re.kr",
+      "contributions": [
+        "ideas"
+      ]
+    },
+    {
+      "login": "innodreamer",
+      "name": "Sean Oh",
+      "avatar_url": "https://avatars.githubusercontent.com/u/51111668?v=4",
+      "profile": "https://github.com/innodreamer",
+      "contributions": [
+        "ideas"
+      ]
+    },
+    {
+      "login": "MZC-CSC",
+      "name": "MZC-CSC",
+      "avatar_url": "https://avatars.githubusercontent.com/u/78469943?v=4",
+      "profile": "https://github.com/MZC-CSC",
+      "contributions": [
+        "bug"
+      ]
+    },
+    {
+      "login": "itnpeople",
+      "name": "Eunsang",
+      "avatar_url": "https://avatars.githubusercontent.com/u/35829386?v=4",
+      "profile": "https://github.com/itnpeople",
+      "contributions": [
+        "userTesting"
+      ]
+    },
+    {
+      "login": "hyokyungk",
+      "name": "hyokyungk",
+      "avatar_url": "https://avatars.githubusercontent.com/u/51115778?v=4",
+      "profile": "https://github.com/hyokyungk",
+      "contributions": [
+        "userTesting"
+      ]
+    },
+    {
+      "login": "pjini",
+      "name": "pjini",
+      "avatar_url": "https://avatars.githubusercontent.com/u/64886639?v=4",
+      "profile": "https://github.com/pjini",
+      "contributions": [
+        "userTesting"
+      ]
+    },
+    {
+      "login": "vlatte",
+      "name": "sunmi",
+      "avatar_url": "https://avatars.githubusercontent.com/u/21170063?v=4",
+      "profile": "https://github.com/vlatte",
+      "contributions": [
+        "userTesting"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "projectName": "cb-tumblebug",
+  "projectOwner": "cloud-barista",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "skipCi": true
+}

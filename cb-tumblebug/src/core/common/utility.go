@@ -41,9 +41,28 @@ func GenUuid() string {
 	return uuid.New().String()
 }
 
-func GenId(name string) string {
-	r, _ := regexp.Compile("_")
-	out := r.ReplaceAllString(name, "-")
+func CheckString(name string) error {
+
+	if name == "" {
+		err := fmt.Errorf("The provided name is empty.")
+		return err
+	}
+
+	r, _ := regexp.Compile("[a-z]([-a-z0-9]*[a-z0-9])?")
+	filtered := r.FindString(name)
+
+	if filtered != name {
+		err := fmt.Errorf(name + ": The first character of name must be a lowercase letter, and all following characters must be a dash, lowercase letter, or digit, except the last character, which cannot be a dash.")
+		return err
+	}
+
+	return nil
+}
+
+// To be deprecated
+func ToLower(name string) string {
+	out := strings.ReplaceAll(name, "_", "-")
+	out = strings.ReplaceAll(out, " ", "-")
 	out = strings.ToLower(out)
 	return out
 }
@@ -59,6 +78,12 @@ func GenMcisKey(nsId string, mcisId string, vmId string) string {
 	} else {
 		return ""
 	}
+
+}
+
+func GenMcisVmGroupKey(nsId string, mcisId string, groupId string) string {
+
+	return "/ns/" + nsId + "/mcis/" + mcisId + "/vmgroup/" + groupId
 
 }
 
@@ -85,7 +110,7 @@ func LookupKeyValueList(kvl []KeyValue, key string) string {
 }
 
 func PrintJsonPretty(v interface{}) {
-	prettyJSON, err := json.MarshalIndent(v, "", "    ")
+	prettyJSON, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		fmt.Printf("%+v\n", v)
 	} else {
@@ -94,19 +119,18 @@ func PrintJsonPretty(v interface{}) {
 }
 
 func GenResourceKey(nsId string, resourceType string, resourceId string) string {
-	//resourceType = strings.ToLower(resourceType)
 
-	if resourceType == "image" ||
-		resourceType == "sshKey" ||
-		resourceType == "spec" ||
-		resourceType == "vNet" ||
-		resourceType == "securityGroup" {
+	if resourceType == StrImage ||
+		resourceType == StrSSHKey ||
+		resourceType == StrSpec ||
+		resourceType == StrVNet ||
+		resourceType == StrSecurityGroup {
 		//resourceType == "subnet" ||
 		//resourceType == "publicIp" ||
 		//resourceType == "vNic" {
 		return "/ns/" + nsId + "/resources/" + resourceType + "/" + resourceId
 	} else {
-		return "/invalid_key"
+		return "/invalidKey"
 	}
 }
 
@@ -127,119 +151,44 @@ type mcirIds struct { // Tumblebug
 	ConnectionName string
 }
 
-/*
-func GetResourcesCspType(nsId string, resourceType string, resourceId string) string {
-	key := GenResourceKey(nsId, resourceType, resourceId)
-	if key == "/invalid_key" {
-		return "invalid nsId or resourceType or resourceId"
-	}
-	keyValue, err := CBStore.Get(key)
-	if err != nil {
-		CBLog.Error(err)
-		// if there is no matched value for the key, return empty string. Error will be handled in a parent fucntion
-		return ""
-	}
-	if keyValue == nil {
-		//CBLog.Error(err)
-		// if there is no matched value for the key, return empty string. Error will be handled in a parent fucntion
-		return ""
-	}
-
-	content := mcirIds{}
-	json.Unmarshal([]byte(keyValue.Value), &content)
-
-	url := SPIDER_REST_URL + "/connectionconfig/" + content.ConnectionName
-
-	method := "GET"
-
-	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-	req, err := http.NewRequest(method, url, nil)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	res, err := client.Do(req)
-	if err != nil {
-		CBLog.Error(err)
-		return "http request error"
-	}
-	defer res.Body.Close()
-
-	body, err := ioutil.ReadAll(res.Body)
-	fmt.Println(string(body))
-	if err != nil {
-		CBLog.Error(err)
-		return "ioutil.ReadAll error"
-	}
-
-	fmt.Println("HTTP Status code " + strconv.Itoa(res.StatusCode))
-	switch {
-	case res.StatusCode >= 400 || res.StatusCode < 200:
-		err := fmt.Errorf(string(body))
-		CBLog.Error(err)
-		return "Cannot get VM's CSP type"
-	default:
-
-	}
-
-	type ConnConfigInfo struct {
-		ProviderName            string
-	}
-
-	temp := ConnConfigInfo{}
-	err2 := json.Unmarshal(body, &temp)
-	if err2 != nil {
-		fmt.Println("whoops:", err2)
-	}
-
-	return temp.ProviderName
-}
-*/
-
 func GetCspResourceId(nsId string, resourceType string, resourceId string) (string, error) {
 	key := GenResourceKey(nsId, resourceType, resourceId)
-	if key == "/invalid_key" {
+	if key == "/invalidKey" {
 		return "", fmt.Errorf("invalid nsId or resourceType or resourceId")
 	}
 	keyValue, err := CBStore.Get(key)
 	if err != nil {
 		CBLog.Error(err)
-		// if there is no matched value for the key, return empty string. Error will be handled in a parent fucntion
 		return "", err
 	}
 	if keyValue == nil {
 		//CBLog.Error(err)
-		// if there is no matched value for the key, return empty string. Error will be handled in a parent fucntion
-		return "", err
+		// if there is no matched value for the key, return empty string. Error will be handled in a parent function
+		return "", fmt.Errorf("cannot find the key " + key)
 	}
 
 	switch resourceType {
-	case "image":
+	case StrImage:
 		content := mcirIds{}
 		json.Unmarshal([]byte(keyValue.Value), &content)
 		return content.CspImageId, nil
-	case "sshKey":
+	case StrSSHKey:
 		content := mcirIds{}
 		json.Unmarshal([]byte(keyValue.Value), &content)
-		return content.CspSshKeyName, nil
-	case "spec":
+		return resourceId, nil
+	case StrSpec:
 		content := mcirIds{}
 		json.Unmarshal([]byte(keyValue.Value), &content)
 		return content.CspSpecName, nil
-	case "vNet":
+	case StrVNet:
 		content := mcirIds{}
 		json.Unmarshal([]byte(keyValue.Value), &content)
-		return content.CspVNetName, nil // contains CspSubnetId
+		return resourceId, nil // contains CspSubnetId
 	// case "subnet":
 	// 	content := subnetInfo{}
 	// 	json.Unmarshal([]byte(keyValue.Value), &content)
 	// 	return content.CspSubnetId
-	case "securityGroup":
+	case StrSecurityGroup:
 		content := mcirIds{}
 		json.Unmarshal([]byte(keyValue.Value), &content)
 		return content.CspSecurityGroupName, nil
@@ -253,7 +202,7 @@ func GetCspResourceId(nsId string, resourceType string, resourceId string) (stri
 			err = json.Unmarshal([]byte(keyValue.Value), &content)
 			if err != nil {
 				CBLog.Error(err)
-				// if there is no matched value for the key, return empty string. Error will be handled in a parent fucntion
+				// if there is no matched value for the key, return empty string. Error will be handled in a parent function
 				return ""
 			}
 			return content.CspVNicName
@@ -294,7 +243,7 @@ func GetConnConfig(ConnConfigName string) (ConnConfig, error) {
 
 		fmt.Println(string(resp.Body())) // for debug
 
-		fmt.Println("HTTP Status code " + strconv.Itoa(resp.StatusCode()))
+		fmt.Println("HTTP Status code: " + strconv.Itoa(resp.StatusCode()))
 		switch {
 		case resp.StatusCode() >= 400 || resp.StatusCode() < 200:
 			err := fmt.Errorf(string(resp.Body()))
@@ -329,11 +278,64 @@ func GetConnConfig(ConnConfigName string) (ConnConfig, error) {
 		}
 
 		temp := ConnConfig{}
-		err2 := json.Unmarshal([]byte(result), &temp)
-		if err2 != nil {
-			fmt.Println("whoops:", err2)
+		err = json.Unmarshal([]byte(result), &temp)
+		if err != nil {
+			CBLog.Error("cim api request failed : ", err)
+			return ConnConfig{}, err
 		}
 		return temp, nil
+	}
+}
+
+type RegionInfo struct { // Spider
+	RegionName       string     // ex) "region01"
+	ProviderName     string     // ex) "GCP"
+	KeyValueInfoList []KeyValue // ex) { {region, us-east1},
+	//	 {zone, us-east1-c},
+}
+
+func GetRegionInfo(RegionName string) (RegionInfo, error) {
+
+	if os.Getenv("SPIDER_CALL_METHOD") == "REST" {
+
+		url := SPIDER_REST_URL + "/region/" + RegionName
+
+		client := resty.New()
+
+		resp, err := client.R().
+			SetResult(&RegionInfo{}).
+			//SetError(&SimpleMsg{}).
+			Get(url)
+
+		if err != nil {
+			CBLog.Error(err)
+			content := RegionInfo{}
+			err := fmt.Errorf("an error occurred while requesting to CB-Spider")
+			return content, err
+		}
+
+		fmt.Println(string(resp.Body())) // for debug
+
+		fmt.Println("HTTP Status code: " + strconv.Itoa(resp.StatusCode()))
+		switch {
+		case resp.StatusCode() >= 400 || resp.StatusCode() < 200:
+			err := fmt.Errorf(string(resp.Body()))
+			CBLog.Error(err)
+			content := RegionInfo{}
+			return content, err
+		}
+
+		temp, _ := resp.Result().(*RegionInfo)
+		return *temp, nil
+
+	} else {
+		// needs GRPC code
+
+		CBLog.Error(err)
+		content := RegionInfo{}
+		err := fmt.Errorf("an error occurred while requesting to CB-Spider: needs GRPC code")
+		return content, err
+
 	}
 }
 
@@ -363,7 +365,7 @@ func GetConnConfigList() (ConnConfigList, error) {
 
 		fmt.Println(string(resp.Body())) // for debug
 
-		fmt.Println("HTTP Status code " + strconv.Itoa(resp.StatusCode()))
+		fmt.Println("HTTP Status code: " + strconv.Itoa(resp.StatusCode()))
 		switch {
 		case resp.StatusCode() >= 400 || resp.StatusCode() < 200:
 			err := fmt.Errorf(string(resp.Body()))
@@ -398,9 +400,10 @@ func GetConnConfigList() (ConnConfigList, error) {
 		}
 
 		temp := ConnConfigList{}
-		err2 := json.Unmarshal([]byte(result), &temp)
-		if err2 != nil {
-			fmt.Println("whoops:", err2)
+		err = json.Unmarshal([]byte(result), &temp)
+		if err != nil {
+			CBLog.Error("cim api Unmarshal failed : ", err)
+			return ConnConfigList{}, err
 		}
 		return temp, nil
 
@@ -435,7 +438,7 @@ func GetRegion(RegionName string) (Region, error) {
 
 		fmt.Println(string(resp.Body())) // for debug
 
-		fmt.Println("HTTP Status code " + strconv.Itoa(resp.StatusCode()))
+		fmt.Println("HTTP Status code: " + strconv.Itoa(resp.StatusCode()))
 		switch {
 		case resp.StatusCode() >= 400 || resp.StatusCode() < 200:
 			err := fmt.Errorf(string(resp.Body()))
@@ -470,19 +473,22 @@ func GetRegion(RegionName string) (Region, error) {
 		}
 
 		temp := Region{}
-		err2 := json.Unmarshal([]byte(result), &temp)
-		if err2 != nil {
-			fmt.Println("whoops:", err2)
+		err = json.Unmarshal([]byte(result), &temp)
+		if err != nil {
+			CBLog.Error("cim api Unmarshal failed : ", err)
+			return Region{}, err
 		}
 		return temp, nil
 
 	}
 }
 
-type RegionList struct { // Spider
+// RegionList is array struct for Region
+type RegionList struct {
 	Region []Region `json:"region"`
 }
 
+// GetRegionList retrieves region list
 func GetRegionList() (RegionList, error) {
 
 	if os.Getenv("SPIDER_CALL_METHOD") == "REST" {
@@ -505,7 +511,7 @@ func GetRegionList() (RegionList, error) {
 
 		fmt.Println(string(resp.Body())) // for debug
 
-		fmt.Println("HTTP Status code " + strconv.Itoa(resp.StatusCode()))
+		fmt.Println("HTTP Status code: " + strconv.Itoa(resp.StatusCode()))
 		switch {
 		case resp.StatusCode() >= 400 || resp.StatusCode() < 200:
 			err := fmt.Errorf(string(resp.Body()))
@@ -540,9 +546,10 @@ func GetRegionList() (RegionList, error) {
 		}
 
 		temp := RegionList{}
-		err2 := json.Unmarshal([]byte(result), &temp)
-		if err2 != nil {
-			fmt.Println("whoops:", err2)
+		err = json.Unmarshal([]byte(result), &temp)
+		if err != nil {
+			CBLog.Error("cim api Unmarshal failed : ", err)
+			return RegionList{}, err
 		}
 		return temp, nil
 
@@ -689,4 +696,57 @@ func GetChildIdList(key string) []string {
 	fmt.Println("===============================================")
 	return childIdList
 
+}
+
+// func GetObjectList returns IDs of each child objects that has the same key.
+func GetObjectList(key string) []string {
+
+	keyValue, _ := CBStore.GetList(key, true)
+
+	var childIdList []string
+	for _, v := range keyValue {
+		childIdList = append(childIdList, v.Key)
+	}
+
+	fmt.Println("===============================================")
+	return childIdList
+
+}
+
+// func GetObjectValue returns the object value.
+func GetObjectValue(key string) (string, error) {
+
+	keyValue, err := CBStore.Get(key)
+	if err != nil {
+		CBLog.Error(err)
+		return "", err
+	}
+	if keyValue == nil {
+		return "", nil
+	}
+	return keyValue.Value, nil
+}
+
+// func DeleteObject delete the object.
+func DeleteObject(key string) error {
+
+	err := CBStore.Delete(key)
+	if err != nil {
+		CBLog.Error(err)
+		return err
+	}
+	return nil
+}
+
+// func DeleteObjects delete objects.
+func DeleteObjects(key string) error {
+	keyValue, _ := CBStore.GetList(key, true)
+	for _, v := range keyValue {
+		err := CBStore.Delete(v.Key)
+		if err != nil {
+			CBLog.Error(err)
+			return err
+		}
+	}
+	return nil
 }

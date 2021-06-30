@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/astaxie/beego/validation"
-	"github.com/cloud-barista/cb-ladybug/src/utils/config"
-	"github.com/go-resty/resty/v2"
+	"github.com/beego/beego/v2/core/validation"
+	"github.com/cloud-barista/cb-ladybug/src/core/model"
+
+	logger "github.com/sirupsen/logrus"
 )
 
 type SSHKey struct {
@@ -23,75 +24,42 @@ func NewSSHKey(ns string, name string, conf string) *SSHKey {
 	}
 }
 
-func (ssh *SSHKey) GET() (bool, error) {
-	// validation
-	if err := ssh.validate(validation.Validation{}); err != nil {
-		return false, err
-	}
+func (self *SSHKey) GET() (bool, error) {
 
-	conf := config.Config
-	resp, err := resty.New().R().
-		SetBasicAuth(conf.Username, conf.Password).
-		SetBody(fmt.Sprintf(`{"connectionName" : "%s"}`, ssh.Config)).
-		SetResult(&ssh).
-		Get(conf.TumblebugUrl + fmt.Sprintf("/ns/%s/resources/sshKey/%s", ssh.namespace, ssh.Name))
+	return self.execute(http.MethodGet, fmt.Sprintf("/ns/%s/resources/sshKey/%s", self.namespace, self.Name), fmt.Sprintf(`{"connectionName" : "%s"}`, self.Config), &self)
 
-	if e := ssh.response(resp, err); e != nil {
-		return false, e
-	}
-	if resp.StatusCode() == http.StatusNotFound {
-		return false, nil
-	}
-
-	return true, nil
 }
 
-func (ssh *SSHKey) POST() error {
+func (self *SSHKey) POST() error {
 	// validation
 	valid := validation.Validation{}
-	valid.Required(ssh.Username, "username")
-	if err := ssh.validate(valid); err != nil {
+	valid.Required(self.Username, "username")
+	if err := self.validate(valid); err != nil {
 		return err
 	}
 
-	conf := config.Config
-	resp, err := resty.New().R().
-		SetBasicAuth(conf.Username, conf.Password).
-		SetBody(ssh).
-		SetResult(&ssh).
-		Post(conf.TumblebugUrl + fmt.Sprintf("/ns/%s/resources/sshKey", ssh.namespace))
-
-	if err = ssh.response(resp, err); err != nil {
+	_, err := self.execute(http.MethodPost, fmt.Sprintf("/ns/%s/resources/sshKey", self.namespace), self, &self)
+	if err != nil {
 		return err
 	}
 
 	return nil
+
 }
 
-func (ssh *SSHKey) DELETE(ns string) error {
-	// validation
-	if err := ssh.validate(validation.Validation{}); err != nil {
-		return err
-	}
+func (self *SSHKey) DELETE(ns string) error {
 
-	exist, err := ssh.GET()
+	exist, err := self.GET()
 	if err != nil {
 		return err
 	}
 	if exist {
-		conf := config.Config
-
-		resp, err := resty.New().R().
-			SetBasicAuth(conf.Username, conf.Password).
-			SetBody(fmt.Sprintf(`{"connectionName" : "%s"}`, ssh.Config)).
-			SetResult(TumblebugResult{}).
-			Delete(conf.TumblebugUrl + fmt.Sprintf("/ns/%s/resources/sshKey/%s", ssh.namespace, ssh.Name))
-
-		if err = ssh.response(resp, err); err != nil {
+		_, err := self.execute(http.MethodDelete, fmt.Sprintf("/ns/%s/resources/sshKey/%s", self.namespace, self.Name), fmt.Sprintf(`{"connectionName" : "%s"}`, self.Config), model.Status{})
+		if err != nil {
 			return err
 		}
 	} else {
-		fmt.Println(fmt.Sprintf("delete sshkey skip (name=%s, cause=not found)", ssh.Name))
+		logger.Infof("delete sshkey skip (name=%s, cause=not found)", self.Name)
 	}
 
 	return nil

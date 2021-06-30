@@ -16,7 +16,7 @@ import (
 
 // ===== [ Public Functions ] =====
 
-// NewKeypairCmd - Keypair 관리 기능을 수행하는 Cobra Command 생성
+// NewKeypairCmd : "cbadm keypair *" (for CB-Tumblebug)
 func NewKeypairCmd() *cobra.Command {
 
 	keypairCmd := &cobra.Command{
@@ -28,14 +28,16 @@ func NewKeypairCmd() *cobra.Command {
 	//  Adds the commands for application.
 	keypairCmd.AddCommand(NewKeypairCreateCmd())
 	keypairCmd.AddCommand(NewKeypairListCmd())
+	keypairCmd.AddCommand(NewKeypairListIdCmd())
 	keypairCmd.AddCommand(NewKeypairGetCmd())
 	keypairCmd.AddCommand(NewKeypairSaveCmd())
 	keypairCmd.AddCommand(NewKeypairDeleteCmd())
+	keypairCmd.AddCommand(NewKeypairDeleteAllCmd())
 
 	return keypairCmd
 }
 
-// NewKeypairCreateCmd - Keypair 생성 기능을 수행하는 Cobra Command 생성
+// NewKeypairCreateCmd : "cbadm keypair create"
 func NewKeypairCreateCmd() *cobra.Command {
 
 	createCmd := &cobra.Command{
@@ -62,7 +64,7 @@ func NewKeypairCreateCmd() *cobra.Command {
 	return createCmd
 }
 
-// NewKeypairListCmd - Keypair 목록 기능을 수행하는 Cobra Command 생성
+// NewKeypairListCmd : "cbadm keypair list"
 func NewKeypairListCmd() *cobra.Command {
 
 	listCmd := &cobra.Command{
@@ -86,7 +88,31 @@ func NewKeypairListCmd() *cobra.Command {
 	return listCmd
 }
 
-// NewKeypairGetCmd - Keypair 조회 기능을 수행하는 Cobra Command 생성
+// NewKeypairListIdCmd : "cbadm keypair list-id"
+func NewKeypairListIdCmd() *cobra.Command {
+
+	listIdCmd := &cobra.Command{
+		Use:   "list-id",
+		Short: "This is list-id command for keypair",
+		Long:  "This is list-id command for keypair",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger := logger.NewLogger()
+			if nameSpaceID == "" {
+				logger.Error("failed to validate --ns parameter")
+				return
+			}
+			logger.Debug("--ns parameter value : ", nameSpaceID)
+
+			SetupAndRun(cmd, args)
+		},
+	}
+
+	listIdCmd.PersistentFlags().StringVarP(&nameSpaceID, "ns", "", "", "namespace id")
+
+	return listIdCmd
+}
+
+// NewKeypairGetCmd : "cbadm keypair get"
 func NewKeypairGetCmd() *cobra.Command {
 
 	getCmd := &cobra.Command{
@@ -116,7 +142,7 @@ func NewKeypairGetCmd() *cobra.Command {
 	return getCmd
 }
 
-// NewKeypairSaveCmd - Keypair 저장 기능을 수행하는 Cobra Command 생성
+// NewKeypairSaveCmd : "cbadm keypair save"
 func NewKeypairSaveCmd() *cobra.Command {
 
 	saveCmd := &cobra.Command{
@@ -152,7 +178,7 @@ func NewKeypairSaveCmd() *cobra.Command {
 	return saveCmd
 }
 
-// NewKeypairDeleteCmd - Keypair 삭제 기능을 수행하는 Cobra Command 생성
+// NewKeypairDeleteCmd : "cbadm keypair delete"
 func NewKeypairDeleteCmd() *cobra.Command {
 
 	deleteCmd := &cobra.Command{
@@ -186,4 +212,34 @@ func NewKeypairDeleteCmd() *cobra.Command {
 	deleteCmd.PersistentFlags().StringVarP(&force, "force", "", "false", "force flag")
 
 	return deleteCmd
+}
+
+// NewKeypairDeleteAllCmd : "cbadm keypair delete-all"
+func NewKeypairDeleteAllCmd() *cobra.Command {
+
+	deleteAllCmd := &cobra.Command{
+		Use:   "delete-all",
+		Short: "This is delete-all command for keypair",
+		Long:  "This is delete-all command for keypair",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger := logger.NewLogger()
+			if nameSpaceID == "" {
+				logger.Error("failed to validate --ns parameter")
+				return
+			}
+			if force == "" {
+				logger.Error("failed to validate --force parameter")
+				return
+			}
+			logger.Debug("--ns parameter value : ", nameSpaceID)
+			logger.Debug("--force parameter value : ", force)
+
+			SetupAndRun(cmd, args)
+		},
+	}
+
+	deleteAllCmd.PersistentFlags().StringVarP(&nameSpaceID, "ns", "", "", "namespace id")
+	deleteAllCmd.PersistentFlags().StringVarP(&force, "force", "", "false", "force flag")
+
+	return deleteAllCmd
 }

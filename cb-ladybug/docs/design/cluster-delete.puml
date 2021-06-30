@@ -1,41 +1,40 @@
-@@startuml
+@startuml
 
-header **Cloud-Barista Ladybug** (Espresso version)
+header **Cloud-Barista Ladybug** (v0.4.0-cafemocha)
 title Delete a cluster
 hide footbox
 
-actor		"User"			as user			#d1e0ff
 participant	"Webtool"		as webtool		#d1e0ff
 participant	"Ladybug"		as provider
 database	"Ladybug data"	as db
 participant	"Tumblebug"		as tumblebug	#d1e0ff
-participant	"Spider"		as spider		#d1e0ff
 
-
-user		->	webtool		: delete a cluster
 
 activate webtool
 	webtool		->	provider		: DELETE\n/ns/:ns/clusters/:cluster
 
 	activate provider
-		provider	->	tumblebug	: GET\n/mcis
-		activate tumblebug
-			tumblebug	-->	provider 	: ack {mcis}
-		deactivate tumblebug
+		provider	->	tumblebug	: GET\n/ns/:ns/mcis/:mcis
+		tumblebug	-->	provider	: {mcis}
+		alt if mcis does exist 
+			provider	->	tumblebug	: DELETE\n/ns/:ns/mcis/:mcis
+			tumblebug	-->	provider
 
-		provider	->	tumblebug	: DELETE\n/mcis
-	
-		activate tumblebug
-			tumblebug	->o	spider		: DELETE\n/vm
-			tumblebug	-->	provider 	: ack
-		deactivate tumblebug
+			alt if there is an error
+				provider	->	tumblebug	: [if it does exist]\nDELETE\n/ns/:ns/mcis/:mcis?action=refine
+				tumblebug	-->	provider	: {status}
+				
+				provider	->	tumblebug	: DELETE\n/ns/:ns/mcis/:mcis
+				tumblebug	-->	provider	: {status}
+			end
 
-		provider	->o	db	: delete
-		provider		-->	webtool		: ack {result}
+		end
+
+		provider	->	db	: delete
+		provider	-->	webtool		: {result}
 
 	deactivate provider
 
-	webtool	-->	user	: ack {result}
 deactivate webtool
 
-@@enduml
+@enduml

@@ -207,6 +207,12 @@ func SetupAndRun(cmd *cobra.Command, args []string) {
 			result, err = ccm.ListAllVPCByParam(connectionName)
 		case "deletecsp":
 			result, err = ccm.DeleteCSPVPCByParam(connectionName, cspID)
+		case "add-subnet":
+			result, err = ccm.AddSubnet(inData)
+		case "remove-subnet":
+			result, err = ccm.RemoveSubnetByParam(connectionName, vpcName, subnetName, force)
+		case "removecsp-subnet":
+			result, err = ccm.RemoveCSPSubnetByParam(connectionName, vpcName, cspID)
 		}
 	case "security":
 		switch cmd.Name() {
@@ -267,8 +273,12 @@ func SetupAndRun(cmd *cobra.Command, args []string) {
 	}
 
 	if err != nil {
-		logger.Error("failed to run command: ", err)
+		if outType == "yaml" {
+			fmt.Fprintf(cmd.OutOrStdout(), "message: %v\n", err)
+		} else {
+			fmt.Fprintf(cmd.OutOrStdout(), "{\"message\": \"%v\"}\n", err)
+		}
+	} else {
+		fmt.Fprintf(cmd.OutOrStdout(), "%s\n", result)
 	}
-
-	fmt.Printf("%s\n", result)
 }

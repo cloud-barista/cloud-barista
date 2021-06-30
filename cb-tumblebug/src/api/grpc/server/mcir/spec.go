@@ -97,6 +97,28 @@ func (s *MCIRService) ListSpec(ctx context.Context, req *pb.ResourceAllQryReques
 	return resp, nil
 }
 
+// ListSpecId
+func (s *MCIRService) ListSpecId(ctx context.Context, req *pb.ResourceAllQryRequest) (*pb.ListIdResponse, error) {
+	logger := logger.NewLogger()
+
+	logger.Debug("calling MCIRService.ListSpecId()")
+
+	resourceIdList, err := mcir.ListResourceId(req.NsId, req.ResourceType)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.ListSpecId()")
+	}
+
+	// MCIR 객체에서 GRPC 메시지로 복사
+	var grpcObj []string
+	err = gc.CopySrcToDest(&resourceIdList, &grpcObj)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.ListSpecId()")
+	}
+
+	resp := &pb.ListIdResponse{IdList: grpcObj}
+	return resp, nil
+}
+
 // GetSpec - Spec 조회
 func (s *MCIRService) GetSpec(ctx context.Context, req *pb.ResourceQryRequest) (*pb.TbSpecInfoResponse, error) {
 	logger := logger.NewLogger()
@@ -155,9 +177,25 @@ func (s *MCIRService) FetchSpec(ctx context.Context, req *pb.FetchSpecQryRequest
 
 	logger.Debug("calling MCIRService.FetchSpec()")
 
-	connConfigCount, specCount, err := mcir.FetchSpecs(req.NsId)
-	if err != nil {
-		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.FetchSpec()")
+	// connConfigCount, specCount, err := mcir.FetchSpecsForAllConnConfigs(req.NsId)
+	// if err != nil {
+	// 	return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.FetchSpec()")
+	// }
+
+	var connConfigCount, specCount uint
+	var err error
+
+	if req.ConnectionName == "!all" {
+		connConfigCount, specCount, err = mcir.FetchSpecsForAllConnConfigs(req.NsId)
+		if err != nil {
+			return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.FetchSpec()")
+		}
+	} else {
+		connConfigCount = 1
+		specCount, err = mcir.FetchSpecsForConnConfig(req.ConnectionName, req.NsId)
+		if err != nil {
+			return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.FetchSpec()")
+		}
 	}
 
 	resp := &pb.MessageResponse{Message: "Fetched " + fmt.Sprint(specCount) + " specs (from " + fmt.Sprint(connConfigCount) + " connConfigs)"}
@@ -190,6 +228,93 @@ func (s *MCIRService) FilterSpec(ctx context.Context, req *pb.TbSpecInfoRequest)
 	}
 
 	resp := &pb.ListTbSpecInfoResponse{Items: grpcObj}
+	return resp, nil
+}
+
+// FilterSpecsByRange
+func (s *MCIRService) FilterSpecsByRange(ctx context.Context, req *pb.FilterSpecsByRangeRequest) (*pb.ListTbSpecInfoResponse, error) {
+	logger := logger.NewLogger()
+
+	logger.Debug("calling MCIRService.FilterSpecsByRange()")
+
+	// GRPC 메시지에서 MCIR 객체로 복사
+	var filter mcir.FilterSpecsByRangeRequest
+	err := gc.CopySrcToDest(&req.Filter, &filter)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.FilterSpecsByRange()")
+	}
+
+	resourceList, err := mcir.FilterSpecsByRange(req.NsId, filter)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.FilterSpecsByRange()")
+	}
+
+	// MCIR 객체에서 GRPC 메시지로 복사
+	var grpcObj []*pb.TbSpecInfo
+	err = gc.CopySrcToDest(&resourceList, &grpcObj)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.FilterSpecsByRange()")
+	}
+
+	resp := &pb.ListTbSpecInfoResponse{Items: grpcObj}
+	return resp, nil
+}
+
+// SortSpecs
+func (s *MCIRService) SortSpecs(ctx context.Context, req *pb.SortSpecsRequest) (*pb.ListTbSpecInfoResponse, error) {
+	logger := logger.NewLogger()
+
+	logger.Debug("calling MCIRService.SortSpecs()")
+
+	// GRPC 메시지에서 MCIR 객체로 복사
+	var specList []mcir.TbSpecInfo
+	err := gc.CopySrcToDest(&req.Items, &specList)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.SortSpecs()")
+	}
+
+	resourceList, err := mcir.SortSpecs(specList, req.OrderBy, req.Direction)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.SortSpecs()")
+	}
+
+	// MCIR 객체에서 GRPC 메시지로 복사
+	var grpcObj []*pb.TbSpecInfo
+	err = gc.CopySrcToDest(&resourceList, &grpcObj)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.SortSpecs()")
+	}
+
+	resp := &pb.ListTbSpecInfoResponse{Items: grpcObj}
+	return resp, nil
+}
+
+// UpdateSpec
+func (s *MCIRService) UpdateSpec(ctx context.Context, req *pb.TbSpecInfoRequest) (*pb.TbSpecInfoResponse, error) {
+	logger := logger.NewLogger()
+
+	logger.Debug("calling MCIRService.UpdateSpec()")
+
+	// GRPC 메시지에서 MCIR 객체로 복사
+	var mcirObj mcir.TbSpecInfo
+	err := gc.CopySrcToDest(&req.Item, &mcirObj)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.UpdateSpec()")
+	}
+
+	content, err := mcir.UpdateSpec(req.NsId, mcirObj)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.UpdateSpec()")
+	}
+
+	// MCIR 객체에서 GRPC 메시지로 복사
+	var grpcObj pb.TbSpecInfo
+	err = gc.CopySrcToDest(&content, &grpcObj)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.UpdateSpec()")
+	}
+
+	resp := &pb.TbSpecInfoResponse{Item: &grpcObj}
 	return resp, nil
 }
 

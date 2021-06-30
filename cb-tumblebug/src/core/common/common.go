@@ -16,10 +16,13 @@ type KeyValue struct {
 	Value string
 }
 
+type IdList struct {
+	IdList []string `json:"idList"`
+}
+
 // CB-Store
 var CBLog *logrus.Logger
 var CBStore icbs.Store
-const CbStoreKeyNotFoundErrorString string = "key not found"
 
 var SPIDER_REST_URL string
 var DRAGONFLY_REST_URL string
@@ -31,13 +34,23 @@ var AUTOCONTROL_DURATION_MS string
 var MYDB *sql.DB
 var err error
 
-const StrSPIDER_REST_URL string = "SPIDER_REST_URL"
-const StrDRAGONFLY_REST_URL string = "DRAGONFLY_REST_URL"
-const StrDB_URL string = "DB_URL"
-const StrDB_DATABASE string = "DB_DATABASE"
-const StrDB_USER string = "DB_USER"
-const StrDB_PASSWORD string = "DB_PASSWORD"
-const StrAUTOCONTROL_DURATION_MS string = "AUTOCONTROL_DURATION_MS"
+const (
+	StrSPIDER_REST_URL            string = "SPIDER_REST_URL"
+	StrDRAGONFLY_REST_URL         string = "DRAGONFLY_REST_URL"
+	StrDB_URL                     string = "DB_URL"
+	StrDB_DATABASE                string = "DB_DATABASE"
+	StrDB_USER                    string = "DB_USER"
+	StrDB_PASSWORD                string = "DB_PASSWORD"
+	StrAUTOCONTROL_DURATION_MS    string = "AUTOCONTROL_DURATION_MS"
+	CbStoreKeyNotFoundErrorString string = "key not found"
+	StrAdd                        string = "add"
+	StrDelete                     string = "delete"
+	StrSSHKey                     string = "sshKey"
+	StrImage                      string = "image"
+	StrSecurityGroup              string = "securityGroup"
+	StrSpec                       string = "spec"
+	StrVNet                       string = "vNet"
+)
 
 var StartTime string
 
@@ -54,6 +67,10 @@ type IID struct {
 	SystemId string // SystemID by CloudOS
 }
 
+type SpiderConnectionName struct {
+	ConnectionName string `json:"ConnectionName"`
+}
+
 func OpenSQL(path string) error {
 	/*
 		common.MYDB, err = sql.Open("mysql", //"root:pwd@tcp(127.0.0.1:3306)/testdb")
@@ -65,24 +82,12 @@ func OpenSQL(path string) error {
 
 	fullPathString := "file:" + path
 	MYDB, err = sql.Open("sqlite3", fullPathString)
-	if err != nil {
-		fmt.Println(err.Error())
-	} else {
-		fmt.Println("Database access info set successfully")
-	}
-
 	return err
 }
 
 func SelectDatabase(database string) error {
-	query := "USE " + database
+	query := "USE " + database + ";"
 	_, err = MYDB.Exec(query)
-	if err != nil {
-		fmt.Println(err.Error())
-	} else {
-		fmt.Println("DB selected successfully..")
-	}
-
 	return err
 }
 
@@ -126,11 +131,6 @@ func CreateSpecTable() error {
 		fmt.Println(err.Error())
 	}
 	_, err = stmt.Exec()
-	if err != nil {
-		fmt.Println(err.Error())
-	} else {
-		fmt.Println("Table spec created successfully..")
-	}
 
 	return err
 }
@@ -152,11 +152,6 @@ func CreateImageTable() error {
 		fmt.Println(err.Error())
 	}
 	_, err = stmt.Exec()
-	if err != nil {
-		fmt.Println(err.Error())
-	} else {
-		fmt.Println("Table image created successfully..")
-	}
 
 	return err
 }

@@ -19,11 +19,13 @@ type SecurityReqInfo struct {
 	SecurityRules *[]SecurityRuleInfo
 }
 
+// @definitionAlias cres.SecurityRuleInfo
 type SecurityRuleInfo struct {
 	FromPort   string
 	ToPort     string
 	IPProtocol string
 	Direction  string
+	CIDR       string
 }
 
 type SecurityInfo struct {

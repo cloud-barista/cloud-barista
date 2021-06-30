@@ -1,12 +1,18 @@
 # CB-Ladybug :beetle:
 > Multi-Cloud Application Management Framework
 
-
-![Version](https://img.shields.io/github/release/cloud-barista/cb-ladybug) ![License](https://img.shields.io/github/license/cloud-barista/cb-ladybug) ![issues](https://img.shields.io/github/issues/cloud-barista/cb-ladybug) ![issues](https://img.shields.io/github/issues-closed/cloud-barista/cb-ladybug) ![pull requests](https://img.shields.io/github/issues-pr-closed/cloud-barista/cb-ladybug) ![workflow](https://img.shields.io/github/workflow/status/cloud-barista/cb-ladybug/Docker) ![code size](https://img.shields.io/github/languages/code-size/cloud-barista/cb-ladybug) 
+[![Go Report Card](https://goreportcard.com/badge/github.com/cloud-barista/cb-ladybug)](https://goreportcard.com/report/github.com/cloud-barista/cb-ladybug)
+[![Build](https://img.shields.io/github/workflow/status/cloud-barista/cb-ladybug/Build%20amd64%20container%20image)](https://github.com/cloud-barista/cb-ladybug/actions?query=workflow%3A%22Build+amd64+container+image%22)
+[![Top Language](https://img.shields.io/github/languages/top/cloud-barista/cb-ladybug)](https://github.com/cloud-barista/cb-ladybug/search?l=go)
+[![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/cloud-barista/cb-ladybug?label=go.mod)](https://github.com/cloud-barista/cb-ladybug/blob/master/go.mod)
+[![Repo Size](https://img.shields.io/github/repo-size/cloud-barista/cb-ladybug)](#)
+[![GoDoc](https://godoc.org/github.com/cloud-barista/cb-ladybug?status.svg)](https://pkg.go.dev/github.com/cloud-barista/cb-ladybug@master)
+[![Release Version](https://img.shields.io/github/v/release/cloud-barista/cb-ladybug?color=blue)](https://github.com/cloud-barista/cb-ladybug/releases/latest)
+[![License](https://img.shields.io/github/license/cloud-barista/cb-ladybug?color=blue)](https://github.com/cloud-barista/cb-ladybug/blob/master/LICENSE)
 
 ```
 [NOTE]
-CB-Ladybug is currently under development. (the latest release is 0.3.0 espresso)
+CB-Ladybug is currently under development. (the latest release is v0.4.0)
 So, we do not recommend using the current release in production.
 Please note that the functionalities of CB-Ladybug are not stable and secure yet.
 If you have any difficulties in using CB-Ladybug, please let us know.
@@ -17,12 +23,12 @@ If you have any difficulties in using CB-Ladybug, please let us know.
 
 ### Preparation
 
-* Golang 1.15.+ ([Download and install](https://golang.org/doc/install))
+* Golang 1.16.+ ([Download and install](https://golang.org/doc/install))
 
 ### Dependencies
 
-* CB-Spider [v0.3.0-espresso](https://github.com/cloud-barista/cb-tumblebug/releases/tag/v0.3.0-espresso)
-* CB-Tumbluebug [v0.3.0-espresso](https://github.com/cloud-barista/cb-spider/releases/tag/v0.3.0-espresso)
+* CB-Tumblebug [v0.4.0](https://github.com/cloud-barista/cb-tumblebug/releases/tag/v0.4.0)
+* CB-Spider [v0.4.0](https://github.com/cloud-barista/cb-spider/releases/tag/v0.4.0)
 
 
 ### Clone
@@ -62,23 +68,24 @@ code:200
 ```
 
 
-### API documentation (swagger)
+### API documentation
 
 * Execute or Run
-* Open http://localhost:8080/swagger/index.html in your web browser 
-
-#### How to generate an updated swagger.yaml
+* Generate an updated swagger.yaml
 ```
 $ go get -u github.com/swaggo/swag/cmd/swag
 
 # in src/ folder
 $ swag init
 ```
+* Open http://localhost:8080/swagger/index.html in your web browser 
 
-## Documentation
+## Documents
 
 * [Design](./docs/design)
+* REST API [latest](https://cloud-barista.github.io/cb-ladybug-api-web/?url=https://raw.githubusercontent.com/cloud-barista/cb-ladybug/master/src/docs/v0.4.0.yaml)
 
 
 ## Contribution
-Learn how to start contribution on the [Contributing Guideline](https://github.com/cloud-barista/docs/tree/master/contributing)
+Learn how to start contribution on the [Contributing Guideline](https://github.com/cloud-barista/docs/tree/master/contributing) and [Style Guideline](https://github.com/cloud-barista/cb-ladybug/blob/master/STYLE_GUIDE.md)
+

@@ -12,7 +12,7 @@ import (
 // RestPostMcis godoc
 // @Summary Create MCIS
 // @Description Create MCIS
-// @Tags MCIS
+// @Tags [MCIS] Provisioning management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -30,7 +30,7 @@ func RestPostMcis(c echo.Context) error {
 		return err
 	}
 
-	result, err := mcis.CorePostMcis(nsId, req)
+	result, err := mcis.CreateMcis(nsId, req)
 	if err != nil {
 		mapA := map[string]string{"message": err.Error()}
 		return c.JSON(http.StatusInternalServerError, &mapA)
@@ -42,15 +42,41 @@ func RestPostMcis(c echo.Context) error {
 	return c.JSON(http.StatusCreated, result)
 }
 
+// JSONResult's data field will be overridden by the specific type
+type JSONResult struct {
+	//Code    int          `json:"code" `
+	//Message string       `json:"message"`
+	//Data    interface{}  `json:"data"`
+}
+
+func RestTestListVmId(c echo.Context) error { // for debug
+	nsId := c.Param("nsId")
+	mcisId := c.Param("mcisId")
+
+	vmList, err := mcis.ListVmId(nsId, mcisId)
+	if err != nil {
+		mapA := map[string]string{"message": err.Error()}
+		return c.JSON(http.StatusInternalServerError, &mapA)
+	}
+
+	// mapA := map[string]string{"message": result}
+	return c.JSON(http.StatusOK, &vmList)
+}
+
+// TODO: swag does not support multiple response types (success 200) in an API.
+// Annotation for API documention Need to be revised.
+
 // RestGetMcis godoc
-// @Summary Get MCIS
-// @Description Get MCIS
-// @Tags MCIS
+// @Summary Get MCIS, Action to MCIS (status, suspend, resume, reboot, terminate, refine), or Get VMs' ID
+// @Description Get MCIS, Action to MCIS (status, suspend, resume, reboot, terminate, refine), or Get VMs' ID
+// @Tags [MCIS] Provisioning management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
 // @Param mcisId path string true "MCIS ID"
-// @Success 200 {object} TbMcisInfo
+// @Param action query string false "Action to MCIS" Enums(status, suspend, resume, reboot, terminate, refine)
+// @Param option query string false "Option" Enums(id)
+// @success 200 {object} JSONResult{[DEFAULT]=mcis.TbMcisInfo,[STATUS]=mcis.McisStatusInfo,[CONTROL]=common.SimpleMsg,[ID]=common.IdList} "Different return structures by the given action param"
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
 // @Router /ns/{nsId}/mcis/{mcisId} [get]
@@ -61,10 +87,21 @@ func RestGetMcis(c echo.Context) error {
 	mcisId := c.Param("mcisId")
 
 	action := c.QueryParam("action")
+	option := c.QueryParam("option")
 
-	if action == "suspend" || action == "resume" || action == "reboot" || action == "terminate" {
+	if option == "id" {
+		content := common.IdList{}
+		var err error
+		content.IdList, err = mcis.ListVmId(nsId, mcisId)
+		if err != nil {
+			mapA := map[string]string{"message": err.Error()}
+			return c.JSON(http.StatusInternalServerError, &mapA)
+		}
 
-		result, err := mcis.CoreGetMcisAction(nsId, mcisId, action)
+		return c.JSON(http.StatusOK, &content)
+	} else if action == "suspend" || action == "resume" || action == "reboot" || action == "terminate" || action == "refine" {
+
+		result, err := mcis.HandleMcisAction(nsId, mcisId, action)
 		if err != nil {
 			mapA := map[string]string{"message": err.Error()}
 			return c.JSON(http.StatusInternalServerError, &mapA)
@@ -75,7 +112,7 @@ func RestGetMcis(c echo.Context) error {
 
 	} else if action == "status" {
 
-		result, err := mcis.CoreGetMcisStatus(nsId, mcisId)
+		result, err := mcis.GetMcisStatus(nsId, mcisId)
 		if err != nil {
 			mapA := map[string]string{"message": err.Error()}
 			return c.JSON(http.StatusInternalServerError, &mapA)
@@ -93,7 +130,7 @@ func RestGetMcis(c echo.Context) error {
 
 	} else {
 
-		result, err := mcis.CoreGetMcisInfo(nsId, mcisId)
+		result, err := mcis.GetMcisInfo(nsId, mcisId)
 		if err != nil {
 			mapA := map[string]string{"message": err.Error()}
 			return c.JSON(http.StatusNotFound, &mapA)
@@ -112,20 +149,21 @@ func RestGetMcis(c echo.Context) error {
 type RestGetAllMcisResponse struct {
 	Mcis []mcis.TbMcisInfo `json:"mcis"`
 }
+
 // Response structure for RestGetAllMcisStatus
 type RestGetAllMcisStatusResponse struct {
 	Mcis []mcis.McisStatusInfo `json:"mcis"`
 }
 
-
 // RestGetAllMcis godoc
-// @Summary List all MCISs
-// @Description List all MCISs
-// @Tags MCIS
+// @Summary List all MCISs or MCISs' ID
+// @Description List all MCISs or MCISs' ID
+// @Tags [MCIS] Provisioning management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
-// @Success 200 {object} RestGetAllMcisResponse
+// @Param option query string false "Option" Enums(id)
+// @Success 200 {object} JSONResult{[DEFAULT]=RestGetAllMcisResponse,[ID]=common.IdList} "Different return structures by the given option param"
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
 // @Router /ns/{nsId}/mcis [get]
@@ -135,7 +173,17 @@ func RestGetAllMcis(c echo.Context) error {
 	option := c.QueryParam("option")
 	fmt.Println("[Get MCIS List requested with option: " + option)
 
-	if option == "status" {
+	if option == "id" {
+		content := common.IdList{}
+		var err error
+		content.IdList, err = mcis.ListMcisId(nsId)
+		if err != nil {
+			mapA := map[string]string{"message": err.Error()}
+			return c.JSON(http.StatusNotFound, &mapA)
+		}
+
+		return c.JSON(http.StatusOK, &content)
+	} else if option == "status" {
 		result, err := mcis.GetMcisStatusAll(nsId)
 		if err != nil {
 			mapA := map[string]string{"message": err.Error()}
@@ -165,7 +213,7 @@ func RestGetAllMcis(c echo.Context) error {
 // RestPutMcis godoc
 // @Summary Update MCIS
 // @Description Update MCIS
-// @Tags MCIS
+// @Tags [MCIS] Provisioning management
 // @Accept  json
 // @Produce  json
 // @Param mcisInfo body TbMcisInfo true "Details for an MCIS object"
@@ -181,11 +229,12 @@ func RestPutMcis(c echo.Context) error {
 // RestDelMcis godoc
 // @Summary Delete MCIS
 // @Description Delete MCIS
-// @Tags MCIS
+// @Tags [MCIS] Provisioning management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
 // @Param mcisId path string true "MCIS ID"
+// @Param option query string false "Option for delete MCIS (support force delete)" Enums(force)
 // @Success 200 {object} common.SimpleMsg
 // @Failure 404 {object} common.SimpleMsg
 // @Router /ns/{nsId}/mcis/{mcisId} [delete]
@@ -193,32 +242,35 @@ func RestDelMcis(c echo.Context) error {
 
 	nsId := c.Param("nsId")
 	mcisId := c.Param("mcisId")
+	option := c.QueryParam("option")
 
-	err := mcis.DelMcis(nsId, mcisId)
+	err := mcis.DelMcis(nsId, mcisId, option)
 	if err != nil {
 		common.CBLog.Error(err)
-		mapA := map[string]string{"message": "Failed to delete the MCIS"}
+		mapA := map[string]string{"message": err.Error()}
 		return c.JSON(http.StatusInternalServerError, &mapA)
 	}
 
-	mapA := map[string]string{"message": "Deleting the MCIS info"}
+	mapA := map[string]string{"message": "Deleting the MCIS " + mcisId}
 	return c.JSON(http.StatusOK, &mapA)
 }
 
 // RestDelAllMcis godoc
 // @Summary Delete all MCISs
 // @Description Delete all MCISs
-// @Tags MCIS
+// @Tags [MCIS] Provisioning management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
+// @Param option query string false "Option for delete MCIS (support force delete)" Enums(force)
 // @Success 200 {object} common.SimpleMsg
 // @Failure 404 {object} common.SimpleMsg
 // @Router /ns/{nsId}/mcis [delete]
 func RestDelAllMcis(c echo.Context) error {
 	nsId := c.Param("nsId")
+	option := c.QueryParam("option")
 
-	result, err := mcis.CoreDelAllMcis(nsId)
+	result, err := mcis.CoreDelAllMcis(nsId, option)
 	if err != nil {
 		mapA := map[string]string{"message": err.Error()}
 		return c.JSON(http.StatusInternalServerError, &mapA)
@@ -228,26 +280,27 @@ func RestDelAllMcis(c echo.Context) error {
 	return c.JSON(http.StatusOK, &mapA)
 }
 
-type RestPostMcisRecommandResponse struct {
-	//Vm_req          []TbVmRecommendReq    `json:"vm_req"`
-	Vm_recommend    []mcis.TbVmRecommendInfo `json:"vm_recommend"`
-	Placement_algo  string                   `json:"placement_algo"`
-	Placement_param []common.KeyValue        `json:"placement_param"`
+type RestPostMcisRecommendResponse struct {
+	//VmReq          []TbVmRecommendReq    `json:"vmReq"`
+	Vm_recommend   []mcis.TbVmRecommendInfo `json:"vm_recommend"`
+	PlacementAlgo  string                   `json:"placementAlgo"`
+	PlacementParam []common.KeyValue        `json:"placementParam"`
 }
 
-// RestPostMcisRecommand godoc
+// RestPostMcisRecommend godoc
 // @Summary Get MCIS recommendation
 // @Description Get MCIS recommendation
-// @Tags MCIS
+// @Tags [MCIS] Provisioning management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
 // @Param mcisRecommendReq body mcis.McisRecommendReq true "Details for an MCIS object"
-// @Success 200 {object} RestPostMcisRecommandResponse
+// @Success 200 {object} RestPostMcisRecommendResponse
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
 // @Router /ns/{nsId}/mcis/recommend [post]
-func RestPostMcisRecommand(c echo.Context) error {
+// @Deprecated
+func RestPostMcisRecommend(c echo.Context) error {
 
 	nsId := c.Param("nsId")
 
@@ -256,16 +309,16 @@ func RestPostMcisRecommand(c echo.Context) error {
 		return err
 	}
 
-	result, err := mcis.CorePostMcisRecommand(nsId, req)
+	result, err := mcis.CorePostMcisRecommend(nsId, req)
 	if err != nil {
 		mapA := map[string]string{"message": err.Error()}
 		return c.JSON(http.StatusInternalServerError, &mapA)
 	}
 
-	content := RestPostMcisRecommandResponse{}
+	content := RestPostMcisRecommendResponse{}
 	content.Vm_recommend = result
-	content.Placement_algo = req.Placement_algo
-	content.Placement_param = req.Placement_param
+	content.PlacementAlgo = req.PlacementAlgo
+	content.PlacementParam = req.PlacementParam
 
 	//fmt.Printf("%+v\n", content)
 	common.PrintJsonPretty(content)
@@ -280,7 +333,7 @@ type RestPostCmdMcisVmResponse struct {
 // RestPostCmdMcisVm godoc
 // @Summary Send a command to specified VM
 // @Description Send a command to specified VM
-// @Tags MCIS
+// @Tags [MCIS] Remote command
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -313,10 +366,10 @@ func RestPostCmdMcisVm(c echo.Context) error {
 }
 
 type RestPostCmdMcisResponse struct {
-	Mcis_id string `json:"mcis_id"`
-	Vm_id   string `json:"vm_id"`
-	Vm_ip   string `json:"vm_ip"`
-	Result  string `json:"result"`
+	McisId string `json:"mcisId"`
+	VmId   string `json:"vmId"`
+	VmIp   string `json:"vmIp"`
+	Result string `json:"result"`
 }
 
 type RestPostCmdMcisResponseWrapper struct {
@@ -326,7 +379,7 @@ type RestPostCmdMcisResponseWrapper struct {
 // RestPostCmdMcis godoc
 // @Summary Send a command to specified MCIS
 // @Description Send a command to specified MCIS
-// @Tags MCIS
+// @Tags [MCIS] Remote command
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -357,9 +410,9 @@ func RestPostCmdMcis(c echo.Context) error {
 	for _, v := range resultArray {
 
 		resultTmp := RestPostCmdMcisResponse{}
-		resultTmp.Mcis_id = mcisId
-		resultTmp.Vm_id = v.Vm_id
-		resultTmp.Vm_ip = v.Vm_ip
+		resultTmp.McisId = mcisId
+		resultTmp.VmId = v.VmId
+		resultTmp.VmIp = v.VmIp
 		resultTmp.Result = v.Result
 		content.Result_array = append(content.Result_array, resultTmp)
 		//fmt.Println("result from goroutin " + v)
@@ -375,7 +428,7 @@ func RestPostCmdMcis(c echo.Context) error {
 // RestPostInstallAgentToMcis godoc
 // @Summary Install the benchmark agent to specified MCIS
 // @Description Install the benchmark agent to specified MCIS
-// @Tags MCIS
+// @Tags [MCIS] Performance benchmarking (WIP)
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -407,7 +460,7 @@ func RestPostInstallAgentToMcis(c echo.Context) error {
 // RestPostMcisVm godoc
 // @Summary Create VM in specified MCIS
 // @Description Create VM in specified MCIS
-// @Tags MCIS
+// @Tags [MCIS] Provisioning management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -438,16 +491,54 @@ func RestPostMcisVm(c echo.Context) error {
 	return c.JSON(http.StatusCreated, result)
 }
 
+// RestPostMcisVmGroup godoc
+// @Summary Create multiple VMs by VM group in specified MCIS
+// @Description Create multiple VMs by VM group in specified MCIS
+// @Tags [MCIS] Provisioning management
+// @Accept  json
+// @Produce  json
+// @Param nsId path string true "Namespace ID"
+// @Param mcisId path string true "MCIS ID"
+// @Param vmReq body mcis.TbVmReq true "Details for VM Group"
+// @Success 200 {object} mcis.TbMcisInfo
+// @Failure 404 {object} common.SimpleMsg
+// @Failure 500 {object} common.SimpleMsg
+// @Router /ns/{nsId}/mcis/{mcisId}/vmgroup [post]
+func RestPostMcisVmGroup(c echo.Context) error {
+
+	nsId := c.Param("nsId")
+	mcisId := c.Param("mcisId")
+
+	vmInfoData := &mcis.TbVmReq{}
+	if err := c.Bind(vmInfoData); err != nil {
+		return err
+	}
+	common.PrintJsonPretty(*vmInfoData)
+
+	result, err := mcis.CorePostMcisGroupVm(nsId, mcisId, vmInfoData)
+	if err != nil {
+		mapA := map[string]string{"message": err.Error()}
+		return c.JSON(http.StatusInternalServerError, &mapA)
+	}
+	common.PrintJsonPretty(*result)
+
+	return c.JSON(http.StatusCreated, result)
+}
+
+// TODO: swag does not support multiple response types (success 200) in an API.
+// Annotation for API documention Need to be revised.
+
 // RestGetMcisVm godoc
-// @Summary Get MCIS
-// @Description Get MCIS
-// @Tags MCIS
+// @Summary Get VM in specified MCIS
+// @Description Get VM in specified MCIS
+// @Tags [MCIS] Provisioning management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
 // @Param mcisId path string true "MCIS ID"
 // @Param vmId path string true "VM ID"
-// @Success 200 {object} mcis.TbVmInfo
+// @Param action query string false "Action to MCIS" Enums(status, suspend, resume, reboot, terminate)
+// @success 200 {object} JSONResult{[DEFAULT]=mcis.TbVmInfo,[STATUS]=mcis.TbVmStatusInfo,[CONTROL]=common.SimpleMsg} "Different return structures by the given action param"
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
 // @Router /ns/{nsId}/mcis/{mcisId}/vm/{vmId} [get]
@@ -503,11 +594,11 @@ func RestGetMcisVm(c echo.Context) error {
 	}
 }
 
-/* function RestPutMcisVm not yet implemented
+/* RestPutMcisVm function not yet implemented
 // RestPutSshKey godoc
 // @Summary Update MCIS
 // @Description Update MCIS
-// @Tags MCIS
+// @Tags [MCIS] Provisioning management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -524,14 +615,15 @@ func RestPutMcisVm(c echo.Context) error {
 }
 
 // RestDelMcisVm godoc
-// @Summary Delete MCIS
-// @Description Delete MCIS
-// @Tags MCIS
+// @Summary Delete VM in specified MCIS
+// @Description Delete VM in specified MCIS
+// @Tags [MCIS] Provisioning management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
 // @Param mcisId path string true "MCIS ID"
 // @Param vmId path string true "VM ID"
+// @Param option query string false "Option for delete VM (support force delete)" Enums(force)
 // @Success 200 {object} common.SimpleMsg
 // @Failure 404 {object} common.SimpleMsg
 // @Router /ns/{nsId}/mcis/{mcisId}/vm/{vmId} [delete]
@@ -540,8 +632,9 @@ func RestDelMcisVm(c echo.Context) error {
 	nsId := c.Param("nsId")
 	mcisId := c.Param("mcisId")
 	vmId := c.Param("vmId")
+	option := c.QueryParam("option")
 
-	err := mcis.DelMcisVm(nsId, mcisId, vmId)
+	err := mcis.DelMcisVm(nsId, mcisId, vmId, option)
 	if err != nil {
 		common.CBLog.Error(err)
 		mapA := map[string]string{"message": "Failed to delete the VM info"}
@@ -558,9 +651,9 @@ type RestGetAllBenchmarkRequest struct {
 }
 
 // RestGetAllBenchmark godoc
-// @Summary List all MCISs
-// @Description List all MCISs
-// @Tags MCIS
+// @Summary Run MCIS benchmark for all performance metrics and return results
+// @Description Run MCIS benchmark for all performance metrics and return results
+// @Tags [MCIS] Performance benchmarking (WIP)
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -569,7 +662,7 @@ type RestGetAllBenchmarkRequest struct {
 // @Success 200 {object} mcis.BenchmarkInfoArray
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
-// @Router /ns/{nsId}/benchmarkall/mcis/{mcisId} [get]
+// @Router /ns/{nsId}/benchmarkall/mcis/{mcisId} [post]
 func RestGetAllBenchmark(c echo.Context) error {
 	//id, _ := strconv.Atoi(c.Param("id"))
 
@@ -602,18 +695,19 @@ type RestGetBenchmarkRequest struct {
 }
 
 // RestGetBenchmark godoc
-// @Summary Get MCIS
-// @Description Get MCIS
-// @Tags MCIS
+// @Summary Run MCIS benchmark for a single performance metric and return results
+// @Description Run MCIS benchmark for a single performance metric and return results
+// @Tags [MCIS] Performance benchmarking (WIP)
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
 // @Param mcisId path string true "MCIS ID"
 // @Param hostIP body RestGetBenchmarkRequest true "Host IP address to benchmark"
+// @Param action query string true "Benchmark Action to MCIS" Enums(install, init, cpus, cpum, memR, memW, fioR, fioW, dbR, dbW, rtt, mrtt, clean)
 // @Success 200 {object} mcis.BenchmarkInfoArray
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
-// @Router /ns/{nsId}/benchmark/mcis/{mcisId} [get]
+// @Router /ns/{nsId}/benchmark/mcis/{mcisId} [post]
 func RestGetBenchmark(c echo.Context) error {
 	//id, _ := strconv.Atoi(c.Param("id"))
 

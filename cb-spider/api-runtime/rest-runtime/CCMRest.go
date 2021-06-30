@@ -12,13 +12,15 @@ package restruntime
 import (
 	"fmt"
 
+	cm "github.com/cloud-barista/cb-spider/api-runtime/common-runtime"
 	cmrt "github.com/cloud-barista/cb-spider/api-runtime/common-runtime"
 	cres "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces/resources"
 
 	// REST API (echo)
 	"net/http"
 	"net/url"
-	"github.com/labstack/echo"
+
+	"github.com/labstack/echo/v4"
 
 	"strconv"
 	"strings"
@@ -28,14 +30,11 @@ import (
 const (
 	rsImage string = "image"
 	rsVPC   string = "vpc"
-	// rsSubnet = SUBNET:{VPC NameID} => cook in code
+	// rsSubnet = cm.SUBNET:{VPC NameID} => cook in code
 	rsSG  string = "sg"
 	rsKey string = "keypair"
 	rsVM  string = "vm"
 )
-
-const rsSubnetPrefix string = "subnet:"
-const sgDELIMITER string = "-delimiter-"
 
 //================ Image Handler
 func createImage(c echo.Context) error {
@@ -226,33 +225,45 @@ func getOrgVMSpec(c echo.Context) error {
 	return c.String(http.StatusOK, result)
 }
 
-//================ VPC Handler
+type vpcCreateReq struct {
+	ConnectionName string
+	ReqInfo        struct {
+		Name           string
+		IPv4_CIDR      string
+		SubnetInfoList []struct {
+			Name      string
+			IPv4_CIDR string
+		}
+	}
+}
+
+// createVPC godoc
+// @Summary Create VPC
+// @Description Create VPC
+// @Tags [CCM] VPC management
+// @Accept  json
+// @Produce  json
+// @Param vpcCreateReq body vpcCreateReq true "Request body to create VPC"
+// @Success 200 {object} resources.VPCInfo
+// @Failure 404 {object} SimpleMsg
+// @Failure 500 {object} SimpleMsg
+// @Router /vpc [post]
 func createVPC(c echo.Context) error {
 	cblog.Info("call createVPC()")
 
-	var req struct {
-		ConnectionName string
-		ReqInfo        struct {
-			Name           string
-			IPv4_CIDR      string
-			SubnetInfoList []struct {
-				Name      string
-				IPv4_CIDR string
-			}
-		}
-	}
+	req := vpcCreateReq{}
 
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
 	// check the input Name to include the SUBNET: Prefix
-	if strings.HasPrefix(req.ReqInfo.Name, rsSubnetPrefix) {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf(rsSubnetPrefix+" cannot be used for VPC name prefix!!"))
+	if strings.HasPrefix(req.ReqInfo.Name, cm.SUBNET_PREFIX) {
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf(cm.SUBNET_PREFIX+" cannot be used for VPC name prefix!!"))
 	}
 	// check the input Name to include the SecurityGroup Delimiter
-	if strings.HasPrefix(req.ReqInfo.Name, sgDELIMITER) {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf(sgDELIMITER+" cannot be used in VPC name!!"))
+	if strings.HasPrefix(req.ReqInfo.Name, cm.SG_DELIMITER) {
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf(cm.SG_DELIMITER+" cannot be used in VPC name!!"))
 	}
 
 	// Rest RegInfo => Driver ReqInfo
@@ -401,17 +412,17 @@ func deleteCSPVPC(c echo.Context) error {
 	return c.JSON(http.StatusOK, &resultInfo)
 }
 
-//================ SecurityGroup Handler
-func createSecurity(c echo.Context) error {
-	cblog.Info("call createSecurity()")
+// (1) get subnet info from REST Call
+// (2) call common-runtime API
+// (3) return REST Json Format
+func addSubnet(c echo.Context) error {
+	cblog.Info("call addSubnet()")
 
 	var req struct {
 		ConnectionName string
 		ReqInfo        struct {
-			Name          string
-			VPCName       string
-			Direction     string
-			SecurityRules *[]cres.SecurityRuleInfo
+			Name      string
+			IPv4_CIDR string
 		}
 	}
 
@@ -419,16 +430,113 @@ func createSecurity(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// Rest RegInfo => Driver ReqInfo
+	reqSubnetInfo := cres.SubnetInfo{IId: cres.IID{req.ReqInfo.Name, ""}, IPv4_CIDR: req.ReqInfo.IPv4_CIDR}
+
+	// Call common-runtime API
+	result, err := cmrt.AddSubnet(req.ConnectionName, cm.SUBNET_PREFIX+c.Param("VPCName"), c.Param("VPCName"), reqSubnetInfo)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+
+// (1) get args from REST Call
+// (2) call common-runtime API
+// (3) return REST Json Format
+func removeSubnet(c echo.Context) error {
+	cblog.Info("call removeSubnet()")
+
+	var req struct {
+		ConnectionName string
+	}
+
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	// Call common-runtime API
+	result, _, err := cmrt.DeleteResource(req.ConnectionName, cm.SUBNET_PREFIX+c.Param("VPCName"), c.Param("SubnetName"), c.QueryParam("force"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	resultInfo := BooleanInfo{
+		Result: strconv.FormatBool(result),
+	}
+
+	return c.JSON(http.StatusOK, &resultInfo)
+}
+
+// (1) get args from REST Call
+// (2) call common-runtime API
+// (3) return REST Json Format
+func removeCSPSubnet(c echo.Context) error {
+	cblog.Info("call deleteCSPVPC()")
+
+	var req struct {
+		ConnectionName string
+	}
+
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	// Call common-runtime API
+	result, _, err := cmrt.DeleteCSPResource(req.ConnectionName, cm.SUBNET_PREFIX+c.Param("VPCName"), c.Param("Id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	resultInfo := BooleanInfo{
+		Result: strconv.FormatBool(result),
+	}
+
+	return c.JSON(http.StatusOK, &resultInfo)
+}
+
+type securityGroupCreateReq struct {
+	ConnectionName string
+	ReqInfo        struct {
+		Name          string
+		VPCName       string
+		Direction     string
+		SecurityRules *[]cres.SecurityRuleInfo
+	}
+}
+
+/* // createSecurity godoc
+// @Summary Create Security Group
+// @Description Create Security Group
+// @Tags [CCM] Security Group management
+// @Accept  json
+// @Produce  json
+// @Param securityGroupCreateReq body securityGroupCreateReq true "Request body to create Security Group"
+// @Success 200 {object} resources.SecurityInfo
+// @Failure 404 {object} SimpleMsg
+// @Failure 500 {object} SimpleMsg
+// @Router /securitygroup [post] */
+func createSecurity(c echo.Context) error {
+	cblog.Info("call createSecurity()")
+
+	req := securityGroupCreateReq{}
+
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
 	// check the input Name to include the SecurityGroup Delimiter
-	if strings.HasPrefix(req.ReqInfo.Name, sgDELIMITER) {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf(sgDELIMITER+" cannot be used in SecurityGroup name!!"))
+	if strings.Contains(req.ReqInfo.Name, cm.SG_DELIMITER) {
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf(cm.SG_DELIMITER+" cannot be used in Security Group name!!"))
 	}
 
 	// Rest RegInfo => Driver ReqInfo
 	reqInfo := cres.SecurityReqInfo{
-		// SG NameID format => {VPC NameID} + sgDELIMITER + {SG NameID}
-		// transform: SG NameID => {VPC NameID} + sgDELIMITER + {SG NameID}
-		IId:           cres.IID{req.ReqInfo.VPCName + sgDELIMITER + req.ReqInfo.Name, ""},
+		// SG NameID format => {VPC NameID} + cm.SG_DELIMITER + {SG NameID}
+		// transform: SG NameID => {VPC NameID} + cm.SG_DELIMITER + {SG NameID}
+		//IId:           cres.IID{req.ReqInfo.VPCName + cm.SG_DELIMITER + req.ReqInfo.Name, ""},
+		IId:           cres.IID{req.ReqInfo.VPCName + cm.SG_DELIMITER + req.ReqInfo.Name, req.ReqInfo.Name}, // for NCP: fixed NameID => SystemID, Driver: (1)search systemID with fixed NameID (2)replace fixed NameID into SysemID
 		VpcIID:        cres.IID{req.ReqInfo.VPCName, ""},
 		Direction:     req.ReqInfo.Direction,
 		SecurityRules: req.ReqInfo.SecurityRules,
@@ -565,7 +673,31 @@ func deleteCSPSecurity(c echo.Context) error {
 	return c.JSON(http.StatusOK, &resultInfo)
 }
 
-//================ KeyPair Handler
+// type keyPairCreateReq struct {
+// 	ConnectionName string
+// 	ReqInfo        struct {
+// 		Name string
+// 	}
+// }
+
+// JSONResult's data field will be overridden by the specific type
+type JSONResult struct {
+	//Code    int          `json:"code" `
+	//Message string       `json:"message"`
+	//Data    interface{}  `json:"data"`
+}
+
+// createKey godoc
+// @Summary Create SSH Key
+// @Description Create SSH Key
+// @Tags [CCM] Access key management
+// @Accept  json
+// @Produce  json
+// @Param keyPairCreateReq body JSONResult{ConnectionName=string,ReqInfo=JSONResult{Name=string}} true "Request body to create key"
+// @Success 200 {object} resources.KeyPairInfo
+// @Failure 404 {object} SimpleMsg
+// @Failure 500 {object} SimpleMsg
+// @Router /keypair [post]
 func createKey(c echo.Context) error {
 	cblog.Info("call createKey()")
 
@@ -1007,9 +1139,9 @@ func startVM(c echo.Context) error {
 	// (1) create SecurityGroup IID List
 	sgIIDList := []cres.IID{}
 	for _, sgName := range req.ReqInfo.SecurityGroupNames {
-		// SG NameID format => {VPC NameID} + sgDELIMITER + {SG NameID}
+		// SG NameID format => {VPC NameID} + cm.SG_DELIMITER + {SG NameID}
 		// transform: SG NameID => {VPC NameID}-{SG NameID}
-		sgIID := cres.IID{req.ReqInfo.VPCName + sgDELIMITER + sgName, ""}
+		sgIID := cres.IID{req.ReqInfo.VPCName + cm.SG_DELIMITER + sgName, ""}
 		sgIIDList = append(sgIIDList, sgIID)
 	}
 	// (2) create VMReqInfo with SecurityGroup IID List

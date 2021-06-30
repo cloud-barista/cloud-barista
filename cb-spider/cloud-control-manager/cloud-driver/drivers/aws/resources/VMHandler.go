@@ -7,8 +7,11 @@
 package resources
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"reflect"
 	"strings"
 
@@ -69,6 +72,24 @@ func (vmHandler *AwsVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, err
 	baseName := vmReqInfo.IId.NameId //"mcloud-barista-VMHandlerTest"
 	subnetID := vmReqInfo.SubnetIID.SystemId
 
+	// 2021-04-28 cbuser 추가에 따른 Local KeyPair만 VM 생성 가능하도록 강제
+	//=============================
+	// KeyPair의 PublicKey 정보 처리
+	//=============================
+	cblogger.Infof("[%s] KeyPair 조회 시작", keyName)
+	keypairHandler := AwsKeyPairHandler{
+		//CredentialInfo:
+		Region: vmHandler.Region,
+		Client: vmHandler.Client,
+	}
+	cblogger.Info(keypairHandler)
+
+	keyPairInfo, errKeyPair := keypairHandler.GetKey(vmReqInfo.KeyPairIID)
+	if errKeyPair != nil {
+		cblogger.Error(errKeyPair)
+		return irs.VMInfo{}, errKeyPair
+	}
+
 	//=============================
 	// 보안그룹 처리 - SystemId 기반
 	//=============================
@@ -104,6 +125,34 @@ func (vmHandler *AwsVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, err
 	cblogger.Infof("PublicIP ID를 [%s]대신 [%s]로 사용합니다.", publicIPInfo.Id, publicIpId)
 	*/
 
+	/*
+		//=============================
+		// UserData생성 처리
+		//=============================
+		userData := "#cloud-config\nusers:\n  - default\n  - name: " + CBDefaultVmUserName + "\n    groups: sudo\n    shell: /bin/bash\n    sudo: ['ALL=(ALL) NOPASSWD:ALL']\n    ssh-authorized-keys:\n      - "
+		//userData = userData + "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0wqohybvHvljVsUW7vmyicVNVDcPdzh6ZRkm1H9SyMuUEK0zOB3Kj+1MxMQPnRXgL9fI518ymUxavrkrHr0LwZtG8pfMOwZkZ7WD4WnT6Ho14N14U1JIM/+005cBBYyF+OWYyxD/q5p/y8R19NXLpEbnpTNL0mKjQ1q8a6/LVCsaKxy9OJ9o/ChN2FDXhCdVLPHL/jrUPqzjSLkm/GIt+v9RWJ0BFAk+rZY7abMNfGSorTqWZEYYd8gqofeTPh2mhYr21NVLBiAyzQqs6fgL+FgsnJFBnuIZ2peuCGxcOxZ7h8iEzJG2r+tGn+ivfMpla12oHxwihJhiodN1KxeZ7"
+		userData = userData + keyPairInfo.PublicKey
+		userDataBase64 := aws.String(base64.StdEncoding.EncodeToString([]byte(userData)))
+		cblogger.Infof("===== userData ===")
+		spew.Dump(userDataBase64)
+	*/
+
+	//=============================
+	// UserData생성 처리(File기반)
+	//=============================
+	// 향후 공통 파일이나 외부에서 수정 가능하도록 cloud-init 스크립트 파일로 설정
+	rootPath := os.Getenv("CBSPIDER_ROOT")
+	fileDataCloudInit, err := ioutil.ReadFile(rootPath + CBCloudInitFilePath)
+	if err != nil {
+		cblogger.Error(err)
+		return irs.VMInfo{}, err
+	}
+	userData := string(fileDataCloudInit)
+	userData = strings.ReplaceAll(userData, "{{username}}", CBDefaultVmUserName)
+	userData = strings.ReplaceAll(userData, "{{public_key}}", keyPairInfo.PublicKey)
+	userDataBase64 := aws.String(base64.StdEncoding.EncodeToString([]byte(userData)))
+	cblogger.Debugf("cloud-init data : [%s]", userDataBase64)
+
 	//=============================
 	// VM생성 처리
 	//=============================
@@ -138,6 +187,7 @@ func (vmHandler *AwsVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, err
 		},
 
 		//ec2.InstanceNetworkInterfaceSpecification
+		UserData: userDataBase64,
 	}
 	cblogger.Info(input)
 
@@ -196,6 +246,9 @@ func (vmHandler *AwsVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, err
 	}
 	//Public IP및 최신 정보 전달을 위해 부팅이 완료될 때까지 대기했다가 전달하는 것으로 변경 함.
 	//cblogger.Info("Public IP 할당 및 VM의 최신 정보 획득을 위해 EC2가 Running 상태가 될때까지 대기")
+
+	//2021-05-11 EIP 할당 로직이 제거되었으며 빠른 생성을 위해 Running 상태가 될때까지 대기하지 않음.
+	//2021-05-11 WaitForRun을 호출하지 않아도 GetVM() 호출 시 에러가 발생하지 않는 것은 확인했음. (우선은 정책이 최종 확정이 아니라서 WaitForRun을 사용하도록 원복함.)
 	cblogger.Info("VM의 최신 정보 획득을 위해 EC2가 Running 상태가 될때까지 대기")
 	WaitForRun(vmHandler.Client, newVmId)
 	cblogger.Info("EC2 Running 상태 완료 : ", runResult.Instances[0].State.Name)
@@ -399,12 +452,15 @@ func (vmHandler *AwsVMHandler) SuspendVM(vmIID irs.IID) (irs.VMStatus, error) {
 func (vmHandler *AwsVMHandler) RebootVM(vmIID irs.IID) (irs.VMStatus, error) {
 	cblogger.Infof("vmNameId : [%s]", vmIID.NameId)
 
-	vmInfo, errVmInfo := vmHandler.GetVM(vmIID)
-	if errVmInfo != nil {
-		return irs.VMStatus("Failed"), errVmInfo
-	}
-	cblogger.Info(vmInfo)
-	vmID := vmInfo.IId.SystemId
+	/*
+		vmInfo, errVmInfo := vmHandler.GetVM(vmIID)
+		if errVmInfo != nil {
+			return irs.VMStatus("Failed"), errVmInfo
+		}
+		cblogger.Info(vmInfo)
+		vmID := vmInfo.IId.SystemId
+	*/
+	vmID := vmIID.SystemId
 	cblogger.Infof("vmID : [%s]", vmID)
 
 	input := &ec2.RebootInstancesInput{
@@ -466,12 +522,7 @@ func (vmHandler *AwsVMHandler) RebootVM(vmIID irs.IID) (irs.VMStatus, error) {
 func (vmHandler *AwsVMHandler) TerminateVM(vmIID irs.IID) (irs.VMStatus, error) {
 	cblogger.Infof("vmNameId : [%s]", vmIID.NameId)
 
-	vmInfo, errVmInfo := vmHandler.GetVM(vmIID)
-	if errVmInfo != nil {
-		return irs.VMStatus("Failed"), errVmInfo
-	}
-	cblogger.Info(vmInfo)
-	vmID := vmInfo.IId.SystemId
+	vmID := vmIID.SystemId
 	cblogger.Infof("vmID : [%s]", vmID)
 
 	input := &ec2.TerminateInstancesInput{
@@ -904,7 +955,7 @@ func (vmHandler *AwsVMHandler) ListVMStatus() ([]*irs.VMStatusInfo, error) {
 		CloudOS:      call.AWS,
 		RegionZone:   vmHandler.Region.Zone,
 		ResourceType: call.VM,
-		ResourceName: "",
+		ResourceName: "ListVMStatus()",
 		CloudOSAPI:   "DescribeInstances()",
 		ElapsedTime:  "",
 		ErrorMSG:     "",

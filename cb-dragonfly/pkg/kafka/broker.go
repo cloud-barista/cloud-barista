@@ -3,10 +3,11 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"github.com/cloud-barista/cb-dragonfly/pkg/config"
 	"sync"
 
-	"github.com/sirupsen/logrus"
+	"github.com/cloud-barista/cb-dragonfly/pkg/config"
+	"github.com/cloud-barista/cb-dragonfly/pkg/util"
+
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 )
 
@@ -33,8 +34,8 @@ func Initialize() error {
 	})
 
 	if err != nil {
-		logrus.Error(err)
-		logrus.Debug("Fail to load-balancer kafka connection")
+		util.GetLogger().Error(err)
+		util.GetLogger().Error("failed to  load-balancer kafka connection")
 		return err
 	} else {
 		adminKafka.AdminClient = admin
@@ -57,8 +58,8 @@ func (k *KafkaStruct) GetAllTopics() []string {
 	topics := []string{}
 	getTopics, err := k.AdminClient.GetMetadata(nil, true, -1)
 	if err != nil {
-		logrus.Error(err)
-		logrus.Debug("Fail to get all topics list")
+		util.GetLogger().Error(err)
+		util.GetLogger().Error("failed to  get all topics list")
 		return nil
 	} else {
 		for topic, _ := range getTopics.Topics {
@@ -71,8 +72,8 @@ func (k *KafkaStruct) GetAllTopics() []string {
 func (k *KafkaStruct) DeleteTopics(topics []string) error {
 	_, err := k.AdminClient.DeleteTopics(context.Background(), topics)
 	if err != nil {
-		logrus.Error(err)
-		logrus.Debug("Fail to delete topic list from broker")
+		util.GetLogger().Error(err)
+		util.GetLogger().Error("failed to  delete topic list from broker")
 		return err
 	}
 	return nil

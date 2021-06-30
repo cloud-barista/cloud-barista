@@ -194,7 +194,7 @@ func setTemplateVars(alertTaskReq types.AlertTaskReq) (map[string]kapacitorclien
 	var compareExpression string
 	switch alertTaskReq.AlertMathExpression {
 	case "equal":
-		compareExpression = "="
+		compareExpression = "=="
 	case "greater":
 		compareExpression = ">"
 	case "equalgreater":

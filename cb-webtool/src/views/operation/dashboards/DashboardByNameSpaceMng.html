@@ -1,0 +1,266 @@
+{{ template "OperationTop" .}}
+<div id="lnb">
+			
+	<div class="bg"></div>
+		
+	<div class="m_box">
+		
+		{{template "TopBox" .}}
+
+		{{template "LNBPopup" .}}
+
+		{{template "MenuLeft" .}}
+		
+	</div>
+	
+	<div class="bottom"></div>
+	<a href="javascript:;" id="m_close"></a>
+	
+</div>
+{{template "Header" .}}
+{{template "Modal" .}}
+<!-- 추가 스크립트 -->
+				<!-- contents -->
+				<input type="hidden" id="mcis_id" />
+				<input type="hidden" id="mcis_name" />
+				<input type="hidden" id="init_select_areabox" />
+
+				<div class="contbox">
+					
+					<div class="titlebox">
+						<div class="tit"><img src="/assets/img/common/icon_cont.png" alt=""/>Dashboard / <strong>NS</strong></div>
+						<div class="location">Home  <span>></span>  Operation  <span>></span>  Dashboard  <span>></span>  <strong>NS</strong></div>
+					</div>
+					
+					<div class="dashboard">
+						
+						<div class="d_box box_1 box_1m">
+							<div class="titbox">
+								<div class="tit" >
+									<strong>Mcis</strong> <span>/</span> server
+								</div>
+								<div class="state color_b"></div>
+							</div>
+							
+							<div class="box_cont">
+								<div class="lbox">
+									<strong id="total_mcis" title="Total count of MCIS">{{ .TotalMcisCount }}</strong>
+									<span>/</span>
+									<span title="Total count of VM" id="total_vm">{{ .TotalVmCount }}</span>
+								</div>
+								<div class="rbox">
+									<div class="numbox">
+										<div class="num bgbox_b cursor" >
+											<span id="run_cnt" title="Running State">{{ .TotalVmStatusCountMap.running }}</span>
+										</div>
+										<div class="num bgbox_g cursor" >
+											<span id="stop_cnt" title="Stopped State">{{ .TotalVmStatusCountMap.stopped }}</span>
+										</div>
+									</div>
+									<div class="txt">Status of Infra Service</div>
+								</div>
+							</div>
+							
+						</div>
+						
+						<div class="d_box box_3 box_2m">
+							<div class="titbox">
+								<div class="tit"><strong>CP</strong> <span>/</span> connection</div>
+								<div class="state color_r"></div>
+							</div>
+							
+							<div class="box_cont">
+								<div class="lbox" id="dash_2">
+									<strong title="Number of Providers" id="providerCount">{{ .TotalProviderCount }}</strong>
+									<span>/</span>
+									<span title="Number of connections" id="connectionCount">{{ .TotalConnectionConfigCount }}</span>									
+								</div>
+								<div class="cbox">
+									<div class="tcbox">
+										<div class="sc_box scrollbar-inner">
+											
+											<ul id="dash_3" hidden>
+												
+											</ul>
+											<ul id="cpConnectionDetail">
+												{{ range $key, $value := .ConnectionConfigCountMap }}
+												<li class="bg_etc bg_{{$key}}">
+													<a href="#!"><span class="conn_cnt">{{ $value }}<div class="conn_tit">{{ $key }}</div></span></a>
+													<!-- <a href="#!"><span>{{ $key }} ( {{ $value }} )</span></a> -->
+												</li>
+												{{ end }}
+											</ul>
+										</div>
+									</div>
+									<div class="txt">Status of Cloud Provider</div>
+								</div>
+							</div>
+							
+						</div>						
+					</div>
+
+					<div class="dashboard dashboard_cont">
+						
+						<div class="d_box box_b1">
+							<div class="titbox">
+								<div class="tit"><strong>Mcis</strong> <span>/</span> server</div>
+								<div class="top_info">
+									<ul>
+										<li>
+											<a href="javascript:void(0);">Filter</a>
+											<div class="infobox">
+												<div class="box">
+													<p>NS name</p>
+													<ul>
+														<li><a href="javascript:void(0);">name</a></li>
+														<li><a href="javascript:void(0);">status</a></li>
+														<li><a href="javascript:void(0);">Description</a></li>
+														<li><a href="javascript:void(0);">Server name</a></li>
+													</ul>
+												</div>
+											</div>
+										</li>
+										<li>
+											<a href="javascript:void(0);">Sort</a>
+											<div class="infobox">
+												<div class="box">
+													<ul>
+														<li><a href="javascript:void(0);">name</a></li>
+														<li><a href="javascript:void(0);">status</a></li>
+													</ul>
+												</div>
+											</div>
+										</li>
+										<li>
+											<a href="javascript:void(0);">Action</a>
+											<div class="infobox">
+												<div class="box">
+													<ul>
+														<li>
+															<strong>Life Cycle</strong>
+															<ul>
+																<!-- <li><a href="javascript:void(0);" data-toggle="modal" data-target="#Life_Start">Start</a></li> -->
+																<li><a href="javascript:void(0);" data-toggle="modal" data-target="#Life_Reboot" onClick="commonConfirmOpen('McisLifeCycleReboot')">Reboot</a></li>
+																<li><a href="javascript:void(0);" data-toggle="modal" data-target="#Life_Suspend" onClick="commonConfirmOpen('McisLifeCycleSuspend')">Suspend</a></li>
+																<li><a href="javascript:void(0);" data-toggle="modal" data-target="#Life_Resume" onClick="commonConfirmOpen('McisLifeCycleResume')">Resume</a></li>								
+																<li><a href="javascript:void(0);" data-toggle="modal" data-target="#Life_Terminate" onClick="commonConfirmOpen('McisLifeCycleTerminate')">Terminate</a></li>
+															</ul>
+														</li>
+														<li class="divider"></li>
+														<li>
+															<strong>Manage</strong>
+															<ul>
+																<li><a href="javascript:void(0);" data-toggle="modal" data-target="#n_Manage" onClick="commonConfirmOpen('MoveToMcisManagementFromDashboard')">Manage</a></li>
+																<li><a href="javascript:void(0);" data-toggle="modal" data-target="#n_New" onClick="commonConfirmOpen('AddNewMcis')">New</a></li>
+															</ul>
+														</li>
+													</ul>
+												</div>
+											</div>
+										</li>
+										<li><a href="!#"><img src="/assets/img/common/icon_question.png" alt=""/></a></li>
+									</ul>
+								</div>
+							</div>
+	
+	<!-- { {template "Dashboard_Modal" .} } -->
+							
+							<!-- <div class="ds_cont" id="table_1"> -->
+							<div class="ds_cont" id="mcisList">
+								<!-- MCIS 목록 -->
+								{{range $index, $item := .McisList}}
+								<div class="areabox dbinfo cursor active" id="mcis_areabox_{{$index}}" onclick="selectMcis('{{$item.ID}}','{{$item.Name}}','mcis_areabox_{{$index}}', this)">
+									<div class="box">
+							   			<div class="top">
+											<div class="txtbox">
+												<div class="tit">{{$item.Name}}</div>
+												<div class="txt"><span class="bgbox_b"></span>Available 01</div>
+											</div>
+											
+										<div class="state color_{{$item.McisStatus}}"></div><!-- TODO : b, y, r 대신 status 로 style 추가할 것.-->
+									</div>
+							   
+									<!-- // 전체 인프라 갯수 및 각각의 상태에 따른 VM 갯수 -->
+									{{ $vmStatusCountMap := $item.VmStatusCountMap}}
+									<div class="numbox">
+										infra <strong class="color_b">{{$vmStatusCountMap.TOTAL}}</strong>
+										<span class="line">(</span> <span class="num color_b">{{$vmStatusCountMap.running}}</span>
+										<span class="line">/</span> <span class="num color_y">{{$vmStatusCountMap.stopped}}</span>
+										<span class="line">/</span> <span class="num color_r">{{$vmStatusCountMap.terminated}}</span>
+										<span class="line">)</span></div>
+					
+										<!-- // 서버 갯수 -->
+										<div class="numinfo">
+											<div class="num">server {{$vmStatusCountMap.TOTAL}}</div>
+										</div>
+									
+										<!-- // 각각의 VM 항목들 -->
+										<div class="shotbox">
+											
+											{{range $vmStatusIndex, $vmStatusObj := $item.VmSimpleList}}
+											<div class="shot bgbox_{{$vmStatusObj.VmStatus}}">
+												<a href="javascript:void(0);"><span>{{ $vmStatusObj.VmIndex}}</span></a>
+
+												<!-- Map 그리기 위한 vm 정보-->
+												<input type="hidden" name="vmID" id="vmID_{{ $vmStatusObj.VmIndex}}" value="{{$vmStatusObj.VmID}}" />
+												<input type="hidden" name="vmName" id="vmName_{{ $vmStatusObj.VmIndex}}" value="{{$vmStatusObj.VmName}}" />
+												<input type="hidden" name="vmStatus" id="vmStatus_{{ $vmStatusObj.VmIndex}}" value="{{$vmStatusObj.VmStatus}}" />
+												<input type="hidden" name="longitude" id="longitude_{{ $vmStatusObj.VmIndex}}" value="{{$vmStatusObj.Longitude}}" />
+												<input type="hidden" name="latitude" id="latitude_{{ $vmStatusObj.VmIndex}}" value="{{$vmStatusObj.Latitude}}" />
+
+											</div>
+											{{ end }}
+
+										</div>
+									</div>
+								</div>
+								
+								{{ end }}
+								<!-- MCIS 등록-->
+								<div class="areabox">
+									<div class="box">
+										<a href="javascript:void(0);" class="btn_add" onclick="changePage('/operation/manages/mcismng/regform')"><span>+</span></a>										
+									</div>
+								</div>
+							</div>
+							
+						</div>
+						
+						<div class="d_box box_b2">
+							<div class="titbox">
+								<div class="tit"><strong>Service Map</strong></div>
+								<div class="state color_b"></div>
+							</div>
+							
+							<div class="mapcont" >
+								<div class="map" id="map" style="height:300px;"></div>
+							</div>
+							
+						</div>
+						
+					</div>
+					
+					
+				</div>
+				<!-- //contents -->
+
+<script type="text/javascript" src="/assets/js/operation/dashboards/dashboardbynamespacemng.js"></script>
+<script type="text/javascript" src="/assets/js/util/mcislifecycle.js"></script>
+<script type="text/javascript">
+	
+
+	$( document ).ready( function() {
+		$("[id^='mcis_areabox_']").each(function(){    
+            $(this).removeClass("active");// style이 제대로 먹지 않아서 강제로 처리
+    	})
+
+		const osmLayer = new ol.layer.Tile({
+			source: new ol.source.OSM(),
+		});	
+
+		// var JZMap = map_init()
+		// console.log("JZMAP here : ",JZMap);
+		setMap();
+	});
+</script>
+{{template "Footer" .}}

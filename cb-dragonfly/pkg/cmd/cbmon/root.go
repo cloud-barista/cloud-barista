@@ -1,7 +1,7 @@
 package cbmon
 
 import (
-	"github.com/sirupsen/logrus"
+	"github.com/cloud-barista/cb-dragonfly/pkg/util"
 	"github.com/spf13/cobra"
 
 	"github.com/cloud-barista/cb-dragonfly/pkg/api/grpc/request"
@@ -31,7 +31,7 @@ func GetCLIRoot() *cobra.Command {
 	monApi := request.InitMonitoringAPI()
 	err := monApi.Open()
 	if err != nil {
-		logrus.Errorf("failed to initialize grpc client, %s", err.Error())
+		util.GetLogger().Errorf("failed to initialize grpc client, %s", err.Error())
 	}
 	return root
 }

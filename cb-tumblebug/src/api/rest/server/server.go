@@ -2,7 +2,6 @@ package restapiserver
 
 import (
 	"github.com/cloud-barista/cb-tumblebug/src/core/common"
-	"github.com/cloud-barista/cb-tumblebug/src/webadmin"
 
 	rest_common "github.com/cloud-barista/cb-tumblebug/src/api/rest/server/common"
 	rest_mcir "github.com/cloud-barista/cb-tumblebug/src/api/rest/server/mcir"
@@ -12,31 +11,29 @@ import (
 	"fmt"
 	"os"
 
-	// REST API (echo)
 	"net/http"
 
+	// REST API (echo)
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	// CB-Store
-
-	_ "github.com/cloud-barista/cb-tumblebug/src/docs"
-	echoSwagger "github.com/swaggo/echo-swagger" // echo-swagger middleware
+	// echo-swagger middleware
+	_ "github.com/cloud-barista/cb-tumblebug/src/api/rest/docs"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 //var masterConfigInfos confighandler.MASTERCONFIGTYPE
 
 const (
-	InfoColor    = "\033[1;34m%s\033[0m"
-	NoticeColor  = "\033[1;36m%s\033[0m"
-	WarningColor = "\033[1;33m%s\033[0m"
-	ErrorColor   = "\033[1;31m%s\033[0m"
-	DebugColor   = "\033[0;36m%s\033[0m"
+	infoColor    = "\033[1;34m%s\033[0m"
+	noticeColor  = "\033[1;36m%s\033[0m"
+	warningColor = "\033[1;33m%s\033[0m"
+	errorColor   = "\033[1;31m%s\033[0m"
+	debugColor   = "\033[0;36m%s\033[0m"
 )
 
 const (
-//	Version = " Version: Cappuccino"
-	website = " Repository: https://github.com/cloud-barista/cb-tumblebug"
+	website = " https://github.com/cloud-barista/cb-tumblebug"
 	banner  = `
 
   ██████╗██████╗    ████████╗██████╗      
@@ -65,12 +62,13 @@ func ApiServer() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	e.GET("/tumblebug/swagger/*", echoSwagger.WrapHandler)
-
-	e.GET("/tumblebug/health", rest_common.RestGetHealth)
-
 	e.HideBanner = true
 	//e.colorer.Printf(banner, e.colorer.Red("v"+Version), e.colorer.Blue(website))
+
+	// Route for system management
+	e.GET("/tumblebug/swagger/*", echoSwagger.WrapHandler)
+	e.GET("/tumblebug/swaggerActive", rest_common.RestGetSwagger)
+	e.GET("/tumblebug/health", rest_common.RestGetHealth)
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"*"},
@@ -79,7 +77,7 @@ func ApiServer() {
 
 	API_USERNAME := os.Getenv("API_USERNAME")
 	API_PASSWORD := os.Getenv("API_PASSWORD")
-	fmt.Println("REST API username/password: " + API_USERNAME + "/" + API_PASSWORD)
+
 	e.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
 		// Be careful to use constant time comparison to prevent timing attacks
 		if subtle.ConstantTimeCompare([]byte(username), []byte(API_USERNAME)) == 1 &&
@@ -89,23 +87,13 @@ func ApiServer() {
 		return false, nil
 	}))
 
-	fmt.Println("")
-	fmt.Println("")
-	fmt.Println("")
-	fmt.Println("")
+	fmt.Println("\n \n ")
 	fmt.Printf(banner)
-	fmt.Println("")
-//	fmt.Printf(ErrorColor, Version)
-	fmt.Println("")
-	fmt.Printf(InfoColor, website)
-	fmt.Println("")
-	fmt.Println("")
+	fmt.Println("\n ")
+	fmt.Printf(infoColor, website)
+	fmt.Println("\n \n ")
 
 	// Route
-
-	//common.UpdateEnv()
-	//common.SPIDER_REST_URL = "TEST"
-
 	e.GET("/tumblebug/checkNs/:nsId", rest_common.RestCheckNs)
 
 	e.GET("/tumblebug/connConfig", rest_common.RestGetConnConfigList)
@@ -113,24 +101,29 @@ func ApiServer() {
 	e.GET("/tumblebug/region", rest_common.RestGetRegionList)
 	e.GET("/tumblebug/region/:regionName", rest_common.RestGetRegion)
 
-	e.GET("/tumblebug/lookupSpec", rest_mcir.RestLookupSpecList)
-	e.GET("/tumblebug/lookupSpec/:specName", rest_mcir.RestLookupSpec)
+	e.GET("/tumblebug/lookupSpecs", rest_mcir.RestLookupSpecList)
+	e.GET("/tumblebug/lookupSpec", rest_mcir.RestLookupSpec)
 
-	e.GET("/tumblebug/lookupImage", rest_mcir.RestLookupImageList)
-	e.GET("/tumblebug/lookupImage/:imageId", rest_mcir.RestLookupImage)
+	e.GET("/tumblebug/lookupImages", rest_mcir.RestLookupImageList)
+	e.GET("/tumblebug/lookupImage", rest_mcir.RestLookupImage)
 
-	e.GET("/tumblebug/webadmin", webadmin.Mainpage)
-	e.GET("/tumblebug/webadmin/menu", webadmin.Menu)
-	e.GET("/tumblebug/webadmin/ns", webadmin.Ns)
-	e.GET("/tumblebug/webadmin/spec", webadmin.Spec)
+	e.POST("/tumblebug/inspectResources", rest_common.RestInspectResources)
 
+	// @Tags [Admin] System environment
 	e.POST("/tumblebug/config", rest_common.RestPostConfig)
 	e.GET("/tumblebug/config/:configId", rest_common.RestGetConfig)
 	e.GET("/tumblebug/config", rest_common.RestGetAllConfig)
-	e.DELETE("/tumblebug/config", rest_common.RestDelAllConfig)
+	e.DELETE("/tumblebug/config/:configId", rest_common.RestInitConfig)
+	e.DELETE("/tumblebug/config", rest_common.RestInitAllConfig)
+
+	e.GET("/tumblebug/object", rest_common.RestGetObject)
+	e.GET("/tumblebug/objects", rest_common.RestGetObjects)
+	e.DELETE("/tumblebug/object", rest_common.RestDeleteObject)
+	e.DELETE("/tumblebug/objects", rest_common.RestDeleteObjects)
 
 	g := e.Group("/tumblebug/ns", common.NsValidation())
 
+	//Namespace Management
 	g.POST("", rest_common.RestPostNs)
 	g.GET("/:nsId", rest_common.RestGetNs)
 	g.GET("", rest_common.RestGetAllNs)
@@ -138,6 +131,7 @@ func ApiServer() {
 	g.DELETE("/:nsId", rest_common.RestDelNs)
 	g.DELETE("", rest_common.RestDelAllNs)
 
+	//MCIS Management
 	g.POST("/:nsId/mcis", rest_mcis.RestPostMcis)
 	g.GET("/:nsId/mcis/:mcisId", rest_mcis.RestGetMcis)
 	g.GET("/:nsId/mcis", rest_mcis.RestGetAllMcis)
@@ -146,19 +140,25 @@ func ApiServer() {
 	g.DELETE("/:nsId/mcis", rest_mcis.RestDelAllMcis)
 
 	g.POST("/:nsId/mcis/:mcisId/vm", rest_mcis.RestPostMcisVm)
+	g.POST("/:nsId/mcis/:mcisId/vmgroup", rest_mcis.RestPostMcisVmGroup)
 	g.GET("/:nsId/mcis/:mcisId/vm/:vmId", rest_mcis.RestGetMcisVm)
 	//g.GET("/:nsId/mcis/:mcisId/vm", rest_mcis.RestGetAllMcisVm)
 	//g.PUT("/:nsId/mcis/:mcisId/vm/:vmId", rest_mcis.RestPutMcisVm)
 	g.DELETE("/:nsId/mcis/:mcisId/vm/:vmId", rest_mcis.RestDelMcisVm)
 	//g.DELETE("/:nsId/mcis/:mcisId/vm", rest_mcis.RestDelAllMcisVm)
 
-	g.POST("/:nsId/mcis/recommend", rest_mcis.RestPostMcisRecommand)
+	g.GET("/:nsId/mcis/:mcisId/testListVmId", rest_mcis.RestTestListVmId) // for debug
+
+	g.POST("/:nsId/mcis/recommend", rest_mcis.RestPostMcisRecommend)
+
+	g.POST("/:nsId/testRecommendVm", rest_mcis.RestRecommendVm)
+
 	g.POST("/:nsId/cmd/mcis/:mcisId", rest_mcis.RestPostCmdMcis)
 	g.POST("/:nsId/cmd/mcis/:mcisId/vm/:vmId", rest_mcis.RestPostCmdMcisVm)
 	g.POST("/:nsId/install/mcis/:mcisId", rest_mcis.RestPostInstallAgentToMcis)
-	g.GET("/:nsId/benchmark/mcis/:mcisId", rest_mcis.RestGetBenchmark)
-	g.GET("/:nsId/benchmarkall/mcis/:mcisId", rest_mcis.RestGetAllBenchmark)
-	
+	g.POST("/:nsId/benchmark/mcis/:mcisId", rest_mcis.RestGetBenchmark)
+	g.POST("/:nsId/benchmarkall/mcis/:mcisId", rest_mcis.RestGetAllBenchmark)
+
 	//MCIS AUTO Policy
 	g.POST("/:nsId/policy/mcis/:mcisId", rest_mcis.RestPostMcisPolicy)
 	g.GET("/:nsId/policy/mcis/:mcisId", rest_mcis.RestGetMcisPolicy)
@@ -167,10 +167,10 @@ func ApiServer() {
 	g.DELETE("/:nsId/policy/mcis/:mcisId", rest_mcis.RestDelMcisPolicy)
 	g.DELETE("/:nsId/policy/mcis", rest_mcis.RestDelAllMcisPolicy)
 
-
 	g.POST("/:nsId/monitoring/install/mcis/:mcisId", rest_mcis.RestPostInstallMonitorAgentToMcis)
 	g.GET("/:nsId/monitoring/mcis/:mcisId/metric/:metric", rest_mcis.RestGetMonitorData)
 
+	//MCIR Management
 	g.POST("/:nsId/resources/image", rest_mcir.RestPostImage)
 	g.GET("/:nsId/resources/image/:resourceId", rest_mcir.RestGetResource)
 	g.GET("/:nsId/resources/image", rest_mcir.RestGetAllResources)
@@ -193,12 +193,12 @@ func ApiServer() {
 	g.DELETE("/:nsId/resources/spec", rest_mcir.RestDelAllResources)
 
 	g.POST("/:nsId/resources/fetchSpecs", rest_mcir.RestFetchSpecs)
-	g.GET("/:nsId/resources/filterSpecs", rest_mcir.RestFilterSpecs)
-	g.GET("/:nsId/resources/filterSpecsByRange", rest_mcir.RestFilterSpecsByRange)
-	g.GET("/:nsId/resources/testSortSpecs", rest_mcir.RestTestSortSpecs)
+	g.POST("/:nsId/resources/filterSpecs", rest_mcir.RestFilterSpecs)
+	g.POST("/:nsId/resources/filterSpecsByRange", rest_mcir.RestFilterSpecsByRange)
+	g.POST("/:nsId/resources/testSortSpecs", rest_mcir.RestTestSortSpecs)
 
 	g.POST("/:nsId/resources/fetchImages", rest_mcir.RestFetchImages)
-	g.GET("/:nsId/resources/searchImage", rest_mcir.RestSearchImage)
+	g.POST("/:nsId/resources/searchImage", rest_mcir.RestSearchImage)
 
 	g.POST("/:nsId/resources/securityGroup", rest_mcir.RestPostSecurityGroup)
 	g.GET("/:nsId/resources/securityGroup/:resourceId", rest_mcir.RestGetResource)
@@ -245,7 +245,17 @@ func ApiServer() {
 	g.GET("/:nsId/checkResource/:resourceType/:resourceId", rest_mcir.RestCheckResource)
 	g.GET("/:nsId/checkMcis/:mcisId", rest_mcis.RestCheckMcis)
 	g.GET("/:nsId/mcis/:mcisId/checkVm/:vmId", rest_mcis.RestCheckVm)
+	// Temporal test API for development of UpdateAssociatedObjectList
+	g.PUT("/:nsId/testAddObjectAssociation/:resourceType/:resourceId", rest_mcir.RestTestAddObjectAssociation)
+	g.PUT("/:nsId/testDeleteObjectAssociation/:resourceType/:resourceId", rest_mcir.RestTestDeleteObjectAssociation)
+	g.GET("/:nsId/testGetAssociatedObjectCount/:resourceType/:resourceId", rest_mcir.RestTestGetAssociatedObjectCount)
+
+	selfEndpoint := os.Getenv("SELF_ENDPOINT")
+	apidashboard := " http://" + selfEndpoint + "/tumblebug/swagger/index.html?url=http://" + selfEndpoint + "/tumblebug/swaggerActive"
+
+	fmt.Println(" Access to API dashboard" + " (username: " + API_USERNAME + " / password: " + API_PASSWORD + ")")
+	fmt.Printf(noticeColor, apidashboard)
+	fmt.Println("\n ")
 
 	e.Logger.Fatal(e.Start(":1323"))
-
 }

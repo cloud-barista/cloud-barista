@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/astaxie/beego/validation"
-	"github.com/cloud-barista/cb-ladybug/src/utils/config"
-	"github.com/go-resty/resty/v2"
+	"github.com/cloud-barista/cb-ladybug/src/core/model"
+	logger "github.com/sirupsen/logrus"
 )
 
 type Firewall struct {
@@ -32,79 +31,42 @@ func NewFirewall(ns string, name string, conf string) *Firewall {
 		Model:  Model{Name: name, namespace: ns},
 		Config: conf,
 		FirewallRules: []FirewallRules{
-			FirewallRules{Protocol: "tcp", Direction: "inbound", From: "1", To: "65535"},
-			FirewallRules{Protocol: "udp", Direction: "inbound", From: "1", To: "65535"},
-			FirewallRules{Protocol: "icmp", Direction: "inbound", From: "-1", To: "-1"},
+			{Protocol: "tcp", Direction: "inbound", From: "1", To: "65535"},
+			{Protocol: "udp", Direction: "inbound", From: "1", To: "65535"},
+			{Protocol: "icmp", Direction: "inbound", From: "-1", To: "-1"},
 		},
 	}
 }
 
-func (fw *Firewall) GET() (bool, error) {
-	// validation
-	if err := fw.validate(validation.Validation{}); err != nil {
-		return false, err
-	}
+func (self *Firewall) GET() (bool, error) {
 
-	conf := config.Config
-	resp, err := resty.New().R().
-		SetBasicAuth(conf.Username, conf.Password).
-		SetBody(fmt.Sprintf(`{"connectionName" : "%s"}`, fw.Config)).
-		SetResult(&fw).
-		Get(conf.TumblebugUrl + fmt.Sprintf("/ns/%s/resources/securityGroup/%s", fw.namespace, fw.Name))
+	return self.execute(http.MethodGet, fmt.Sprintf("/ns/%s/resources/securityGroup/%s", self.namespace, self.Name), fmt.Sprintf(`{"connectionName" : "%s"}`, self.Config), &self)
 
-	if err = fw.response(resp, err); err != nil {
-		return false, err
-	}
-	if resp.StatusCode() == http.StatusNotFound {
-		return false, nil
-	}
-
-	return true, nil
 }
 
-func (fw *Firewall) POST() error {
-	// validation
-	if err := fw.validate(validation.Validation{}); err != nil {
-		return err
-	}
+func (self *Firewall) POST() error {
 
-	conf := config.Config
-	resp, err := resty.New().R().
-		SetBasicAuth(conf.Username, conf.Password).
-		SetBody(fw).
-		SetResult(&fw).
-		Post(conf.TumblebugUrl + fmt.Sprintf("/ns/%s/resources/securityGroup", fw.namespace))
-
-	if err = fw.response(resp, err); err != nil {
+	_, err := self.execute(http.MethodPost, fmt.Sprintf("/ns/%s/resources/securityGroup", self.namespace), self, &self)
+	if err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (fw *Firewall) DELETE(ns string) error {
-	// validation
-	if err := fw.validate(validation.Validation{}); err != nil {
-		return err
-	}
+func (self *Firewall) DELETE(ns string) error {
 
-	exist, err := fw.GET()
+	exist, err := self.GET()
 	if err != nil {
 		return err
 	}
 	if exist {
-		conf := config.Config
-		resp, err := resty.New().R().
-			SetBasicAuth(conf.Username, conf.Password).
-			SetBody(fmt.Sprintf(`{"connectionName" : "%s"}`, fw.Config)).
-			SetResult(TumblebugResult{}).
-			Delete(conf.TumblebugUrl + fmt.Sprintf("/ns/%s/resources/securityGroup/%s", fw.namespace, fw.Name))
-
-		if err = fw.response(resp, err); err != nil {
+		_, err := self.execute(http.MethodDelete, fmt.Sprintf("/ns/%s/resources/securityGroup/%s", self.namespace, self.Name), fmt.Sprintf(`{"connectionName" : "%s"}`, self.Config), model.Status{})
+		if err != nil {
 			return err
 		}
 	} else {
-		fmt.Println(fmt.Sprintf("delete firewall skip (name=%s, cause=not found)", fw.Name))
+		logger.Infof("delete firewall skip (name=%s, cause=not found)", self.Name)
 	}
 
 	return nil

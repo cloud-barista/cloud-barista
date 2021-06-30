@@ -11,7 +11,7 @@ package service
 import (
 	"context"
 	"strings"
-
+	cm "github.com/cloud-barista/cb-spider/api-runtime/common-runtime"
 	gc "github.com/cloud-barista/cb-spider/api-runtime/grpc-runtime/common"
 	"github.com/cloud-barista/cb-spider/api-runtime/grpc-runtime/logger"
 	pb "github.com/cloud-barista/cb-spider/api-runtime/grpc-runtime/stub/cbspider"
@@ -33,12 +33,12 @@ func (s *CCMService) CreateVPC(ctx context.Context, req *pb.VPCCreateRequest) (*
 	logger.Debug("calling CCMService.CreateVPC()")
 
 	// check the input Name to include the SUBNET: Prefix
-	if strings.HasPrefix(req.Item.Name, rsSubnetPrefix) {
-		return nil, gc.NewGrpcStatusErr(rsSubnetPrefix+" cannot be used for VPC name prefix!!", "", "CCMService.CreateVPC()")
+	if strings.HasPrefix(req.Item.Name, cm.SUBNET_PREFIX) {
+		return nil, gc.NewGrpcStatusErr(cm.SUBNET_PREFIX+" cannot be used for VPC name prefix!!", "", "CCMService.CreateVPC()")
 	}
 	// check the input Name to include the SecurityGroup Delimiter
-	if strings.HasPrefix(req.Item.Name, sgDELIMITER) {
-		return nil, gc.NewGrpcStatusErr(sgDELIMITER+" cannot be used in VPC name!!", "", "CCMService.CreateVPC()")
+	if strings.HasPrefix(req.Item.Name, cm.SG_DELIMITER) {
+		return nil, gc.NewGrpcStatusErr(cm.SG_DELIMITER+" cannot be used in VPC name!!", "", "CCMService.CreateVPC()")
 	}
 
 	// Grpc RegInfo => Driver ReqInfo
@@ -166,6 +166,64 @@ func (s *CCMService) DeleteCSPVPC(ctx context.Context, req *pb.CSPVPCQryRequest)
 	result, _, err := cmrt.DeleteCSPResource(req.ConnectionName, rsVPC, req.Id)
 	if err != nil {
 		return nil, gc.ConvGrpcStatusErr(err, "", "CCMService.DeleteCSPVPC()")
+	}
+
+	resp := &pb.BooleanResponse{Result: result}
+	return resp, nil
+}
+
+// AddSubnet - Subnet 추가
+func (s *CCMService) AddSubnet(ctx context.Context, req *pb.SubnetAddRequest) (*pb.VPCInfoResponse, error) {
+	logger := logger.NewLogger()
+
+	logger.Debug("calling CCMService.AddSubnet()")
+
+	// Grpc RegInfo => Driver ReqInfo
+	reqSubnetInfo := cres.SubnetInfo{IId: cres.IID{req.Item.Name, ""}, IPv4_CIDR: req.Item.Ipv4Cidr}
+
+	// Call common-runtime API
+	result, err := cmrt.AddSubnet(req.ConnectionName, cm.SUBNET_PREFIX+req.VpcName, req.VpcName, reqSubnetInfo)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "CCMService.AddSubnet()")
+	}
+
+	// CCM 객체에서 GRPC 메시지로 복사
+	var grpcObj pb.VPCInfo
+	err = gc.CopySrcToDest(result, &grpcObj)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "CCMService.AddSubnet()")
+	}
+
+	resp := &pb.VPCInfoResponse{Item: &grpcObj}
+	return resp, nil
+}
+
+// RemoveSubnet - Subnet 삭제
+func (s *CCMService) RemoveSubnet(ctx context.Context, req *pb.SubnetQryRequest) (*pb.BooleanResponse, error) {
+	logger := logger.NewLogger()
+
+	logger.Debug("calling CCMService.RemoveSubnet()")
+
+	// Call common-runtime API
+	result, _, err := cmrt.DeleteResource(req.ConnectionName, cm.SUBNET_PREFIX+req.VpcName, req.SubnetName, req.Force)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "CCMService.RemoveSubnet()")
+	}
+
+	resp := &pb.BooleanResponse{Result: result}
+	return resp, nil
+}
+
+// RemoveCSPSubnet - CSP Subnet 삭제
+func (s *CCMService) RemoveCSPSubnet(ctx context.Context, req *pb.CSPSubnetQryRequest) (*pb.BooleanResponse, error) {
+	logger := logger.NewLogger()
+
+	logger.Debug("calling CCMService.RemoveCSPSubnet()")
+
+	// Call common-runtime API
+	result, _, err := cmrt.DeleteCSPResource(req.ConnectionName, cm.SUBNET_PREFIX+req.VpcName, req.Id)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "CCMService.RemoveCSPSubnet()")
 	}
 
 	resp := &pb.BooleanResponse{Result: result}

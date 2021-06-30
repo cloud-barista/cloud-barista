@@ -9,6 +9,7 @@ package cbstore
 
 import (
 	"io/ioutil"
+	_ "fmt"
 	"os"
 	"strings"
 
@@ -137,7 +138,7 @@ func (nutsdbDriver *NUTSDBDriver) Get(key string) (*icbs.KeyValue, error) {
 			key := []byte(key)
 			e, err := tx.Get(bucket, key)
 			if err != nil {
-				if strings.Contains(err.Error(), "key not found") {
+				if strings.Contains(err.Error(), "key not found") || strings.Contains(err.Error(), "not found bucket:") {
 					keyValue = nil
 					return nil
 				}
@@ -158,35 +159,47 @@ func (nutsdbDriver *NUTSDBDriver) Get(key string) (*icbs.KeyValue, error) {
 func (nutsdbDriver *NUTSDBDriver) GetList(key string, sortAscend bool) ([]*icbs.KeyValue, error) {
 	config.Cblogger.Info("Key:" + key)
 
-	var keyValueList []*icbs.KeyValue
+	keyValueList := []*icbs.KeyValue{}
 	if err := db.View(
 		func(tx *nutsdb.Tx) error {
 			key := []byte(key)
-			entries, _, err := tx.PrefixScan(bucket, key, 0, 10000)
-			//config.Cblogger.Infof("================================:%v, %v", key, len(entries))
-			if err != nil {
-				if err.Error() == "prefix scans not found" {
-					return nil
+			offsetNum := 0
+			limitNum := 10000 
+			for true {
+				entries, _, err := tx.PrefixScan(bucket, key, offsetNum, limitNum)
+				//fmt.Printf("\n================================:%s, %d\n", key, len(entries))
+				//config.Cblogger.Infof("================================:%v, %v", key, len(entries))
+				if err != nil {
+					if err.Error() == "prefix scans not found" {
+						return nil
+					}
+					config.Cblogger.Error(err)
+					return err
 				}
-				config.Cblogger.Error(err)
-				return err
-			}
-			keyValueList = make([]*icbs.KeyValue, len(entries))
-			if sortAscend {
-				for k, entry := range entries {
+				if len(entries) == 0 {
+					return nil;
+				}
+
+				for _, entry := range entries {
 					tmpOne := icbs.KeyValue{Key: string(entry.Key), Value: string(entry.Value)}
-					keyValueList[k] = &tmpOne
+					keyValueList = append(keyValueList, &tmpOne)
 				}
-			} else {
-				for k, entry := range entries {
-					tmpOne := icbs.KeyValue{Key: string(entry.Key), Value: string(entry.Value)}
-					keyValueList[len(entries)-1-k] = &tmpOne
-				}
-			}
+
+			offsetNum = offsetNum + limitNum	
+			}  // end of for true
+
 			return nil
 		}); err != nil {
 		config.Cblogger.Error(err)
 		return nil, err
+	}
+
+	// for descending order
+	if !sortAscend {
+		len := len(keyValueList)
+		for i := 0; i<len/2; i++ {  // swap the list around the center.
+			keyValueList[i], keyValueList[len-1-i] = keyValueList[len-1-i], keyValueList[i]
+		}
 	}
 
 	return keyValueList, nil

@@ -22,9 +22,14 @@ func TestSpec(t *testing.T) {
 	nsReq := common.NsReq{}
 	nsReq.Name = nsName
 
-	common.CreateNs(&nsReq)
+	_, err := common.CreateNs(&nsReq)
+	if err != nil {
+		fmt.Println(err.Error())
+	} else {
+		fmt.Println("Namespace created successfully")
+	}
 
-	err := common.OpenSQL("../../../meta_db/dat/tb-unit-test.s3db")
+	err = common.OpenSQL("../../../meta_db/dat/tb-unit-test.s3db")
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
@@ -51,11 +56,11 @@ func TestSpec(t *testing.T) {
 	specReq.Name = specName
 
 	result, _ := RegisterSpecWithInfo(nsName, &specReq)
-	resultJSON, err := json.MarshalIndent(result, "", "  ")
+	resultJSON, _ := json.MarshalIndent(result, "", "  ")
 	fmt.Println("result: " + string(resultJSON))
 	assert.Equal(t, specName, result.Name, "CreateSpec 기대값과 결과값이 다릅니다.")
 
-	resultInterface, _ := GetResource(nsName, "spec", specName)
+	resultInterface, _ := GetResource(nsName, common.StrSpec, specName)
 	result = resultInterface.(TbSpecInfo) // type assertion
 	assert.Equal(t, specName, result.Name, "GetSpec 기대값과 결과값이 다릅니다.")
 
@@ -63,8 +68,14 @@ func TestSpec(t *testing.T) {
 
 	//result, _ := ListSpecId()
 
-	resultErr := DelResource(nsName, "spec", specName, "false")
+	resultErr := DelResource(nsName, common.StrSpec, specName, "false")
 	assert.Nil(t, resultErr)
 
-	common.DelNs(nsName)
+	err = common.DelNs(nsName)
+	if err != nil {
+		fmt.Println(err.Error())
+	} else {
+		fmt.Println("Namespace deleted successfully")
+	}
+
 }

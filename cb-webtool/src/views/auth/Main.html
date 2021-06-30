@@ -1,0 +1,40 @@
+{{ template "Top" .}}
+	
+		<div id="lnb">
+			
+			<div class="bg"></div>
+				
+			<div class="m_box">
+				
+                {{template "TopBox" .}}
+
+                {{template "LNBPopup" .}}
+        
+                {{template "MenuLeft" .}}                
+
+			</div>
+			
+			<div class="bottom"></div>
+			<a href="javascript:;" id="m_close"></a>
+			
+		</div>
+			
+		{{template "Header" .}}
+	
+		{{template "Modal" .}}
+				
+				<!-- contents -->
+				<div class="contbox" id="mainNameSpace">
+					
+					<div class="titlebox">
+						<div class="tit"><img src="/assets/img/common/icon_cont.png" alt=""/>서비스 생성 Guide</strong></div>
+						<div class="location">Home  <span>></span> <strong>Main</strong></div>
+					</div>
+ 
+										
+					{{template "UserGuide" .}}
+					
+				</div>
+				<!-- //contents -->
+
+{{template "Footer" .}}

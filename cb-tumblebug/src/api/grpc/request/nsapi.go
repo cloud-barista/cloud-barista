@@ -121,7 +121,7 @@ func (ns *NSApi) GetJWTToken() (string, error) {
 func (ns *NSApi) SetConfigPath(configFile string) error {
 	logger := logger.NewLogger()
 
-	// Viper 를 사용하는 설정 파서 생성
+	// Make new config parser that uses Viper library
 	parser := config.MakeParser()
 
 	var (
@@ -301,6 +301,15 @@ func (ns *NSApi) ListNS() (string, error) {
 	}
 
 	return ns.requestNS.ListNS()
+}
+
+// ListNSId
+func (ns *NSApi) ListNSId() (string, error) {
+	if ns.requestNS == nil {
+		return "", errors.New("The Open() function must be called")
+	}
+
+	return ns.requestNS.ListNSId()
 }
 
 // GetNS - Namespace 조회

@@ -1,39 +1,33 @@
 package types
 
-// TODO: implements
-type Metric struct{}
+type Metric string
 
-type Metrics struct {
-	metrics []Metric
+const (
+	Cpu          Metric = "cpu"
+	CpuFrequency Metric = "cpufreq"
+	Memory       Metric = "memory"
+	Disk         Metric = "disk"
+	DiskIO       Metric = "diskio"
+	Network      Metric = "network"
+	None         Metric = "none"
+)
+
+func (m Metric) ToString() string {
+	if m == "" {
+		return "none"
+	}
+	return string(m)
 }
 
-const (
-	MONCONFIG           = "config"
-	COLLECTORGROUPTOPIC = "collectorGroupTopic"
-	TOPIC               = "topic"
-)
-
-const (
-	NSID    = "nsId"
-	MCISID  = "mcisId"
-	VMID    = "vmId"
-	OSTYPE  = "osType"
-	CSPTYPE = "cspType"
-)
-
-const (
-	AGENTCOUNT = "AGENTCOUNT"
-	CSP        = "CSP"
-)
-
-const (
-	ALIBABA     = "ALIBABA"
-	AWS         = "AWS"
-	AZURE       = "AZURE"
-	CLOUDIT     = "CLOUDIT"
-	CLOUDTWIN   = "CLOUDTWIN"
-	DOCKER      = "DOCKER"
-	GCP         = "GCP"
-	OPENSTACK   = "OPENSTACK"
-	TOTALCSPCNT = 8
-)
+func (m Metric) ToAgentMetricKey() string {
+	//var metricKey string
+	if m == Cpu || m == CpuFrequency || m == Disk || m == DiskIO {
+		return m.ToString()
+	} else if m == Memory {
+		return "mem"
+	} else if m == Network {
+		return "net"
+	} else {
+		return "none"
+	}
+}
