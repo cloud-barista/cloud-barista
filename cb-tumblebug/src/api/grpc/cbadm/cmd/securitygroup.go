@@ -16,7 +16,7 @@ import (
 
 // ===== [ Public Functions ] =====
 
-// NewSecurityCmd - Security Group 관리 기능을 수행하는 Cobra Command 생성
+// NewSecurityCmd : "cbadm securitygroup *" (for CB-Tumblebug)
 func NewSecurityCmd() *cobra.Command {
 
 	securityCmd := &cobra.Command{
@@ -29,13 +29,15 @@ func NewSecurityCmd() *cobra.Command {
 	//  Adds the commands for application.
 	securityCmd.AddCommand(NewSecurityCreateCmd())
 	securityCmd.AddCommand(NewSecurityListCmd())
+	securityCmd.AddCommand(NewSecurityListIdCmd())
 	securityCmd.AddCommand(NewSecurityGetCmd())
 	securityCmd.AddCommand(NewSecurityDeleteCmd())
+	securityCmd.AddCommand(NewSecurityDeleteAllCmd())
 
 	return securityCmd
 }
 
-// NewSecurityCreateCmd - Security Group 생성 기능을 수행하는 Cobra Command 생성
+// NewSecurityCreateCmd : "cbadm securitygroup create"
 func NewSecurityCreateCmd() *cobra.Command {
 
 	createCmd := &cobra.Command{
@@ -62,7 +64,7 @@ func NewSecurityCreateCmd() *cobra.Command {
 	return createCmd
 }
 
-// NewSecurityListCmd - Security Group 목록 기능을 수행하는 Cobra Command 생성
+// NewSecurityListCmd : "cbadm securitygroup list"
 func NewSecurityListCmd() *cobra.Command {
 
 	listCmd := &cobra.Command{
@@ -86,7 +88,31 @@ func NewSecurityListCmd() *cobra.Command {
 	return listCmd
 }
 
-// NewSecurityGetCmd - Security Group 조회 기능을 수행하는 Cobra Command 생성
+// NewSecurityListIdCmd : "cbadm securitygroup list-id"
+func NewSecurityListIdCmd() *cobra.Command {
+
+	listIdCmd := &cobra.Command{
+		Use:   "list-id",
+		Short: "This is list-id command for securitygroup",
+		Long:  "This is list-id command for securitygroup",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger := logger.NewLogger()
+			if nameSpaceID == "" {
+				logger.Error("failed to validate --ns parameter")
+				return
+			}
+			logger.Debug("--ns parameter value : ", nameSpaceID)
+
+			SetupAndRun(cmd, args)
+		},
+	}
+
+	listIdCmd.PersistentFlags().StringVarP(&nameSpaceID, "ns", "", "", "namespace id")
+
+	return listIdCmd
+}
+
+// NewSecurityGetCmd : "cbadm securitygroup get"
 func NewSecurityGetCmd() *cobra.Command {
 
 	getCmd := &cobra.Command{
@@ -116,7 +142,7 @@ func NewSecurityGetCmd() *cobra.Command {
 	return getCmd
 }
 
-// NewSecurityDeleteCmd - Security Group 삭제 기능을 수행하는 Cobra Command 생성
+// NewSecurityDeleteCmd : "cbadm securitygroup delete"
 func NewSecurityDeleteCmd() *cobra.Command {
 
 	deleteCmd := &cobra.Command{
@@ -150,4 +176,34 @@ func NewSecurityDeleteCmd() *cobra.Command {
 	deleteCmd.PersistentFlags().StringVarP(&force, "force", "", "false", "force flag")
 
 	return deleteCmd
+}
+
+// NewSecurityDeleteAllCmd : "cbadm securitygroup delete-all"
+func NewSecurityDeleteAllCmd() *cobra.Command {
+
+	deleteAllCmd := &cobra.Command{
+		Use:   "delete-all",
+		Short: "This is delete-all command for securitygroup",
+		Long:  "This is delete-all command for securitygroup",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger := logger.NewLogger()
+			if nameSpaceID == "" {
+				logger.Error("failed to validate --ns parameter")
+				return
+			}
+			if force == "" {
+				logger.Error("failed to validate --force parameter")
+				return
+			}
+			logger.Debug("--ns parameter value : ", nameSpaceID)
+			logger.Debug("--force parameter value : ", force)
+
+			SetupAndRun(cmd, args)
+		},
+	}
+
+	deleteAllCmd.PersistentFlags().StringVarP(&nameSpaceID, "ns", "", "", "namespace id")
+	deleteAllCmd.PersistentFlags().StringVarP(&force, "force", "", "false", "force flag")
+
+	return deleteAllCmd
 }

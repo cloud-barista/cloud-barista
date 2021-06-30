@@ -23,13 +23,17 @@ func InstallTelegraf(c echo.Context) error {
 	userName := c.FormValue("user_name")
 	sshKey := c.FormValue("ssh_key")
 	cspType := c.FormValue("cspType")
+	port := c.FormValue("port")
 
 	// form 파라미터 값 체크
 	if nsId == "" || mcisId == "" || vmId == "" || publicIp == "" || userName == "" || sshKey == "" || cspType == "" {
 		return c.JSON(http.StatusInternalServerError, rest.SetMessage("failed to get package. query parameter is missing"))
 	}
+	if port == "" {
+		port = "22"
+	}
 
-	errCode, err := agent.InstallTelegraf(nsId, mcisId, vmId, publicIp, userName, sshKey, cspType)
+	errCode, err := agent.InstallTelegraf(nsId, mcisId, vmId, publicIp, userName, sshKey, cspType, port)
 	if errCode != http.StatusOK {
 		return c.JSON(errCode, rest.SetMessage(err.Error()))
 	}
@@ -119,12 +123,17 @@ func UninstallAgent(c echo.Context) error {
 	userName := c.FormValue("user_name")
 	sshKey := c.FormValue("ssh_key")
 	cspType := c.FormValue("cspType")
+	port := c.FormValue("port")
 	// form 파라미터 값 체크
 	if nsId == "" || mcisId == "" || vmId == "" || publicIp == "" || userName == "" || sshKey == "" || cspType == "" {
 		return c.JSON(http.StatusInternalServerError, rest.SetMessage("failed to get package. query parameter is missing"))
 	}
 
-	errCode, err := agent.UninstallAgent(nsId, mcisId, vmId, publicIp, userName, sshKey, cspType)
+	if port == "" {
+		port = "22"
+	}
+
+	errCode, err := agent.UninstallAgent(nsId, mcisId, vmId, publicIp, userName, sshKey, cspType, port)
 	if errCode != http.StatusOK {
 		fmt.Println(errCode)
 		return c.JSON(errCode, rest.SetMessage(err.Error()))

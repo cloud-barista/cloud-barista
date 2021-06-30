@@ -192,8 +192,8 @@ function map_init(){
       var feature = JZMap.forEachFeatureAtPixel(evt.pixel,function(feature){
         return feature;
       })
-      
-      console.log("feature click info : ",feature.get("id"));
+      console.log(feature)
+      console.log("feature click info : ",feature.get("id"));//Cannot read property 'get' of undefined at e.<anonymous> (mcis.map.js:196)
       var id = feature.get("id")
       if(feature.get("id") != null){
         JZMap.removeOverlay(JZMap.getOverlayById(id));
@@ -202,7 +202,7 @@ function map_init(){
         var element = document.createElement('div');
       element.setAttribute("class", "popover");
       element.setAttribute("onclick", "$(this).hide()");
-      element.innerHTML="<div data-toggle='popover' style='width:100%;'>"+feature.get("title")+"</div>"
+      element.innerHTML="<div data-toggle='popover' style='width:100%;min-width: 100px;'>"+feature.get("title")+"</div>"
       
       
 
@@ -259,6 +259,7 @@ function map_init(){
   return m;
 }
 function drawMap(map,long,lat,info){
+  console.log("in drawMap")
   var JZMap = map;
   console.log("JZMap : ",JZMap);
   

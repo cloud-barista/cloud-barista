@@ -6,80 +6,86 @@ import (
 	"fmt"
 
 	"github.com/cloud-barista/cb-ladybug/src/core/common"
+	"github.com/cloud-barista/cb-ladybug/src/utils/config"
 	"github.com/cloud-barista/cb-ladybug/src/utils/lang"
 )
 
 type Node struct {
 	Model
-	Credential string `json:"credential"`
-	PublicIP   string `json:"publicIp"`
-	UId        string `json:"uid"`
-	Role       string `json:"role"`
-	Spec       string `json:"spec"`
+	namespace   string
+	clusterName string
+	Credential  string     `json:"credential"`
+	PublicIP    string     `json:"publicIp"`
+	UId         string     `json:"uid"`
+	Role        string     `json:"role"`
+	Spec        string     `json:"spec"`
+	Csp         config.CSP `json:"csp"`
 }
 
 type NodeList struct {
-	Kind  string `json:"kind"`
-	Items []Node `json:"items"`
+	ListModel
+	namespace   string
+	clusterName string
+	Items       []Node `json:"items"`
 }
 
-type NodeReq struct {
-	Config          string `json:"config"`
-	WorkerNodeSpec  string `json:"workerNodeSpec"`
-	WorkerNodeCount int    `json:"workerNodeCount"`
-}
-
-func NewNode(vm VM) *Node {
+func NewNodeVM(namespace string, clusterName string, vm VM) *Node {
 	return &Node{
-		Model:      Model{Kind: KIND_NODE, Name: vm.Name},
-		Credential: vm.Credential,
-		PublicIP:   vm.PublicIP,
-		UId:        vm.UId,
-		Role:       vm.Role,
-		Spec:       vm.Spec,
+		Model:       Model{Kind: KIND_NODE, Name: vm.Name},
+		Credential:  vm.Credential,
+		PublicIP:    vm.PublicIP,
+		Role:        vm.Role,
+		Spec:        vm.Spec,
+		Csp:         vm.Csp,
+		namespace:   namespace,
+		clusterName: clusterName,
 	}
 }
 
-func NewNodeDef(nodeName string) *Node {
+func NewNode(namespace string, clusterName string, nodeName string) *Node {
 	return &Node{
-		Model: Model{Kind: KIND_NODE, Name: nodeName},
+		Model:       Model{Kind: KIND_NODE, Name: nodeName},
+		namespace:   namespace,
+		clusterName: clusterName,
 	}
 }
 
-func NewNodeList() *NodeList {
+func NewNodeList(namespace string, clusterName string) *NodeList {
 	return &NodeList{
-		Kind:  KIND_NODE_LIST,
-		Items: []Node{},
+		ListModel:   ListModel{Kind: KIND_NODE_LIST},
+		Items:       []Node{},
+		namespace:   namespace,
+		clusterName: clusterName,
 	}
 }
 
-func (n *Node) Select(namespace string, clusterName string, node *Node) (*Node, error) {
-	key := lang.GetStoreNodeKey(namespace, clusterName, node.Name)
+func (self *Node) Select() error {
+	key := lang.GetStoreNodeKey(self.namespace, self.clusterName, self.Name)
 	keyValue, err := common.CBStore.Get(key)
-	if keyValue == nil {
-		return nil, errors.New(fmt.Sprintf("%s not found", key))
-	}
 	if err != nil {
-		return nil, err
+		return err
+	}
+	if keyValue == nil {
+		return errors.New(fmt.Sprintf("%s not found", key))
 	}
 
-	json.Unmarshal([]byte(keyValue.Value), &node)
-	return node, nil
+	json.Unmarshal([]byte(keyValue.Value), &self)
+	return nil
 }
 
-func (n *Node) Insert(namespace string, clusterName string, node *Node) (*Node, error) {
-	key := lang.GetStoreNodeKey(namespace, clusterName, node.Name)
-	value, _ := json.Marshal(node)
+func (self *Node) Insert() error {
+	key := lang.GetStoreNodeKey(self.namespace, self.clusterName, self.Name)
+	value, _ := json.Marshal(self)
 	err := common.CBStore.Put(key, string(value))
 	if err != nil {
-		common.CBLog.Error(err)
+		return err
 	}
 
-	return node, nil
+	return nil
 }
 
-func (n *Node) Delete(namespace string, clusterName string, node *Node) error {
-	key := lang.GetStoreNodeKey(namespace, clusterName, node.Name)
+func (self *Node) Delete() error {
+	key := lang.GetStoreNodeKey(self.namespace, self.clusterName, self.Name)
 	err := common.CBStore.Delete(key)
 	if err != nil {
 		return err
@@ -88,16 +94,16 @@ func (n *Node) Delete(namespace string, clusterName string, node *Node) error {
 	return nil
 }
 
-func (n *NodeList) SelectList(namespace string, clusterName string, nodes *NodeList) (*NodeList, error) {
-	keyValues, err := common.CBStore.GetList(lang.GetStoreNodeKey(namespace, clusterName, ""), true)
+func (self *NodeList) SelectList() error {
+	keyValues, err := common.CBStore.GetList(lang.GetStoreNodeKey(self.namespace, self.clusterName, ""), true)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	for _, keyValue := range keyValues {
 		node := &Node{}
 		json.Unmarshal([]byte(keyValue.Value), &node)
-		nodes.Items = append(nodes.Items, *node)
+		self.Items = append(self.Items, *node)
 	}
 
-	return nodes, nil
+	return nil
 }

@@ -4,14 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/astaxie/beego/validation"
-	"github.com/cloud-barista/cb-ladybug/src/utils/config"
-	"github.com/go-resty/resty/v2"
+	"github.com/cloud-barista/cb-ladybug/src/core/model"
+	logger "github.com/sirupsen/logrus"
 )
-
-type TumblebugResult struct {
-	Message string `json:"message"`
-}
 
 type VPC struct {
 	Model
@@ -36,79 +31,43 @@ func NewVPC(ns string, name string, conf string) *VPC {
 		Config:    conf,
 		CidrBlock: "192.168.0.0/16",
 		Subnets: []Subnet{
-			Subnet{
+			{
 				Name:      fmt.Sprintf("%s-subnet", name),
 				CidrBlock: "192.168.1.0/24"},
 		},
 	}
 }
 
-func (vpc *VPC) GET() (bool, error) {
-	// validation
-	if err := vpc.validate(validation.Validation{}); err != nil {
-		return false, err
-	}
+func (self *VPC) GET() (bool, error) {
 
-	conf := config.Config
-	resp, err := resty.New().R().
-		SetBasicAuth(conf.Username, conf.Password).
-		SetBody(fmt.Sprintf(`{"connectionName" : "%s"}`, vpc.Config)).
-		SetResult(&vpc).
-		Get(conf.TumblebugUrl + fmt.Sprintf("/ns/%s/resources/vNet/%s", vpc.namespace, vpc.Name))
+	return self.execute(http.MethodGet, fmt.Sprintf("/ns/%s/resources/vNet/%s", self.namespace, self.Name), fmt.Sprintf(`{"connectionName" : "%s"}`, self.Config), &self)
 
-	if err = vpc.response(resp, err); err != nil {
-		return false, err
-	}
-	if resp.StatusCode() == http.StatusNotFound {
-		return false, nil
-	}
-
-	return true, nil
 }
 
-func (vpc *VPC) POST() error {
-	// validation
-	if err := vpc.validate(validation.Validation{}); err != nil {
-		return err
-	}
+func (self *VPC) POST() error {
 
-	conf := config.Config
-	resp, err := resty.New().R().
-		SetBasicAuth(conf.Username, conf.Password).
-		SetBody(vpc).
-		SetResult(&vpc).
-		Post(conf.TumblebugUrl + fmt.Sprintf("/ns/%s/resources/vNet", vpc.namespace))
-
-	if err = vpc.response(resp, err); err != nil {
+	_, err := self.execute(http.MethodPost, fmt.Sprintf("/ns/%s/resources/vNet", self.namespace), self, &self)
+	if err != nil {
 		return err
 	}
 
 	return nil
+
 }
 
-func (vpc *VPC) DELETE() error {
-	// validation
-	if err := vpc.validate(validation.Validation{}); err != nil {
-		return err
-	}
+func (self *VPC) DELETE() error {
 
-	exist, err := vpc.GET()
+	exist, err := self.GET()
 	if err != nil {
 		return err
 	}
 	if exist {
-		conf := config.Config
-		resp, err := resty.New().R().
-			SetBasicAuth(conf.Username, conf.Password).
-			SetBody(fmt.Sprintf(`{"connectionName" : "%s"}`, vpc.Config)).
-			SetResult(TumblebugResult{}).
-			Delete(conf.TumblebugUrl + fmt.Sprintf("/ns/%s/resources/vNet/%s", vpc.namespace, vpc.Name))
-
-		if err = vpc.response(resp, err); err != nil {
+		_, err := self.execute(http.MethodDelete, fmt.Sprintf("/ns/%s/resources/vNet/%s", self.namespace, self.Name), fmt.Sprintf(`{"connectionName" : "%s"}`, self.Config), model.Status{})
+		if err != nil {
 			return err
 		}
 	} else {
-		fmt.Println(fmt.Sprintf("delete vpc skip.. (name=%s, cause=not found)", vpc.Name))
+		logger.Infof("delete vpc skip.. (name=%s, cause=not found)", self.Name)
 	}
 
 	return nil

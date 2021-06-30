@@ -1,0 +1,379 @@
+basePath: /ladybug
+definitions:
+  model.Cluster:
+    properties:
+      clusterConfig:
+        type: string
+      cpLeader:
+        type: string
+      kind:
+        type: string
+      mcis:
+        type: string
+      name:
+        type: string
+      namespace:
+        type: string
+      networkCni:
+        type: string
+      nodes:
+        items:
+          $ref: '#/definitions/model.Node'
+        type: array
+      status:
+        type: string
+      uid:
+        type: string
+    type: object
+  model.ClusterList:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/model.Cluster'
+        type: array
+      kind:
+        type: string
+    type: object
+  model.ClusterReq:
+    properties:
+      config:
+        $ref: '#/definitions/model.Config'
+      controlPlane:
+        items:
+          $ref: '#/definitions/model.NodeConfig'
+        type: array
+      name:
+        type: string
+      worker:
+        items:
+          $ref: '#/definitions/model.NodeConfig'
+        type: array
+    type: object
+  model.Config:
+    properties:
+      kubernetes:
+        $ref: '#/definitions/model.Kubernetes'
+    type: object
+  model.Kubernetes:
+    properties:
+      networkCni:
+        type: string
+      podCidr:
+        type: string
+      serviceCidr:
+        type: string
+      serviceDnsDomain:
+        type: string
+    type: object
+  model.Node:
+    properties:
+      credential:
+        type: string
+      csp:
+        type: string
+      kind:
+        type: string
+      name:
+        type: string
+      publicIp:
+        type: string
+      role:
+        type: string
+      spec:
+        type: string
+      uid:
+        type: string
+    type: object
+  model.NodeConfig:
+    properties:
+      connection:
+        type: string
+      count:
+        type: integer
+      spec:
+        type: string
+    type: object
+  model.NodeList:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/model.Node'
+        type: array
+      kind:
+        type: string
+    type: object
+  model.NodeReq:
+    properties:
+      controlPlane:
+        items:
+          $ref: '#/definitions/model.NodeConfig'
+        type: array
+      worker:
+        items:
+          $ref: '#/definitions/model.NodeConfig'
+        type: array
+    type: object
+  model.Status:
+    properties:
+      code:
+        type: integer
+      kind:
+        type: string
+      message:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: contact-to-cloud-barista@googlegroups.com
+    name: API Support
+    url: http://cloud-barista.github.io
+  description: CB-Ladybug REST API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: CB-Ladybug REST API
+  version: 0.3.5
+paths:
+  /healthy:
+    get:
+      consumes:
+      - application/json
+      description: for health check
+      operationId: Healthy
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+      summary: Health Check
+      tags:
+      - Default
+  /ns/{namespace}/clusters:
+    get:
+      consumes:
+      - application/json
+      description: List Cluster
+      operationId: ListCluster
+      parameters:
+      - description: namespace
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ClusterList'
+      summary: List Cluster
+      tags:
+      - Cluster
+    post:
+      consumes:
+      - application/json
+      description: Create Cluster
+      operationId: CreateCluster
+      parameters:
+      - description: namespace
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: Reuest json
+        in: body
+        name: json
+        required: true
+        schema:
+          $ref: '#/definitions/model.ClusterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Cluster'
+      summary: Create Cluster
+      tags:
+      - Cluster
+  /ns/{namespace}/clusters/{cluster}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a cluster
+      operationId: DeleteCluster
+      parameters:
+      - description: namespace
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: cluster
+        in: path
+        name: cluster
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Status'
+      summary: Delete a cluster
+      tags:
+      - Cluster
+    get:
+      consumes:
+      - application/json
+      description: Get Cluster
+      operationId: GetCluster
+      parameters:
+      - description: namespace
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: cluster
+        in: path
+        name: cluster
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Cluster'
+      summary: Get Cluster
+      tags:
+      - Cluster
+  /ns/{namespace}/clusters/{cluster}/nodes:
+    get:
+      consumes:
+      - application/json
+      description: List Node
+      operationId: ListNode
+      parameters:
+      - description: namespace
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: cluster
+        in: path
+        name: cluster
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.NodeList'
+      summary: List Node
+      tags:
+      - Node
+    post:
+      consumes:
+      - application/json
+      description: Add Node
+      operationId: AddNode
+      parameters:
+      - description: namespace
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: cluster
+        in: path
+        name: cluster
+        required: true
+        type: string
+      - description: Reuest json
+        in: body
+        name: json
+        required: true
+        schema:
+          $ref: '#/definitions/model.NodeReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Node'
+      summary: Add Node
+      tags:
+      - Node
+  /ns/{namespace}/clusters/{cluster}/nodes/{node}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove Node
+      operationId: RemoveNode
+      parameters:
+      - description: namespace
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: cluster
+        in: path
+        name: cluster
+        required: true
+        type: string
+      - description: node
+        in: path
+        name: node
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Status'
+      summary: Remove Node
+      tags:
+      - Node
+    get:
+      consumes:
+      - application/json
+      description: Get Node
+      operationId: GetNode
+      parameters:
+      - description: namespace
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: cluster
+        in: path
+        name: cluster
+        required: true
+        type: string
+      - description: node
+        in: path
+        name: node
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Node'
+      summary: Get Node
+      tags:
+      - Node
+swagger: "2.0"

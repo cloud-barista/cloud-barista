@@ -1,75 +1,96 @@
 package mcis
 
 import (
-
 	"encoding/json"
 	"fmt"
-	"strings"
 	"strconv"
-
+	"strings"
 
 	"github.com/cloud-barista/cb-tumblebug/src/core/common"
-
 )
 
 // Status for mcis automation
-const AutoStatusReady string = "Ready"
-const AutoStatusChecking string = "Checking"
-const AutoStatusDetected string = "Detected"
-const AutoStatusOperating string = "Operating"
-const AutoStatusStabilizing string = "Stabilizing"
-const AutoStatusTimeout string = "Timeout"
-const AutoStatusError string = "Failed"
-const AutoStatusSuspended string = "Suspended"
+const (
+	// AutoStatusReady is const for "Ready" status.
+	AutoStatusReady string = "Ready"
+	// AutoStatusChecking is const for "Checking" status.
+	AutoStatusChecking string = "Checking"
+	// AutoStatusDetected is const for "Detected" status.
+	AutoStatusDetected string = "Detected"
+	// AutoStatusOperating is const for "Operating" status.
+	AutoStatusOperating string = "Operating"
+	// AutoStatusStabilizing is const for "Stabilizing" status.
+	AutoStatusStabilizing string = "Stabilizing"
+	// AutoStatusTimeout is const for "Timeout" status.
+	AutoStatusTimeout string = "Timeout"
+	// AutoStatusError is const for "Failed" status.
+	AutoStatusError string = "Failed"
+	// AutoStatusSuspended is const for "Suspended" status.
+	AutoStatusSuspended string = "Suspended"
+)
 
 // Action for mcis automation
-const AutoActionScaleOut string = "ScaleOut"
-const AutoActionScaleIn string = "ScaleIn"
+const (
+	// AutoActionScaleOut is const for "ScaleOut" action.
+	AutoActionScaleOut string = "ScaleOut"
+	// AutoActionScaleIn is const for "ScaleIn" action.
+	AutoActionScaleIn string = "ScaleIn"
+)
 
+// AutoCondition is struct for MCIS auto-control condition.
 type AutoCondition struct {
-	Metric            string     `json:"metric"`
-	Operator          string     `json:"operator"` // <, <=, >, >=, ...
-	Operand           string     `json:"operand"`   // 10, 70, 80, 98, ...
-	EvaluationPeriod  string     `json:"evaluationPeriod"`   // evaluationPeriod
-	EvaluationValue   []string   `json:"evaluationValue"`
+	Metric           string   `json:"metric"`
+	Operator         string   `json:"operator"`         // <, <=, >, >=, ...
+	Operand          string   `json:"operand"`          // 10, 70, 80, 98, ...
+	EvaluationPeriod string   `json:"evaluationPeriod"` // evaluationPeriod
+	EvaluationValue  []string `json:"evaluationValue"`
 	//InitTime	   string 	  `json:"initTime"`  // to check start of duration
-	//Duration	   string 	  `json:"duration"`  // duration for checking 
+	//Duration	   string 	  `json:"duration"`  // duration for checking
 }
 
+// AutoAction is struct for MCIS auto-control action.
 type AutoAction struct {
-	ActionType     string     `json:"actionType"`
-	Vm             TbVmInfo   `json:"vm"`
-	PostCommand    McisCmdReq       `json:"postCommand"`
-	Placement_algo string     `json:"placement_algo"`
+	ActionType    string     `json:"actionType"`
+	Vm            TbVmInfo   `json:"vm"`
+	PostCommand   McisCmdReq `json:"postCommand"`
+	PlacementAlgo string     `json:"placementAlgo"`
 }
 
+// Policy is struct for MCIS auto-control Policy request that includes AutoCondition, AutoAction, Status.
 type Policy struct {
-	AutoCondition     AutoCondition     `json:"autoCondition"`
-	AutoAction        AutoAction   		`json:"autoAction"`
-	Status         string     `json:"status"`
+	AutoCondition AutoCondition `json:"autoCondition"`
+	AutoAction    AutoAction    `json:"autoAction"`
+	Status        string        `json:"status"`
 }
 
+// McisPolicyInfo is struct for MCIS auto-control Policy object.
 type McisPolicyInfo struct {
-	Name         	string     `json:"Name"` //MCIS Name (for request)
-	Id         		string     `json:"Id"`	 //MCIS Id (generated ID by the Name)
-	Policy         []Policy   `json:"policy"`
+	Name   string   `json:"Name"` //MCIS Name (for request)
+	Id     string   `json:"Id"`   //MCIS Id (generated ID by the Name)
+	Policy []Policy `json:"policy"`
 
-	ActionLog	   string     `json:"actionLog"`
-	Description    string     `json:"description"`
+	ActionLog   string `json:"actionLog"`
+	Description string `json:"description"`
 }
 
+// OrchestrationController is responsible for executing MCIS automation policy.
+// OrchestrationController will be periodically involked by a time.NewTicker in main.go.
 func OrchestrationController() {
 
-	nsList := common.ListNsId()
+	nsList, err := common.ListNsId()
+	if err != nil {
+		common.CBLog.Error(err)
+		err = fmt.Errorf("an error occurred while getting namespaces' list: " + err.Error())
+		return
+	}
 
-	fmt.Println("")
+	//fmt.Println("")
 	for _, nsId := range nsList {
-		fmt.Println("NS[" + nsId + "]")
+
 		mcisPolicyList := ListMcisPolicyId(nsId)
 
-		fmt.Println("\n[MCIS Policy List]")
 		for _, m := range mcisPolicyList {
-			fmt.Println("McisPolicy[" + m + "]")
+			fmt.Println("NS[" + nsId + "]" + "McisPolicy[" + m + "]")
 		}
 
 		for _, v := range mcisPolicyList {
@@ -96,271 +117,264 @@ func OrchestrationController() {
 			const AutoStatusSuspend string = "Suspend"
 			*/
 
-			for policyIndex, _ := range mcisPolicyTmp.Policy {
+			for policyIndex := range mcisPolicyTmp.Policy {
 				fmt.Println("\n[MCIS-Policy-StateMachine]")
 				common.PrintJsonPretty(mcisPolicyTmp.Policy[policyIndex])
 
 				switch {
-					case mcisPolicyTmp.Policy[policyIndex].Status == AutoStatusReady:
-						fmt.Println("- PolicyStatus[" + AutoStatusReady + "],["+ v + "]")
+				case mcisPolicyTmp.Policy[policyIndex].Status == AutoStatusReady:
+					fmt.Println("- PolicyStatus[" + AutoStatusReady + "],[" + v + "]")
+					mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusChecking
+					UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
+
+					fmt.Println("[Check MCIS Policy] " + mcisPolicyTmp.Id)
+					check, _ := CheckMcis(nsId, mcisPolicyTmp.Id)
+					fmt.Println("[Check existence of MCIS] " + mcisPolicyTmp.Id)
+					//keyValueMcis, _ := common.CBStore.Get(common.GenMcisKey(nsId, mcisPolicyTmp.Id, ""))
+
+					if !check {
+						mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
+						UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
+						fmt.Println("[MCIS is not exist] " + mcisPolicyTmp.Id)
+						break
+					} else { // need to enhance : loop for each policies and realize metric
+
+						//Checking (measuring)
 						mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusChecking
 						UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
-						 
-						fmt.Println("[Check MCIS Policy] " + mcisPolicyTmp.Id)
-						check, _, _ := LowerizeAndCheckMcis(nsId, mcisPolicyTmp.Id ) 
-						fmt.Println("[Check existance of MCIS] " + mcisPolicyTmp.Id)
-						//keyValueMcis, _ := common.CBStore.Get(common.GenMcisKey(nsId, mcisPolicyTmp.Id, ""))
-						
-						if !check {
+						fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],[" + v + "]")
+
+						fmt.Println("[MCIS is exist] " + mcisPolicyTmp.Id)
+						content, err := GetMonitoringData(nsId, mcisPolicyTmp.Id, mcisPolicyTmp.Policy[policyIndex].AutoCondition.Metric)
+						if err != nil {
+							common.CBLog.Error(err)
 							mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
-							UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
-							fmt.Println("[MCIS is not exist] " + mcisPolicyTmp.Id)
-							break	
-						} else { // need to enhance : loop for each policies and realize metric
-	
-							//Checking (measuring)
-							mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusChecking
-							UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
-							fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],["+ v + "]")
-	
-							fmt.Println("[MCIS is exist] " + mcisPolicyTmp.Id)
-							content, err := GetMonitoringData(nsId, mcisPolicyTmp.Id, mcisPolicyTmp.Policy[policyIndex].AutoCondition.Metric)
-							if err != nil {
-								common.CBLog.Error(err)
-								mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
+							break
+						}
+						//common.PrintJsonPretty(content)
+
+						//Statistic
+						sumMcis := 0.0
+						for _, monData := range content.McisMonitoring {
+							//fmt.Println("[monData.Value: ] " + monData.Value)
+							monDataValue, _ := strconv.ParseFloat(monData.Value, 64)
+							sumMcis += monDataValue
+						}
+						averMcis := (sumMcis / float64(len(content.McisMonitoring)))
+						fmt.Printf("[monData.Value] AverMcis: %f,  SumMcis: %f \n", averMcis, sumMcis)
+
+						evaluationPeriod, _ := strconv.Atoi(mcisPolicyTmp.Policy[policyIndex].AutoCondition.EvaluationPeriod)
+						evaluationValue := mcisPolicyTmp.Policy[policyIndex].AutoCondition.EvaluationValue
+						evaluationValue = append([]string{fmt.Sprintf("%f", averMcis)}, evaluationValue...) // prepend current aver date
+						mcisPolicyTmp.Policy[policyIndex].AutoCondition.EvaluationValue = evaluationValue
+
+						sum := 0.0
+						aver := -0.1
+						// accumerate previous evaluation value
+						fmt.Printf("[Evaluation History]\n")
+						for evi, evv := range evaluationValue {
+							evvFloat, _ := strconv.ParseFloat(evv, 64)
+							sum += evvFloat
+							fmt.Printf("[%v] %f ", evi, evvFloat)
+							// break with outside evaluationValue
+							if evi >= evaluationPeriod-1 {
 								break
-							}
-							//common.PrintJsonPretty(content)
-	
-							//Statistic
-							sumMcis := 0.0
-							for _, monData := range content.McisMonitoring {
-								//fmt.Println("[monData.Value: ] " + monData.Value)
-								monDataValue, _ := strconv.ParseFloat(monData.Value, 64)
-								sumMcis += monDataValue
-							}
-							averMcis := (sumMcis / float64(len(content.McisMonitoring)))
-							fmt.Printf("[monData.Value] AverMcis: %f,  SumMcis: %f \n", averMcis, sumMcis)
-	
-							evaluationPeriod, _ := strconv.Atoi(mcisPolicyTmp.Policy[policyIndex].AutoCondition.EvaluationPeriod)
-							evaluationValue := mcisPolicyTmp.Policy[policyIndex].AutoCondition.EvaluationValue 
-							evaluationValue = append( []string{fmt.Sprintf("%f", averMcis)}, evaluationValue... ) // prepend current aver date
-							mcisPolicyTmp.Policy[policyIndex].AutoCondition.EvaluationValue = evaluationValue
-	
-							sum := 0.0
-							aver := -0.1
-							// accumerate previous evaluation value
-							fmt.Printf("[Evaluation History]\n")
-							for evi, evv := range evaluationValue {
-								evvFloat, _ := strconv.ParseFloat(evv, 64)
-								sum += evvFloat
-								fmt.Printf("[%v] %f ", evi, evvFloat)
-								// break with outside evaluationValue
-								if evi >= evaluationPeriod - 1 {
-									break
-								}
-							}
-							// average for evaluationPeriod (if data for the period is not enough, skip)
-							if evaluationPeriod != 0 && len(evaluationValue) >= evaluationPeriod {
-								aver = sum / float64(evaluationPeriod)
-							}
-							fmt.Printf("\n[Evaluation] Aver: %f,  Period: %v \n", aver, evaluationPeriod)
-							
-							//Detecting
-							operator := mcisPolicyTmp.Policy[policyIndex].AutoCondition.Operator
-							operand, _ := strconv.ParseFloat(mcisPolicyTmp.Policy[policyIndex].AutoCondition.Operand, 64)
-	
-							if evaluationPeriod == 0 {
-								fmt.Println("[Checking] Not available evaluationPeriod ")
-								mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
-								UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
-								break
-							}
-							// not enough evaluationPeriod
-							if aver == -0.1 {
-								fmt.Println("[Checking] Not enough evaluationPeriod ")
-								mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusReady
-								UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
-								break
-							}
-							switch {
-								case operator == ">=":
-									if aver >= operand {
-										fmt.Printf("[Detected] Aver: %f >=  Operand: %f \n", aver, operand)
-										mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusDetected
-									} else {
-										fmt.Printf("[Not Detected] Aver: %f >=  Operand: %f \n", aver, operand)
-										mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusReady
-									}
-								case operator == ">":
-									if aver > operand {
-										fmt.Printf("[Detected] Aver: %f >  Operand: %f \n", aver, operand)
-										mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusDetected
-										
-									} else {
-										fmt.Printf("[Not Detected] Aver: %f >  Operand: %f \n", aver, operand)
-										mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusReady
-									}
-								case operator == "<=":
-									if aver <= operand {
-										fmt.Printf("[Detected] Aver: %f <=  Operand: %f \n", aver, operand)
-										mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusDetected
-										
-									} else {
-										fmt.Printf("[Not Detected] Aver: %f <=  Operand: %f \n", aver, operand)
-										mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusReady
-									}
-								case operator == "<":
-									if aver < operand {
-										fmt.Printf("[Detected] Aver: %f <  Operand: %f \n", aver, operand)
-										mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusDetected
-										
-									} else {
-										fmt.Printf("[Not Detected] Aver: %f <  Operand: %f \n", aver, operand)
-										mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusReady
-									}
-								default:
-									fmt.Println("[Checking] Not available operator " + operator)
-									mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
 							}
 						}
-						UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
-						fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],["+ v + "]")
-	
-	
-					case mcisPolicyTmp.Policy[policyIndex].Status == AutoStatusChecking:
-						fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],["+ v + "]")
-						//mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusDetected
-	
-					case mcisPolicyTmp.Policy[policyIndex].Status == AutoStatusDetected:
-						fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],["+ v + "]")
-						mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusOperating
-						UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
-						fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],["+ v + "]")
-	
-						//Action
-						/*
+						// average for evaluationPeriod (if data for the period is not enough, skip)
+						if evaluationPeriod != 0 && len(evaluationValue) >= evaluationPeriod {
+							aver = sum / float64(evaluationPeriod)
+						}
+						fmt.Printf("\n[Evaluation] Aver: %f,  Period: %v \n", aver, evaluationPeriod)
+
+						//Detecting
+						operator := mcisPolicyTmp.Policy[policyIndex].AutoCondition.Operator
+						operand, _ := strconv.ParseFloat(mcisPolicyTmp.Policy[policyIndex].AutoCondition.Operand, 64)
+
+						if evaluationPeriod == 0 {
+							fmt.Println("[Checking] Not available evaluationPeriod ")
+							mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
+							UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
+							break
+						}
+						// not enough evaluationPeriod
+						if aver == -0.1 {
+							fmt.Println("[Checking] Not enough evaluationPeriod ")
+							mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusReady
+							UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
+							break
+						}
+						switch {
+						case operator == ">=":
+							if aver >= operand {
+								fmt.Printf("[Detected] Aver: %f >=  Operand: %f \n", aver, operand)
+								mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusDetected
+							} else {
+								fmt.Printf("[Not Detected] Aver: %f >=  Operand: %f \n", aver, operand)
+								mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusReady
+							}
+						case operator == ">":
+							if aver > operand {
+								fmt.Printf("[Detected] Aver: %f >  Operand: %f \n", aver, operand)
+								mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusDetected
+
+							} else {
+								fmt.Printf("[Not Detected] Aver: %f >  Operand: %f \n", aver, operand)
+								mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusReady
+							}
+						case operator == "<=":
+							if aver <= operand {
+								fmt.Printf("[Detected] Aver: %f <=  Operand: %f \n", aver, operand)
+								mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusDetected
+
+							} else {
+								fmt.Printf("[Not Detected] Aver: %f <=  Operand: %f \n", aver, operand)
+								mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusReady
+							}
+						case operator == "<":
+							if aver < operand {
+								fmt.Printf("[Detected] Aver: %f <  Operand: %f \n", aver, operand)
+								mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusDetected
+
+							} else {
+								fmt.Printf("[Not Detected] Aver: %f <  Operand: %f \n", aver, operand)
+								mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusReady
+							}
+						default:
+							fmt.Println("[Checking] Not available operator " + operator)
+							mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
+						}
+					}
+					UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
+					fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],[" + v + "]")
+
+				case mcisPolicyTmp.Policy[policyIndex].Status == AutoStatusChecking:
+					fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],[" + v + "]")
+					//mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusDetected
+
+				case mcisPolicyTmp.Policy[policyIndex].Status == AutoStatusDetected:
+					fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],[" + v + "]")
+					mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusOperating
+					UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
+					fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],[" + v + "]")
+
+					//Action
+					/*
 						// Actions for mcis automation
 						const AutoActionScaleOut string = "ScaleOut"
 						const AutoActionScaleIn string = "ScaleIn"
-						*/
-	
-						autoAction := mcisPolicyTmp.Policy[policyIndex].AutoAction
-						fmt.Println("[autoAction] "+ autoAction.ActionType)
-	
-						switch {
-							case autoAction.ActionType == AutoActionScaleOut:
-								
-								autoAction.Vm.Label = LabelAutoGen
-								// append UUID to given vm name to avoid duplicated vm ID.
-								autoAction.Vm.Name = autoAction.Vm.Name +"-"+ common.GenUuid()
-								//vmReqTmp := autoAction.Vm
-	
-								if autoAction.Placement_algo == "random" {
-									fmt.Println("[autoAction.Placement_algo] " + autoAction.Placement_algo)
-									var vmTmpErr error
-									autoAction.Vm, vmTmpErr = GetVmTemplate(nsId, mcisPolicyTmp.Id, autoAction.Placement_algo)
-									if vmTmpErr != nil {
-										mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
-										UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
-									}
-									autoAction.Vm.Name = autoAction.Vm.Name +"-Random"
-									autoAction.Vm.Label = LabelAutoGen
-								}
-								
-								common.PrintJsonPretty(autoAction.Vm)
-								fmt.Println("[Action] "+ autoAction.ActionType)
-	
-								// ScaleOut MCIS according to the VM requirement.
-								fmt.Println("[Generating VM]")
-								result, vmCreateErr := CorePostMcisVm(nsId, mcisPolicyTmp.Id, &autoAction.Vm)
-								if vmCreateErr != nil {
-									mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
-									UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
-								}
-								common.PrintJsonPretty(*result)
-	
-								nullMcisCmdReq := McisCmdReq{}
-								if autoAction.PostCommand != nullMcisCmdReq {
-									fmt.Println("[Post Command to VM] " + autoAction.PostCommand.Command)
-									_, cmdErr := CorePostCmdMcisVm(nsId, mcisPolicyTmp.Id, autoAction.Vm.Name, &autoAction.PostCommand)
-									if cmdErr != nil {
-										mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
-										UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
-									}
-								}
-	
-	
-							case autoAction.ActionType == AutoActionScaleIn:
-								fmt.Println("[Action] "+ autoAction.ActionType)
-	
-								// ScaleIn MCIS.
-								fmt.Println("[Removing VM]")
-								vmList, vmListErr := GetVmListByLabel(nsId, mcisPolicyTmp.Id, LabelAutoGen)
-								if vmListErr != nil {
-									mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
-									UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
-								}
-								if len(vmList) != 0 {
-									removeTargetVm := vmList[len(vmList)-1]
-									fmt.Println("[Removing VM ID] "+ removeTargetVm)
-									delVmErr := DelMcisVm(nsId, mcisPolicyTmp.Id, removeTargetVm)
-									if delVmErr != nil {
-										mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
-										UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
-									}
-								}
-								
-	
-							default:
+					*/
+
+					autoAction := mcisPolicyTmp.Policy[policyIndex].AutoAction
+					fmt.Println("[autoAction] " + autoAction.ActionType)
+
+					switch {
+					case autoAction.ActionType == AutoActionScaleOut:
+
+						autoAction.Vm.Label = LabelAutoGen
+						// append UUID to given vm name to avoid duplicated vm ID.
+						autoAction.Vm.Name = autoAction.Vm.Name + "-" + common.GenUuid()
+						//vmReqTmp := autoAction.Vm
+
+						if autoAction.PlacementAlgo == "random" {
+							fmt.Println("[autoAction.PlacementAlgo] " + autoAction.PlacementAlgo)
+							var vmTmpErr error
+							autoAction.Vm, vmTmpErr = GetVmTemplate(nsId, mcisPolicyTmp.Id, autoAction.PlacementAlgo)
+							if vmTmpErr != nil {
+								mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
+								UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
+							}
+							autoAction.Vm.Name = autoAction.Vm.Name + "-Random"
+							autoAction.Vm.Label = LabelAutoGen
 						}
-	
-						mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusStabilizing
-						UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
-						fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],["+ v + "]")
-	
-					case mcisPolicyTmp.Policy[policyIndex].Status == AutoStatusStabilizing:
-						fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],["+ v + "]")
-	
-						//initialize Evaluation history so that controller does not act too early.
-						//with this we can stablize MCIS by init previously measures.
-						//Will invoke [Checking] Not enough evaluationPeriod
-						mcisPolicyTmp.Policy[policyIndex].AutoCondition.EvaluationValue = nil
-	
-						mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusReady
-						UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
-	
-					case mcisPolicyTmp.Policy[policyIndex].Status == AutoStatusOperating:
-						fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],["+ v + "]")
-						//mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusReady
-						//UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
-	
-					case mcisPolicyTmp.Policy[policyIndex].Status == AutoStatusTimeout:
-						fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],["+ v + "]")
-	
-					case mcisPolicyTmp.Policy[policyIndex].Status == AutoStatusError:
-						fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],["+ v + "]")
-						mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusReady
-						UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
-	
-					case mcisPolicyTmp.Policy[policyIndex].Status == AutoStatusSuspended:
-						fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],["+ v + "]")
-	
+
+						common.PrintJsonPretty(autoAction.Vm)
+						fmt.Println("[Action] " + autoAction.ActionType)
+
+						// ScaleOut MCIS according to the VM requirement.
+						fmt.Println("[Generating VM]")
+						result, vmCreateErr := CorePostMcisVm(nsId, mcisPolicyTmp.Id, &autoAction.Vm)
+						if vmCreateErr != nil {
+							mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
+							UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
+						}
+						common.PrintJsonPretty(*result)
+
+						nullMcisCmdReq := McisCmdReq{}
+						if autoAction.PostCommand != nullMcisCmdReq {
+							fmt.Println("[Post Command to VM] " + autoAction.PostCommand.Command)
+							_, cmdErr := CorePostCmdMcisVm(nsId, mcisPolicyTmp.Id, autoAction.Vm.Name, &autoAction.PostCommand)
+							if cmdErr != nil {
+								mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
+								UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
+							}
+						}
+
+					case autoAction.ActionType == AutoActionScaleIn:
+						fmt.Println("[Action] " + autoAction.ActionType)
+
+						// ScaleIn MCIS.
+						fmt.Println("[Removing VM]")
+						vmList, vmListErr := GetVmListByLabel(nsId, mcisPolicyTmp.Id, LabelAutoGen)
+						if vmListErr != nil {
+							mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
+							UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
+						}
+						if len(vmList) != 0 {
+							removeTargetVm := vmList[len(vmList)-1]
+							fmt.Println("[Removing VM ID] " + removeTargetVm)
+							delVmErr := DelMcisVm(nsId, mcisPolicyTmp.Id, removeTargetVm, "")
+							if delVmErr != nil {
+								mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
+								UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
+							}
+						}
+
 					default:
+					}
+
+					mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusStabilizing
+					UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
+					fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],[" + v + "]")
+
+				case mcisPolicyTmp.Policy[policyIndex].Status == AutoStatusStabilizing:
+					fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],[" + v + "]")
+
+					//initialize Evaluation history so that controller does not act too early.
+					//with this we can stablize MCIS by init previously measures.
+					//Will invoke [Checking] Not enough evaluationPeriod
+					mcisPolicyTmp.Policy[policyIndex].AutoCondition.EvaluationValue = nil
+
+					mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusReady
+					UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
+
+				case mcisPolicyTmp.Policy[policyIndex].Status == AutoStatusOperating:
+					fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],[" + v + "]")
+					//mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusReady
+					//UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
+
+				case mcisPolicyTmp.Policy[policyIndex].Status == AutoStatusTimeout:
+					fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],[" + v + "]")
+
+				case mcisPolicyTmp.Policy[policyIndex].Status == AutoStatusError:
+					fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],[" + v + "]")
+					mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusReady
+					UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
+
+				case mcisPolicyTmp.Policy[policyIndex].Status == AutoStatusSuspended:
+					fmt.Println("- PolicyStatus[" + mcisPolicyTmp.Policy[policyIndex].Status + "],[" + v + "]")
+
+				default:
 				}
 			}
 
-
-
-	
 		}
 
 	}
-	
 
 }
 
-
+// UpdateMcisPolicyInfo updates McisPolicyInfo object in DB.
 func UpdateMcisPolicyInfo(nsId string, mcisPolicyInfoData McisPolicyInfo) {
 	key := common.GenMcisPolicyKey(nsId, mcisPolicyInfoData.Id, "")
 	val, _ := json.Marshal(mcisPolicyInfoData)
@@ -374,23 +388,35 @@ func UpdateMcisPolicyInfo(nsId string, mcisPolicyInfoData McisPolicyInfo) {
 	//fmt.Println("===========================")
 }
 
-
+// CreateMcisPolicy create McisPolicyInfo object in DB according to user's requirements.
 func CreateMcisPolicy(nsId string, mcisId string, u *McisPolicyInfo) (McisPolicyInfo, error) {
 
-	nsId = common.GenId(nsId)
-	check, lowerizedName, _ := LowerizeAndCheckMcisPolicy(nsId, mcisId)
-	//fmt.Println("CreateVNet() called; nsId: " + nsId + ", u.Name: " + u.Name + ", lowerizedName: " + lowerizedName) // for debug
-	u.Name = lowerizedName
-	u.Id = lowerizedName
+	err := common.CheckString(nsId)
+	if err != nil {
+		temp := McisPolicyInfo{}
+		common.CBLog.Error(err)
+		return temp, err
+	}
+
+	err = common.CheckString(mcisId)
+	if err != nil {
+		temp := McisPolicyInfo{}
+		common.CBLog.Error(err)
+		return temp, err
+	}
+	check, _ := CheckMcisPolicy(nsId, mcisId)
+
+	u.Name = mcisId
+	u.Id = mcisId
 	//u.Status = AutoStatusReady
 
-	if check == true {
+	if check {
 		temp := McisPolicyInfo{}
 		err := fmt.Errorf("The MCIS Policy Obj " + u.Name + " already exists.")
 		return temp, err
 	}
 
-	for policyIndex, _ := range u.Policy {
+	for policyIndex := range u.Policy {
 		u.Policy[policyIndex].Status = AutoStatusReady
 	}
 
@@ -403,7 +429,7 @@ func CreateMcisPolicy(nsId string, mcisId string, u *McisPolicyInfo) (McisPolicy
 
 	//fmt.Println("Key: ", Key)
 	//fmt.Println("Val: ", Val)
-	err := common.CBStore.Put(string(Key), string(Val))
+	err = common.CBStore.Put(string(Key), string(Val))
 	if err != nil {
 		common.CBLog.Error(err)
 		return content, err
@@ -415,9 +441,23 @@ func CreateMcisPolicy(nsId string, mcisId string, u *McisPolicyInfo) (McisPolicy
 	return content, nil
 }
 
+// GetMcisPolicyObject returns McisPolicyInfo object.
 func GetMcisPolicyObject(nsId string, mcisId string) (McisPolicyInfo, error) {
 	fmt.Println("[GetMcisPolicyObject]" + mcisId)
-	nsId = common.GenId(nsId)
+
+	err := common.CheckString(nsId)
+	if err != nil {
+		temp := McisPolicyInfo{}
+		common.CBLog.Error(err)
+		return temp, err
+	}
+
+	err = common.CheckString(mcisId)
+	if err != nil {
+		temp := McisPolicyInfo{}
+		common.CBLog.Error(err)
+		return temp, err
+	}
 	key := common.GenMcisPolicyKey(nsId, mcisId, "")
 	fmt.Println("Key: ", key)
 	keyValue, err := common.CBStore.Get(key)
@@ -436,10 +476,14 @@ func GetMcisPolicyObject(nsId string, mcisId string) (McisPolicyInfo, error) {
 	return mcisPolicyTmp, nil
 }
 
-
+// GetAllMcisPolicyObject returns all McisPolicyInfo objects.
 func GetAllMcisPolicyObject(nsId string) ([]McisPolicyInfo, error) {
 
-	nsId = common.GenId(nsId)
+	err := common.CheckString(nsId)
+	if err != nil {
+		common.CBLog.Error(err)
+		return nil, err
+	}
 	Mcis := []McisPolicyInfo{}
 	mcisList := ListMcisPolicyId(nsId)
 
@@ -458,10 +502,14 @@ func GetAllMcisPolicyObject(nsId string) ([]McisPolicyInfo, error) {
 	return Mcis, nil
 }
 
-
+// ListMcisPolicyId returns a list of Ids for all McisPolicyInfo objects .
 func ListMcisPolicyId(nsId string) []string {
 
-	nsId = common.GenId(nsId)
+	err := common.CheckString(nsId)
+	if err != nil {
+		common.CBLog.Error(err)
+		return nil
+	}
 	//fmt.Println("[Get MCIS Policy ID list]")
 	key := "/ns/" + nsId + "/policy/mcis"
 	keyValue, _ := common.CBStore.GetList(key, true)
@@ -475,13 +523,23 @@ func ListMcisPolicyId(nsId string) []string {
 	return mcisList
 }
 
+// DelMcisPolicy deletes McisPolicyInfo object by mcisId.
 func DelMcisPolicy(nsId string, mcisId string) error {
 
-	nsId = common.GenId(nsId)
-	check, lowerizedName, _ := LowerizeAndCheckMcisPolicy(nsId, mcisId)
-	mcisId = lowerizedName
+	err := common.CheckString(nsId)
+	if err != nil {
+		common.CBLog.Error(err)
+		return err
+	}
 
-	if check == false {
+	err = common.CheckString(mcisId)
+	if err != nil {
+		common.CBLog.Error(err)
+		return err
+	}
+	check, _ := CheckMcisPolicy(nsId, mcisId)
+
+	if !check {
 		err := fmt.Errorf("The mcis Policy" + mcisId + " does not exist.")
 		return err
 	}
@@ -492,7 +550,7 @@ func DelMcisPolicy(nsId string, mcisId string) error {
 	fmt.Println(key)
 
 	// delete mcis Policy info
-	err := common.CBStore.Delete(key)
+	err = common.CBStore.Delete(key)
 	if err != nil {
 		common.CBLog.Error(err)
 		return err
@@ -501,9 +559,14 @@ func DelMcisPolicy(nsId string, mcisId string) error {
 	return nil
 }
 
+// DelAllMcisPolicy deletes all McisPolicyInfo objects.
 func DelAllMcisPolicy(nsId string) (string, error) {
 
-	nsId = common.GenId(nsId)
+	err := common.CheckString(nsId)
+	if err != nil {
+		common.CBLog.Error(err)
+		return "", err
+	}
 	mcisList := ListMcisPolicyId(nsId)
 	if len(mcisList) == 0 {
 		return "No MCIS Policy to delete", nil
@@ -513,8 +576,8 @@ func DelAllMcisPolicy(nsId string) (string, error) {
 		if err != nil {
 			common.CBLog.Error(err)
 
-			return "", fmt.Errorf("Failed to delete All MCISs")
+			return "", fmt.Errorf("Failed to delete All MCIS Policies")
 		}
 	}
-	return "All MCIS Policys has been deleted", nil
+	return "All MCIS Policies has been deleted", nil
 }

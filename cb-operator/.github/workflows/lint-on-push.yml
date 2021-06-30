@@ -1,0 +1,42 @@
+# The name of your workflow. GitHub displays the names of your workflows on your repository's actions page. 
+# If you omit name, GitHub sets it to the workflow file path relative to the root of the repository.
+name: lint-on-push
+
+# This workflow is triggered on push
+on: 
+  push:
+    # Ignoring branches
+    branches-ignore: 
+      # Push events to branches matching master
+      - 'master'
+      # Push events to branches matching develop
+      #- 'develop'
+      
+    # Ignoring paths
+    paths-ignore:
+      # Push events to mypath/**
+      #- 'mypath/**'    
+
+jobs:
+  # Set the job key. The key is displayed as the job name
+  # when a job name is not provided
+  # The job key is “lint"
+  lint:
+    # Job name is “xxx”
+    name: Lint
+
+    strategy:
+      matrix:
+        go-version: [1.15.x]
+        os: [ubuntu-18.04] #macos-latest, windows-latest
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout source code
+      uses: actions/checkout@v2
+    
+    - name: Install golangci-lint
+      run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.34.1      
+    
+    - name: Run golangci-lint
+      run: $(go env GOPATH)/bin/golangci-lint run

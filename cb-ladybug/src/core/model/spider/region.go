@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/cloud-barista/cb-ladybug/src/utils/app"
 	"github.com/cloud-barista/cb-ladybug/src/utils/config"
-	"github.com/go-resty/resty/v2"
+	logger "github.com/sirupsen/logrus"
 )
 
 type Region struct {
@@ -28,20 +29,18 @@ func NewRegion(name string) *Region {
 }
 
 // get region
-func (region *Region) GET() (bool, error) {
+func (self *Region) GET() (bool, error) {
 
-	conf := config.Config
-	resp, err := resty.New().R().
-		SetBasicAuth(conf.Username, conf.Password).
-		SetResult(&region).
-		Get(conf.SpiderUrl + fmt.Sprintf("/region/%s", region.RegionName))
-
-	if err = region.response(resp, err); err != nil {
+	url := fmt.Sprintf("%s/region/%s", *config.Config.SpiderUrl, self.RegionName)
+	resp, err := app.ExecutHTTP(http.MethodGet, url, nil, &self)
+	if err != nil {
 		return false, err
 	}
 	if resp.StatusCode() == http.StatusNotFound {
+		logger.Warnf("Not found data (status=404, method=%s, url=%s)", http.MethodGet, url)
 		return false, nil
 	}
 
 	return true, nil
+
 }

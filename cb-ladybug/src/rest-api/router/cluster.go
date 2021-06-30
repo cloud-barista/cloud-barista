@@ -4,11 +4,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cloud-barista/cb-ladybug/src/core/common"
 	"github.com/cloud-barista/cb-ladybug/src/core/model"
-	"github.com/cloud-barista/cb-ladybug/src/rest-api/service"
+	"github.com/cloud-barista/cb-ladybug/src/core/service"
 	"github.com/cloud-barista/cb-ladybug/src/utils/app"
 	"github.com/labstack/echo/v4"
+
+	logger "github.com/sirupsen/logrus"
 )
 
 // ListCluster
@@ -24,7 +25,7 @@ import (
 func ListCluster(c echo.Context) error {
 	clusterList, err := service.ListCluster(c.Param("namespace"))
 	if err != nil {
-		common.CBLog.Error(err)
+		logger.Error(err)
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
 
@@ -44,14 +45,14 @@ func ListCluster(c echo.Context) error {
 // @Router /ns/{namespace}/clusters/{cluster} [get]
 func GetCluster(c echo.Context) error {
 	if err := app.Validate(c, []string{"namespace", "cluster"}); err != nil {
-		common.CBLog.Error(err)
+		logger.Error(err)
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
 
 	cluster, err := service.GetCluster(c.Param("namespace"), c.Param("cluster"))
 	if err != nil {
-		common.CBLog.Error(err)
-		return app.SendMessage(c, http.StatusBadRequest, err.Error())
+		logger.Infof("not found a cluster (namespace=%s, cluster=%s, cause=%s)", c.Param("namespace"), c.Param("cluster"), err)
+		return app.SendMessage(c, http.StatusNotFound, err.Error())
 	}
 
 	return app.Send(c, http.StatusOK, cluster)
@@ -72,24 +73,26 @@ func CreateCluster(c echo.Context) error {
 	start := time.Now()
 	clusterReq := &model.ClusterReq{}
 	if err := c.Bind(clusterReq); err != nil {
-		common.CBLog.Error(err)
+		logger.Error(err)
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
 
-	err := app.ClusterReqValidate(c, *clusterReq)
+	app.ClusterReqDef(*clusterReq)
+
+	err := app.ClusterReqValidate(*clusterReq)
 	if err != nil {
-		common.CBLog.Error(err)
+		logger.Error(err)
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
 
 	cluster, err := service.CreateCluster(c.Param("namespace"), clusterReq)
 	if err != nil {
-		common.CBLog.Error(err)
+		logger.Error(err)
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
 
 	duration := time.Since(start)
-	common.CBLog.Info(" duration := ", duration)
+	logger.Info("duration := ", duration)
 	return app.Send(c, http.StatusOK, cluster)
 }
 
@@ -106,13 +109,13 @@ func CreateCluster(c echo.Context) error {
 // @Router /ns/{namespace}/clusters/{cluster} [delete]
 func DeleteCluster(c echo.Context) error {
 	if err := app.Validate(c, []string{"namespace", "cluster"}); err != nil {
-		common.CBLog.Error(err)
+		logger.Error(err)
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
 
 	status, err := service.DeleteCluster(c.Param("namespace"), c.Param("cluster"))
 	if err != nil {
-		common.CBLog.Error(err)
+		logger.Error(err)
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
 

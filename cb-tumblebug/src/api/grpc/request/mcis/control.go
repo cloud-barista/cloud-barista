@@ -14,21 +14,21 @@ import (
 
 // ===== [ Implementations ] =====
 
-// CreateMcis - MCIS 생성
+// CreateMcis
 func (r *MCISRequest) CreateMcis() (string, error) {
-	// 입력데이터 검사
+	// Check input data
 	if r.InData == "" {
 		return "", errors.New("input data required")
 	}
 
-	// 입력데이터 언마샬링
+	// Unmarshal (json/yaml -> Request Input)
 	var item pb.TbMcisCreateRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 서버에 요청
+	// Request to server
 	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
 	defer cancel()
 
@@ -37,25 +37,25 @@ func (r *MCISRequest) CreateMcis() (string, error) {
 		return "", err
 	}
 
-	// 결과값 마샬링
+	// Marshal (Response -> json/yaml)
 	return gc.ConvertToOutput(r.OutType, &resp.Item)
 }
 
-// ListMcis - MCIS 목록
+// ListMcis
 func (r *MCISRequest) ListMcis() (string, error) {
-	// 입력데이터 검사
+	// Check input data
 	if r.InData == "" {
 		return "", errors.New("input data required")
 	}
 
-	// 입력데이터 언마샬링
+	// Unmarshal (json/yaml -> Request Input)
 	var item pb.TbMcisAllQryRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 서버에 요청
+	// Request to server
 	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
 	defer cancel()
 
@@ -64,25 +64,52 @@ func (r *MCISRequest) ListMcis() (string, error) {
 		return "", err
 	}
 
-	// 결과값 마샬링
+	// Marshal (Response -> json/yaml)
 	return gc.ConvertToOutput(r.OutType, &resp)
 }
 
-// ControlMcis - MCIS 제어
-func (r *MCISRequest) ControlMcis() (string, error) {
-	// 입력데이터 검사
+// ListMcisId
+func (r *MCISRequest) ListMcisId() (string, error) {
+	// Check input data
 	if r.InData == "" {
 		return "", errors.New("input data required")
 	}
 
-	// 입력데이터 언마샬링
+	// Unmarshal (json/yaml -> Request Input)
+	var item pb.TbMcisAllQryRequest
+	err := gc.ConvertToMessage(r.InType, r.InData, &item)
+	if err != nil {
+		return "", err
+	}
+
+	// Request to server
+	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
+	defer cancel()
+
+	resp, err := r.Client.ListMcisId(ctx, &item)
+	if err != nil {
+		return "", err
+	}
+
+	// Marshal (Response -> json/yaml)
+	return gc.ConvertToOutput(r.OutType, &resp)
+}
+
+// ControlMcis - Control MCIS's lifecycle
+func (r *MCISRequest) ControlMcis() (string, error) {
+	// Check input data
+	if r.InData == "" {
+		return "", errors.New("input data required")
+	}
+
+	// Unmarshal (json/yaml -> Request Input)
 	var item pb.TbMcisActionRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 서버에 요청
+	// Request to server
 	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
 	defer cancel()
 
@@ -91,25 +118,52 @@ func (r *MCISRequest) ControlMcis() (string, error) {
 		return "", err
 	}
 
-	// 결과값 마샬링
+	// Marshal (Response -> json/yaml)
 	return gc.ConvertToOutput(r.OutType, &resp)
 }
 
-// GetMcisStatus - MCIS 상태 조회
-func (r *MCISRequest) GetMcisStatus() (string, error) {
-	// 입력데이터 검사
+// ListMcisStatus
+func (r *MCISRequest) ListMcisStatus() (string, error) {
+	// Check input data
 	if r.InData == "" {
 		return "", errors.New("input data required")
 	}
 
-	// 입력데이터 언마샬링
+	// Unmarshal (json/yaml -> Request Input)
+	var item pb.TbMcisAllQryRequest
+	err := gc.ConvertToMessage(r.InType, r.InData, &item)
+	if err != nil {
+		return "", err
+	}
+
+	// Request to server
+	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
+	defer cancel()
+
+	resp, err := r.Client.ListMcisStatus(ctx, &item)
+	if err != nil {
+		return "", err
+	}
+
+	// Marshal (Response -> json/yaml)
+	return gc.ConvertToOutput(r.OutType, &resp)
+}
+
+// GetMcisStatus
+func (r *MCISRequest) GetMcisStatus() (string, error) {
+	// Check input data
+	if r.InData == "" {
+		return "", errors.New("input data required")
+	}
+
+	// Unmarshal (json/yaml -> Request Input)
 	var item pb.TbMcisQryRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 서버에 요청
+	// Request to server
 	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
 	defer cancel()
 
@@ -118,25 +172,25 @@ func (r *MCISRequest) GetMcisStatus() (string, error) {
 		return "", err
 	}
 
-	// 결과값 마샬링
-	return gc.ConvertToOutput(r.OutType, &resp.Item)
+	// Marshal (Response -> json/yaml)
+	return gc.ConvertToOutput(r.OutType, &resp)
 }
 
-// GetMcisInfo - MCIS 정보 조회
+// GetMcisInfo
 func (r *MCISRequest) GetMcisInfo() (string, error) {
-	// 입력데이터 검사
+	// Check input data
 	if r.InData == "" {
 		return "", errors.New("input data required")
 	}
 
-	// 입력데이터 언마샬링
+	// Unmarshal (json/yaml -> Request Input)
 	var item pb.TbMcisQryRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 서버에 요청
+	// Request to server
 	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
 	defer cancel()
 
@@ -145,25 +199,52 @@ func (r *MCISRequest) GetMcisInfo() (string, error) {
 		return "", err
 	}
 
-	// 결과값 마샬링
+	// Marshal (Response -> json/yaml)
 	return gc.ConvertToOutput(r.OutType, &resp.Item)
 }
 
-// DeleteMcis - MCIS 삭제
-func (r *MCISRequest) DeleteMcis() (string, error) {
-	// 입력데이터 검사
+// ListMcisVmId
+func (r *MCISRequest) ListMcisVmId() (string, error) {
+	// Check input data
 	if r.InData == "" {
 		return "", errors.New("input data required")
 	}
 
-	// 입력데이터 언마샬링
+	// Unmarshal (json/yaml -> Request Input)
 	var item pb.TbMcisQryRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 서버에 요청
+	// Request to server
+	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
+	defer cancel()
+
+	resp, err := r.Client.ListMcisVmId(ctx, &item)
+	if err != nil {
+		return "", err
+	}
+
+	// Marshal (Response -> json/yaml)
+	return gc.ConvertToOutput(r.OutType, &resp)
+}
+
+// DeleteMcis
+func (r *MCISRequest) DeleteMcis() (string, error) {
+	// Check input data
+	if r.InData == "" {
+		return "", errors.New("input data required")
+	}
+
+	// Unmarshal (json/yaml -> Request Input)
+	var item pb.TbMcisQryRequest
+	err := gc.ConvertToMessage(r.InType, r.InData, &item)
+	if err != nil {
+		return "", err
+	}
+
+	// Request to server
 	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
 	defer cancel()
 
@@ -172,25 +253,25 @@ func (r *MCISRequest) DeleteMcis() (string, error) {
 		return "", err
 	}
 
-	// 결과값 마샬링
+	// Marshal (Response -> json/yaml)
 	return gc.ConvertToOutput(r.OutType, &resp)
 }
 
-// DeleteAllMcis -MCIS 전체 삭제
+// DeleteAllMcis
 func (r *MCISRequest) DeleteAllMcis() (string, error) {
-	// 입력데이터 검사
+	// Check input data
 	if r.InData == "" {
 		return "", errors.New("input data required")
 	}
 
-	// 입력데이터 언마샬링
+	// Unmarshal (json/yaml -> Request Input)
 	var item pb.TbMcisAllQryRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 서버에 요청
+	// Request to server
 	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
 	defer cancel()
 
@@ -199,25 +280,25 @@ func (r *MCISRequest) DeleteAllMcis() (string, error) {
 		return "", err
 	}
 
-	// 결과값 마샬링
+	// Marshal (Response -> json/yaml)
 	return gc.ConvertToOutput(r.OutType, &resp)
 }
 
-// CreateMcisVM -MCIS VM 생성
+// CreateMcisVM
 func (r *MCISRequest) CreateMcisVM() (string, error) {
-	// 입력데이터 검사
+	// Check input data
 	if r.InData == "" {
 		return "", errors.New("input data required")
 	}
 
-	// 입력데이터 언마샬링
+	// Unmarshal (json/yaml -> Request Input)
 	var item pb.TbVmCreateRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 서버에 요청
+	// Request to server
 	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
 	defer cancel()
 
@@ -226,25 +307,52 @@ func (r *MCISRequest) CreateMcisVM() (string, error) {
 		return "", err
 	}
 
-	// 결과값 마샬링
+	// Marshal (Response -> json/yaml)
 	return gc.ConvertToOutput(r.OutType, &resp.Item)
 }
 
-// ControlMcisVM - MCIS VM 제어
-func (r *MCISRequest) ControlMcisVM() (string, error) {
-	// 입력데이터 검사
+// CreateMcisVMGroup
+func (r *MCISRequest) CreateMcisVMGroup() (string, error) {
+	// Check input data
 	if r.InData == "" {
 		return "", errors.New("input data required")
 	}
 
-	// 입력데이터 언마샬링
+	// Unmarshal (json/yaml -> Request Input)
+	var item pb.TbVmGroupCreateRequest
+	err := gc.ConvertToMessage(r.InType, r.InData, &item)
+	if err != nil {
+		return "", err
+	}
+
+	// Request to server
+	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
+	defer cancel()
+
+	resp, err := r.Client.CreateMcisVMGroup(ctx, &item)
+	if err != nil {
+		return "", err
+	}
+
+	// Marshal (Response -> json/yaml)
+	return gc.ConvertToOutput(r.OutType, &resp.Item)
+}
+
+// ControlMcisVM - Control MCIS VM's lifecycle
+func (r *MCISRequest) ControlMcisVM() (string, error) {
+	// Check input data
+	if r.InData == "" {
+		return "", errors.New("input data required")
+	}
+
+	// Unmarshal (json/yaml -> Request Input)
 	var item pb.TbVmActionRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 서버에 요청
+	// Request to server
 	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
 	defer cancel()
 
@@ -253,25 +361,25 @@ func (r *MCISRequest) ControlMcisVM() (string, error) {
 		return "", err
 	}
 
-	// 결과값 마샬링
+	// Marshal (Response -> json/yaml)
 	return gc.ConvertToOutput(r.OutType, &resp)
 }
 
-// GetMcisVMStatus - MCIS VM 상태 조회
+// GetMcisVMStatus
 func (r *MCISRequest) GetMcisVMStatus() (string, error) {
-	// 입력데이터 검사
+	// Check input data
 	if r.InData == "" {
 		return "", errors.New("input data required")
 	}
 
-	// 입력데이터 언마샬링
+	// Unmarshal (json/yaml -> Request Input)
 	var item pb.TbVmQryRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 서버에 요청
+	// Request to server
 	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
 	defer cancel()
 
@@ -280,25 +388,25 @@ func (r *MCISRequest) GetMcisVMStatus() (string, error) {
 		return "", err
 	}
 
-	// 결과값 마샬링
+	// Marshal (Response -> json/yaml)
 	return gc.ConvertToOutput(r.OutType, &resp.Item)
 }
 
-// GetMcisVMInfo - MCIS VM 정보 조회
+// GetMcisVMInfo
 func (r *MCISRequest) GetMcisVMInfo() (string, error) {
-	// 입력데이터 검사
+	// Check input data
 	if r.InData == "" {
 		return "", errors.New("input data required")
 	}
 
-	// 입력데이터 언마샬링
+	// Unmarshal (json/yaml -> Request Input)
 	var item pb.TbVmQryRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 서버에 요청
+	// Request to server
 	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
 	defer cancel()
 
@@ -307,25 +415,25 @@ func (r *MCISRequest) GetMcisVMInfo() (string, error) {
 		return "", err
 	}
 
-	// 결과값 마샬링
+	// Marshal (Response -> json/yaml)
 	return gc.ConvertToOutput(r.OutType, &resp.Item)
 }
 
-// DeleteMcisVM - MCIS VM 삭제
+// DeleteMcisVM
 func (r *MCISRequest) DeleteMcisVM() (string, error) {
-	// 입력데이터 검사
+	// Check input data
 	if r.InData == "" {
 		return "", errors.New("input data required")
 	}
 
-	// 입력데이터 언마샬링
+	// Unmarshal (json/yaml -> Request Input)
 	var item pb.TbVmQryRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 서버에 요청
+	// Request to server
 	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
 	defer cancel()
 
@@ -334,52 +442,52 @@ func (r *MCISRequest) DeleteMcisVM() (string, error) {
 		return "", err
 	}
 
-	// 결과값 마샬링
+	// Marshal (Response -> json/yaml)
 	return gc.ConvertToOutput(r.OutType, &resp)
 }
 
-// RecommandMcis - MCIS 추천
-func (r *MCISRequest) RecommandMcis() (string, error) {
-	// 입력데이터 검사
+// RecommendMcis
+func (r *MCISRequest) RecommendMcis() (string, error) {
+	// Check input data
 	if r.InData == "" {
 		return "", errors.New("input data required")
 	}
 
-	// 입력데이터 언마샬링
+	// Unmarshal (json/yaml -> Request Input)
 	var item pb.McisRecommendCreateRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 서버에 요청
+	// Request to server
 	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
 	defer cancel()
 
-	resp, err := r.Client.RecommandMcis(ctx, &item)
+	resp, err := r.Client.RecommendMcis(ctx, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 결과값 마샬링
+	// Marshal (Response -> json/yaml)
 	return gc.ConvertToOutput(r.OutType, &resp.Item)
 }
 
-// CmdMcis - MCIS 명령 실행
+// CmdMcis - Send a command to execute to MCIS
 func (r *MCISRequest) CmdMcis() (string, error) {
-	// 입력데이터 검사
+	// Check input data
 	if r.InData == "" {
 		return "", errors.New("input data required")
 	}
 
-	// 입력데이터 언마샬링
+	// Unmarshal (json/yaml -> Request Input)
 	var item pb.McisCmdCreateRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 서버에 요청
+	// Request to server
 	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
 	defer cancel()
 
@@ -388,25 +496,25 @@ func (r *MCISRequest) CmdMcis() (string, error) {
 		return "", err
 	}
 
-	// 결과값 마샬링
+	// Marshal (Response -> json/yaml)
 	return gc.ConvertToOutput(r.OutType, &resp)
 }
 
-// CmdMcisVm - MCIS VM 명령 실행
+// CmdMcisVm - Send a command to execute to MCIS VM
 func (r *MCISRequest) CmdMcisVm() (string, error) {
-	// 입력데이터 검사
+	// Check input data
 	if r.InData == "" {
 		return "", errors.New("input data required")
 	}
 
-	// 입력데이터 언마샬링
+	// Unmarshal (json/yaml -> Request Input)
 	var item pb.McisCmdVmCreateRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 서버에 요청
+	// Request to server
 	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
 	defer cancel()
 
@@ -415,25 +523,25 @@ func (r *MCISRequest) CmdMcisVm() (string, error) {
 		return "", err
 	}
 
-	// 결과값 마샬링
+	// Marshal (Response -> json/yaml)
 	return gc.ConvertToOutput(r.OutType, &resp)
 }
 
-// InstallAgentToMcis - MCIS Agent 설치
+// InstallAgentToMcis - Install CB-Tumblebug benchmarking agent (cb-milkyway), which will be deprecated
 func (r *MCISRequest) InstallAgentToMcis() (string, error) {
-	// 입력데이터 검사
+	// Check input data
 	if r.InData == "" {
 		return "", errors.New("input data required")
 	}
 
-	// 입력데이터 언마샬링
+	// Unmarshal (json/yaml -> Request Input)
 	var item pb.McisCmdCreateRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 서버에 요청
+	// Request to server
 	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
 	defer cancel()
 
@@ -442,25 +550,25 @@ func (r *MCISRequest) InstallAgentToMcis() (string, error) {
 		return "", err
 	}
 
-	// 결과값 마샬링
+	// Marshal (Response -> json/yaml)
 	return gc.ConvertToOutput(r.OutType, &resp)
 }
 
-// GetBenchmark - Benchmark 조회
+// GetBenchmark - Get benchmark result
 func (r *MCISRequest) GetBenchmark() (string, error) {
-	// 입력데이터 검사
+	// Check input data
 	if r.InData == "" {
 		return "", errors.New("input data required")
 	}
 
-	// 입력데이터 언마샬링
+	// Unmarshal (json/yaml -> Request Input)
 	var item pb.BmQryRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 서버에 요청
+	// Request to server
 	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
 	defer cancel()
 
@@ -469,25 +577,25 @@ func (r *MCISRequest) GetBenchmark() (string, error) {
 		return "", err
 	}
 
-	// 결과값 마샬링
+	// Marshal (Response -> json/yaml)
 	return gc.ConvertToOutput(r.OutType, &resp)
 }
 
-// GetAllBenchmark - Benchmark 목록
+// GetAllBenchmark - List benchmark results
 func (r *MCISRequest) GetAllBenchmark() (string, error) {
-	// 입력데이터 검사
+	// Check input data
 	if r.InData == "" {
 		return "", errors.New("input data required")
 	}
 
-	// 입력데이터 언마샬링
+	// Unmarshal (json/yaml -> Request Input)
 	var item pb.BmQryAllRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
 	}
 
-	// 서버에 요청
+	// Request to server
 	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
 	defer cancel()
 
@@ -496,7 +604,7 @@ func (r *MCISRequest) GetAllBenchmark() (string, error) {
 		return "", err
 	}
 
-	// 결과값 마샬링
+	// Marshal (Response -> json/yaml)
 	return gc.ConvertToOutput(r.OutType, &resp)
 }
 

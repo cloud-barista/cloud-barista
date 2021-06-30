@@ -2,7 +2,8 @@ version: 1
 name: cb-restapigw
 port: 8000
 #cache_ttl: 3600s
-timeout: 1m
+timeout: 100m
+output_encoding: json
 debug: true
 router_engine: gin
 middleware:
@@ -61,8 +62,9 @@ admin:
     algorithm: HS256
     secret: test
     basic:
-       users:
-         admin: "test@admin00"
-         tester: "tester@admin00"
+      users:
+        admin: "test@admin00"
+        tester: "tester@admin00"
   profiling_enabled: true
   profiling_public: true
+  

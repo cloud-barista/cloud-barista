@@ -13,4 +13,6 @@
 
 *.log
 *.idea
-/vendor/
+
+bin/
+vendor/

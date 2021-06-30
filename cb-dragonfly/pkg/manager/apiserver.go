@@ -2,13 +2,10 @@ package manager
 
 import (
 	"fmt"
-	"github.com/cloud-barista/cb-dragonfly/pkg/localstore"
 	"net/http"
 	"sync"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	"github.com/sirupsen/logrus"
+	"github.com/cloud-barista/cb-dragonfly/pkg/util"
 
 	"github.com/cloud-barista/cb-dragonfly/pkg/api/rest/agent"
 	"github.com/cloud-barista/cb-dragonfly/pkg/api/rest/alert"
@@ -17,13 +14,15 @@ import (
 	"github.com/cloud-barista/cb-dragonfly/pkg/api/rest/metric"
 	"github.com/cloud-barista/cb-dragonfly/pkg/config"
 	"github.com/cloud-barista/cb-dragonfly/pkg/core/alert/eventhandler"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 type APIServer struct {
 	echo *echo.Echo
 }
 
-// API 서버 초기화
+// NewAPIServer API 서버 초기화
 func NewAPIServer() (*APIServer, error) {
 	e := echo.New()
 	apiServer := APIServer{
@@ -32,10 +31,10 @@ func NewAPIServer() (*APIServer, error) {
 	return &apiServer, nil
 }
 
-// 모니터링 API 서버 실행
+// StartAPIServer 모니터링 API 서버 실행
 func (apiServer *APIServer) StartAPIServer(wg *sync.WaitGroup) error {
 	defer wg.Done()
-	logrus.Info("Start Monitoring API Server")
+	util.GetLogger().Info("start CB-Dragonfly Framework API Server")
 
 	// 모니터링 API 라우팅 룰 설정
 	apiServer.SetRoutingRule(apiServer.echo)
@@ -60,7 +59,6 @@ func (apiServer *APIServer) SetRoutingRule(e *echo.Echo) {
 
 	// 멀티 클라우드 인프라 VM 모니터링/실시간 모니터링 정보 조회
 	dragonfly.GET("/ns/:ns_id/mcis/:mcis_id/vm/:vm_id/metric/:metric_name/info", metric.GetVMMonInfo)
-	//dragonfly.GET("/ns/:ns/mcis/:mcis_id/vm/:vm_id/metric/:metric_name/rt-info", metric.GetVMLatestMonInfo)
 
 	// 멀티 클라우드 모니터링 정책 설정
 	dragonfly.PUT("/config", restconfig.SetMonConfig)
@@ -68,19 +66,21 @@ func (apiServer *APIServer) SetRoutingRule(e *echo.Echo) {
 	dragonfly.PUT("/config/reset", restconfig.ResetMonConfig)
 
 	// 에이전트 설치
-	dragonfly.POST("/agent/install", agent.InstallTelegraf)
-	// MCIS 삭제 (테스트)
-	dragonfly.POST("/agent/uninstall", agent.UninstallAgent)
-	// MCIS 모니터링(Milkyway)
+	dragonfly.POST("/agent", agent.InstallTelegraf)
+	// 에이전트 삭제
+	dragonfly.DELETE("/agent", agent.UninstallAgent)
+	// MCIS 모니터링 (Milkyway)
 	dragonfly.GET("/ns/:ns_id/mcis/:mcis_id/vm/:vm_id/agent_ip/:agent_ip/mcis_metric/:metric_name/mcis-monitoring-info", metric.GetMCISMetric)
-
 	// 멀티클라우드 인프라 VM 온디멘드 모니터링
 	dragonfly.GET("/ns/:ns/mcis/:mcis_id/vm/:vm_id/agent_ip/:agent_ip/metric/:metric_name/ondemand-monitoring-info", metric.GetVMOnDemandMetric)
 
 	// windows 에이전트 config, package 파일 다운로드
 	dragonfly.GET("/installer/cbinstaller.zip", agent.GetWindowInstaller)
-	dragonfly.GET("/file/agent/conf", agent.GetTelegrafConfFile)
-	dragonfly.GET("/file/agent/pkg", agent.GetTelegrafPkgFile)
+	//dragonfly.GET("/file/agent/conf", agent.GetTelegrafConfFile)
+	//dragonfly.GET("/file/agent/pkg", agent.GetTelegrafPkgFile)
+
+	// 에이전트 메타데이터 조회
+	dragonfly.GET("/agent/metadata", agent.ListAgentMetadata)
 
 	// 알람 조회, 생성, 삭제
 	dragonfly.GET("/alert/tasks", alert.ListAlertTask)
@@ -102,7 +102,4 @@ func (apiServer *APIServer) SetRoutingRule(e *echo.Echo) {
 
 	// 헬스체크
 	dragonfly.GET("/healthcheck", healthcheck.Ping)
-
-	// 메타데이터 관리 테스트용 API
-	dragonfly.GET("/metadata/ns/:ns/mcis/:mcis_id/vm/:vm_id/csp/:csp_type", localstore.ShowMetadata)
 }

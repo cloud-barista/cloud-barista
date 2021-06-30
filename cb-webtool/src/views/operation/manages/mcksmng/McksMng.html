@@ -1,0 +1,57 @@
+{{ template "OperationTop" .}}
+<div id="lnb">
+			
+	<div class="bg"></div>
+		
+	<div class="m_box">
+		
+		{{template "TopBox" .}}
+
+		{{template "LNBPopup" .}}
+
+		{{template "MenuLeft" .}}
+		
+	</div>
+	
+	<div class="bottom"></div>
+	<a href="javascript:;" id="m_close"></a>
+	
+</div>
+{{template "Header" .}}
+{{template "Modal" .}}
+
+				<!-- contents -->
+				<input type="hidden" id="mcks_uid" value=''/>
+				<input type="hidden" id="mcks_name" value=''/>
+				<input type="hidden" id="node_uid" value=''/>
+				<input type="hidden" id="node_name" value=''/>
+				
+				<!-- contents -->
+				<div class="contbox">
+					
+					<div class="titlebox">
+						<div class="tit"><img src="/assets/img/common/icon_cont.png" alt=""/>Manage / <strong>MCKS</strong></div>
+						<div class="location">Home  <span>></span>  Operation  <span>></span>  Manage  <span>></span>  <strong>MCKS</strong></div>
+					</div>
+					
+					{{template "McksStatus" .}}		
+					
+					<!-- list -->
+					{{template "McksList" .}}
+					<!-- //list -->
+					
+					<!-- Info -->
+					{{template "McksInfo" .}}
+					<!-- //Info -->
+				
+					<!-- detail -->
+					{{template "McksNodeInfo" .}}
+					<!-- //detail -->
+				</div>
+				<!-- //contents -->
+				
+				
+
+<script type="text/javascript" src="/assets/js/operation/manages/mcksmng/mcksmng.js"></script>
+
+{{template "Footer" .}}

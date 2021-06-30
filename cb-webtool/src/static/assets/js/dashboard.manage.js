@@ -210,9 +210,13 @@ function short_desc(str){
        //fnMove("table_1");
     //    $("#mcis_id").val(mcis[0].id)
     //    $("#mcis_name").val(mcis[0].name)
-   }).catch(function(error){
-    console.log("show mcis error at dashboard js: ",error);
-   });
+    //    }).catch(function(error){
+    //     console.log("show mcis error at dashboard js: ",error);
+    //    });
+    }).catch((error) => {
+        console.warn(error);
+        console.log(error.response) 
+    });
 }
 
 //새로운 퍼블리싱에 적용할 function
@@ -224,11 +228,11 @@ function show_mcis2(url, map){
     var apiInfo = ApiInfo;
     var JZMap = map;
     console.log("apiInfo : ",apiInfo);
-     axios.get(url,{
-         headers:{
-             'Authorization': apiInfo
-         }
-     }).then(result=>{
+    axios.get(url,{
+        headers:{
+            'Authorization': apiInfo
+        }
+    }).then(result=>{
        
         console.log("Dashboard Data :",result.status);
         var data = result.data;
@@ -238,51 +242,51 @@ function show_mcis2(url, map){
            return;
         }
         if(data.mcis.length == 0 ){
-         location.href = "/Manage/MCIS/reg";
-         return;
-      }
-         console.log("show mcis's map data : ",map);
-         console.log("showmcis Data : ",data)
-         var html = "";
-         var mcis = data.mcis;
-         var len = 0
-         var mcis_cnt = 0 
-         if(mcis){
+            location.href = "/Manage/MCIS/reg";
+            return;
+        }
+        console.log("show mcis's map data : ",map);
+        console.log("showmcis Data : ",data)
+        var html = "";
+        var mcis = data.mcis;
+        var len = 0
+        var mcis_cnt = 0 
+        if(mcis){
             len = mcis.length;
-         }
-         mcis_cnt = len;
-         var count = 0;
+        }
+        mcis_cnt = len;
+        var count = 0;
+        
+        var server_cnt = 0;
          
-         var server_cnt = 0;
-         
-         var html = "";
-         var run_cnt = 0;
-         var stop_cnt = 0;
-         for(var i in mcis){
+        var html = "";
+        var run_cnt = 0;
+        var stop_cnt = 0;
+        for(var i in mcis){
             count++;
-           var vm_run_cnt = 0;
-           var vm_stop_cnt = 0;
+            var vm_run_cnt = 0;
+            var vm_stop_cnt = 0;
             var terminate_cnt = 0;
-             var vm_len = 0
-             var sta = mcis[i].status;
-             var sl = sta.split("-");
-             var mcis_badge = "";
-             var vm_badge = "";
-             var status = sl[0].toLowerCase()
-             var vms = mcis[i].vm
+            var vm_len = 0
+            var sta = mcis[i].status;
+            var sl = sta.split("-");
+            var mcis_badge = "";
+            var vm_badge = "";
+            var status = sl[0].toLowerCase()
+            var vms = mcis[i].vm
             console.log("mcis status : ",status)
             var vm_status = "";
-             if(vms){
+            if(vms){
                 vm_len = vms.length
                 server_cnt = server_cnt+vm_len;
-             }
-             //VM  상태 및 기타 생성하기
-             var vm_cnt = 0
-             var vm_html = "";
-             //지도 그리기 관련
-             var polyArr = new Array();
-             for(var o in vms){
-                 vm_cnt++;
+            }
+            //VM  상태 및 기타 생성하기
+            var vm_cnt = 0
+            var vm_html = "";
+            //지도 그리기 관련
+            var polyArr = new Array();
+            for(var o in vms){
+                vm_cnt++;
                 var vm_status = vms[o].status
                 var lat = vms[0].location.latitude
                 var long = vms[0].location.longitude
@@ -293,19 +297,16 @@ function show_mcis2(url, map){
                     polyArr.push(fromLonLat)
                     drawMap(JZMap,long,lat,vms[o])
                 }
-              
-
-
 
                 console.log(lat, long, provider)
                  
-                 if(vms[o].status == "Suspended"){
-                     stop_cnt++;
-                     vm_stop_cnt++;
-                 }else if(vms[o].status == "Running"){
-                     run_cnt++;
-                     vm_run_cnt++;
-                 }else if(vms[o].status == "Terminated"){
+                if(vms[o].status == "Suspended"){
+                    stop_cnt++;
+                    vm_stop_cnt++;
+                }else if(vms[o].status == "Running"){
+                    run_cnt++;
+                    vm_run_cnt++;
+                }else if(vms[o].status == "Terminated"){
                     terminate_cnt++;
                 }else{
                     stop_cnt++;
@@ -314,80 +315,80 @@ function show_mcis2(url, map){
 
                 if(vm_status == "Running"){
                     vm_badge += "shot bgbox_b"
-                 }else if(vm_status == "include" ){
+                }else if(vm_status == "include" ){
                     vm_badge += "shot bgbox_y"
-                 }else if(vm_status == "Suspended"){
+                }else if(vm_status == "Suspended"){
                     vm_badge += "shot bgbox_y"
-                 }else if(vm_status == "Terminated"){
+                }else if(vm_status == "Terminated"){
                     vm_badge += "shot bgbox_r"
-                 }else{
+                }else{
                     vm_badge += "shot bgbox_g"
-                 }
+                }
 
-                 vm_html +='<div class="'+vm_badge+'"><a href="javascript:void(0);"><span>'+vm_cnt+'</span></a></div>'
-             }
-             var polygon = "";
-             console.log("poly arr : ",polyArr);
-             if(polyArr.length > 1){
-               polygon = polyArr.join(", ")
-               polygon = "POLYGON(("+polygon+"))";
-             }else{
-               polygon = "POLYGON(("+polyArr[0]+"))";
-             }
-             if(polyArr.length >1){
+                vm_html +='<div class="'+vm_badge+'"><a href="javascript:void(0);"><span>'+vm_cnt+'</span></a></div>'
+            }
+            var polygon = "";
+            console.log("poly arr : ",polyArr);
+            if(polyArr.length > 1){
+                polygon = polyArr.join(", ")
+                polygon = "POLYGON(("+polygon+"))";
+            }else{
+                polygon = "POLYGON(("+polyArr[0]+"))";
+            }
+            if(polyArr.length >1){
                 drawPoligon(JZMap,polygon);
-              }
+            }
 
-             //MCIS name  / MCIS 상태
-             if(status == "running"){
+            //MCIS name  / MCIS 상태
+            if(status == "running"){
                 mcis_badge += 'state color_b'
-             }else if(status == "include" ){
+            }else if(status == "include" ){
                 mcis_badge += 'state color_y'
-             }else if(status == "suspended"){
+            }else if(status == "suspended"){
                 mcis_badge += 'state color_y'
-             }else if(status == "terminate"){
+            }else if(status == "terminate"){
                 mcis_badge += 'state color_r'
-             }else{
+            }else{
                 mcis_badge += 'state color_g'
-             }
-             var cursor = ""
+            }
+            var cursor = ""
             //  if(i == mcis_cnt-1){
             //      cursor = "active"
             //  }
 
-             html +='<div class="areabox dbinfo cursor '+cursor+'" id="mcis_areabox_'+i+'" onclick="change_mcis(\''+mcis[i].id+'\',\''+mcis[i].name+'\',\'mcis_areabox_'+i+'\')">'
+            html +='<div class="areabox dbinfo cursor '+cursor+'" id="mcis_areabox_'+i+'" onclick="change_mcis(\''+mcis[i].id+'\',\''+mcis[i].name+'\',\'mcis_areabox_'+i+'\')">'
                   +'<div class="box">';
-             html += '<div class="top">'
+            html += '<div class="top">'
                   +'<div class="txtbox">'
                   +'<div class="tit">'+mcis[i].name+'</div>'
                   +'<div class="txt"><span class="bgbox_b"></span>Available 01</div>'
                   +'</div>'
                   +'<div class="'+mcis_badge+'"></div>'
                   +'</div>';
-             // 전체 인프라 갯수 및 각각의 상태에 따른 VM 갯수
-             html +='<div class="numbox">infra <strong class="color_b">'+vm_cnt+'</strong>' 
+            // 전체 인프라 갯수 및 각각의 상태에 따른 VM 갯수
+            html +='<div class="numbox">infra <strong class="color_b">'+vm_cnt+'</strong>' 
                    +'<span class="line">(</span> <span class="num color_b">'+vm_run_cnt+'</span>' 
                    +'<span class="line">/</span> <span class="num color_y">'+vm_stop_cnt+'</span>' 
                    +'<span class="line">/</span> <span class="num color_r">'+terminate_cnt+'</span>'
                    +'<span class="line">)</span></div>';
 
-             // 서버 갯수
-             html += '<div class="numinfo">'
-             html += '<div class="num">server'+vm_cnt+'</div>'
-             html += '</div>'
-             // 각각의 VM 항목들
-             html +='<div class="shotbox">'
-             html += vm_html;
-             html +='</div></div></div>'
+            // 서버 갯수
+            html += '<div class="numinfo">'
+            html += '<div class="num">server'+vm_cnt+'</div>'
+            html += '</div>'
+            // 각각의 VM 항목들
+            html +='<div class="shotbox">'
+            html += vm_html;
+            html +='</div></div></div>'
 
  
             console.log("mcis Status 1: ", mcis[i].status)
             console.log("mcis Status 2: ", status)
              
              
-             if(count == 1){
+            if(count == 1){
  
-             }
+            }
             
         }
         html +='<div class="areabox">'
@@ -419,8 +420,12 @@ function show_mcis2(url, map){
         //       });
         //   });
 
-    }).catch(function(error){
-     console.log("show mcis error at dashboard js: ",error);
+    // }).catch(function(error){
+    //  console.log("show mcis error at dashboard js: ",error);
+    // });
+    }).catch((error) => {
+        console.warn(error);
+        console.log(error.response) 
     });
  }
  

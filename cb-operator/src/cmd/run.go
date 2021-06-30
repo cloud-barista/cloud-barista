@@ -1,18 +1,3 @@
-/*
-Copyright © 2020 NAME HERE <EMAIL ADDRESS>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package cmd
 
 import (
@@ -28,7 +13,8 @@ var runCmd = &cobra.Command{
 	Short: "Setup and Run Cloud-Barista System",
 	Long:  `Setup and Run Cloud-Barista System`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("\n[Setup and Run Cloud-Barista]\n")
+		fmt.Println("\n[Setup and Run Cloud-Barista]")
+		fmt.Println()
 
 		if common.FileStr == "" {
 			fmt.Println("file is required")
@@ -47,18 +33,21 @@ var runCmd = &cobra.Command{
 
 				common.PrintJsonPretty(configuration)
 			*/
-			common.FileStr = common.GenConfigPath(common.FileStr, common.CB_OPERATOR_MODE)
+			common.FileStr = common.GenConfigPath(common.FileStr, common.CBOperatorMode)
 
 			var cmdStr string
-			switch common.CB_OPERATOR_MODE {
-			case common.Mode_DockerCompose:
+			switch common.CBOperatorMode {
+			case common.ModeDockerCompose:
 				cmdStr = "sudo COMPOSE_PROJECT_NAME=cloud-barista docker-compose -f " + common.FileStr + " up"
 				//fmt.Println(cmdStr)
 				common.SysCall(cmdStr)
-			case common.Mode_Kubernetes:
-				cmdStr = "sudo kubectl create ns " + common.CB_K8s_Namespace
+			case common.ModeKubernetes:
+				// For Kubernetes 1.19 and above (included)
+				cmdStr = "sudo kubectl create ns " + common.CBK8sNamespace + " --dry-run=client -o yaml | kubectl apply -f -"
+				// For Kubernetes 1.18 and below (included)
+				//cmdStr = "sudo kubectl create ns " + common.CBK8sNamespace + " --dry-run -o yaml | kubectl apply -f -"
 				common.SysCall(cmdStr)
-				cmdStr = "sudo helm install --namespace " + common.CB_K8s_Namespace + " " + common.CB_Helm_Release_Name + " -f " + common.FileStr + " ../helm-chart --debug"
+				cmdStr = "sudo helm install --namespace " + common.CBK8sNamespace + " " + common.CBHelmReleaseName + " -f " + common.FileStr + " ../helm-chart --debug"
 				//fmt.Println(cmdStr)
 				common.SysCall(cmdStr)
 			default:
@@ -74,13 +63,13 @@ func init() {
 	rootCmd.AddCommand(runCmd)
 
 	pf := runCmd.PersistentFlags()
-	pf.StringVarP(&common.FileStr, "file", "f", common.Not_Defined, "User-defined configuration file")
+	pf.StringVarP(&common.FileStr, "file", "f", common.NotDefined, "User-defined configuration file")
 
 	/*
-		switch common.CB_OPERATOR_MODE {
-		case common.Mode_DockerCompose:
+		switch common.CBOperatorMode {
+		case common.ModeDockerCompose:
 			pf.StringVarP(&common.FileStr, "file", "f", "../docker-compose-mode-files/docker-compose.yaml", "Path to Cloud-Barista Docker Compose YAML file")
-		case common.Mode_Kubernetes:
+		case common.ModeKubernetes:
 			pf.StringVarP(&common.FileStr, "file", "f", "../helm-chart/values.yaml", "Path to Cloud-Barista Helm chart file")
 		default:
 

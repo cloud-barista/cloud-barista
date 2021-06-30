@@ -1,0 +1,161 @@
+{{define "VmSecurity"}}
+<!-- Security -->
+<div class="tab-pane fade" id="Security">
+													
+	<div class="tab_ip_box">
+		<div class="tit"><strong>Server Security Configuration</strong> <a href="javascript:void(0);" class="btn_clear">Clear</a></div>
+		
+		<div class="tab_ipbox">
+			<div class="ipbox ipbox1">
+				<ul>
+					<li>
+						<label><span class="ch">*</span>Security Group </label>
+
+						<span class="sbox sbox_m">
+							<input type="text" name="es_securityGroupFilterKeyword" placeholder="Security Group Name, description, subnet keyword" class="pline ip_1 search_ip" id="filter_securityGroup" onkeydown="filterEnterToHidden(this.id, 'securityGroup_info', 'e_securityGroupList');"/>
+							<input type="submit" name="" class="btn_search" value="" title="" onclick="filterToHidden('filter_securityGroup', 'securityGroup_info', 'e_securityGroupList')"/>							
+						</span>
+						<input type="text" name="tab_securityGroupInfo" placeholder="" class="gray ip_2"  id="tab_securityGroupInfo" readonly />
+						<input type="hidden" name="tab_securityGroupConnectionName" id="tab_securityGroupConnectionName"/>						
+					</li>
+
+				</ul>
+
+				<div class="dataTable status_list" >
+					<a href="javascript:void(0);" id="e_securityGroupListHide" class="btn_hide" onclick="hideFilterResultTable('e_securityGroupList', 'e_securityGroupListHide')">Hide</a>
+					<table cellpadding="0" cellspacing="0" id="e_securityGroupList" style="max-height:300px; display:none;">				
+						<!-- <colgroup>
+							<col width="50px">
+							<col width="30%">
+							<col width="30%">
+							<col width="30%">			
+						</colgroup> -->
+						<thead>
+							<tr>
+								<th class="column-50px">&nbsp;</td>
+								<th>SecurityGroup Name</th>
+								<th>Connection Name</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody id="e_securityGroupListTbody">
+							{{ $length := len .SecurityGroupList }} 
+							{{ if eq $length 0 }}
+							<tr>
+								<td class="overlay hidden" data-th="" colspan="4">No Data</td>
+							</tr>
+							{{ end }}
+
+							{{range $securityGroupIndex, $securityGroupItem := .SecurityGroupList}}	
+							<!-- <tr onclick="setValueToFormObj('e_securityGroupList', 'tab_securityGroupInfo', 'securityGroup', '{{$securityGroupIndex}}', 'e_securityGroupIds');"> -->
+							<tr>
+								<td class="overlay hidden column-50px" data-th="">
+									<input type="checkbox" name="securityGroup_chk" id="securityGroup_Raw_{{$securityGroupIndex}}" title="" />
+									<input type="hidden" id="securityGroup_id_{{$securityGroupIndex}}" value="{{$securityGroupItem.ID}}"/>
+									<input type="hidden" id="securityGroup_name_{{$securityGroupIndex}}" value="{{$securityGroupItem.Name}}"/>
+									<input type="hidden" name="securityGroup_connectionName" id="securityGroup_connectionName_{{$securityGroupIndex}}" value="{{$securityGroupItem.ConnectionName}}"/>									
+									<input type="hidden" name="securityGroup_info" id="securityGroup_info_{{$securityGroupIndex}}" value="{{$securityGroupItem.Name}}|{{$securityGroupItem.ConnectionName}}|{{$securityGroupItem.Description}}"/>
+											
+									<label for="td_ch1"></label> <span class="ov off"></span>
+								</td>
+								<td class="overlay hidden" data-th="Name">{{$securityGroupItem.Name}}</td>
+								<td class="btn_mtd ovm td_left" data-th="ConnectionName">
+									{{$securityGroupItem.ConnectionName}}
+								</td>
+								<td class="overlay hidden" data-th="Description">{{$securityGroupItem.Description}}</td>
+							</tr>											
+							{{end}}
+							
+						</tbody>
+					</table>
+				</div>
+			</div>
+			
+		</div>
+		<hr/>
+		<div class="tab_ipbox tab_ipbox_2">
+			<div class="ipbox ipbox1">
+				<ul>
+					<li>
+						<label><span class="ch">*</span>Access (ssh key)</label>
+						<!-- <select class="selectbox white pline sel_1">
+							<option value="1">All</option>
+						</select>
+						<span class="sbox">
+							<input type="text" name="" value="" placeholder="Filter Items" class="pline ip_1 search_ip" title="" />
+							<input type="submit" name="" class="btn_search" value="" title="" />
+						</span>
+						<input type="text" name="" value="" placeholder="" class="gray ip_2" title="" readonly /> -->
+						
+						<span class="sbox sbox_m">
+							<input type="text" name="es_sshKeyFilterKeyword" placeholder="SSH Key Name, description, connection keyword" class="pline ip_1 search_ip" id="filter_sshKey" onkeydown="filterEnterToHidden(this.id, 'sshKey_info', 'es_sshKeyList');"/>
+							<input type="submit" name="" class="btn_search" value="" title="" onclick="filterToHidden('filter_sshKey', 'sshKey_info', 'es_sshKeyList')"/>
+						</span>
+						<input type="text" name="tab_sshKeyInfo" placeholder="" class="gray ip_2"  id="tab_sshKeyInfo" readonly />
+						<input type="hidden" name="tab_sshKeyConnectionName" id="tab_sshKeyConnectionName"/>
+					</li>
+				</ul>
+				
+				<div class="dataTable status_list" >
+					<a href="javascript:void(0);" id="es_sshKeyListHide" class="btn_hide" onclick="hideFilterResultTable('es_sshKeyList', 'es_sshKeyListHide')">Hide</a>
+					<table cellpadding="0" cellspacing="0" id="es_sshKeyList" style="max-height:300px; display:none;">				
+						<colgroup>
+							<col width="30%">
+							<col width="30%">
+							<col width="30%">			
+						</colgroup>
+						<thead>
+							<tr>
+								<th>Key Name</th>
+								<th>Connection Name</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody id="e_sshKeyListTbody">
+							{{ $length := len .SshKeyList }} 
+							{{ if eq $length 0 }}
+							<tr>
+								<td class="overlay hidden" data-th="" colspan="4">No Data</td>
+							</tr>
+							{{ end }}
+
+							{{range $sshKeyIndex, $sshKeyItem := .SshKeyList}}	
+							<tr onclick="setValueToFormObj('es_sshKeyList', 'tab_sshKey', 'sshKey', '{{$sshKeyIndex}}', 'e_sshKeyId');">
+								<input type="hidden" name="sshKey_id" id="sshKey_id_{{$sshKeyIndex}}" value="{{$sshKeyItem.ID}}"/>
+								<input type="hidden" name="sshKey_connectionName" id="sshKey_connectionName_{{$sshKeyIndex}}" value="{{$sshKeyItem.ConnectionName}}"/>
+								<input type="hidden" name="sshKey_info" id="sshKey_info_{{$sshKeyIndex}}" value="{{$sshKeyItem.Name}}|{{$sshKeyItem.ConnectionName}}|{{$sshKeyItem.Description}}"/>
+								
+								<td class="overlay hidden" data-th="Name">{{$sshKeyItem.Name}}</td>
+								<td class="btn_mtd ovm td_left" data-th="ConnectionName">
+									{{$sshKeyItem.ConnectionName}}
+								</td>
+								<td class="overlay hidden" data-th="Description">{{$sshKeyItem.Description}}</td>
+							</tr>											
+							{{end}}
+							
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div class="ipbox ipbox2">
+				<ul>
+					<li>
+						<label>Access ID</label>
+						<input type="text" name="" value="" placeholder="Access User Account" class="pline ip_2" id="es_vmUserAccount" onkeyup="setTextValueToFormObj(this.value, 'e_vmUserAccount')" />
+					</li>
+					<li>
+						<label>Access Password</label>
+						<input type="text" name="" value="" placeholder="AccessUser Password" class="pline ip_2" id="es_vmUserPassword" onkeyup="setTextValueToFormObj(this.value, 'e_vmUserPassword')" />
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	
+	<div class="btn_tab">
+		<a href="javascript:void(0);" class="btn_prev">Prev</a>
+		<a href="javascript:void(0);" class="btn_next">Next</a>
+	</div>
+</div>
+<!-- //Security -->
+{{end}}

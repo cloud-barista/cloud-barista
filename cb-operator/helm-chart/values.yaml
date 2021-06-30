@@ -5,6 +5,10 @@ cb-dragonfly:
     restNodePort: 30090
     grpcNodePort: 30254
     #monitorNodePort: 30094
+  persistence:
+    enabled: true
+    size: 1Gi
+    accessMode: 'ReadWriteOnce'
 
 cb-restapigw:
   enabled : true
@@ -22,6 +26,7 @@ cb-spider:
   persistence:
     enabled: true
     size: 1Gi
+    accessMode: 'ReadWriteOnce'
 
 cb-tumblebug:
   enabled : true
@@ -32,6 +37,7 @@ cb-tumblebug:
   persistence:
     enabled: true
     size: 1Gi
+    accessMode: 'ReadWriteOnce'
 
 cb-ladybug:
   enabled : true
@@ -42,6 +48,7 @@ cb-ladybug:
   persistence:
     enabled: true
     size: 1Gi
+    accessMode: 'ReadWriteOnce'
 
 cb-webtool:
   enabled : true
@@ -66,6 +73,7 @@ docker-registry:
   persistence:
     enabled: true
     size: 1Gi
+    accessMode: 'ReadWriteOnce'
 
 weave-scope:
   enabled : false
@@ -93,6 +101,7 @@ grafana:
   persistence:
     type: pvc
     enabled: false
+    accessMode: 'ReadWriteOnce'
   sidecar:
     dashboards:
       enabled: true

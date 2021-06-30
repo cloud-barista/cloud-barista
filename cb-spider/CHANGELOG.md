@@ -1,3 +1,32 @@
+# v0.4.0-CafeMocha (2021.06.30.)
+
+### API Change
+
+- Add AddSubnet and RemoveSubnet API ([#325](https://github.com/cloud-barista/cb-spider/pull/325) [#326](https://github.com/cloud-barista/cb-spider/pull/326) [#327](https://github.com/cloud-barista/cb-spider/pull/327))
+- Add SSHAccessPoint info to VM Info ([#338](https://github.com/cloud-barista/cb-spider/pull/338) )
+
+
+### Feature
+- Add AddSubnet and RemoveSubnet ([#325](https://github.com/cloud-barista/cb-spider/pull/325) [#326](https://github.com/cloud-barista/cb-spider/pull/326) [#327](https://github.com/cloud-barista/cb-spider/pull/327))
+- Add SSHAccessPoint info to VM Info ([#338](https://github.com/cloud-barista/cb-spider/pull/338) )
+- Support single VM User with cb-user ([#230](https://github.com/cloud-barista/cb-spider/issues/230))
+- Enhance the method of Call Log Elapsed time ([#359](https://github.com/cloud-barista/cb-spider/issues/359) [ref](https://github.com/cloud-barista/cb-spider/wiki/StartVM-and-TerminateVM-Main-Flow-of-Cloud-Drivers))
+- Change the OpenStack Go SDK for Improvement ([#368](https://github.com/cloud-barista/cb-spider/pull/368) [#370](https://github.com/cloud-barista/cb-spider/pull/370))
+  - github.com/rackspace/gophercloud => github.com/gophercloud/gophercloud
+- Update the CSP Go sdk package of cloud drivers ([#328](https://github.com/cloud-barista/cb-spider/issues/328) [ref](https://github.com/cloud-barista/cb-spider/wiki/What-is-the-CSP-SDK-API-Version-of-drivers))
+- Shorten the SG delimiter: `-delimiter-` => `-deli-`
+- Support Server Status and Endpoint info
+  - ./bin/endpoint-info.sh
+- Add SecurityGroup Source filter with CIDR ([#355](https://github.com/cloud-barista/cb-spider/issues/355))
+- Integrate tencent driver with current state
+- Add REST Basic Auth ([#261](https://github.com/cloud-barista/cb-spider/issues/261) [#412](https://github.com/cloud-barista/cb-spider/pull/412))
+- Add cli-dist Make option to build and tar spctl pkg and cli-examples ([c0a902](https://github.com/cloud-barista/cb-spider/commit/c0a902facc468cbf0bf22bdf3182b289484571d2))
+- Add Swagger pilot codes ([#418](https://github.com/cloud-barista/cb-spider/pull/418))
+- Reflect Dockerfile about cb-user materials
+- Update the AdminWeb API Info Page with 0.4.0
+
+***
+
 # v0.3.0-espresso (2020.12.11.)
 ### API Change
 - 관리용 API listAllXXX(), deleteXXX(force=true), deleteCSPXXX() 추가
@@ -18,6 +47,8 @@
   - ref) https://github.com/cloud-barista/cb-spider/issues/292
 - Add Experimental Features about distributed Spiders PoC(MEERKAT Project)
 
+***
+
 # v0.2.0-cappuccino (2020.06.01.)
 ### API Change
 - CloudO 목록 제공 API 추가
@@ -35,6 +66,8 @@
 - Android 운영 환경을 위한 plugin off mode 추가 ([3938ea0](https://github.com/cloud-barista/cb-spider/commit/3938ea0c70e69664a62eb3cee6611cfbf26ea4ea))  
 
 ### Bug Fix
+
+***
 
 # v0.1.0-americano (2019.12.23.)
 

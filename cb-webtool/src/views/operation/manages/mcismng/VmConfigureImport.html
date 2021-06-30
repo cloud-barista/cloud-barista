@@ -1,0 +1,139 @@
+{{define "VmConfigureImport"}}
+<!-- server 추가 form -->
+<div class="servers_config import_servers_config" id="importServerConfig">
+	<!-- <label><span class="ch">*</span>Import File</label>
+	<button onclick="importVmInfoFromFile()">Open</button> -->
+
+	<form id="import_form">	
+		<input type="hidden" name="name" id="i_name" />
+		<input type="hidden" name="description" id="i_description" />
+		<input type="hidden" name="connectionName" id="i_connectionName" />
+		<input type="hidden" name="vNetId" id="i_vNetId" />								
+		<input type="hidden" name="subnetId" id="i_subnetId" />								
+		<input type="hidden" name="securityGroupIds[]" id="i_securityGroupIds" />								
+		<input type="hidden" name="sshKeyId" id="i_sshKeyId" />								
+		<input type="hidden" name="imageId" id="i_imageId" />
+		<input type="hidden" name="specId" id="i_specId" />
+		<input type="hidden" name="label" id="i_label" />								
+		<input type="hidden" name="vm_userAccount" id="i_vmUserAccount" />								
+		<input type="hidden" name="vm_password" id="i_vmUserPassword" />
+	</form>
+		<!--id 에 간단설정이면 s_, Expert On 이면 e_, Import면 i_-->
+
+		<div class="top_box">
+			<div class="titbox_sc">
+				<div class="tit">Server Configuration</div>			
+				<a href="javascript:void(0);" class="btn_clear">Clear</a>
+
+				&nbsp;|&nbsp;<a href="javascript:void(0);" onclick="displayVmImportServerFormByImport();">Vm Import</a>
+				&nbsp;|&nbsp;<a href="javascript:void(0);" onclick="displayNewServerForm();">Goto Expert Mode</a>				
+						
+			</div>
+		
+			<div class="ip_box">
+				<!-- <div class="svc_ipbox">
+					<div class="ipbox ipbox3">
+						<textarea  style="width:100%" rows="10" placeholder="Display imported Vm Script" class="pline ta_1" id="vmImportScript"></textarea>																	
+					</div>
+				</div> -->
+				<input type="hidden" name="vmImportScript" id="i_vmImportScript" />
+				<div class="svc_ipbox">
+					<div class="ipbox ipbox3">
+						<textarea  style="width:100%" rows="20" placeholder="Display imported Vm Script" class="pline ta_1" id="vmImportScriptPretty" readonly></textarea>																	
+					</div>
+				</div>
+<!-- 				
+				<div class="svc_ipbox">
+					<div class="ipbox ipbox3">
+						<ul>
+							<li>
+								<label><span class="ch">*</span>Server Name</label>
+								<input type="text" name="name" value="" placeholder="Input Server Name" class="pline ip_3" title="" id="i_name" />
+							</li>
+							<li>
+								<label>Description</label>
+								<textarea  cols="" rows="" placeholder="Input Description" class="pline ta_3" title=""  name="description" id="i_description"></textarea>
+							</li>
+							<li>
+								<label><span class="ch">*</span>Connection Name</label>
+								<input type="text" name="connectionName" value="" placeholder="InputConnection  Name" class="pline ip_3" title="" id="i_connectionName" />
+							</li>
+							<li>
+								<label><span class="ch">*</span>VNetId</label>
+								<input type="text" name="vNetId" value="" placeholder="Input VNetId" class="pline ip_3" title="" id="i_vNetId" />								
+							</li>
+							<li>
+								<label><span class="ch">*</span>SubnetId</label>
+								<input type="text" name="subnetId" value="" placeholder="Input SubnetId" class="pline ip_3" title="" id="i_subnetId" />								
+							</li>
+							<li>
+								<label><span class="ch">*</span>SecurityGroupIds</label>
+								<input type="text" name="securityGroupIds[]" value="" placeholder="Input SecurityGroupIds" class="pline ip_3" title="" id="i_securityGroupIds" />								
+							</li>
+							<li>
+								<label><span class="ch">*</span>Access (ssh key)</label>
+								<input type="text" name="sshKeyId" value="" placeholder="Input Access key" class="pline ip_3" title="" id="i_sshKeyId" />								
+							</li>
+							<li>
+								<label><span class="ch">*</span>Image</label>
+								<input type="text" name="imageId" value="" placeholder="Input Spec" class="pline ip_3" title="" id="i_imageId" />
+							</li>
+							<li>
+								<label><span class="ch">*</span>Spec</label>
+								<input type="text" name="specId" value="" placeholder="Input Spec" class="pline ip_3" title="" id="i_specId" />
+							</li>
+							<li>
+								<label><span class="ch">*</span>Label</label>
+								<input type="text" name="label" value="" placeholder="Input Label" class="pline ip_3" title="" id="i_label" />								
+							</li>
+							<li>
+								<label><span class="ch">*</span>VM UserAccount</label>
+								<input type="text" name="vm_userAccount" placeholder="Input VM User Account" class="pline ip_3" title="" id="i_vmUserAccount" />								
+							</li>
+							<li>
+								<label><span class="ch">*</span>VM UserPassword</label>
+								<input type="text" name="vm_password" value="" placeholder="Input VM Password" class="pline ip_3" title="" id="i_vmUserPassword" />								
+							</li>							
+						</ul>
+					</div>
+				</div>				 -->
+			</div>
+			<!-- button -->
+			<div class="btnbox spec_select_box">
+				<div class="svc_ipbox svc_ipbox_2">
+					
+					<div class="amount_add s_slider_box">
+						<div class="add_box">
+							<div class="a_box">
+								<strong class="t font-NotoKR">추가 수량</strong>
+								<div class="a_slider">
+									<div class="slider_ip">
+										<button type="button" class="btn_s btn_s_minus">-</button>
+										<div>
+											<input type="text" name="" value="" class="slider_bar" title="" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="0" />
+										</div>
+										<button type="button" class="btn_s btn_s_plus">+</button>
+									</div>
+									<input type="text" name="vm_add_cnt" value="1" class="components_input txt_ipbox" title="" readonly id="i_vm_add_cnt"/>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+				</div>
+
+				<div class="btnbox spec_select_box">
+					<div class="btn_right">
+						
+						<button type="button" name="" value="" class="btn_done btn_co btn_cr_g" onclick="importDone_btn();"><span>DONE</span></button> 
+						<button type="button" name="" value="" class="btn_clear btn_co btn_cr_b">CLEAR</button> 
+						
+					</div>
+				</div>
+			</div>
+			<!-- //button -->
+		</div>
+
+</div>
+<script src="/assets/js/operation/manages/mcismng/vmconfigureimport.js"></script>
+{{end}}

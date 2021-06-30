@@ -1,0 +1,67 @@
+{{define "Header"}}
+<div id="contents">
+			
+	<!-- container -->
+	<div id="container">
+
+	<!-- header -->
+	<div class="header">
+			<div class="logo"><img src="/assets/img/common/img_logo.png" alt="Cloud Barista"/></div>
+			
+			<a href="javascript:;" id="btn_menu"><span></span></a>
+			<input type="hidden" id="returnMessage" value='{{ .Message }}'/>
+			<input type="hidden" id="returnStatusCode" value='{{ .Status }}'/>
+				
+			<div class="topmenu">
+				<ul>
+					<li class="logout">
+						<a href="javascript:void(0);" data-toggle="modal" data-target="#logout" onClick="commonConfirmOpen('Logout')">
+							<img src="/assets/img/common/icon_logout.png" alt=""/> Logout</a>
+					</li>
+					<!-- <li class="add">
+						<img src="/assets/img/common/icon_add.png" alt=""/>
+						<div class="infobox">
+							<div class="box box_txt">See you in the next release !</div>
+						</div>
+					</li> -->
+					<li class="notice">
+						<img src="/assets/img/common/icon_notice.png" alt=""/>
+						<div class="infobox">
+							<div class="box box_txt">See you in the next release !</div>
+						</div>
+					</li>
+					<!-- <li class="email">
+						<img src="/assets/img/common/icon_email.png" alt=""/><span>7</span>
+						<div class="infobox">
+							<div class="box box_txt">See you in the next release !</div>
+						</div>
+					</li> -->
+					<li class="setting">
+						<a href="javascript:void(0);"><img src="/assets/img/common/icon_setting.png" alt=""/></a>
+						<div class="infobox">
+							<div class="box">
+								<p>Cloud Setting</p>
+								<ul>
+									<li><a href="javascript:void(0);" data-toggle="modal" data-target="#Connection" onClick="commonConfirmOpen('MoveToConnection')">[Cloud] Connection</a></li>
+								</ul>
+							</div>
+						</div>
+					</li>
+					<li class="question">
+						<a href="javascript:void(0);" onclick="showHelp()">
+							<img src="/assets/img/common/icon_question.png" alt="Api call test"/>
+						</a>
+					</li>
+				</ul>
+			</div>
+			
+		</div>
+		<!-- //header -->
+
+		<!-- Loading bar -->
+		<div class="loading-container" id="loadingContainer" tabindex="-1" style="display:none">
+			<div class="loading"></div>
+			<div id="loading-text" >loading</div>
+		</div>
+		<!-- // Loading bar -->
+{{end}}

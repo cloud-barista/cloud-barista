@@ -13,17 +13,19 @@ package resources
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
-	"github.com/rackspace/gophercloud"
-	"github.com/rackspace/gophercloud/openstack/blockstorage/v2/volumes"
-	"github.com/rackspace/gophercloud/openstack/compute/v2/extensions/floatingip"
-	"github.com/rackspace/gophercloud/openstack/compute/v2/extensions/keypairs"
-	"github.com/rackspace/gophercloud/openstack/compute/v2/extensions/startstop"
-	"github.com/rackspace/gophercloud/openstack/compute/v2/flavors"
-	"github.com/rackspace/gophercloud/openstack/compute/v2/images"
-	"github.com/rackspace/gophercloud/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud"
+	"github.com/gophercloud/gophercloud/openstack/blockstorage/v2/volumes"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/startstop"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/images"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 
 	call "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/call-log"
 	idrv "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces"
@@ -31,7 +33,8 @@ import (
 )
 
 const (
-	VM = "VM"
+	VM             = "VM"
+	SSHDefaultUser = "cb-user"
 )
 
 type OpenStackVMHandler struct {
@@ -116,13 +119,30 @@ func (vmHandler *OpenStackVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInf
 		return irs.VMInfo{}, err
 	}*/
 
+	//  이미지 정보 조회 (Name)
+	imageHandler := OpenStackImageHandler{
+		Client: vmHandler.Client,
+	}
+	image, err := imageHandler.GetImage(vmReqInfo.ImageIID)
+	if err != nil {
+		cblogger.Error(fmt.Sprintf("failed to get image, err : %s", err))
+		return irs.VMInfo{}, err
+	}
+
+	// Flavor 정보 조회 (Name)
+	vmSpecId, err := GetFlavorByName(vmHandler.Client, vmReqInfo.VMSpecName)
+	if err != nil {
+		LoggingError(hiscallInfo, err)
+		return irs.VMInfo{}, err
+	}
+
 	// VM 생성
 	serverCreateOpts := servers.CreateOpts{
-		Name:      vmReqInfo.IId.NameId,
-		ImageName: vmReqInfo.ImageIID.NameId,
-		//ImageRef:  vmReqInfo.ImageIID.SystemId,
-		FlavorName: vmReqInfo.VMSpecName,
-		//FlavorRef: *flavorId,
+		Name: vmReqInfo.IId.NameId,
+		//ImageName: vmReqInfo.ImageIID.NameId,
+		ImageRef: image.IId.SystemId,
+		//FlavorName: vmReqInfo.VMSpecName,
+		FlavorRef: vmSpecId,
 		Networks: []servers.Network{
 			{UUID: vmReqInfo.VpcIID.SystemId},
 		},
@@ -136,9 +156,30 @@ func (vmHandler *OpenStackVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInf
 
 	// Add KeyPair
 	createOpts := keypairs.CreateOptsExt{
-		CreateOptsBuilder: serverCreateOpts,
-		KeyName:           vmReqInfo.KeyPairIID.NameId,
+		KeyName: vmReqInfo.KeyPairIID.NameId,
 	}
+
+	// KeyPair 정보 가져오기
+	keyPair, err := keypairs.Get(vmHandler.Client, vmReqInfo.KeyPairIID.NameId).Extract()
+	if err != nil {
+		LoggingError(hiscallInfo, err)
+		return irs.VMInfo{}, err
+	}
+
+	// cloud-init 스크립트 설정
+	rootPath := os.Getenv("CBSPIDER_ROOT")
+	fileData, err := ioutil.ReadFile(rootPath + "/cloud-driver-libs/.cloud-init-openstack/cloud-init")
+	if err != nil {
+		LoggingError(hiscallInfo, err)
+		return irs.VMInfo{}, err
+	}
+	fileStr := string(fileData)
+	fileStr = strings.ReplaceAll(fileStr, "{{username}}", SSHDefaultUser)
+	fileStr = strings.ReplaceAll(fileStr, "{{public_key}}", keyPair.PublicKey)
+
+	// cloud-init 스크립트 적용
+	serverCreateOpts.UserData = []byte(fileStr)
+	createOpts.CreateOptsBuilder = serverCreateOpts
 
 	start := call.Start()
 	server, err := servers.Create(vmHandler.Client, createOpts).Extract()
@@ -148,36 +189,39 @@ func (vmHandler *OpenStackVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInf
 	}
 	LoggingInfo(hiscallInfo, start)
 
-	// VM 생성 완료까지 wait
-	vmId := server.ID
-	var isDeployed bool
-	var serverInfo irs.VMInfo
 	var serverResult *servers.Server
+	var serverInfo irs.VMInfo
+
+	// VM 생성 완료까지 wait
+	curRetryCnt := 0
+	maxRetryCnt := 120
 	for {
-		if isDeployed {
-			serverResult, err = servers.Get(vmHandler.Client, vmId).Extract()
-			serverInfo = vmHandler.mappingServerInfo(*serverResult)
-			break
-		}
-
-		time.Sleep(5 * time.Second)
-
 		// Check VM Deploy Status
-		serverResult, err = servers.Get(vmHandler.Client, vmId).Extract()
+		serverResult, err = servers.Get(vmHandler.Client, server.ID).Extract()
 		if err != nil {
 			LoggingError(hiscallInfo, err)
 			return irs.VMInfo{}, err
 		}
+
 		if strings.ToLower(serverResult.Status) == "active" {
 			// Associate Public IP
 			if ok, err := vmHandler.AssociatePublicIP(serverResult.ID); !ok {
 				LoggingError(hiscallInfo, err)
 				return irs.VMInfo{}, err
 			}
-			isDeployed = true
-
+			// Get server info
+			serverResult, err = servers.Get(vmHandler.Client, server.ID).Extract()
+			serverInfo = vmHandler.mappingServerInfo(*serverResult)
+			break
+		}
+		curRetryCnt++
+		time.Sleep(1 * time.Second)
+		if curRetryCnt > maxRetryCnt {
+			cblogger.Errorf(fmt.Sprintf("failed to start vm, exceeded maximum retry count %d", maxRetryCnt))
+			return irs.VMInfo{}, errors.New(fmt.Sprintf("failed to start vm, exceeded maximum retry count %d", maxRetryCnt))
 		}
 	}
+
 	return serverInfo, nil
 }
 
@@ -233,7 +277,10 @@ func (vmHandler *OpenStackVMHandler) RebootVM(vmIID irs.IID) (irs.VMStatus, erro
 		return irs.Failed, err
 	}*/
 	start := call.Start()
-	rebootOpts := servers.SoftReboot
+	rebootOpts := servers.RebootOpts{
+		Type: servers.SoftReboot,
+	}
+
 	err := servers.Reboot(vmHandler.Client, vmIID.SystemId, rebootOpts).ExtractErr()
 	if err != nil {
 		LoggingError(hiscallInfo, err)
@@ -257,12 +304,12 @@ func (vmHandler *OpenStackVMHandler) TerminateVM(vmIID irs.IID) (irs.VMStatus, e
 	}
 
 	// VM에 연결된 PublicIP 삭제
-	pager, err := floatingip.List(vmHandler.Client).AllPages()
+	pager, err := floatingips.List(vmHandler.Client).AllPages()
 	if err != nil {
 		LoggingError(hiscallInfo, err)
 		return irs.Failed, err
 	}
-	publicIPList, err := floatingip.ExtractFloatingIPs(pager)
+	publicIPList, err := floatingips.ExtractFloatingIPs(pager)
 	if err != nil {
 		LoggingError(hiscallInfo, err)
 		return irs.Failed, err
@@ -278,7 +325,7 @@ func (vmHandler *OpenStackVMHandler) TerminateVM(vmIID irs.IID) (irs.VMStatus, e
 	}
 	// Public IP 삭제
 	if publicIPId != "" {
-		err := floatingip.Delete(vmHandler.Client, publicIPId).ExtractErr()
+		err := floatingips.Delete(vmHandler.Client, publicIPId).ExtractErr()
 		if err != nil {
 			LoggingError(hiscallInfo, err)
 			return irs.Failed, err
@@ -405,24 +452,39 @@ func (vmHandler *OpenStackVMHandler) GetVM(vmIID irs.IID) (irs.VMInfo, error) {
 
 func (vmHandler *OpenStackVMHandler) AssociatePublicIP(serverID string) (bool, error) {
 	// PublicIP 생성
-	//VPCHander := cloudConnection.CreateVPCHandler()
 	externVPCName, _ := GetPublicVPCInfo(vmHandler.NetworkClient, "NAME")
-	createOpts := floatingip.CreateOpts{
+	createOpts := floatingips.CreateOpts{
 		Pool: externVPCName,
 	}
-	publicIP, err := floatingip.Create(vmHandler.Client, createOpts).Extract()
+	publicIP, err := floatingips.Create(vmHandler.Client, createOpts).Extract()
 	if err != nil {
 		return false, err
 	}
+
 	// PublicIP VM 연결
-	associateOpts := floatingip.AssociateOpts{
-		ServerID:   serverID,
-		FloatingIP: publicIP.IP,
+	curRetryCnt := 0
+	//maxRetryCnt := 60
+	maxRetryCnt := 120
+	for {
+		associateOpts := floatingips.AssociateOpts{
+			FloatingIP: publicIP.IP,
+		}
+		err = floatingips.AssociateInstance(vmHandler.Client, serverID, associateOpts).ExtractErr()
+		if err == nil {
+			break
+		} else {
+			fmt.Println(fmt.Sprintf("[%d] err = %s", curRetryCnt, err))
+		}
+
+		time.Sleep(1 * time.Second)
+		curRetryCnt++
+
+		if curRetryCnt > maxRetryCnt {
+			cblogger.Errorf(fmt.Sprintf("failed to associate floating ip to vm, exceeded maximum retry count %d", maxRetryCnt))
+			return false, errors.New(fmt.Sprintf("failed to associate floating ip to vm, exceeded maximum retry count %d", maxRetryCnt))
+		}
 	}
-	err = floatingip.AssociateInstance(vmHandler.Client, associateOpts).ExtractErr()
-	if err != nil {
-		return false, err
-	}
+
 	return true, nil
 }
 
@@ -466,7 +528,7 @@ func (vmHandler *OpenStackVMHandler) mappingServerInfo(server servers.Server) ir
 		KeyValueList:      nil,
 		SecurityGroupIIds: nil,
 	}
-	if creatTime, err := time.Parse(time.RFC3339, server.Created); err == nil {
+	if creatTime, err := time.Parse(time.RFC3339, server.Created.String()); err == nil {
 		vmInfo.StartTime = creatTime
 	}
 
@@ -546,10 +608,8 @@ func (vmHandler *OpenStackVMHandler) mappingServerInfo(server servers.Server) ir
 
 	for _, vol := range volList {
 		for _, attach := range vol.Attachments {
-			if val, ok := attach["server_id"].(string); ok {
-				if strings.EqualFold(val, vmInfo.IId.SystemId) {
-					vmInfo.VMBlockDisk = attach["device"].(string)
-				}
+			if attach.ServerID == vmInfo.IId.SystemId {
+				vmInfo.VMBlockDisk = attach.Device
 			}
 		}
 	}

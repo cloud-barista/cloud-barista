@@ -1,0 +1,105 @@
+{{define "NodeConfigureWorker"}}
+
+<!-- Node 추가 form : worker only -->
+<div class="servers_config node_config" id="nodeConfig" style="display:block">
+	<form id="node_form">
+		<input type="hidden" name="mcksID"  value="{{ .McksID}}" id="mcksID" />
+		<input type="hidden" name="mcksName"  value="{{ .McksName}}" id="mcksName" />
+
+		<div class="top_box">
+			<div class="titbox_sc">
+				<div class="tit">Node Configuration</div>
+			</div>
+		
+			<div class="ip_box">
+				<div class="svc_ipbox svc_ipbox_2">
+					<div class="ipbox ipbox3">
+						<ul>
+							
+						</ul>
+					</div>
+				</div>
+
+				<!-- worker -->
+				<div class="servers_box" id="mcks_Worker_list_0">
+					<div class="title">Worker</div>
+					<div class="list">
+						<ul>															
+							<li>
+								<label><span class="ch">*</span>Provider</label>
+								<select  class="selectbox white pline sel_4"  name="workerProvider"  id="workerProvider_0" onchange="getConnectionListForSelectbox(this.value, 'workerConnectionName_0');">
+									<option value="">Select Provider</option>
+									{{ range $item := .CloudOSList}}	
+									<option value="{{ $item }}">{{ $item }}</option>
+									{{ end }}
+								</select>
+							</li>
+							<li>
+								<label><span class="ch">*</span>Connection Name</label>
+								<select class="selectbox white pline sel_4" name="workerConnectionName" id="workerConnectionName_0" onchange="changeConnectionInfo(this.value, 'workerSpecId_0');">
+									<option value="">Select Connection</option>
+								</select>
+							</li>
+							<li>
+								<label>Count</label>
+								<input type="text" name="workerCount" value="" id="workerCount_0" placeholder="Input Count" class="pline ip_1" title="" />
+							</li>
+							<li>
+								<label><span class="ch">*</span>Spec</label>
+								<select class="selectbox white pline sel_4" name="workerSpecId" id="workerSpecId_0">
+									<option value="1">Select Spec</option>
+								</select>
+							</li>
+						</ul>
+					</div>
+				</div>
+				
+			</div>
+			<div class="ip_box" id="hidden_mcks_Worker_list">
+				<!-- hidden worker 추가시 사용하는 것으로 hidden-->
+				<div class="servers_box" style="display:none">
+					<div class="title">Worker</div>
+					<div class="list">
+						<ul>															
+							<li>
+								<label><span class="ch">*</span>Provider</label>
+								<select  class="selectbox white pline sel_4"  name="workerProvider"  id="hidden_workerProvider" onchange="getConnectionListForSelectbox(this.value, this.id);">
+									<option value="">Select Provider</option>
+									{{ range $item := .CloudOSList}}	
+									<option value="{{ $item }}">{{ $item }}</option>
+									{{ end }}
+								</select>
+							</li>
+							<li>
+								<label><span class="ch">*</span>Connection Name</label>
+								<select class="selectbox white pline sel_4" name="workerConnectionName" id="hidden_workerConnectionName" onchange="changeConnectionInfo(this.value, this.id);">
+									<option value="">Select Connection</option>
+								</select>
+							</li>
+							<li>
+								<label>Count</label>
+								<input type="text" name="workerCount" value="" id="hidden_workerCount" placeholder="Input Count" class="pline ip_1" title="" />
+							</li>
+							<li>
+								<label><span class="ch">*</span>Spec</label>
+								<select class="selectbox white pline sel_4" name="workerSpecId" id="hidden_workerSpecId">
+									<option value="1">Select Spec</option>
+								</select>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+			
+			
+		</div>
+		
+	</form>
+	<!-- //worker -->
+	<div class="btn_tab">
+		<a href="javascript:void(0);" onclick="addWorkNode()">Add1</a>
+	</div>	
+</div>
+
+<script src="/assets/js/operation/manages/mcksmng/nodeconfigure.js"></script>  
+{{end}}

@@ -1,4 +1,38 @@
 
+# v0.4.0-CafeMocha (2021.06.30.)
+
+### API Change 
+- 에이전트 메타데이터 조회 API 추가
+
+### Feature
+- PULL 방식 모니터링 모니터링 개발
+- PUSH/PULL 메커니즘 기반 CB-Dragonfly FW 구동 모듈 고도화
+- PUSH/PULL 메커니즘 기반 에이전트 구동 모듈 고도화
+
+### Bug Fix
+- Kafka 토픽 관련 오류 개선
+- 모니터링 데이터 조회 로직 개선
+
+# v0.3.0-cappuccino (2020.12.03.)
+
+### API Change
+- 온디멘드 API 추가
+- MCIS 모니터링 API 추가
+- 알람 이벤트 핸들러, 태스크, 알람 API 추가
+- CB-Dragonfly FW 헬스체크 API 추가
+
+### Feature
+- Kafka 기반 부하분산 모듈 고도화
+- MCIS 성능 모니터링 메트릭 제공
+- 온디멘드 기반 모니터링 제공
+- CB-Store 기반 모니터링 데이터 저장
+- 알람 기능 개발
+- Go API(gRPC 통신) 및 CLI 도구 지원
+- Cloud-Twin 환경 에이전트 구동
+
+### Bug Fix
+- 모니터링 조회 API 오류 개선
+
 # v0.2.0-cappuccino (2020.06.02.)
 
 ### API Change
@@ -14,8 +48,6 @@
 ### Bug Fix
 - CB-Dragonfly 에이전트 설치 로직 및 오류 개선
 - 대규모 모니터링 안정성 테스트 기반 모니터링 콜렉터 로직 개선
-
-
 
 # v0.1.0-americano (2019.12.23.)
 

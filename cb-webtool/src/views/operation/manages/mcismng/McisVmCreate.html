@@ -1,0 +1,177 @@
+{{template "OperationTop" .}}
+<div id="lnb">
+			
+	<div class="bg"></div>
+		
+	<div class="m_box">
+		
+		{{template "TopBox" .}}
+
+		{{template "LNBPopup" .}}
+		
+        <!-- menu -->
+		{{template "MenuLeft" .}}
+		<!-- //menu -->	
+	</div>
+	
+	
+	<div class="bottom"></div>
+	<a href="javascript:;" id="m_close"></a>
+	
+</div>
+{{template "Header" .}}
+{{template "Modal" .}}
+				<script>
+			
+				</script>
+				<!-- contents -->
+				<div class="contbox">
+					
+					<input type="hidden" name="mcis_id"  value="{{ .McisID}}" id="mcis_id" />
+					
+					<div class="titlebox">
+						<div class="tit"><img src="/assets/img/common/icon_cont.png" alt=""/>Manage / <strong>MCIS</strong></div>
+						<div class="location">Home  <span>></span>  Operation  <span>></span>  Manage  <span>></span>  <strong>MCIS</strong></div>
+					</div>
+						
+					
+					<!-- list -->
+					<div class="dashboard dashboard_cont">
+						
+						<div class="d_box box_m box_w100">
+							<div class="titbox line_none">
+								<div class="tit initial"><strong>Extend VM</strong></div>
+								
+								<div class="step_box">
+									<div class="on">STEP 1 <div class="bar"></div></div>
+									<div>STEP 2 <div class="bar"></div></div>
+									<div>STEP 3 <div class="bar"></div></div>
+								</div>
+
+							</div>
+							
+							
+							<div class="ds_cont">
+								
+								<div class="area_cont">
+
+									<div class="box">
+																				
+										<div class="create_box">
+											
+											<div class="create_top">
+											
+												<div class="top_ipbox">
+													<div class="ipbox ipbox1">
+														<ul>
+															<li>
+																<label>Name</label>
+																<input type="text" name="mcis_name" value="{{ .McisName }}" id="mcis_name" placeholder="Input Name" class="pline ip_1" title="" readonly />
+															</li>
+														</ul>
+													</div>
+													<div class="ipbox ipbox2">
+														<ul>
+															<li>
+																<label>Deployment Algorithm</label>
+																<select class="selectbox white pline sel_1" name="placement_algo" id="placement_algo" disabled>
+																	<option value="">Select Algorithm Name / (ID)</option>
+																</select>
+															</li>
+														</ul>
+													</div>
+												</div>
+												
+												<!-- servers -->
+												<div class="servers_box">
+													<div class="title">Servers</div>
+													
+													<div class="switch">
+														<span class="txt">Expert 
+															<!-- <span class="txt_c on d_none">ON</span><span class="txt_c off ">OFF</span> -->
+														</span> 
+														<label><input type="checkbox" name="consent" class="ch" onclick="displayNewServerForm()"  /><span></span></label>
+													</div>
+								
+													<div class="list">
+														<!-- <div class="radio">
+															<label><input type="radio" id="vmInfoTypeSimple" name="vmInfoType" value="simple" checked>Simple</label><br>
+														</div>
+														<div class="radio">
+															<label><input type="radio" id="vmInfoTypeExpert" name="vmInfoType" value="expert">Expert</label><br>
+														</div>
+														<div class="radio">
+															<label><input type="radio" id="vmInfoTypeImport" name="vmInfoType" value="import">Import</label>
+														</div> -->
+														
+														<ul id="mcis_server_list">
+															{{range $vmIndex, $item := .VMList}}
+															
+															<li>
+																<div class="server server_on bgbox_g">
+																	<div class="icon"></div>
+																	<div class="txt">{{$item.Name}}</div>
+																</div>
+															</li>														
+
+															{{ end }}
+															<li>
+																
+																<div class="server server_add" onClick="displayNewServerForm()">
+																	<!-- <a href="#">+</a> -->
+																	
+																</div>
+															</li>
+														</ul>
+													</div>													
+													
+												</div>
+												<!-- //servers -->												
+												<div>
+													<!-- TODO : MCIS mng 화면으로 이동
+														<button name="" type="button" value="" class="btn_co btn_cr_g w95 btn_apply" onclick="btn_ImportExport();"><span>Export</span></button>  
+													-->
+													<span class="text-center" id="serverRegistResult">&nbsp;</span>
+												</div>
+
+												<div class="btnbox">
+													<div class="btn_right">
+														<button name="" type="button" value="" class="btn_co btn_cr_g w95 btn_apply" onclick="btn_deploy();"><span>DEPLOY</span></button> 
+													</div>
+												</div>						
+
+												<!-- Simple Server Configuration -->
+												{{template "VmConfigureSimple" .}}
+												<!-- Simple Server Configuration -->
+												
+												<!-- Expert Server Config -->
+												{{template "VmConfigureExpert" .}}
+												<!-- //Expert Server Config -->
+
+												<!-- Import Server Config -->
+												{{template "VmConfigureImport" .}}
+												<!-- //Import Server Config -->
+												
+												{{template "VmAssistPopup" .}}
+
+											</div>
+											
+										</div>
+										
+										
+									</div>
+									
+								</div>
+								
+							</div>
+							
+						</div>
+						
+					</div>
+					<!-- //list -->
+					
+				</div>
+				<!-- //contents -->				
+				<script src="/assets/js/operation/manages/mcismng/mcisvmcreate.js"></script>
+
+{{template "Footer" .}}			

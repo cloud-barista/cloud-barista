@@ -19,7 +19,7 @@ import (
 
 	"net/http"
 	"strings"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"encoding/json"
 )
 
@@ -276,17 +276,20 @@ func makeOnchangeCredentialProviderFunc_js() string {
 			credentialInfo = '[{"Key":"IdentityEndpoint", "Value":"http://xxx.xxx.co.kr:9090"}, {"Key":"AuthToken", "Value":"xxxx"}, {"Key":"Username", "Value":"xxxx"}, {"Key":"Password", "Value":"xxxx"}, {"Key":"TenantId", "Value":"tnt0009"}]'
 		    break;
 		  case "OPENSTACK":
-			credentialInfo = '[{"Key":"IdentityEndpoint", "Value":"http://182.252.xxx.xxx:5000/v3"}, {"Key":"Username", "Value":"etri"}, {"Key":"Password", "Value":"xxxx"}, {"Key":"DomainName", "Value":"default"}, {"Key":"ProjectID", "Value":"xxxx"}]'
+			credentialInfo = '[{"Key":"IdentityEndpoint", "Value":"http://123.456.789.123:5000/v3"}, {"Key":"Username", "Value":"etri"}, {"Key":"Password", "Value":"xxxx"}, {"Key":"DomainName", "Value":"default"}, {"Key":"ProjectID", "Value":"xxxx"}]'
 		    break;
 		  case "DOCKER":
-			credentialInfo = '[{"Key":"Host", "Value":"http://18.191.xxx.xxx:1004"}, {"Key":"APIVersion", "Value":"v1.38"}]'
+			credentialInfo = '[{"Key":"Host", "Value":"http://123.456.789.123:1004"}, {"Key":"APIVersion", "Value":"v1.38"}]'
 		    break;
 
+		  case "NCP":
+			credentialInfo = '[{"Key":"ClientId", "Value":"XXXXXXXXXXXXXXXXXXX"}, {"Key":"ClientSecret", "Value":"XXXXXXXXXXXXXXXXXXXXXXXXXXX"}]'
+		    break;
 		  case "MOCK":
 			credentialInfo = '[{"Key":"MockName", "Value":"mock_name00"}]'
 		    break;
 		  case "CLOUDTWIN":
-			credentialInfo = '[{"Key":"ClientId", "Value":"XXXXXX"}, {"Key":"ClientSecret", "Value":"XXXXXX"}]'
+			credentialInfo = '[{"Key":"IdentityEndpoint", "Value":"http://123.456.789.123:8192"}, {"Key":"DomainName", "Value":"cloud-1"}, {"Key":"MockName", "Value":"mock_name01"}]'
 		    break;
 		  default:
 			credentialInfo = '[{"Key":"ClientId", "Value":"XXXXXX"}, {"Key":"ClientSecret", "Value":"XXXXXX"}]'
@@ -546,6 +549,12 @@ func makeOnchangeRegionProviderFunc_js() string {
           case "DOCKER":
             regionInfo = '[{"Key":"Region", "Value":"default"}]'
             region = 'default'
+            zone = ''             
+            break;
+
+          case "NCP":
+            regionInfo = '[{"Key":"region", "Value":"KR"}]'
+            region = 'KR'
             zone = ''             
             break;
 
@@ -837,6 +846,11 @@ func makeOnchangeConnectionConfigProviderFunc_js() string {
 	    credentialNameList = document.getElementsByName('credentialName-DOCKER');
 	    regionNameList = document.getElementsByName('regionName-DOCKER');
             break;
+          case "NCP":
+	    driverNameList = document.getElementsByName('driverName-NCP');
+	    credentialNameList = document.getElementsByName('credentialName-NCP');
+	    regionNameList = document.getElementsByName('regionName-NCP');
+            break;
           case "MOCK":
 	    driverNameList = document.getElementsByName('driverName-MOCK');
 	    credentialNameList = document.getElementsByName('credentialName-MOCK');
@@ -916,13 +930,13 @@ func getRegionZone(regionName string) (string, string, error) {
 	zone := ""
 	// get the region & zone
 	for _, one := range regionInfo.KeyValueInfoList {
-		if one.Key == "Region" {
+		if one.Key == "Region" || one.Key == "region" {
 			region = one.Value
 		}
 		if one.Key == "location" {
 			region = one.Value
 		}
-		if one.Key == "Zone" {
+		if one.Key == "Zone" || one.Key == "zone" {
 			zone = one.Value
 		}
 		
@@ -1341,10 +1355,10 @@ func SpiderInfo(c echo.Context) error {
                                             <font size=2>$$STARTTIME$$</font>
                                     </td>
                                     <td width="220">
-                                            <font size=2>CB-Spider v0.3.0 (Espresso)</font>
+                                            <font size=2>CB-Spider v0.4.0 (CafeMocha)</font>
                                     </td>
                                     <td width="220">
-                                            <font size=2>REST API v0.3.0 (Espresso)</font>
+                                            <font size=2>REST API v0.4.0 (CafeMocha)</font>
                                     </td>
                                 </tr>
 
@@ -1368,18 +1382,8 @@ func SpiderInfo(c echo.Context) error {
                                     </td>
                                     <td width="420">
                                             <font size=2>
-                                            * Cloud Connection Info Mgmt:
-                                                <br>
-                                                &nbsp;&nbsp;&nbsp;&nbsp;<a href='https://cloud-barista.github.io/rest-api/v0.3.0/spider/ccim/' target='_blank'>
-                                                    https://cloud-barista.github.io/rest-api/v0.3.0/spider/ccim/
-                                                </a>
-                                            </font>
-                                            <p>
-                                            <font size=2>
-                                                * Cloud Resource Control Mgmt: 
-                                                <br>
-                                                &nbsp;&nbsp;&nbsp;&nbsp;<a href='https://cloud-barista.github.io/rest-api/v0.3.0/spider/cctm/' target='_blank'>
-                                                    https://cloud-barista.github.io/rest-api/v0.3.0/spider/cctm/
+					    &nbsp;&nbsp;<a href='https://github.com/cloud-barista/cb-spider/wiki/CB-Spider-User-Interface' target='_blank'>
+					    		CB-Spider User Interface
                                                 </a>
                                             </font>
                                     </td>

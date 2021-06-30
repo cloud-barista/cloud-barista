@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/ecs"
+	call "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/call-log"
 	idrv "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces"
 	irs "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces/resources"
 	"github.com/davecgh/go-spew/spew"
@@ -27,7 +28,7 @@ type AlibabaSecurityHandler struct {
 
 func (securityHandler *AlibabaSecurityHandler) CreateSecurity(securityReqInfo irs.SecurityReqInfo) (irs.SecurityInfo, error) {
 	cblogger.Infof("securityReqInfo : ", securityReqInfo)
-	spew.Dump(securityReqInfo)
+	//spew.Dump(securityReqInfo)
 
 	//=======================================
 	// 보안 그룹 생성
@@ -40,12 +41,31 @@ func (securityHandler *AlibabaSecurityHandler) CreateSecurity(securityReqInfo ir
 	request.VpcId = securityReqInfo.VpcIID.SystemId
 	cblogger.Debugf("보안 그룹 생성 요청 정보", request)
 
+	// logger for HisCall
+	callogger := call.GetLogger("HISCALL")
+	callLogInfo := call.CLOUDLOGSCHEMA{
+		CloudOS:      call.ALIBABA,
+		RegionZone:   securityHandler.Region.Zone,
+		ResourceType: call.SECURITYGROUP,
+		ResourceName: securityReqInfo.IId.NameId,
+		CloudOSAPI:   "CreateSecurityGroup()",
+		ElapsedTime:  "",
+		ErrorMSG:     "",
+	}
+
+	callLogStart := call.Start()
 	// Create the security group with the VPC, name and description.
 	createRes, err := securityHandler.Client.CreateSecurityGroup(request)
+	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+
 	if err != nil {
+		callLogInfo.ErrorMSG = err.Error()
+		callogger.Error(call.String(callLogInfo))
+
 		cblogger.Errorf("Unable to create security group %q, %v", securityReqInfo.IId.NameId, err)
 		return irs.SecurityInfo{}, err
 	}
+	callogger.Info(call.String(callLogInfo))
 	cblogger.Infof("[%s] 보안 그룹 생성완료: SecurityGroupId:[%s]", securityReqInfo.IId.NameId, createRes.SecurityGroupId)
 	//spew.Dump(createRes)
 
@@ -61,8 +81,9 @@ func (securityHandler *AlibabaSecurityHandler) CreateSecurity(securityReqInfo ir
 		cblogger.Info("Successfully set security group AuthorizeSecurityRules")
 	}
 
-	cblogger.Info("AuthorizeSecurityRules Result")
-	spew.Dump(createRuleRes)
+	cblogger.Debug("AuthorizeSecurityRules Result")
+	// spew.Dump(createRuleRes)
+	cblogger.Debug(createRuleRes)
 
 	securityInfo, _ := securityHandler.GetSecurity(irs.IID{SystemId: createRes.SecurityGroupId})
 	//securityInfo.IId.NameId = securityReqInfo.IId.NameId
@@ -88,7 +109,8 @@ func (securityHandler *AlibabaSecurityHandler) AuthorizeSecurityRules(securityGr
 			request.IpProtocol = curRule.IPProtocol
 			request.PortRange = curRule.FromPort + "/" + curRule.ToPort
 			request.SecurityGroupId = securityGroupId
-			request.SourceCidrIp = "0.0.0.0/0"
+			//request.SourceCidrIp = "0.0.0.0/0"
+			request.SourceCidrIp = curRule.CIDR
 
 			cblogger.Infof("[%s] [%s] inbound rule Request", request.IpProtocol, request.PortRange)
 			spew.Dump(request)
@@ -106,8 +128,8 @@ func (securityHandler *AlibabaSecurityHandler) AuthorizeSecurityRules(securityGr
 			request.IpProtocol = curRule.IPProtocol
 			request.PortRange = curRule.FromPort + "/" + curRule.ToPort
 			request.SecurityGroupId = securityGroupId
-			//request.SourceCidrIp = "0.0.0.0/0"
-			request.DestCidrIp = "0.0.0.0/0"
+			//request.DestCidrIp = "0.0.0.0/0"
+			request.DestCidrIp = curRule.CIDR
 
 			cblogger.Infof("[%s] [%s] outbound rule Request", request.IpProtocol, request.PortRange)
 			spew.Dump(request)
@@ -131,11 +153,32 @@ func (securityHandler *AlibabaSecurityHandler) ListSecurity() ([]*irs.SecurityIn
 	request := ecs.CreateDescribeSecurityGroupsRequest()
 	request.Scheme = "https"
 	spew.Dump(request)
+
+	// logger for HisCall
+	callogger := call.GetLogger("HISCALL")
+	callLogInfo := call.CLOUDLOGSCHEMA{
+		CloudOS:      call.ALIBABA,
+		RegionZone:   securityHandler.Region.Zone,
+		ResourceType: call.SECURITYGROUP,
+		ResourceName: "ListSecurity()",
+		CloudOSAPI:   "DescribeSecurityGroups()",
+		ElapsedTime:  "",
+		ErrorMSG:     "",
+	}
+
+	callLogStart := call.Start()
 	result, err := securityHandler.Client.DescribeSecurityGroups(request)
+	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+
 	if err != nil {
+		callLogInfo.ErrorMSG = err.Error()
+		callogger.Error(call.String(callLogInfo))
+
 		cblogger.Error(err)
 		return nil, err
 	}
+	callogger.Info(call.String(callLogInfo))
+
 	cblogger.Info(result)
 	//spew.Dump(result)
 	//ecs.DescribeSecurityGroupsResponse
@@ -161,16 +204,39 @@ func (securityHandler *AlibabaSecurityHandler) GetSecurity(securityIID irs.IID) 
 	request.Scheme = "https"
 	request.SecurityGroupId = securityIID.SystemId
 
+	// logger for HisCall
+	callogger := call.GetLogger("HISCALL")
+	callLogInfo := call.CLOUDLOGSCHEMA{
+		CloudOS:      call.ALIBABA,
+		RegionZone:   securityHandler.Region.Zone,
+		ResourceType: call.SECURITYGROUP,
+		ResourceName: securityIID.SystemId,
+		CloudOSAPI:   "DescribeSecurityGroups()",
+		ElapsedTime:  "",
+		ErrorMSG:     "",
+	}
+
+	callLogStart := call.Start()
 	result, err := securityHandler.Client.DescribeSecurityGroups(request)
+	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+
 	if err != nil {
+		callLogInfo.ErrorMSG = err.Error()
+		callogger.Error(call.String(callLogInfo))
+
 		cblogger.Error(err)
 		return irs.SecurityInfo{}, err
 	}
+	callogger.Info(call.String(callLogInfo))
+
+	cblogger.Debug(result)
+	//spew.Dump(result)
+	//ecs.DescribeSecurityGroupsResponse
 
 	//ecs.DescribeSecurityGroupsResponse.SecurityGroups
 	//ecs.SecurityGroups
-	cblogger.Info(result)
-	spew.Dump(result)
+	//spew.Dump(result)
+	
 	//ecs.DescribeSecurityGroupsResponse
 	if result.TotalCount < 1 {
 		return irs.SecurityInfo{}, errors.New("Notfound: '" + securityIID.SystemId + "' SecurityGroup Not found")
@@ -234,13 +300,14 @@ func (securityHandler *AlibabaSecurityHandler) ExtractSecurityRuleInfo(securityG
 	for _, curPermission := range response.Permissions.Permission {
 		curSecurityRuleInfo.Direction = curPermission.Direction
 
-		/*
-			if strings.EqualFold(curPermission.Direction, "ingress") {
-				curSecurityRuleInfo.Direction = "inbound"
-			} else if strings.EqualFold(curPermission.Direction, "egress") {
-				curSecurityRuleInfo.Direction = "outbound"
-			}
-		*/
+		if strings.EqualFold(curPermission.Direction, "ingress") {
+			// curSecurityRuleInfo.Direction = "inbound"
+			curSecurityRuleInfo.CIDR = curPermission.SourceCidrIp
+		} else if strings.EqualFold(curPermission.Direction, "egress") {
+			// curSecurityRuleInfo.Direction = "outbound"
+			curSecurityRuleInfo.CIDR = curPermission.DestCidrIp
+		}
+
 		curSecurityRuleInfo.IPProtocol = curPermission.IpProtocol
 
 		portRange := strings.Split(curPermission.PortRange, "/")
@@ -262,11 +329,31 @@ func (securityHandler *AlibabaSecurityHandler) DeleteSecurity(securityIID irs.II
 	request.Scheme = "https"
 	request.SecurityGroupId = securityIID.SystemId
 
+	// logger for HisCall
+	callogger := call.GetLogger("HISCALL")
+	callLogInfo := call.CLOUDLOGSCHEMA{
+		CloudOS:      call.ALIBABA,
+		RegionZone:   securityHandler.Region.Zone,
+		ResourceType: call.SECURITYGROUP,
+		ResourceName: securityIID.SystemId,
+		CloudOSAPI:   "DeleteSecurityGroup()",
+		ElapsedTime:  "",
+		ErrorMSG:     "",
+	}
+
+	callLogStart := call.Start()
 	response, err := securityHandler.Client.DeleteSecurityGroup(request)
+	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+
 	if err != nil {
+		callLogInfo.ErrorMSG = err.Error()
+		callogger.Error(call.String(callLogInfo))
+
 		cblogger.Errorf("Unable to get descriptions for security groups, %v.", err)
 		return false, err
 	}
+	callogger.Info(call.String(callLogInfo))
+
 	cblogger.Info(response)
 	cblogger.Infof("Successfully delete security group %q.", securityIID.SystemId)
 	return true, nil

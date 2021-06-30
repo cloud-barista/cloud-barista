@@ -18,7 +18,10 @@ func Server() {
 	e := echo.New()
 
 	// Echo middleware func
-	e.Use(middleware.Logger())                             // Setting logger
+
+	if *config.Config.LoglevelHTTP == true {
+		e.Use(middleware.Logger()) // Setting logger
+	}
 	e.Use(middleware.Recover())                            // Recover from panics anywhere in the chain
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{ // CORS Middleware
 		AllowOrigins: []string{"*"},
@@ -27,9 +30,9 @@ func Server() {
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
-	e.GET(config.Config.BasePath+"/healthy", router.Healthy)
+	e.GET(*config.Config.RootURL+"/healthy", router.Healthy)
 
-	g := e.Group(config.Config.BasePath+"/ns", common.NsValidate())
+	g := e.Group(*config.Config.RootURL+"/ns", common.NsValidate())
 
 	// Routes
 	g.GET("/:namespace/clusters", router.ListCluster)

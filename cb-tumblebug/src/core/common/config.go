@@ -1,31 +1,38 @@
 package common
 
 import (
-	"strings"
 	"encoding/json"
 	"fmt"
+	"os"
+	"strings"
 
 	cbstore_utils "github.com/cloud-barista/cb-store/utils"
 )
 
+// swagger:request ConfigReq
 type ConfigReq struct {
-	Name        string `json:"name" example:"spider"`
-	Value		string `json:"value" example:"http://localhost:1024/spider"`
+	Name  string `json:"name" example:"SPIDER_REST_URL"`
+	Value string `json:"value" example:"http://localhost:1024/spider"`
 }
 
 // swagger:response ConfigInfo
 type ConfigInfo struct {
-	Id          string `json:"id" example:"configid01"`
-	Name        string `json:"name" example:"spider"`
-	Value 		string `json:"value" example:"http://localhost:1024/spider"`
+	Id    string `json:"id" example:"SPIDER_REST_URL"`
+	Name  string `json:"name" example:"SPIDER_REST_URL"`
+	Value string `json:"value" example:"http://localhost:1024/spider"`
 }
 
 func UpdateConfig(u *ConfigReq) (ConfigInfo, error) {
-	_, lowerizedName, _ := LowerizeAndCheckConfig(u.Name)
+
+	if u.Name == "" {
+		temp := ConfigInfo{}
+		err := fmt.Errorf("The provided name is empty.")
+		return temp, err
+	}
 
 	content := ConfigInfo{}
-	content.Id = lowerizedName
-	content.Name = lowerizedName
+	content.Id = u.Name
+	content.Name = u.Name
 	content.Value = u.Value
 
 	key := "/config/" + content.Id
@@ -41,68 +48,98 @@ func UpdateConfig(u *ConfigReq) (ConfigInfo, error) {
 	fmt.Println("UpdateConfig(); Key: " + keyValue.Key + "\nValue: " + keyValue.Value)
 	fmt.Println("UpdateConfig(); ===========================")
 
-	UpdateEnv(content.Id)
+	UpdateGlobalVariable(content.Id)
 
 	return content, nil
 }
 
-func UpdateEnv(id string) error {
+func UpdateGlobalVariable(id string) error {
 
 	/*
-	common.SPIDER_REST_URL = common.NVL(os.Getenv("SPIDER_REST_URL"), "http://localhost:1024/spider")
-	common.DRAGONFLY_REST_URL = common.NVL(os.Getenv("DRAGONFLY_REST_URL"), "http://localhost:9090/dragonfly")
-	common.DB_URL = common.NVL(os.Getenv("DB_URL"), "localhost:3306")
-	common.DB_DATABASE = common.NVL(os.Getenv("DB_DATABASE"), "cb_tumblebug")
-	common.DB_USER = common.NVL(os.Getenv("DB_USER"), "cb_tumblebug")
-	common.DB_PASSWORD = common.NVL(os.Getenv("DB_PASSWORD"), "cb_tumblebug")
+		common.SPIDER_REST_URL = common.NVL(os.Getenv("SPIDER_REST_URL"), "http://localhost:1024/spider")
+		common.DRAGONFLY_REST_URL = common.NVL(os.Getenv("DRAGONFLY_REST_URL"), "http://localhost:9090/dragonfly")
+		common.DB_URL = common.NVL(os.Getenv("DB_URL"), "localhost:3306")
+		common.DB_DATABASE = common.NVL(os.Getenv("DB_DATABASE"), "cb_tumblebug")
+		common.DB_USER = common.NVL(os.Getenv("DB_USER"), "cb_tumblebug")
+		common.DB_PASSWORD = common.NVL(os.Getenv("DB_PASSWORD"), "cb_tumblebug")
 	*/
 
-	content := ConfigInfo{}
-
-	lowStrSPIDER_REST_URL := GenId(StrSPIDER_REST_URL)
-	lowStrDRAGONFLY_REST_URL := GenId(StrDRAGONFLY_REST_URL)
-	lowStrDB_URL := GenId(StrDB_URL)
-	lowStrDB_DATABASE := GenId(StrDB_DATABASE)
-	lowStrDB_USER := GenId(StrDB_USER)
-	lowStrDB_PASSWORD := GenId(StrDB_PASSWORD)
-	lowStrAUTOCONTROL_DURATION_MS := GenId(StrAUTOCONTROL_DURATION_MS)
-
-	Key := "/config/" + id
-	keyValue, err := CBStore.Get(Key)
+	configInfo, err := GetConfig(id)
 	if err != nil {
-		CBLog.Error(err)
+		//CBLog.Error(err)
 		return err
 	}
-	if keyValue != nil {
-		json.Unmarshal([]byte(keyValue.Value), &content)
 
-		switch id {
-		case lowStrSPIDER_REST_URL:
-			SPIDER_REST_URL = content.Value	
-		case lowStrDRAGONFLY_REST_URL:
-			DRAGONFLY_REST_URL = content.Value	
-		case lowStrDB_URL:
-			DB_URL = content.Value	
-		case lowStrDB_DATABASE:
-			DB_DATABASE = content.Value	
-		case lowStrDB_USER:
-			DB_USER = content.Value			
-		case lowStrDB_PASSWORD:
-			DB_PASSWORD = content.Value	
-		case lowStrAUTOCONTROL_DURATION_MS:
-			AUTOCONTROL_DURATION_MS = content.Value	
-		default:
-	
-		}
+	switch id {
+	case StrSPIDER_REST_URL:
+		SPIDER_REST_URL = configInfo.Value
+		fmt.Println("<SPIDER_REST_URL> " + SPIDER_REST_URL)
+	case StrDRAGONFLY_REST_URL:
+		DRAGONFLY_REST_URL = configInfo.Value
+		fmt.Println("<DRAGONFLY_REST_URL> " + DRAGONFLY_REST_URL)
+	case StrDB_URL:
+		DB_URL = configInfo.Value
+		fmt.Println("<DB_URL> " + DB_URL)
+	case StrDB_DATABASE:
+		DB_DATABASE = configInfo.Value
+		fmt.Println("<DB_DATABASE> " + DB_DATABASE)
+	case StrDB_USER:
+		DB_USER = configInfo.Value
+		fmt.Println("<DB_USER> " + DB_USER)
+	case StrDB_PASSWORD:
+		DB_PASSWORD = configInfo.Value
+		fmt.Println("<DB_PASSWORD> " + DB_PASSWORD)
+	case StrAUTOCONTROL_DURATION_MS:
+		AUTOCONTROL_DURATION_MS = configInfo.Value
+		fmt.Println("<AUTOCONTROL_DURATION_MS> " + AUTOCONTROL_DURATION_MS)
+	default:
+
 	}
 
-	fmt.Println("\n<SPIDER_REST_URL> " + SPIDER_REST_URL)
-	fmt.Println("<DRAGONFLY_REST_URL> " + DRAGONFLY_REST_URL)
-	fmt.Println("<DB_URL> " + DB_URL)
-	fmt.Println("<DB_DATABASE> " + DB_DATABASE)
-	fmt.Println("<DB_USER> " + DB_USER)
-	fmt.Println("<DB_PASSWORD> " + DB_PASSWORD)
-	fmt.Println("<AUTOCONTROL_DURATION_MS> " + AUTOCONTROL_DURATION_MS)
+	return nil
+}
+
+func InitConfig(id string) error {
+
+	switch id {
+	case StrSPIDER_REST_URL:
+		SPIDER_REST_URL = NVL(os.Getenv("SPIDER_REST_URL"), "http://localhost:1024/spider")
+		fmt.Println("<SPIDER_REST_URL> " + SPIDER_REST_URL)
+	case StrDRAGONFLY_REST_URL:
+		DRAGONFLY_REST_URL = NVL(os.Getenv("DRAGONFLY_REST_URL"), "http://localhost:9090/dragonfly")
+		fmt.Println("<DRAGONFLY_REST_URL> " + DRAGONFLY_REST_URL)
+	case StrDB_URL:
+		DB_URL = NVL(os.Getenv("DB_URL"), "localhost:3306")
+		fmt.Println("<DB_URL> " + DB_URL)
+	case StrDB_DATABASE:
+		DB_DATABASE = NVL(os.Getenv("DB_DATABASE"), "cb_tumblebug")
+		fmt.Println("<DB_DATABASE> " + DB_DATABASE)
+	case StrDB_USER:
+		DB_USER = NVL(os.Getenv("DB_USER"), "cb_tumblebug")
+		fmt.Println("<DB_USER> " + DB_USER)
+	case StrDB_PASSWORD:
+		DB_PASSWORD = NVL(os.Getenv("DB_PASSWORD"), "cb_tumblebug")
+		fmt.Println("<DB_PASSWORD> " + DB_PASSWORD)
+	case StrAUTOCONTROL_DURATION_MS:
+		AUTOCONTROL_DURATION_MS = NVL(os.Getenv("AUTOCONTROL_DURATION_MS"), "10000")
+		fmt.Println("<AUTOCONTROL_DURATION_MS> " + AUTOCONTROL_DURATION_MS)
+	default:
+
+	}
+
+	check, err := CheckConfig(id)
+
+	if check && err == nil {
+		fmt.Println("[Init config] " + id)
+		key := "/config/" + id
+		//fmt.Println(key)
+
+		CBStore.Delete(key)
+		// if err != nil {
+		// 	CBLog.Error(err)
+		// 	return err
+		// }
+	}
 
 	return nil
 }
@@ -111,10 +148,10 @@ func GetConfig(id string) (ConfigInfo, error) {
 
 	res := ConfigInfo{}
 
-	check, lowerizedId, err := LowerizeAndCheckConfig(id)
+	check, err := CheckConfig(id)
 
-	if check == false {
-		errString := "The config " + lowerizedId + " does not exist."
+	if !check {
+		errString := "The config " + id + " does not exist."
 		err := fmt.Errorf(errString)
 		return res, err
 	}
@@ -125,9 +162,9 @@ func GetConfig(id string) (ConfigInfo, error) {
 		return temp, err
 	}
 
-	fmt.Println("[Get config] " + lowerizedId)
-	key := "/config/" + lowerizedId
-	fmt.Println(key)
+	fmt.Println("[Get config] " + id)
+	key := "/config/" + id
+	//fmt.Println(key)
 
 	keyValue, err := CBStore.Get(key)
 	if err != nil {
@@ -135,10 +172,14 @@ func GetConfig(id string) (ConfigInfo, error) {
 		return res, err
 	}
 
-	fmt.Println("<" + keyValue.Key + "> \n" + keyValue.Value)
-	fmt.Println("===============================================")
+	fmt.Println("<" + keyValue.Key + "> " + keyValue.Value)
+	//fmt.Println("===============================================")
 
-	json.Unmarshal([]byte(keyValue.Value), &res)
+	err = json.Unmarshal([]byte(keyValue.Value), &res)
+	if err != nil {
+		CBLog.Error(err)
+		return res, err
+	}
 	return res, nil
 }
 
@@ -158,7 +199,11 @@ func ListConfig() ([]ConfigInfo, error) {
 		res := []ConfigInfo{}
 		for _, v := range keyValue {
 			tempObj := ConfigInfo{}
-			json.Unmarshal([]byte(v.Value), &tempObj)
+			err = json.Unmarshal([]byte(v.Value), &tempObj)
+			if err != nil {
+				CBLog.Error(err)
+				return nil, err
+			}
 			res = append(res, tempObj)
 		}
 		return res, nil
@@ -187,6 +232,7 @@ func ListConfigId() []string {
 
 }
 
+/*
 func DelAllConfig() error {
 	fmt.Printf("DelAllConfig() called;")
 
@@ -206,30 +252,32 @@ func DelAllConfig() error {
 	}
 	return nil
 }
+*/
 
-func LowerizeAndCheckConfig(Id string) (bool, string, error) {
+func InitAllConfig() error {
+	fmt.Printf("InitAllConfig() called;")
 
-	if Id == "" {
+	configIdList := ListConfigId()
+
+	for _, v := range configIdList {
+		InitConfig(v)
+	}
+	return nil
+}
+
+func CheckConfig(id string) (bool, error) {
+
+	if id == "" {
 		err := fmt.Errorf("CheckConfig failed; configId given is null.")
-		return false, "", err
+		return false, err
 	}
 
-	lowerizedId := GenId(Id)
-
-	fmt.Println("[Check config] " + lowerizedId)
-
-	key := "/config/" + lowerizedId
+	key := "/config/" + id
 	//fmt.Println(key)
 
 	keyValue, _ := CBStore.Get(key)
-	/*
-		if err != nil {
-			CBLog.Error(err)
-			return false, err
-		}
-	*/
 	if keyValue != nil {
-		return true, lowerizedId, nil
+		return true, nil
 	}
-	return false, lowerizedId, nil
+	return false, nil
 }

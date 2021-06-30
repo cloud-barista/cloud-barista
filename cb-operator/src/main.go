@@ -47,10 +47,10 @@ func scanAndWriteMode() {
 	switch userInput {
 	case 1:
 		fmt.Println("[1: Docker Compose environment (Requires Docker and Docker Compose)] selected.")
-		tempStr = common.Mode_DockerCompose
+		tempStr = common.ModeDockerCompose
 	case 2:
 		fmt.Println("[2: Kubernetes environment (Requires Kubernetes cluster with Helm 3)] selected.")
-		tempStr = common.Mode_Kubernetes
+		tempStr = common.ModeKubernetes
 	default:
 		fmt.Println("You should choose between 1 and 2.")
 		return
@@ -70,14 +70,14 @@ func readMode() string {
 		data, err := ioutil.ReadFile("./CB_OPERATOR_MODE")
 		errCheck(err)
 
-		common.CB_OPERATOR_MODE = string(data)
-		fmt.Println("CB_OPERATOR_MODE: " + common.CB_OPERATOR_MODE)
+		common.CBOperatorMode = string(data)
+		fmt.Println("CB_OPERATOR_MODE: " + common.CBOperatorMode)
 
-		//if common.CB_OPERATOR_MODE == common.DockerCompose || common.CB_OPERATOR_MODE == common.Kubernetes {
-		return common.CB_OPERATOR_MODE
+		//if common.CBOperatorMode == common.DockerCompose || common.CBOperatorMode == common.Kubernetes {
+		return common.CBOperatorMode
 		//}
 
-	} else if os.IsNotExist(err) == true {
+	} else if os.IsNotExist(err) {
 		// path/to/whatever does *not* exist
 		fmt.Println("CB_OPERATOR_MODE file does not exist.")
 		scanAndWriteMode()
@@ -92,23 +92,23 @@ func readMode() string {
 		errCheck(err)
 		return ""
 	}
-	return ""
+	//return ""
 }
 
-//var CB_OPERATOR_MODE string
+//var CBOperatorMode string
 
 func main() {
 
 	mode := readMode()
 
 	switch mode {
-	case common.Mode_DockerCompose:
+	case common.ModeDockerCompose:
 		cmd.Execute()
-	case common.Mode_Kubernetes:
+	case common.ModeKubernetes:
 		cmd.Execute()
 	default:
 		fmt.Println("Invalid CB_OPERATOR_MODE: " + mode)
-		fmt.Println("CB_OPERATOR_MODE should be one of these: " + common.Mode_DockerCompose + ", " + common.Mode_Kubernetes)
+		fmt.Println("CB_OPERATOR_MODE should be one of these: " + common.ModeDockerCompose + ", " + common.ModeKubernetes)
 
 		//fmt.Println("To change CB_OPERATOR_MODE, just delete the CB_OPERATOR_MODE file and re-run the cb-operator.")
 		scanAndWriteMode()

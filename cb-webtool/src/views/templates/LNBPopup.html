@@ -1,0 +1,191 @@
+{{define "LNBPopup"}}
+<!-- Left Navigation Bar : LNB -->
+    <!-- namespace 변경 -->
+            <!-- popup NameSpace -->
+            <!-- <div class="modal fade layerpopup" id="NameSpace" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">                        
+                        <div class="modal-body">
+                            <div class="txt">Would you like to move <br />selected NameSpace?</div>
+                            <div class="btnbox">
+                                <button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn_ok" data-dismiss="modal" onclick="nameSpaceSet()">OK</button> 
+                                <button type="button" data-dismiss="modal" onclick="nameSpaceSet()">OK</button>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div> -->
+            <!-- //popup NameSpace -->
+
+            <!-- popup NewNameSpace -->
+            <!-- <div class="modal fade layerpopup" id="NewNS" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        
+                        <div class="modal-body">
+                            <div class="txt">Would you like to new Name Space?</div>
+                            <div class="btnbox">
+                                <button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn_ok" data-dismiss="modal">OK</button>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div> -->
+            <!-- //popup New NameSpace -->
+
+            <!-- popup Manage NameSpace -->
+            <!-- <div class="modal fade layerpopup" id="ManageNS" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        
+                        <div class="modal-body">
+                            <div class="txt"> Would you like to manage <br />Name Space?</div>
+                            <div class="btnbox">
+                                <button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn_ok" data-dismiss="modal">OK</button>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div> -->
+            <!-- //popup Manage NameSpace -->
+            
+
+            <!-- Cloud Connection / Select NS (NameSpace) input -->
+            <div class="modal fade" id="popNameSpace" tabindex="-1" role="dialog" aria-hidden="true">
+           
+                <div class="modal-dialog popupBody">
+                    <div class="modal-content">
+                
+                        <div class="modal-body scrollbar-inner">
+                        
+                            <div class="wbox">	
+             
+                                <!-- Select NS (NameSpace) -->
+                                <div class="popbox popboxNS">
+                                    <div class="popcont">
+                                        <div class="titlebox">
+                                            <div class="tit"><span>Select NS</span> (NameSpace)</div>
+                                            <div class="txt">사용자의 작업 영역을 선택 또는 생성해 주세요</div>
+                                        </div>
+                                
+                                        <!-- list -->
+                                        <div class="cloudlist">
+                                            <div class="listbox scrollbar-inner" id="selectNameSpaceListPopup">
+                                                {{range $index, $item := .NameSpaceList}}
+                                                    
+                                                    <div class="list" onclick="selectDefaultNameSpace( 'LNBPopup', '{{ $item.ID }}');">
+                                                    <div class="stit">{{$item.Name}}</div>
+                                                    <div class="stxt">{{$item.Description}} </div>
+                                                    </div>
+                                                    
+                                                {{end}}                 
+                                                
+                                                <input type="hidden" id="tempSelectedNameSpaceID" />
+                                            </div>
+                                        </div>
+                                        <!-- //list -->
+                                
+                                        <!-- add -->
+                                        <div class="addbox">
+                                            <div class="txt">or <span>Add</span> new NameSpace</div>
+                                            <button name="" value="" class="btn_add" id="btn_add2">ADD +</button> 
+                                        </div>
+                                
+                                        <div class="add_ipbox">
+                                            
+                                            <div class="iplist">
+                                                <ul>
+                                                    <li><label class="chk">Type New NS Name</label><input type="text" name="" id="namespace" value="" placeholder="Input Name" title="" /></li>
+                                                    <li>
+                                                        <label>Type Description</label>
+                                                        <textarea  cols="" rows="" placeholder="Input Description" id="nsDesc"title=""></textarea>
+                                                    </li>
+                                                </ul>
+                                            
+                                                <div class="btnbox">
+                                                    <button name="" value="" class="btn_create" id="ns_create_btn" onclick="createNS()">Create</button>
+                                                    <button name="" value="" class="btn_clear">Clear</button>
+                                                </div>
+                                                
+                                            </div>
+                                            
+                                        </div>
+                                        <!-- //add -->
+                                
+                                    </div>
+                                </div>
+                                <!-- //Select NS (NameSpace) -->                        
+                            </div>                    
+                    
+                            <button name="" value="" class="btn_ok" data-dismiss="modal" onclick="nameSpaceSet('LNBPopup');">OK</button> 
+                    
+                        </div><!-- modal body-->
+                
+                    </div><!-- modal content -->
+            
+                </div><!-- popupBody-->
+        
+            </div>
+            <!-- //Cloud Connection / Select NS (NameSpace) input -->
+    
+    <script>
+    // server side에서 이미 가져옴. 
+    // function getNameSspaceList(){
+    // } 
+
+    // 목록에서 namespace 선택(확정한것은 아님. OK버튼을 눌러야 확정됨)
+    // function selectNameSpace(nameSpaceID){
+    //     console.log("select namespace : ",nameSpaceID)
+    //     $("#modalSelectedNameSpaceID").val(nameSpaceID);
+    // }
+
+
+    // namespace 클릭시 ok button 표시 설정
+    function namespaceModalOkbtn(){
+            $(".popboxNS .cloudlist .list").each(function () {
+            $(this).click(function () {
+                var $list = $(this);
+                var $ok = $(".btn_ok");
+                    $ok.fadeIn();
+                $list.addClass('selected');
+                $list.siblings().removeClass("selected");
+                $list.off("click").click(function(){
+                    if( $(this).hasClass("selected") ) {
+                        $ok.stop().fadeOut();
+                        $list.removeClass("selected");
+                    } else {
+                        $ok.stop().fadeIn();
+                        $list.addClass("selected");
+                        $list.siblings().removeClass("selected");
+                    }
+                });
+            });
+        });
+    }
+    
+    // TobBox에 있는 왼쪽 메뉴의 namespaceList에서 namespace 선택시
+    // function menuChangeNameSpace(nameSpaceID) {
+    //     setNameSpace(nameSpaceID);
+        // <input type="hidden" id="defaultNameSpaceID" value="{{.LoginInfo.DefaultNameSpaceID}}" />
+        //     <span id="defaultNameSpace">{{.LoginInfo.DefaultNameSpaceName}}</span>
+
+    //function changeNamespace(){
+        // var selectdNamespace = $("#modalSelectedNameSpaceID").val();
+        // console.log("select Namespace : ",selectdNamespace)
+        // if(selectdNamespace){
+        //     setNameSpace(selectdNamespace);              
+        // }else{
+        //     alert("Select Namespace!!")
+        //     return;
+        // }
+    // }
+
+    </script>    
+
+{{end}}

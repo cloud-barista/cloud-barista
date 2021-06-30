@@ -1,0 +1,105 @@
+{{define "McisStatus"}}
+	<div class="dashboard">
+						
+						<div class="d_box box_m box_m1 box_1m">
+							<div class="titbox">
+								<div class="tit"><strong>Mcis</strong></div>
+								<div class="state color_b"></div>
+							</div>
+							
+							<div class="box_cont">
+								<div class="lbox">
+									
+									<strong id="total_mcis" title="Total count of MCIS">{{ .TotalMcisCount }}</strong>
+									<!-- <strong class="txt_3n">999</strong> -->
+								</div>
+								<div class="rbox">
+									
+									<div class="numbox" id="mcis_numbox">
+										<div class="num bgbox_b"><span title="Running State">{{ .TotalMcisStatusCountMap.RUNNING }}</span></div>
+										<!-- <div class="num bgbox_b"><span class="txt_3n">999</span></div> -->
+										<div class="num bgbox_r"><span title="Stopped State">{{ .TotalMcisStatusCountMap.STOPPED }}</span></div>
+										<div class="num bgbox_g"><span title="Terminated State">{{ .TotalMcisStatusCountMap.TERMINATED }}</span></div>
+									</div>
+							
+									<div class="txt">Status of Infra Service</div>
+								</div>
+							</div>
+							
+								<!-- { { $mcisLength := len .McisList } }
+								<div class="lbox">
+									
+									<strong id="total_mcis">{ { $mcisLength } }</strong>
+									
+								</div>
+								{ {range $index, $item := .McisList} }
+									{ { $vmList := $item.Vms} }									
+									
+									{ {range $vmIndex, $vm := $item.Vms} }
+										
+									<span> { { $index } } :: { { $vmIndex } } ::: { { $vm.Status } }</span>
+									{ { end } }
+								{ { end } } -->
+						</div>
+						
+						<div class="d_box box_m box_m2 box_2m">
+							<div class="titbox">
+								<div class="tit"><strong class="stit">Server</strong></div>
+								<div class="state color_b"></div>
+							</div>
+							
+							<div class="box_cont">
+								<div class="lbox">									
+									<strong id="total_vm" title="Total count of VM">{{ .TotalVmCount }}</strong>
+								</div>
+								<div class="rbox">
+									<div class="numbox" id="vm_numbox">
+										<div class="num bgbox_b boxrd" >											
+											<span title="Running State">{{ .TotalVmStatusCountMap.running }}</span>
+										</div>
+										<div class="num bgbox_r boxrd" >
+											<span title="Stopped State">{{ .TotalVmStatusCountMap.stopped }}</span>
+										</div>
+										<div class="num bgbox_g boxrd" >
+											<span title="Terminated State">{{ .TotalVmStatusCountMap.terminated }}</span>
+										</div>										
+									</div>
+									<div class="txt">Status of Server</div>
+								</div>
+							</div>
+							
+						</div>
+						
+						<div class="d_box box_m box_m4 box_3m">
+							<div class="titbox">
+								<div class="tit"><strong>CP</strong> <span>/</span> connection</div>
+								<div class="state color_r"></div>
+							</div>
+							
+							<div class="box_cont">
+								<div class="lbox" id="cpConnectionTotal">
+									<strong title="Number of Providers" id="providerCount">{{ .TotalProviderCount }}</strong>
+									<span>/</span>
+									<span title="Number connection" id="connectionCount">{{ .TotalConnectionConfigCount }}</span>
+								</div>
+								<div class="cbox">
+									<div class="tcbox">
+										<div class="sc_box scrollbar-inner">
+											<ul id="cpConnectionDetail">
+												{{ range $key, $value := .ConnectionConfigCountMap }}
+												<li class="bg_etc bg_{{$key}}">
+													<a href="#!"><span class="conn_cnt">{{ $value }}<div class="conn_tit">{{ $key }}</div></span></a>
+													<!-- <a href="#!"><span>{{ $key }} ( {{ $value }} )</span></a> -->
+												</li>
+												{{ end }}
+											</ul>
+										</div>
+									</div>
+									<div class="txt">Status of Cloud Provider</div>
+								</div>
+							</div>
+							
+						</div>
+						
+					</div>
+{{end}}

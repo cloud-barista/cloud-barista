@@ -1,8 +1,8 @@
 apiVersion: v2
 name: cb-restapigw
 type: application
-version: 0.3.0
-appVersion: v0.3.0-espresso
+version: 0.4.0
+appVersion: 0.4.0
 description: cb-restapigw Helm chart
 
 dependencies:
@@ -11,8 +11,8 @@ dependencies:
     repository: "https://charts.bitnami.com/bitnami"
     condition: influxdb.enabled
   - name: grafana
-    version: ~5.0.26
-    repository: "https://kubernetes-charts.storage.googleapis.com"
+    version: ~6.6.4
+    repository: "https://grafana.github.io/helm-charts"
     condition: grafana.enabled
   - name: jaeger
     version: ~0.28.0

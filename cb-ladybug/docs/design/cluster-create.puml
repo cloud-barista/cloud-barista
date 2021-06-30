@@ -1,17 +1,16 @@
-@@startuml
+@startuml
 
-header **Cloud-Barista Ladybug** (Espresso version)
+header **Cloud-Barista Ladybug** (v0.4.0-cafemocha)
 title Create a cluster
 hide footbox
 
-actor		"User"			as user			#d1e0ff
 participant	"Webtool"		as webtool		#d1e0ff
 
 participant	"Ladybug"		as provider
 database	"Ladybug data"	as db
 
 participant	"Tumblebug"		as tumblebug	#d1e0ff
-participant	"Spider"		as spider		#d1e0ff
+participant	"Nodes"			as nodes		#eeeeee
 participant	"Control plane"	as mNodes		#eeeeee
 participant	"Worker nodes"	as wNodes		#eeeeee
 
@@ -19,165 +18,105 @@ skinparam sequence {
 	GroupColor DeepSkyBlue
 }
 
-activate user
-	user		->	webtool		: create a cluster
 
-	activate webtool
-		webtool		->	provider		: POST/ns/:ns/clusters/:cluster\n{name,\n controlPlaneNodeSpec,\n controlPlaneNodeCount,\n workerNodeSpec,\n workerNodeCount}
+activate webtool
+	webtool		->	provider		: POST/ns/:ns/clusters/:cluster\n{name, controlPlane:{}, workrer:{}, config:{}}
 
 
-			' -- 1.infra
-			activate provider
+		activate provider
 
-				'-- 1.1. vpc
-				provider	->	tumblebug			: GET\n/ns/:ns/resources/vNet/:vpc
-				activate tumblebug
-					tumblebug	-->	provider		: ack {vpc}
-				deactivate tumblebug
+			'-- 1.infra
+			'-- 1.1. namespace
+			provider	->	tumblebug	: GET /ns/:ns
+			tumblebug	-->	provider	: {namespace}
+			provider	->	webtool		: error (if namespace does not exist)
 
-				alt if not exist vpc
-					provider	->	tumblebug		: if exist\nPOST/ns/:ns/resources/vNet
-					activate tumblebug
-						tumblebug	->	spider		: POST /vpc
-						activate spider
-							tumblebug	<--	spider	: ack {vpc}
-						deactivate spider
-						tumblebug	-->	provider	: ack {vpc}
-					deactivate tumblebug
-				end
+			'-- 1.2. MCIS
+			provider	->	tumblebug	: GET /ns/:ns/mcis/:mcis
+			tumblebug	-->	provider	: {mcis}
+			provider	->	webtool		: [if mics does exist] error 
 
-				'-- 1.2. sg(fw)
-				provider	->	tumblebug			: GET\n/ns/:ns/resources/securityGroup/:sg
-				activate tumblebug
-					tumblebug	-->	provider		: ack {sg}
-				deactivate tumblebug
+			'-- 
+			provider	->	db			: insert {cluster}
 
-				alt if not exist security group 
-					provider	->	tumblebug		: POST\n/ns/:ns/resources/securityGroup
-					activate tumblebug
-						tumblebug	->	spider		: POST /securitygroup
-						activate spider
-							tumblebug	<--	spider	: ack {sg}
-						deactivate spider
-						tumblebug	-->	provider	: ack  {sg}
-					deactivate tumblebug
-				end
+			'-- 1.3. vpc
+			provider	->	tumblebug	: GET /ns/:ns/resources/vNet/:vpc
+			tumblebug	-->	provider	: {vpc}
+			provider	->	tumblebug	: [if it does not exist]\nPOST s/:ns/resources/vNet
+			tumblebug	-->	provider	: {vpc}
+			provider	->	webtool		: [if there is an error] error
 
-				'-- 1.3. ssh
-				provider	->	tumblebug		: GET\n/ns/:ns/resources/sshKey/:key
-				activate tumblebug
-					tumblebug	-->	provider	: ack {keypair}
-				deactivate tumblebug
+			'-- 1.4. sg(fw)
+			provider	->	tumblebug	: GET /ns/:ns/resources/securityGroup/:sg
+			tumblebug	-->	provider	: {sg}
+			provider	->	tumblebug	: [if it does not exist]\nPOST /ns/:ns/resources/securityGroup
+			tumblebug	-->	provider	: {sg}
+			provider	->	webtool		: [if there is an error] error
 
-				alt if not exist keypair
-					provider	->	tumblebug	: POST\n/ns/:ns/resources/sshKey
-					activate tumblebug
-						tumblebug	->	spider		: POST /keypair
-						activate spider
-							tumblebug	<--	spider	: ack {keypair}
-						deactivate spider
-						tumblebug	-->	provider	: ack  {keypair}
-					deactivate tumblebug
-				end
-				
-				'-- 1.4. image
-				provider	->	tumblebug			: GET\n/ns/:ns/resources/image/:image
-				activate tumblebug
-					tumblebug	-->	provider		: ack {image}
-				deactivate tumblebug
+			'-- 1.5. ssh
+			provider	->	tumblebug	: GET /ns/:ns/resources/sshKey/:key
+			tumblebug	-->	provider	: {keypair}
+			provider	->	tumblebug	: [if it does not exist] POST /ns/:ns/resources/sshKey
+			tumblebug	-->	provider	: {keypair}
+			provider	->	webtool		: [if there is an error] error
+			
+			'-- 1.6. image
+			provider	->	tumblebug	: GET /ns/:ns/resources/image/:image
+			tumblebug	-->	provider	: {image}
+			provider	->	tumblebug 	: [if it does not exist]\nPOST /ns/:ns/resources/image
+			tumblebug	-->	provider	: {image}
+			provider	->	webtool		: [if there is an error] error
 
-				alt if not exist image
-					provider	->	tumblebug 		: POST\n/ns/:ns/resources/image
-					activate tumblebug
-						tumblebug	->	spider		: POST /vmimage
-						activate spider
-							tumblebug	<--	spider	: ack {vmimage}
-						deactivate spider
-						tumblebug	-->	provider	: ack  {image}
-					deactivate tumblebug
-				end
+			'-- 1.7. spec
+			provider	->	tumblebug	: GET /ns/:ns/resources/spec/:spec
+			tumblebug	-->	provider	: {image}
+			provider	->	tumblebug 	: [if it does not exist]\nPOST /ns/:ns/resources/spec
+			tumblebug	-->	provider	: {image}
+			provider	->	webtool		: [if there is an error] error
 
-				'-- 1.5. spec
-				provider	->	tumblebug			: GET\n/ns/:ns/resources/spec/:spec
-				activate tumblebug
-					tumblebug	-->	provider		: ack {image}
-				deactivate tumblebug
+			'-- 1.8. mcis (vm)
+			provider	->	provider	: append VMs (while node count)
+			provider	->	tumblebug	: POST /ns/:ns/mcis/:mcis
+			tumblebug	-->	provider	: {mcis}
+			provider	->	webtool		: [if there is an error] error
 
-				alt if not exist spec
-					provider	->	tumblebug 		: POST\n/ns/:ns/resources/spec
-					activate tumblebug
-						tumblebug	->	spider		: POST /spec
-						activate spider
-							tumblebug	<--	spider	: ack {spec}
-						deactivate spider
-						tumblebug	-->	provider	: ack  {spec}
-					deactivate tumblebug
-				end
+			'--
+			provider	->	db						: update {cluster}
 
-				'-- 1.6. mcis
-				loop Create MCIS (VMs)
-					provider	->	tumblebug		: POST\n/mcis
+			' -- 2.1. boostrap
+			loop nodes
+				provider	<->o	nodes		: test ssh connection
+				provider	<->o	nodes		: copy scripts
+				provider	<->o	nodes		: systemd
+				provider	<->o	nodes		: bootstrap
+				provider	->		webtool		: [if there is an error] error
+			end
 
-					activate tumblebug
-						tumblebug	->o	spider		: POST/vm
-						activate spider
-							tumblebug	<--	spider	: ack {vm}
-						deactivate spider
-						tumblebug	-->	provider 	: ack {vm}
-					deactivate tumblebug
-				end
+			' -- 2.2. 
+			alt leader of control-plane  nodes
+				provider	<->o	mNodes		: haproxy
+				provider	<->o	mNodes		: init
+				provider	<->o	mNodes		: network CNI
+				provider	->	webtool			: [if there is an error] error
+			end
 
-			deactivate provider
+			' -- 2.3. 
+			alt not leader of control-plane nodes
+				provider	<->o	mNodes		: join (not leader of control-plane nodes)
+				provider	->	webtool			: [if there is an error] error
+			end
 
-			provider		->o	db					: insert {cluster}
+			' -- 2.3. 
+			alt woker nodes
+				provider	<->o	wNodes		: join
+				provider	->	webtool			: [if there is an error] error
+			end
 
-			activate provider
-				' -- 2.boostrap
-				loop Bootstrap VMs
-					provider	->	tumblebug		: bootstrap.sh (ssh)
-					activate tumblebug
-						tumblebug	->	wNodes		: ssh
-						activate wNodes
-							tumblebug	<--	wNodes	: ouput (console)
-						deactivate wNodes
-						provider	<--	tumblebug	: ouput (console)
-					deactivate tumblebug
-					provider	->	provider		: wait
-				end
-	
-				' -- 3.provisioning
-				loop Provisioning Nodes
-					provider	->	tumblebug		: init
-					activate tumblebug
+		deactivate provider
 
-						tumblebug	->	mNodes		: ssh
-						activate mNodes
-							tumblebug	<--	mNodes	: ouput (console)
-						deactivate mNodes
-						provider	<--	tumblebug	: ouput (console)
+		provider	->	db						: complete {cluster}
+		provider	-->	webtool					: {cluster}
 
-					deactivate tumblebug
+deactivate webtool
 
-					provider	->	provider		: resolve {join command, kubeconfig}
-					provider	->	tumblebug		: join {join command}
-
-					activate tumblebug
-
-						tumblebug	->	wNodes		: ssh
-						activate wNodes
-							tumblebug	<--	wNodes	: ouput (console)
-						deactivate wNodes
-						provider	<--	tumblebug	: ouput (console)
-					deactivate tumblebug
-				end
-			deactivate provider
-
-			provider	->o	db						: update {cluster}
-			provider	-->	webtool					: ack {cluster}
-
-		webtool	-->	user	: result
-	deactivate webtool
-
-deactivate user
-
-@@enduml
+@enduml

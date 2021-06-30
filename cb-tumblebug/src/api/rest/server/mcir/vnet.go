@@ -12,7 +12,7 @@ import (
 // RestPostVNet godoc
 // @Summary Create VNet
 // @Description Create VNet
-// @Tags VNet
+// @Tags [MCIR] Network management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -30,8 +30,8 @@ func RestPostVNet(c echo.Context) error {
 		return err
 	}
 
-	fmt.Println("[POST VNet")
-	fmt.Println("[Creating VNet]")
+	fmt.Println("[POST VNet]")
+	//fmt.Println("[Creating VNet]")
 	//content, responseCode, body, err := CreateVNet(nsId, u)
 	content, err := mcir.CreateVNet(nsId, u)
 	if err != nil {
@@ -51,7 +51,7 @@ func RestPostVNet(c echo.Context) error {
 // RestPutVNet godoc
 // @Summary Update VNet
 // @Description Update VNet
-// @Tags VNet
+// @Tags [MCIR] Network management
 // @Accept  json
 // @Produce  json
 // @Param vNetInfo body mcir.TbVNetInfo true "Details for an VNet object"
@@ -69,7 +69,7 @@ func RestPutVNet(c echo.Context) error {
 // RestGetVNet godoc
 // @Summary Get VNet
 // @Description Get VNet
-// @Tags VNet
+// @Tags [MCIR] Network management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -79,7 +79,7 @@ func RestPutVNet(c echo.Context) error {
 // @Failure 500 {object} common.SimpleMsg
 // @Router /ns/{nsId}/resources/vNet/{vNetId} [get]
 func RestGetVNet(c echo.Context) error {
-	// Obsolete function. This is just for Swagger.
+	// This is a dummy function for Swagger.
 	return nil
 }
 
@@ -89,25 +89,26 @@ type RestGetAllVNetResponse struct {
 }
 
 // RestGetAllVNet godoc
-// @Summary List all VNets
-// @Description List all VNets
-// @Tags VNet
+// @Summary List all VNets or VNets' ID
+// @Description List all VNets or VNets' ID
+// @Tags [MCIR] Network management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
-// @Success 200 {object} RestGetAllVNetResponse
+// @Param option query string false "Option" Enums(id)
+// @Success 200 {object} JSONResult{[DEFAULT]=RestGetAllVNetResponse,[ID]=common.IdList} "Different return structures by the given option param"
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
 // @Router /ns/{nsId}/resources/vNet [get]
 func RestGetAllVNet(c echo.Context) error {
-	// Obsolete function. This is just for Swagger.
+	// This is a dummy function for Swagger.
 	return nil
 }
 
 // RestDelVNet godoc
 // @Summary Delete VNet
 // @Description Delete VNet
-// @Tags VNet
+// @Tags [MCIR] Network management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -116,14 +117,14 @@ func RestGetAllVNet(c echo.Context) error {
 // @Failure 404 {object} common.SimpleMsg
 // @Router /ns/{nsId}/resources/vNet/{vNetId} [delete]
 func RestDelVNet(c echo.Context) error {
-	// Obsolete function. This is just for Swagger.
+	// This is a dummy function for Swagger.
 	return nil
 }
 
 // RestDelAllVNet godoc
 // @Summary Delete all VNets
 // @Description Delete all VNets
-// @Tags VNet
+// @Tags [MCIR] Network management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -131,6 +132,6 @@ func RestDelVNet(c echo.Context) error {
 // @Failure 404 {object} common.SimpleMsg
 // @Router /ns/{nsId}/resources/vNet [delete]
 func RestDelAllVNet(c echo.Context) error {
-	// Obsolete function. This is just for Swagger.
+	// This is a dummy function for Swagger.
 	return nil
 }

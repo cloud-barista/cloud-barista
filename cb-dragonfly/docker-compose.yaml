@@ -9,8 +9,9 @@ services:
     image: cloudbaristaorg/cb-dragonfly:espresso-v0.1-kafka
     container_name: cb-dragonfly
     volumes:
-      - ./conf:/go/src/github.com/cloud-barista/cb-dragonfly/conf
-      - ./log:/go/src/github.com/cloud-barista/cb-dragonfly/log
+      - ./conf/:/go/src/github.com/cloud-barista/cb-dragonfly/conf/
+      - ./meta_db/:/go/src/github.com/cloud-barista/cb-dragonfly/meta_db/
+      - ./log/:/go/src/github.com/cloud-barista/cb-dragonfly/log/
     ports:
       - 9090:9090
       - 9999:9999

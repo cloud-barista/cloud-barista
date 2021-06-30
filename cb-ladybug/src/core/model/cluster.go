@@ -24,20 +24,15 @@ type Cluster struct {
 	MCIS          string `json:"mcis"`
 	Namespace     string `json:"namespace"`
 	ClusterConfig string `json:"clusterConfig"`
+	CpLeader      string `json:"cpLeader"`
+	NetworkCni    string `json:"networkCni"`
 	Nodes         []Node `json:"nodes"`
 }
 
 type ClusterList struct {
-	Kind  string    `json:"kind"`
-	Items []Cluster `json:"items"`
-}
-
-type ClusterReq struct {
-	Name                  string `json:"name"`
-	ControlPlaneNodeSpec  string `json:"controlPlaneNodeSpec"`
-	ControlPlaneNodeCount int    `json:"controlPlaneNodeCount"`
-	WorkerNodeSpec        string `json:"workerNodeSpec"`
-	WorkerNodeCount       int    `json:"workerNodeCount"`
+	ListModel
+	namespace string
+	Items     []Cluster `json:"items"`
 }
 
 func NewCluster(namespace string, name string) *Cluster {
@@ -48,65 +43,66 @@ func NewCluster(namespace string, name string) *Cluster {
 	}
 }
 
-func NewClusterList() *ClusterList {
+func NewClusterList(namespace string) *ClusterList {
 	return &ClusterList{
-		Kind:  KIND_CLUSTER_LIST,
-		Items: []Cluster{},
+		ListModel: ListModel{Kind: KIND_CLUSTER_LIST},
+		namespace: namespace,
+		Items:     []Cluster{},
 	}
 }
 
-func (c *Cluster) Insert(cluster *Cluster) {
-	cluster.Status = STATUS_CREATED
-	c.putStore(cluster)
+func (self *Cluster) Insert() error {
+	self.Status = STATUS_CREATED
+	return self.putStore()
 }
 
-func (c *Cluster) Update(cluster *Cluster) {
-	cluster.Status = STATUS_PROVISIONING
-	c.putStore(cluster)
+func (self *Cluster) Update() error {
+	self.Status = STATUS_PROVISIONING
+	return self.putStore()
 }
 
-func (c *Cluster) Complete(cluster *Cluster) {
-	cluster.Status = STATUS_COMPLETED
-	c.putStore(cluster)
+func (self *Cluster) Complete() error {
+	self.Status = STATUS_COMPLETED
+	return self.putStore()
 }
 
-func (c *Cluster) Fail(cluster *Cluster) {
-	cluster.Status = STATUS_FAILED
-	c.putStore(cluster)
+func (self *Cluster) Fail() error {
+	self.Status = STATUS_FAILED
+	return self.putStore()
 }
 
-func (c *Cluster) putStore(cluster *Cluster) {
-	key := lang.GetStoreClusterKey(cluster.Namespace, cluster.Name)
-	value, _ := json.Marshal(cluster)
+func (self *Cluster) putStore() error {
+	key := lang.GetStoreClusterKey(self.Namespace, self.Name)
+	value, _ := json.Marshal(self)
 	err := common.CBStore.Put(key, string(value))
 	if err != nil {
-		common.CBLog.Error(err)
+		return err
 	}
+	return nil
 }
 
-func (c *Cluster) Select(cluster *Cluster) (*Cluster, error) {
-	key := lang.GetStoreClusterKey(cluster.Namespace, cluster.Name)
+func (self *Cluster) Select() error {
+	key := lang.GetStoreClusterKey(self.Namespace, self.Name)
 	keyValue, err := common.CBStore.Get(key)
-
+	if err != nil {
+		return err
+	}
 	if keyValue == nil {
-		return nil, errors.New(fmt.Sprintf("%s not found", key))
+		return errors.New(fmt.Sprintf("%s not found", key))
 	}
-	if err != nil {
-		return nil, err
-	}
-	json.Unmarshal([]byte(keyValue.Value), &cluster)
+	json.Unmarshal([]byte(keyValue.Value), &self)
 
-	cluster, err = getClustersNodes(cluster)
+	err = getClusterNodes(self)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return cluster, nil
+	return nil
 }
 
-func (c *Cluster) Delete(cluster *Cluster) error {
+func (self *Cluster) Delete() error {
 	// delete node
-	keyValues, err := common.CBStore.GetList(lang.GetStoreNodeKey(cluster.Namespace, cluster.Name, ""), true)
+	keyValues, err := common.CBStore.GetList(lang.GetStoreNodeKey(self.Namespace, self.Name, ""), true)
 	if err != nil {
 		return err
 	}
@@ -118,7 +114,7 @@ func (c *Cluster) Delete(cluster *Cluster) error {
 	}
 
 	// delete cluster
-	key := lang.GetStoreClusterKey(cluster.Namespace, cluster.Name)
+	key := lang.GetStoreClusterKey(self.Namespace, self.Name)
 	err = common.CBStore.Delete(key)
 	if err != nil {
 		return err
@@ -127,31 +123,32 @@ func (c *Cluster) Delete(cluster *Cluster) error {
 	return nil
 }
 
-func (c *ClusterList) SelectList(namespace string, clusters *ClusterList) (*ClusterList, error) {
-	keyValues, err := common.CBStore.GetList(lang.GetStoreClusterKey(namespace, ""), true)
+func (self *ClusterList) SelectList() error {
+	keyValues, err := common.CBStore.GetList(lang.GetStoreClusterKey(self.namespace, ""), true)
 	if err != nil {
-		return nil, err
+		return err
 	}
+	self.Items = []Cluster{}
 	for _, keyValue := range keyValues {
 		if !strings.Contains(keyValue.Key, "/nodes") {
 			cluster := &Cluster{}
 			json.Unmarshal([]byte(keyValue.Value), &cluster)
 
-			cluster, err = getClustersNodes(cluster)
+			err = getClusterNodes(cluster)
 			if err != nil {
-				return nil, err
+				return err
 			}
-			clusters.Items = append(clusters.Items, *cluster)
+			self.Items = append(self.Items, *cluster)
 		}
 	}
 
-	return clusters, nil
+	return nil
 }
 
-func getClustersNodes(cluster *Cluster) (*Cluster, error) {
+func getClusterNodes(cluster *Cluster) error {
 	nodeKeyValues, err := common.CBStore.GetList(lang.GetStoreNodeKey(cluster.Namespace, cluster.Name, ""), true)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	for _, nodeKeyValue := range nodeKeyValues {
 		node := &Node{}
@@ -159,5 +156,5 @@ func getClustersNodes(cluster *Cluster) (*Cluster, error) {
 		cluster.Nodes = append(cluster.Nodes, *node)
 	}
 
-	return cluster, nil
+	return nil
 }

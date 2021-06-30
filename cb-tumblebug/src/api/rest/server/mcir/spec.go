@@ -12,7 +12,7 @@ import (
 // RestPostSpec godoc
 // @Summary Register spec
 // @Description Register spec
-// @Tags Spec
+// @Tags [MCIR] Spec management
 // @Accept  json
 // @Produce  json
 // @Param registeringMethod query string true "registerWithInfo or else"
@@ -28,7 +28,7 @@ func RestPostSpec(c echo.Context) error {
 	nsId := c.Param("nsId")
 
 	action := c.QueryParam("action")
-	fmt.Println("[POST Spec requested action: " + action)
+	fmt.Println("[POST Spec] (action: " + action + ")")
 
 	if action == "registerWithInfo" { // `RegisterSpecWithInfo` will be deprecated in Cappuccino.
 		fmt.Println("[Registering Spec with info]")
@@ -70,17 +70,20 @@ func RestPostSpec(c echo.Context) error {
 // RestPutSpec godoc
 // @Summary Update spec
 // @Description Update spec
-// @Tags Spec
+// @Tags [MCIR] Spec management
 // @Accept  json
 // @Produce  json
 // @Param specInfo body mcir.TbSpecInfo true "Details for an spec object"
+// @Param nsId path string true "Namespace ID"
+// @Param specId path string true "Spec ID"
 // @Success 200 {object} mcir.TbSpecInfo
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
 // @Router /ns/{nsId}/resources/spec/{specId} [put]
 func RestPutSpec(c echo.Context) error {
 	nsId := c.Param("nsId")
-	//specId := c.Param("specId")
+	specId := c.Param("specId")
+	fmt.Printf("RestPutSpec called; nsId: %s, specId: %s \n", nsId, specId) // for debug
 
 	u := &mcir.TbSpecInfo{}
 	if err := c.Bind(u); err != nil {
@@ -110,30 +113,28 @@ func RestPutSpec(c echo.Context) error {
 // Request structure for RestLookupSpec
 type RestLookupSpecRequest struct {
 	ConnectionName string `json:"connectionName"`
+	CspSpecName    string `json:"cspSpecName"`
 }
 
 // RestLookupSpec godoc
 // @Summary Lookup spec
 // @Description Lookup spec
-// @Tags Spec
+// @Tags [Admin] Cloud environment management
 // @Accept  json
 // @Produce  json
-// @Param connectionName body RestLookupSpecRequest true "Specify connectionName"
-// @Param specName path string true "Spec name"
+// @Param lookupSpecReq body RestLookupSpecRequest true "Specify connectionName & cspSpecName"
 // @Success 200 {object} mcir.SpiderSpecInfo
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
-// @Router /lookupSpec/{specName} [get]
+// @Router /lookupSpec [get]
 func RestLookupSpec(c echo.Context) error {
-
 	u := &RestLookupSpecRequest{}
 	if err := c.Bind(u); err != nil {
 		return err
 	}
 
-	specName := c.Param("specName")
-	fmt.Println("[Lookup spec]" + specName)
-	content, err := mcir.LookupSpec(u.ConnectionName, specName)
+	fmt.Println("[Lookup spec]: " + u.CspSpecName)
+	content, err := mcir.LookupSpec(u.ConnectionName, u.CspSpecName)
 	if err != nil {
 		common.CBLog.Error(err)
 		return c.JSONBlob(http.StatusNotFound, []byte(err.Error()))
@@ -146,14 +147,14 @@ func RestLookupSpec(c echo.Context) error {
 // RestLookupSpecList godoc
 // @Summary Lookup spec list
 // @Description Lookup spec list
-// @Tags Spec
+// @Tags [Admin] Cloud environment management
 // @Accept  json
 // @Produce  json
-// @Param connectionName body RestLookupSpecRequest true "Specify connectionName"
+// @Param lookupSpecsReq body common.TbConnectionName true "Specify connectionName"
 // @Success 200 {object} mcir.SpiderSpecList
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
-// @Router /lookupSpec [get]
+// @Router /lookupSpecs [get]
 func RestLookupSpecList(c echo.Context) error {
 
 	//type JsonTemplate struct {
@@ -165,7 +166,7 @@ func RestLookupSpecList(c echo.Context) error {
 		return err
 	}
 
-	fmt.Println("[Get Region List]")
+	fmt.Println("[Lookup specs]")
 	content, err := mcir.LookupSpecList(u.ConnectionName)
 	if err != nil {
 		common.CBLog.Error(err)
@@ -179,7 +180,7 @@ func RestLookupSpecList(c echo.Context) error {
 // RestFetchSpecs godoc
 // @Summary Fetch specs
 // @Description Fetch specs
-// @Tags Spec
+// @Tags [MCIR] Spec management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -191,12 +192,31 @@ func RestFetchSpecs(c echo.Context) error {
 
 	nsId := c.Param("nsId")
 
-	connConfigCount, specCount, err := mcir.FetchSpecs(nsId)
-	if err != nil {
-		common.CBLog.Error(err)
-		mapA := map[string]string{
-			"message": err.Error()}
-		return c.JSON(http.StatusInternalServerError, &mapA)
+	u := &RestLookupSpecRequest{}
+	if err := c.Bind(u); err != nil {
+		return err
+	}
+
+	var connConfigCount, specCount uint
+	var err error
+
+	if u.ConnectionName == "" {
+		connConfigCount, specCount, err = mcir.FetchSpecsForAllConnConfigs(nsId)
+		if err != nil {
+			common.CBLog.Error(err)
+			mapA := map[string]string{
+				"message": err.Error()}
+			return c.JSON(http.StatusInternalServerError, &mapA)
+		}
+	} else {
+		connConfigCount = 1
+		specCount, err = mcir.FetchSpecsForConnConfig(u.ConnectionName, nsId)
+		if err != nil {
+			common.CBLog.Error(err)
+			mapA := map[string]string{
+				"message": err.Error()}
+			return c.JSON(http.StatusInternalServerError, &mapA)
+		}
 	}
 
 	mapA := map[string]string{
@@ -204,7 +224,7 @@ func RestFetchSpecs(c echo.Context) error {
 	return c.JSON(http.StatusCreated, &mapA) //content)
 }
 
-// Response structure for RestFilterSpecs
+// RestFilterSpecsResponse is Response structure for RestFilterSpecs
 type RestFilterSpecsResponse struct {
 	Spec []mcir.TbSpecInfo `json:"spec"`
 }
@@ -212,7 +232,7 @@ type RestFilterSpecsResponse struct {
 // RestFilterSpecs godoc
 // @Summary Filter specs
 // @Description Filter specs
-// @Tags Spec
+// @Tags [MCIR] Spec management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -246,7 +266,7 @@ func RestFilterSpecs(c echo.Context) error {
 // RestFilterSpecsByRange godoc
 // @Summary Filter specs by range
 // @Description Filter specs by range
-// @Tags Spec
+// @Tags [MCIR] Spec management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -308,7 +328,7 @@ func RestTestSortSpecs(c echo.Context) error {
 // RestGetSpec godoc
 // @Summary Get spec
 // @Description Get spec
-// @Tags Spec
+// @Tags [MCIR] Spec management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -318,7 +338,7 @@ func RestTestSortSpecs(c echo.Context) error {
 // @Failure 500 {object} common.SimpleMsg
 // @Router /ns/{nsId}/resources/spec/{specId} [get]
 func RestGetSpec(c echo.Context) error {
-	// Obsolete function. This is just for Swagger.
+	// This is a dummy function for Swagger.
 	return nil
 }
 
@@ -328,25 +348,26 @@ type RestGetAllSpecResponse struct {
 }
 
 // RestGetAllSpec godoc
-// @Summary List all specs
-// @Description List all specs
-// @Tags Spec
+// @Summary List all specs or specs' ID
+// @Description List all specs or specs' ID
+// @Tags [MCIR] Spec management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
-// @Success 200 {object} RestGetAllSpecResponse
+// @Param option query string false "Option" Enums(id)
+// @Success 200 {object} JSONResult{[DEFAULT]=RestGetAllSpecResponse,[ID]=common.IdList} "Different return structures by the given option param"
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
 // @Router /ns/{nsId}/resources/spec [get]
 func RestGetAllSpec(c echo.Context) error {
-	// Obsolete function. This is just for Swagger.
+	// This is a dummy function for Swagger.
 	return nil
 }
 
 // RestDelSpec godoc
 // @Summary Delete spec
 // @Description Delete spec
-// @Tags Spec
+// @Tags [MCIR] Spec management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -355,14 +376,14 @@ func RestGetAllSpec(c echo.Context) error {
 // @Failure 404 {object} common.SimpleMsg
 // @Router /ns/{nsId}/resources/spec/{specId} [delete]
 func RestDelSpec(c echo.Context) error {
-	// Obsolete function. This is just for Swagger.
+	// This is a dummy function for Swagger.
 	return nil
 }
 
 // RestDelAllSpec godoc
 // @Summary Delete all specs
 // @Description Delete all specs
-// @Tags Spec
+// @Tags [MCIR] Spec management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -370,6 +391,6 @@ func RestDelSpec(c echo.Context) error {
 // @Failure 404 {object} common.SimpleMsg
 // @Router /ns/{nsId}/resources/spec [delete]
 func RestDelAllSpec(c echo.Context) error {
-	// Obsolete function. This is just for Swagger.
+	// This is a dummy function for Swagger.
 	return nil
 }

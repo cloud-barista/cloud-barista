@@ -1,0 +1,243 @@
+{{define "VmConfigureExpert"}}
+<div class="servers_config expert_servers_config" id="expertServerConfig">
+	<!-- 변경사항 발생 시 expert_form 에 Data Set. done 버튼 클릭 시 array에 push.  deploy button에서 serialize 해서 사용
+		div가 hidden일 때 해당 id를 읽을 수 있으면 form을 전체로 하고
+		읽을 수 없ㄷ으면 input type=hidden으로 변경 data를 set 해서 사용
+
+		화면에 나타나는 Cloud Connection은 filter용이므로 connection정보로 사용할 수 없음.
+		선택하는 resource에서 connection을 추출하여 set
+
+		id naming 
+		s_ : simple
+		e_ : expert
+		i_ : import
+
+		es_ : expert의 조건 조회용 id
+	-->
+	<form id="expert_form">
+		<input type="hidden" name="name" id="e_name" />
+		<input type="hidden" name="description" id="e_description" />		
+		<input type="hidden" name="tempConnectionName" id="t_connectionName" />
+		<input type="hidden" name="connectionName" id="e_connectionName" />
+		<input type="hidden" name="vNetId" id="e_vNetId" />								
+		<input type="hidden" name="subnetId" id="e_subnetId" />								
+		<input type="hidden" name="securityGroupIds[]" id="e_securityGroupIds" />								
+		<input type="hidden" name="sshKeyId" id="e_sshKeyId" />								
+		<input type="hidden" name="imageId" id="e_imageId" />
+		<input type="hidden" name="specId" id="e_specId" />
+		<input type="hidden" name="label" id="e_label" />								
+		<input type="hidden" name="vm_userAccount"  id="e_vmUserAccount" />								
+		<input type="hidden" name="vm_password" id="e_vmUserPassword" />
+		<input type="hidden" name="vmGroupSize" id="e_vmGroupSize" />
+		<input type="hidden" name="vmAddCount" id="e_vm_add_cnt" />
+									
+	</form>
+
+
+	<div class="top_box">
+		<div class="titbox_sc">
+			<div class="tit">New Server #1 Config</div>
+			<div class="config_location">
+				<div class="f_txt"><strong>Server</strong></div> 
+				<div class="on"><span>OS/HW</span></div> 
+				<div><span>Network</span></div> 
+				<div><span>Security</span></div> 
+				<div><span>Others</span></div>
+			</div>
+		</div>
+	
+		<div class="ip_box">
+			<div class="tit">
+				<strong>Server Configuration</strong> 
+				<a href="javascript:void(0);" class="btn_clear">Clear</a>
+				&nbsp;|&nbsp;<a href="javascript:void(0);" onclick="displayVmImportServerFormByImport();">Vm Import</a>				
+			</div>
+			
+			<div class="svc_ipbox">
+				<div class="ipbox ipbox1">
+					<ul>
+						<li>
+							<label><span class="ch">*</span>Server Name</label>
+							<input type="text" name="" value="" placeholder="Input Name" class="pline ip_1" title="" id="es_name" onkeyup="copyValue(this.value, 'e_name') "/>
+						</li>
+						<li>
+							<label>Description</label>
+							<textarea  cols="" rows="" placeholder="Input Description" class="pline ta_1 ta_2" title="" id="es_description" onkeyup="copyValue(this.value, 'e_description') "/></textarea>
+						</li>
+					</ul>
+				</div>
+				<div class="ipbox ipbox2">
+					<ul>
+						<li>
+							<label>Cloud Provider / Region</label>
+							<select class="selectbox white pline sel_1" id="es_regProvider" onchange="getRegionListFilterForSelectbox(this.value, 'es_regRegion', 'es_regConnectionName');">
+								<option value="">Selected CP</option>
+								{{ range $cloudItem := .CloudOSList}}	
+								<option value="{{ $cloudItem }}">{{ $cloudItem }}</option>
+								{{ end }}
+							</select>
+							<select class="selectbox white pline sel_1" id="es_regRegion" onchange="getConnectionListFilterForSelectbox(this.value, 'es_regProvider', 'es_regConnectionName');">
+								<option value="">Selected Region</option>
+								{{ range $regionItem := .RegionList}}	
+								<option value="{{ $regionItem.RegionName }}">[{{ $regionItem.ProviderName }}] {{ $regionItem.RegionName }}</option>
+								{{ end }}
+						
+							</select>
+						</li>
+						<li>
+							<label>Cloud Connection</label>
+							<span class="sbox">
+								<select class="selectbox white pline sel_2" id="es_regConnectionName" onchange="setConnectionValue(this.value)">
+									<option value="">Selected Connection</option>
+									{{ range $connectionItem := .CloudConnectionConfigInfoList}}	
+									<option value="{{ $connectionItem.ConfigName }}">{{ $connectionItem.ConfigName }} [{{ $connectionItem.ProviderName }}] {{ $connectionItem.RegionName }}</option>
+									{{ end }}
+								</select>
+								<a href="javascript:void(0);" class="btn_assist">Assist</a>
+							</span>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+					
+	</div>
+
+	<!-- Deployment Target popup -->
+	<div class="modal fade create_layer" id="Deployment_box" tabindex="-1" role="dialog" aria-hidden="true">
+		
+		<div class="modal-dialog modal-dialog-centered" role="document">
+			<div class="modal-content">
+				
+				<div class="modal-body">
+					<div class="pop-body">
+						
+						<div class="title_box">
+							<div class="title">Deployment Target</div>
+						</div>
+						
+						<div class="pop-cont">
+							
+							<div class="toptxt">
+								<label>Cloud Provider / Region</label>
+								
+								<select class="selectbox sel_1" id="popProvider" onchange="popProviderChange('popProvider', 'popRegion', 'popCloudConnection');">
+									<option value="">Selected CP</option>
+									{{ range $cloudItem := .CloudOSList}}	
+									<option value="{{ $cloudItem }}">{{ $cloudItem }}</option>
+									{{ end }}
+								</select>
+								<select class="selectbox sel_1" id="popRegion" onchange="getConnectionListFilterForTable('popProvider','popRegion', 'popCloudConnection');">
+									<option value="">Selected Region</option>
+									{{ range $regionItem := .RegionList}}	
+									<option value="{{ $regionItem.RegionName }}">[{{ $regionItem.ProviderName }}] {{ $regionItem.RegionName }}</option>
+									{{ end }}
+								</select>
+							</div>
+							
+							<div class="imgbox">
+								<img src="/assets/img/contents/img_thumb_dt.jpg" alt="img"><!-- TODO : 이 이미지는 뭐지? -->
+							</div>
+							
+							<!-- table scrollbar -->
+							<div class="dtbox scrollbar-inner">
+								<div class="dataTable dt_overlay">
+									<table cellpadding="0" cellspacing="0" border="1" summary="" id="popCloudConnection">
+										<colgroup><col width="35%"><col width="25%"><col width=""></colgroup>
+										<thead>
+											<tr>
+												<th>Cloud Provider</th>
+												<th>Region</th>
+												<th>Cloud Connections</th>
+											</tr>
+										</thead>
+										<tbody>
+											{{ range $connectionConfigItem := .CloudConnectionConfigInfoList}}	
+											<tr onclick="setConnectionByAssist('{{ $connectionConfigItem.ProviderName }}', '{{ $connectionConfigItem.RegionName }}', '{{ $connectionConfigItem.ConfigName }}');">
+												<td class="btn_mtd" data-th="Cloud Provide">{{ $connectionConfigItem.ProviderName }}<span class="ov off"></span></td>
+												<td class="overlay hidden" data-th="Region">{{ $connectionConfigItem.RegionName }}</td>
+												<td class="overlay hidden" data-th="Cloud Connections">{{ $connectionConfigItem.ConfigName }}</td>
+											</tr>
+											{{ end }}
+											
+										</tbody>
+									</table>
+									<input type="hidden" id="assistConnectionConfigName">
+								</div>
+							</div>	
+							<!-- //table scrollbar -->
+							
+						</div>
+						
+					</div>
+					
+					<div class="btnbox">
+						<div class="btn_right">
+							<button name="" value="" class="btn_apply btn_co btn_cr_g" onclick="applyConnectionConfigName()"><span>Apply</span></button> 
+							<button name="" value="" class="btn_cancel btn_co btn_cr_b" data-dismiss="modal">cancel</button> 
+						</div>
+					</div>
+				</div>
+				
+			</div>
+			
+		</div>
+									
+	</div>
+	<!-- //Deployment Target popup -->
+		
+
+	<div class="create_tab">
+		<ul class="nav">
+			<li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#OS_HW">OS/HW</a></li>
+			<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#Network">Network</a></li>
+			<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#Security">Security</a></li>
+			<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#Other">Other</a></li>
+		</ul>
+		
+		<div class="tab-content">
+			{{template "VmOsHardware" .}}														
+			{{template "VmNetwork" .}}
+			{{template "VmSecurity" .}}
+			{{template "VmOther" .}}
+		</div>
+		
+		<!-- button -->
+		<div class="btnbox spec_select_box">
+			<div class="svc_ipbox svc_ipbox_2">
+				
+				<div class="amount_add s_slider_box">
+					<div class="add_box">
+						<div class="a_box">
+							<strong class="t font-NotoKR">추가 수량</strong>
+							<div class="a_slider">
+								<div class="slider_ip">
+									<button type="button" class="btn_s btn_s_minus">-</button>
+									<div>
+										<input type="text" name="" value="" placeholder="" class="slider_bar" title="" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="0" />
+									</div>
+									<button type="button" class="btn_s btn_s_plus">+</button>
+								</div>
+								<input type="text" name="es_vm_add_cnt" value="1" class="components_input txt_ipbox" title="" readonly id="es_vm_add_cnt"/>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+			</div>
+
+			<div class="btnbox spec_select_box">
+				<div class="btn_right">
+					
+					<button type="button" name="" value="" class="btn_done btn_co btn_cr_g" onclick="expertDone_btn();"><span>DONE</span></button> 
+					<button type="button" name="" value="" class="btn_clear btn_co btn_cr_b">CLEAR</button> 
+					
+				</div>
+			</div>
+		</div>
+		<!-- //button -->
+	</div>
+
+</div>
+<script src="/assets/js/operation/manages/mcismng/vmconfigureexpert.js"></script>  
+{{end}}

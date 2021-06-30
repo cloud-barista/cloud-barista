@@ -7,6 +7,14 @@ image:
   repository: cloudbaristaorg/cb-spider
   pullPolicy: IfNotPresent
 
+env:
+- name: LOCALHOST
+  value: "OFF"
+- name: PLUGIN_SW
+  value: "OFF"
+- name: MEERKAT
+  value: "OFF"
+
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: "cb-spider"
@@ -48,11 +56,11 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
-persistence:
-  accessMode: 'ReadWriteMany'
-  enabled: false
-  size: 2Gi
-  # storageClass: '-'
+# persistence:
+#   accessMode: 'ReadWriteMany'
+#   enabled: false
+#   size: 2Gi
+#   # storageClass: '-'
 
 nodeSelector: {}
 

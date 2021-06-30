@@ -1,8 +1,8 @@
 apiVersion: v2
 name: cb-dragonfly
 type: application
-version: 0.3.0
-appVersion: v0.3.0-espresso
+version: 0.4.0
+appVersion: 0.4.0
 description: CB-Dragonfly Helm chart
 dependencies:
   - name: influxdb

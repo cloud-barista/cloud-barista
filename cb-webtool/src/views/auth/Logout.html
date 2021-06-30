@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ko">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css" />
+        <script  src="http://code.jquery.com/jquery-latest.min.js"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <!-- https://fontawesome.com/cheatsheet -->
+
+        <link rel="stylesheet" href="../assets/css/custom.css">
+
+        <title>Cloud Baristar</title>
+    </head>
+    <body>
+        <div class="page-login">
+            <div class="container-fluid">
+                <div class="d-flex flex-column h-100 align-items-center justify-content-center">
+                        <h1 class="display-4 mb-5 text-white">Logout Complete!<br/>Thanks!!</h1>
+                    <div class="col-4">
+                        <!-- <div class="card">
+                            <div class="card-body">
+                                <form role="form">
+                                    <div class="form-group mb-4">
+                                        <div class="input-group input-id">
+                                            <input class="form-control form-control-lg" placeholder="Email" name="username" type="text" id="email">
+                                            <i class="fas fa-envelope"></i>
+                                        </div>
+                                    </div>
+                                    <div class="form-group mb-4">
+                                        <div class="input-group input-password">
+                                            <input onkeyup="enterkey();" class="form-control form-control-lg" placeholder="Password" name="password" type="password" id="password">
+                                            <i class="fas fa-key"></i>
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <button type="button" id="sign_btn" class="btn btn-dark btn-lg btn-block">Sign in</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
+<script>
+
+function enterkey() {
+        if (window.event.keyCode == 13) {
+ 
+             // 엔터키가 눌렸을 때 실행할 내용
+             if((confirm("로그인 하시겠습니까?"))){
+                 location.href = "/login";
+             }
+        }
+}
+
+
+$(document).ready(function(){
+    $("document body").on('keyDown',function(){
+        if (window.event.keyCode == 13) {
+        // 엔터키가 눌렸을 때 실행할 내용
+        if((confirm("로그인 하시겠습니까?"))){
+            location.href = "/login";
+        }
+    }
+    })
+    
+    
+   // var nsUrl = "http://localhost:1234/"
+    $("#sign_btn").click(function(){
+       // alert("test")
+        var userID = $("#userID").val();
+        var password = $("#password").val();
+        var req = {
+            userID : userID,
+            userID : userID,
+        };
+        console.log(req)
+        var apiInfo = ApiInfo
+        axios.post("/login/proc",{headers: { 'Content-type': 'application/json', 'Authorization': apiInfo,}
+        ,userID:userID,password:password }).then(result =>{
+            console.log(result);
+            if(result.data.status == "success"){
+                alert("Login Success");
+                //location.reload(true);
+                var url = "{{ .comURL.TumbleBugURL}}"+"/ns";
+                var apiInfo = ApiInfo
+    axios.get(url,{
+        headers:{
+            'Authorization': apiInfo
+        }
+    }).then(result=>{
+                    console.log(result.data);
+                    var data = result.data.ns;
+                    var ns = ""
+                    for(var i in data){
+                        if(i == 0){
+                            ns = data[i].id
+                        }
+                    }
+
+                    console.log(data)
+                    $.ajax({
+                        // url:"/SET/NS/"+ns,
+                        rul:"/setting/namespaces/namespace/set/"+ns,
+                        type:'GET',
+                        async:false,
+                        success:function(res){
+                            console.log(res)
+                        }
+
+                    })
+                    if(data){
+                    location.href ="/dashboard";
+                    }else{
+                        alert("NameSpace가 등록되어 있지 않습니다.\n등록페이지로 이동합니다.")
+                        location.href ="/NS/reg";
+                    }
+                })      
+            }
+        });
+        // $.ajax({
+        //     url:"/login/proc/",
+        //     contentType: "application/json",
+        //     data:req,
+        //     method:"POST",
+        
+
+        // }).done(function(data){
+        //     console.log(data)
+        // });
+
+    })
+   
+})
+
+
+</script>

@@ -4,8 +4,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/astaxie/beego/validation"
+	"github.com/beego/beego/v2/core/validation"
 	"github.com/cloud-barista/cb-ladybug/src/core/model"
+	"github.com/cloud-barista/cb-ladybug/src/utils/config"
+	"github.com/cloud-barista/cb-ladybug/src/utils/lang"
 	"github.com/labstack/echo/v4"
 )
 
@@ -36,26 +38,58 @@ func Validate(c echo.Context, params []string) error {
 	return nil
 }
 
-func ClusterReqValidate(c echo.Context, req model.ClusterReq) error {
-	if req.ControlPlaneNodeCount != 1 {
-		return errors.New("control plane node count must be one")
+func ClusterReqDef(clusterReq model.ClusterReq) {
+	clusterReq.Config.Kubernetes.NetworkCni = lang.NVL(clusterReq.Config.Kubernetes.NetworkCni, config.NETWORKCNI_KILO)
+	clusterReq.Config.Kubernetes.PodCidr = lang.NVL(clusterReq.Config.Kubernetes.PodCidr, config.POD_CIDR)
+	clusterReq.Config.Kubernetes.ServiceCidr = lang.NVL(clusterReq.Config.Kubernetes.ServiceCidr, config.SERVICE_CIDR)
+	clusterReq.Config.Kubernetes.ServiceDnsDomain = lang.NVL(clusterReq.Config.Kubernetes.ServiceDnsDomain, config.SERVICE_DOMAIN)
+}
+
+func ClusterReqValidate(req model.ClusterReq) error {
+	if len(req.ControlPlane) == 0 {
+		return errors.New("control plane node must be at least one")
 	}
-	if req.WorkerNodeCount < 1 {
-		return errors.New("worker node count must be at least one")
+	if len(req.ControlPlane) > 1 {
+		return errors.New("only one control plane node is supported")
+	}
+	if len(req.Worker) == 0 {
+		return errors.New("worker node must be at least one")
+	}
+	if !(req.Config.Kubernetes.NetworkCni == config.NETWORKCNI_CANAL || req.Config.Kubernetes.NetworkCni == config.NETWORKCNI_KILO) {
+		return errors.New("network cni allows only kilo or canal")
+	}
+
+	if len(req.Name) == 0 {
+		return errors.New("cluster name is empty")
+	} else {
+		err := lang.CheckName(req.Name)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(req.Config.Kubernetes.PodCidr) > 0 {
+		err := lang.CheckIpCidr("podCidr", req.Config.Kubernetes.PodCidr)
+		if err != nil {
+			return err
+		}
+	}
+	if len(req.Config.Kubernetes.ServiceCidr) > 0 {
+		err := lang.CheckIpCidr("serviceCidr", req.Config.Kubernetes.ServiceCidr)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func NodeReqValidate(c echo.Context, req model.NodeReq) error {
-	if req.Config == "" {
-		return errors.New("config is required")
+func NodeReqValidate(req model.NodeReq) error {
+	if len(req.ControlPlane) > 0 {
+		return errors.New("control plane node is not supported")
 	}
-	if req.WorkerNodeSpec == "" {
-		return errors.New("worker node spec is required")
-	}
-	if req.WorkerNodeCount < 1 {
-		return errors.New("worker node count must be at least one")
+	if len(req.Worker) == 0 {
+		return errors.New("worker node must be at least one")
 	}
 
 	return nil

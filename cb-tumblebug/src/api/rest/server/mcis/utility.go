@@ -13,10 +13,10 @@ func RestCheckMcis(c echo.Context) error {
 	nsId := c.Param("nsId")
 	mcisId := c.Param("mcisId")
 
-	exists, _, err := mcis.LowerizeAndCheckMcis(nsId, mcisId)
+	exists, err := mcis.CheckMcis(nsId, mcisId)
 
 	type JsonTemplate struct {
-		Exists bool `json:exists`
+		Exists bool `json:"exists"`
 	}
 	content := JsonTemplate{}
 	content.Exists = exists
@@ -37,10 +37,10 @@ func RestCheckVm(c echo.Context) error {
 	mcisId := c.Param("mcisId")
 	vmId := c.Param("vmId")
 
-	exists, _, err := mcis.LowerizeAndCheckVm(nsId, mcisId, vmId)
+	exists, err := mcis.CheckVm(nsId, mcisId, vmId)
 
 	type JsonTemplate struct {
-		Exists bool `json:exists`
+		Exists bool `json:"exists"`
 	}
 	content := JsonTemplate{}
 	content.Exists = exists

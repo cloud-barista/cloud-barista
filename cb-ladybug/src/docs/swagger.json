@@ -13,7 +13,7 @@
             "name": "Apache 2.0",
             "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
         },
-        "version": "0.3.0-espresso"
+        "version": "0.4.0"
     },
     "host": "localhost:8080",
     "basePath": "/ladybug",
@@ -380,6 +380,9 @@
                 "clusterConfig": {
                     "type": "string"
                 },
+                "cpLeader": {
+                    "type": "string"
+                },
                 "kind": {
                     "type": "string"
                 },
@@ -390,6 +393,9 @@
                     "type": "string"
                 },
                 "namespace": {
+                    "type": "string"
+                },
+                "networkCni": {
                     "type": "string"
                 },
                 "nodes": {
@@ -423,19 +429,47 @@
         "model.ClusterReq": {
             "type": "object",
             "properties": {
-                "controlPlaneNodeCount": {
-                    "type": "integer"
+                "config": {
+                    "$ref": "#/definitions/model.Config"
                 },
-                "controlPlaneNodeSpec": {
-                    "type": "string"
+                "controlPlane": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.NodeConfig"
+                    }
                 },
                 "name": {
                     "type": "string"
                 },
-                "workerNodeCount": {
-                    "type": "integer"
+                "worker": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.NodeConfig"
+                    }
+                }
+            }
+        },
+        "model.Config": {
+            "type": "object",
+            "properties": {
+                "kubernetes": {
+                    "$ref": "#/definitions/model.Kubernetes"
+                }
+            }
+        },
+        "model.Kubernetes": {
+            "type": "object",
+            "properties": {
+                "networkCni": {
+                    "type": "string"
                 },
-                "workerNodeSpec": {
+                "podCidr": {
+                    "type": "string"
+                },
+                "serviceCidr": {
+                    "type": "string"
+                },
+                "serviceDnsDomain": {
                     "type": "string"
                 }
             }
@@ -444,6 +478,9 @@
             "type": "object",
             "properties": {
                 "credential": {
+                    "type": "string"
+                },
+                "csp": {
                     "type": "string"
                 },
                 "kind": {
@@ -466,6 +503,20 @@
                 }
             }
         },
+        "model.NodeConfig": {
+            "type": "object",
+            "properties": {
+                "connection": {
+                    "type": "string"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "spec": {
+                    "type": "string"
+                }
+            }
+        },
         "model.NodeList": {
             "type": "object",
             "properties": {
@@ -483,14 +534,17 @@
         "model.NodeReq": {
             "type": "object",
             "properties": {
-                "config": {
-                    "type": "string"
+                "controlPlane": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.NodeConfig"
+                    }
                 },
-                "workerNodeCount": {
-                    "type": "integer"
-                },
-                "workerNodeSpec": {
-                    "type": "string"
+                "worker": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.NodeConfig"
+                    }
                 }
             }
         },

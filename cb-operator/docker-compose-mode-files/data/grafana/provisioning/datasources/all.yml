@@ -1,10 +1,14 @@
+apiVersion: 1
+
 datasources:
-- name: '${DS_INFLUX}'
-  type: 'influxdb'
-  access: 'proxy'
-  database: 'cbrestapigw'
-  org_id: 1
-  url: 'http://influxdb:8086'
-  is_default: true
-  version: 1
-  editable: true
+  #  - name: "${DS_INFLUX}"
+  - name: "ETRI API G/W"
+    type: "influxdb"
+    access: "proxy"
+    database: "cbrestapigw"
+    orgId: 1
+    uid: "cbrestapigw"
+    url: "http://influxdb:8086"
+    isDefault: true
+    version: 1
+    editable: true

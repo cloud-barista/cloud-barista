@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/astaxie/beego/validation"
-	"github.com/cloud-barista/cb-ladybug/src/utils/config"
-	"github.com/go-resty/resty/v2"
+	"github.com/beego/beego/v2/core/validation"
+	"github.com/cloud-barista/cb-ladybug/src/core/model"
+
+	logger "github.com/sirupsen/logrus"
 )
 
 type Spec struct {
 	Model
 	Config      string `json:"connectionName"`
 	CspSpecName string `json:"cspSpecName"`
-	Role        string `json:"role"`
 }
 
 func NewSpec(ns string, name string, conf string) *Spec {
@@ -23,74 +23,44 @@ func NewSpec(ns string, name string, conf string) *Spec {
 	}
 }
 
-func (spec *Spec) GET() (bool, error) {
-	// validation
-	if err := spec.validate(validation.Validation{}); err != nil {
-		return false, err
-	}
+func (self *Spec) GET() (bool, error) {
 
-	conf := config.Config
-	resp, err := resty.New().R().
-		SetBasicAuth(conf.Username, conf.Password).
-		SetBody(fmt.Sprintf(`{"connectionName" : "%s"}`, spec.Config)).
-		SetResult(&spec).
-		Get(conf.TumblebugUrl + fmt.Sprintf("/ns/%s/resources/spec/%s", spec.namespace, spec.Name))
+	return self.execute(http.MethodGet, fmt.Sprintf("/ns/%s/resources/spec/%s", self.namespace, self.Name), fmt.Sprintf(`{"connectionName" : "%s"}`, self.Config), &self)
 
-	if e := spec.response(resp, err); e != nil {
-		return false, e
-	}
-	if resp.StatusCode() == http.StatusNotFound {
-		return false, nil
-	}
-
-	return true, nil
 }
 
-func (spec *Spec) POST() error {
+func (self *Spec) POST() error {
+
 	// validation
 	valid := validation.Validation{}
-	valid.Required(spec.CspSpecName, "cspSpecName")
-	if err := spec.validate(valid); err != nil {
+	valid.Required(self.CspSpecName, "cspSpecName")
+	if err := self.validate(valid); err != nil {
 		return err
 	}
 
-	conf := config.Config
-	resp, err := resty.New().R().
-		SetBasicAuth(conf.Username, conf.Password).
-		SetBody(spec).
-		SetResult(&spec).
-		Post(conf.TumblebugUrl + fmt.Sprintf("/ns/%s/resources/spec", spec.namespace))
-
-	if e := spec.response(resp, err); e != nil {
-		return e
+	_, err := self.execute(http.MethodPost, fmt.Sprintf("/ns/%s/resources/spec", self.namespace), self, &self)
+	if err != nil {
+		return err
 	}
 
 	return nil
+
 }
 
-func (spec *Spec) DELETE(ns string) error {
-	// validation
-	if err := spec.validate(validation.Validation{}); err != nil {
-		return err
-	}
+func (self *Spec) DELETE(ns string) error {
 
-	exist, err := spec.GET()
+	exist, err := self.GET()
 	if err != nil {
 		return err
 	}
 	if exist {
-		conf := config.Config
-		resp, err := resty.New().R().
-			SetBasicAuth(conf.Username, conf.Password).
-			SetBody(fmt.Sprintf(`{"connectionName" : "%s"}`, spec.Config)).
-			SetResult(TumblebugResult{}).
-			Delete(conf.TumblebugUrl + fmt.Sprintf("/ns/%s/resources/spec/%s", spec.namespace, spec.Name))
-
-		if e := spec.response(resp, err); e != nil {
-			return e
+		_, err := self.execute(http.MethodDelete, fmt.Sprintf("/ns/%s/resources/spec/%s", self.namespace, self.Name), fmt.Sprintf(`{"connectionName" : "%s"}`, self.Config), model.Status{})
+		if err != nil {
+			return err
 		}
+
 	} else {
-		fmt.Println(fmt.Sprintf("delete spec skip.. (name=%s, cause=not found)", spec.Name))
+		logger.Infof("delete spec skip.. (name=%s, cause=not found)", self.Name)
 	}
 
 	return nil

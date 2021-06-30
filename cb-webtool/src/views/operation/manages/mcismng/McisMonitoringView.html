@@ -1,0 +1,79 @@
+{{define "McisMonitoringView"}}
+<!-- Monitoring view -->
+<div class="g_detail_view" id="monitoring_viewbox">
+
+	<div class="top_tit">[ Monitoring Info for Server ]</div>
+	
+	<div class="view_ipbox">
+					
+		<div class="view-cont">
+			<div class="view_ip">
+				<ul>
+					<li class="m1">
+						<label>Monitoring Details</label>
+				  <select class="selectbox white">
+					<option value="">Target Servers for Monitoring</option>
+					
+				  </select>
+					</li>
+					<li class="m2">
+						<label>Type</label>
+				  <select class="selectbox white">
+					<option value="">Select Type(Live, Hist)</option>
+				  </select>
+					</li>
+					<li class="m3">
+				  <span class="sbox">
+							<label>Duration</label>
+							<span class="sel_w1">
+								<input type="text" name="" value="" placeholder="" title="" />
+						  <select class="selectbox white">
+							<option value="1">minute</option>
+						  </select>
+						</span>
+					</span>
+				  <span class="sbox">
+							<label>Period</label>
+					  <select class="selectbox white">
+						<option value="1">minutely</option>
+					  </select>
+					</span>
+					</li>
+				</ul>
+			</div>
+			
+			<div class="view_ip">
+				<ul>
+					<li class="m4">
+						<label>Servers / Containers</label>
+						<input type="text" name="" value="" placeholder="" title="" />
+					</li>
+					<li class="m5">
+						<label>Items</label>
+						<span class="sel_w2">
+					  <select class="selectbox white">
+						<option value="1">Select Region</option>
+						<option value="2">Select Region2</option>
+						<option value="3">Select Region3</option>
+						<option value="4">Select Region4</option>
+					  </select>
+					  <button name="" value="" class="btn_view">View</button> 
+				  </span>
+					</li>
+				</ul>
+			</div>
+		</div>
+		
+		<div class="graphbox">
+			<img src="/assets/img/contents/img_graphbox_1.jpg" alt="">
+		</div>
+		
+	</div>
+</div>
+<!-- //Monitoring view -->
+<script>
+
+
+	
+</script>
+{{end}}

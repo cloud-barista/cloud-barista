@@ -73,7 +73,11 @@ func (VPCHandler *AlibabaVPCHandler) CreateVPC(vpcReqInfo irs.VPCReqInfo) (irs.V
 	callogger.Info(call.String(callLogInfo))
 
 	//VPC를 생성하면 Pending 상태라서 Subnet을 추가할 수 없기 때문에 Available로 바뀔 때까지 대기함.
-	VPCHandler.WaitForRun(response.VpcId)
+	err = VPCHandler.WaitForRun(response.VpcId)
+	if err != nil {
+		cblogger.Error(err)
+		return irs.VPCInfo{}, err
+	}
 
 	//==========================
 	// Subnet 생성
@@ -96,7 +100,7 @@ func (VPCHandler *AlibabaVPCHandler) CreateVPC(vpcReqInfo irs.VPCReqInfo) (irs.V
 		cblogger.Error(errVpc)
 		return irs.VPCInfo{}, errVpc
 	}
-	//retVpcInfo.IId.NameId = vpcReqInfo.IId.NameId // NameId는 요청 받은 값으로 리턴해야 함.
+	retVpcInfo.IId.NameId = vpcReqInfo.IId.NameId // NameId는 요청 받은 값으로 리턴해야 함.
 
 	return retVpcInfo, nil
 }
@@ -517,7 +521,34 @@ func (VPCHandler *AlibabaVPCHandler) AddSubnet(vpcIID irs.IID, subnetInfo irs.Su
 	callogger.Info(call.String(callLogInfo))
 	cblogger.Info(resSubnet)
 
-	return VPCHandler.GetVPC(vpcIID)
+	//#330이슈 처리
+	vpcInfo, errVpcInfo := VPCHandler.GetVPC(vpcIID)
+	if errVpcInfo != nil {
+		cblogger.Error(errVpcInfo)
+		return irs.VPCInfo{}, errVpcInfo
+	}
+
+	findSubnet := false
+	cblogger.Debug("============== 체크할 값 =========")
+	for posSubnet, curSubnetInfo := range vpcInfo.SubnetInfoList {
+		cblogger.Debugf("%d - [%s] Subnet 처리 시작", posSubnet, curSubnetInfo.IId.SystemId)
+		if resSubnet.IId.SystemId == curSubnetInfo.IId.SystemId {
+			cblogger.Infof("추가 요청 받은 [%s] Subnet을 발견 했습니다. - SystemID:[%s]", subnetInfo.IId.NameId, curSubnetInfo.IId.SystemId)
+			//for ~ range는 포인터가 아니라서 값 수정이 안됨. for loop으로 직접 서브넷을 체크하거나 vpcInfo의 배열의 값을 수정해야 함.
+			cblogger.Infof("인덱스 위치 : %d", posSubnet)
+			//vpcInfo.SubnetInfoList[posSubnet].IId.NameId = "테스트~"
+			vpcInfo.SubnetInfoList[posSubnet].IId.NameId = subnetInfo.IId.NameId
+			findSubnet = true
+			break
+		}
+	}
+
+	if !findSubnet {
+		cblogger.Errorf("서브넷 생성은 성공했으나 VPC의 서브넷 목록에서 추가 요청한 [%s]서브넷의 정보[%s]를 찾지 못했습니다.", subnetInfo.IId.NameId, resSubnet.IId.SystemId)
+		return irs.VPCInfo{}, errors.New("MismatchSubnet.NotFound: No SysmteId[" + resSubnet.IId.SystemId + "] found for newly created Subnet[" + subnetInfo.IId.NameId + "].")
+	}
+
+	return vpcInfo, nil
 
 	//return irs.VPCInfo{}, nil
 }

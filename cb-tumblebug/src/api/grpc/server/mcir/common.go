@@ -16,13 +16,14 @@ import (
 
 // ===== [ Implementations ] =====
 
-// CheckResource - Resouce 체크
+// CheckResource - Resource 체크
 func (s *MCIRService) CheckResource(ctx context.Context, req *pb.ResourceQryRequest) (*pb.ExistsResponse, error) {
 	logger := logger.NewLogger()
 
 	logger.Debug("calling MCIRService.CheckResource()")
 
-	exists, _, err := mcir.LowerizeAndCheckResource(req.NsId, req.ResourceType, req.ResourceId)
+	exists, err := mcir.CheckResource(req.NsId, req.ResourceType, req.ResourceId)
+
 	if err != nil {
 		logger.Debug(err)
 	}
@@ -58,7 +59,7 @@ func (s *MCIRService) GetLookupSpec(ctx context.Context, req *pb.LookupSpecQryRe
 
 	logger.Debug("calling MCIRService.GetLookupSpec()")
 
-	content, err := mcir.LookupSpec(req.ConnectionName, req.SpecName)
+	content, err := mcir.LookupSpec(req.ConnectionName, req.CspSpecName)
 	if err != nil {
 		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.GetLookupSpec()")
 	}
@@ -101,7 +102,7 @@ func (s *MCIRService) GetLookupImage(ctx context.Context, req *pb.LookupImageQry
 
 	logger.Debug("calling MCIRService.GetLookupImage()")
 
-	content, err := mcir.LookupImage(req.ConnectionName, req.ImageName)
+	content, err := mcir.LookupImage(req.ConnectionName, req.CspImageId)
 	if err != nil {
 		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.GetLookupImage()")
 	}

@@ -1,0 +1,52 @@
+{{ template "Top" .}}
+<div id="lnb">
+			
+	<div class="bg"></div>
+		
+	<div class="m_box">
+		
+		{{template "TopBox" .}}
+
+		
+	</div>
+	
+	<div class="bottom"></div>
+	<a href="javascript:;" id="m_close"></a>
+	
+</div>
+{{template "Header" .}}
+
+
+				<!-- contents -->
+				<input type="hidden" id="message" />
+				<input type="hidden" id="statusCode" />
+				<input type="hidden" id="pageUrl" />
+
+				<div class="contbox">
+					
+					<div class="titlebox">
+						<div class="tit"><img src="/assets/img/common/icon_cont.png" alt=""/>404 Error Page </div>						
+					</div>
+					
+					<div class="dashboard">
+						
+						<div class="d_box box_1 box_1m">
+							<div class="titbox">
+								<div class="tit" >
+									<strong>This is Error Page</strong>
+								</div>
+								
+							</div>							
+							
+						</div>
+						
+						
+						
+					</div>
+
+					
+				</div>
+				<!-- //contents -->
+
+
+{{template "Footer" .}}

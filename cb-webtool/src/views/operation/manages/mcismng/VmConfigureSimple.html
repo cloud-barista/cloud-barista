@@ -1,0 +1,137 @@
+{{define "VmConfigureSimple"}}
+
+<!-- server 추가 form -->
+<div class="servers_config simple_servers_config" id="simpleServerConfig">
+	<form id="simple_form">	
+		<input type="hidden" name="provider" id="s_provider" />	
+		
+		<!-- <input type="hidden" name="specId"  value="" id="s_specId" /> -->
+		<!--id 에 간단설정이면 s_, Expert On 이면 e_ -->
+		<input type="hidden" name="subnetId"  value="" id="s_subnetId"/>
+		<input type="hidden" name="vNetId"  value="" id="s_vNetId"/>	
+		<input type="hidden" name="securityGroupIds[]"  value="" id="s_securityGroupIds"/>	
+		<input type="hidden" name="vm_cnt" value="" id="s_vm_cnt" />	
+
+		<div class="top_box">
+			<div class="titbox_sc">
+				<div class="tit">Server Configuration</div>
+			</div>
+		
+			<div class="ip_box">
+				
+				<div class="svc_ipbox">
+					<div class="ipbox ipbox3">
+						<ul>
+							<li>
+								<label><span class="ch">*</span>Server Name</label>
+								<input type="text" name="name" value="" placeholder="Input Name" class="pline ip_3" title="" id="s_name" />
+							</li>
+						</ul>
+					</div>
+					<div class="ipbox ipbox4">
+						<ul>
+							<li>
+								<label>Description</label>
+								<textarea  cols="" rows="" placeholder="Input Description" class="pline ta_3" title=""  name="description" id="s_description"></textarea>
+							</li>
+						</ul>
+					</div>
+				</div>
+
+				<div class="svc_ipbox svc_ipbox_2">
+					<div class="ipbox ipbox3">
+						<ul>
+							<li>
+								<label><span class="ch">*</span>Provider</label>
+								<select  class="selectbox white pline sel_4"  name="provider"  id="s_regProvider" onchange="getConnectionListForSelectbox(this.value, 's_regConnectionName');">
+									<option value="">Select Provider</option>
+									{{ range $item := .CloudOSList}}	
+									<option value="{{ $item }}">{{ $item }}</option>
+									{{ end }}
+								</select>
+							</li>
+							<li>
+								<label><span class="ch">*</span>Connection Name</label>
+								<select class="selectbox white pline sel_4" name="connectionName" id="s_regConnectionName" onchange="changeConnectionInfo(this.value);">
+									<option value="">Select Connection</option>
+								</select>
+							</li>
+						</ul>
+					</div>
+				</div>
+
+				<div class="svc_ipbox svc_ipbox_2">
+					<div class="ipbox ipbox3">
+						<ul>
+							<li>
+								<label><span class="ch">*</span>Spec</label>
+								<select class="selectbox white pline sel_4" name="specId" id="s_spec">
+									<option value="1">Select Spec</option>
+								</select>
+							</li>
+							<li>
+								<label><span class="ch">*</span>which OS</label>
+								<select class="selectbox white pline sel_4" name="imageId" id="s_imageId"> 
+									<option value="1">Select OS Platform</option>
+								</select>
+							</li>
+						</ul>
+					</div>					
+				</div>
+				
+				<div class="svc_ipbox svc_ipbox_2">
+					<div class="ipbox ipbox3">
+						<ul>
+							<li>
+								<label><span class="ch">*</span>Access (ssh key)</label>
+								<select class="selectbox white pline sel_4" name="sshKeyId" id="s_sshKey">
+									<option value="">Select SSH Key</option>
+								</select>
+								
+							</li>
+						</ul>
+					</div>
+					
+				</div>
+				
+			</div>
+			<!-- button -->
+			<div class="btnbox spec_select_box">
+				<div class="svc_ipbox svc_ipbox_2">
+					
+					<div class="amount_add s_slider_box">
+						<div class="add_box">
+							<div class="a_box">
+								<strong class="t font-NotoKR">추가 수량</strong>
+								<div class="a_slider">
+									<div class="slider_ip">
+										<button type="button" class="btn_s btn_s_minus">-</button>
+										<div>
+											<input type="text" name="" value="" placeholder="" class="slider_bar" title="" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="0" />
+										</div>
+										<button type="button" class="btn_s btn_s_plus">+</button>
+									</div>
+									<input type="text" name="s_vm_add_cnt" value="1" class="components_input txt_ipbox" title="" readonly id="s_vm_add_cnt"/>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+				</div>
+
+				<div class="btnbox spec_select_box">
+					<div class="btn_right">
+						
+						<button type="button" name="" value="" class="btn_done btn_co btn_cr_g" onclick="simpleDone_btn();"><span>DONE</span></button> 
+						<button type="button" name="" value="" class="btn_clear btn_co btn_cr_b">CLEAR</button> 
+						
+					</div>
+				</div>
+			</div>
+			<!-- //button -->
+		</div>
+	</form>
+</div>
+
+<script src="/assets/js/operation/manages/mcismng/vmconfiguresimple.js"></script>  
+{{end}}

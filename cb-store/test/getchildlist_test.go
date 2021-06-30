@@ -21,6 +21,7 @@ func TestGetChildList_1(t *testing.T) {
 	// ## Test Data & Specs
 	keyValueData := []*icbs.KeyValue {
 		{"/ns/ns-01", "ns-01-value"},
+		{"/ns/ns-jhseo", "ns-jhseo-value"},
 		{"/ns/ns-01/mcis/mcis-01", "mcis-01-value"},
 	}
 

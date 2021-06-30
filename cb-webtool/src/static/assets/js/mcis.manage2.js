@@ -369,8 +369,14 @@ function show_mcis_list(url){
         });
     
 
-    }).catch(function(error){
-     console.log("show mcis error at dashboard js: ",error);
+    // }).catch(function(error){
+    //  console.log("show mcis error at dashboard js: ",error);
+    // });
+    }).catch((error) => {
+        console.warn(error);
+        console.log(error.response)
+        var errorMessage = error.response.data.error;
+        commonErrorAlert(statusCode, errorMessage) 
     });
  }
 
@@ -596,8 +602,12 @@ function show_mcis_list(url){
             show_mcis2(mcis_id,select_index)
         }
 
-    }).catch(function(error){
-     console.log("show mcis error at dashboard js: ",error);
+    // }).catch(function(error){
+    //  console.log("show mcis error at dashboard js: ",error);
+    // });
+    }).catch((error) => {
+        console.warn(error);
+        console.log(error.response)       
     });
  }
  function click_view(id,index){

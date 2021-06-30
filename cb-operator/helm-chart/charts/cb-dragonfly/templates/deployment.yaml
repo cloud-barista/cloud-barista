@@ -41,9 +41,22 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
+      {{- if .Values.persistence.enabled }}
+          - name: {{ template "cb-dragonfly.fullname" . }}
+            mountPath: {{ .Values.dragonfly.rootPath }}/meta_db
+      {{- end }}
           - name: config-volume
             mountPath: {{ .Values.dragonfly.rootPath }}/conf
       volumes:
+      {{- if .Values.persistence.enabled }}
+      - name: {{ template "cb-dragonfly.fullname" . }} #cb-dragonfly-persistent-storage
+        persistentVolumeClaim:
+        {{- if .Values.persistence.existingClaim }}
+          claimName: {{ .Values.persistence.existingClaim }}
+        {{- else }}
+          claimName: {{ template "cb-dragonfly.fullname" . }}
+        {{- end }}
+      {{- end }}
       - name: config-volume
         configMap:
           name: {{ include "cb-dragonfly.fullname" . }}-config

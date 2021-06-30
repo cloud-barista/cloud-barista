@@ -12,9 +12,9 @@ env:
   - name: TUMBLE_URL
     value: "http://cb-tumblebug:1323/tumblebug"
   - name: DRAGONFLY_URL
-    value: "http://cb-restapigw:8000/dragonfly"
+    value: "http://cb-dragonfly:9090/dragonfly"
   - name: LADYBUG_URL
-    value: "http://cb-restapigw:8000/ladybug"
+    value: "http://cb-ladybug:8080/ladybug"
 
 
 imagePullSecrets: []

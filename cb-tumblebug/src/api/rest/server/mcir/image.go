@@ -12,7 +12,7 @@ import (
 // RestPostImage godoc
 // @Summary Register image
 // @Description Register image
-// @Tags Image
+// @Tags [MCIR] Image management
 // @Accept  json
 // @Produce  json
 // @Param registeringMethod query string true "registerWithInfo or registerWithId"
@@ -28,7 +28,7 @@ func RestPostImage(c echo.Context) error {
 	nsId := c.Param("nsId")
 
 	action := c.QueryParam("action")
-	fmt.Println("[POST Image requested action: " + action)
+	fmt.Println("[POST Image] (action: " + action + ")")
 	/*
 		if action == "create" {
 			fmt.Println("[Creating Image]")
@@ -76,7 +76,7 @@ func RestPostImage(c echo.Context) error {
 // RestPutImage godoc
 // @Summary Update image
 // @Description Update image
-// @Tags Image
+// @Tags [MCIR] Image management
 // @Accept  json
 // @Produce  json
 // @Param imageInfo body mcir.TbImageInfo true "Details for an image object"
@@ -94,20 +94,20 @@ func RestPutImage(c echo.Context) error {
 // Request structure for RestLookupImage
 type RestLookupImageRequest struct {
 	ConnectionName string `json:"connectionName"`
+	CspImageId     string `json:"cspImageId"`
 }
 
 // RestLookupImage godoc
 // @Summary Lookup image
 // @Description Lookup image
-// @Tags Image
+// @Tags [Admin] Cloud environment management
 // @Accept  json
 // @Produce  json
-// @Param connectionName body RestLookupImageRequest true "Specify connectionName"
-// @Param imageId path string true "Image ID"
+// @Param lookupImageReq body RestLookupImageRequest true "Specify connectionName & cspImageId"
 // @Success 200 {object} mcir.SpiderImageInfo
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
-// @Router /lookupImage/{imageId} [get]
+// @Router /lookupImage [get]
 func RestLookupImage(c echo.Context) error {
 
 	u := &RestLookupImageRequest{}
@@ -115,9 +115,8 @@ func RestLookupImage(c echo.Context) error {
 		return err
 	}
 
-	imageId := c.Param("imageId")
-	fmt.Println("[Lookup image]" + imageId)
-	content, err := mcir.LookupImage(u.ConnectionName, imageId)
+	fmt.Println("[Lookup image]: " + u.CspImageId)
+	content, err := mcir.LookupImage(u.ConnectionName, u.CspImageId)
 	if err != nil {
 		common.CBLog.Error(err)
 		return c.JSONBlob(http.StatusNotFound, []byte(err.Error()))
@@ -130,14 +129,14 @@ func RestLookupImage(c echo.Context) error {
 // RestLookupImageList godoc
 // @Summary Lookup image list
 // @Description Lookup image list
-// @Tags Image
+// @Tags [Admin] Cloud environment management
 // @Accept  json
 // @Produce  json
-// @Param connectionName body RestLookupImageRequest true "Specify connectionName"
+// @Param lookupImagesReq body common.TbConnectionName true "Specify connectionName"
 // @Success 200 {object} mcir.SpiderImageList
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
-// @Router /lookupImage [get]
+// @Router /lookupImages [get]
 func RestLookupImageList(c echo.Context) error {
 
 	//type JsonTemplate struct {
@@ -149,7 +148,7 @@ func RestLookupImageList(c echo.Context) error {
 		return err
 	}
 
-	fmt.Println("[Get Region List]")
+	fmt.Println("[Lookup images]")
 	content, err := mcir.LookupImageList(u.ConnectionName)
 	if err != nil {
 		common.CBLog.Error(err)
@@ -163,7 +162,7 @@ func RestLookupImageList(c echo.Context) error {
 // RestFetchImages godoc
 // @Summary Fetch images
 // @Description Fetch images
-// @Tags Image
+// @Tags [MCIR] Image management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -175,12 +174,39 @@ func RestFetchImages(c echo.Context) error {
 
 	nsId := c.Param("nsId")
 
-	connConfigCount, imageCount, err := mcir.FetchImages(nsId)
-	if err != nil {
-		common.CBLog.Error(err)
-		mapA := map[string]string{
-			"message": err.Error()}
-		return c.JSON(http.StatusInternalServerError, &mapA)
+	// connConfigCount, imageCount, err := mcir.FetchImages(nsId)
+	// if err != nil {
+	// 	common.CBLog.Error(err)
+	// 	mapA := map[string]string{
+	// 		"message": err.Error()}
+	// 	return c.JSON(http.StatusInternalServerError, &mapA)
+	// }
+
+	u := &RestLookupImageRequest{}
+	if err := c.Bind(u); err != nil {
+		return err
+	}
+
+	var connConfigCount, imageCount uint
+	var err error
+
+	if u.ConnectionName == "" {
+		connConfigCount, imageCount, err = mcir.FetchImagesForAllConnConfigs(nsId)
+		if err != nil {
+			common.CBLog.Error(err)
+			mapA := map[string]string{
+				"message": err.Error()}
+			return c.JSON(http.StatusInternalServerError, &mapA)
+		}
+	} else {
+		connConfigCount = 1
+		imageCount, err = mcir.FetchImagesForConnConfig(u.ConnectionName, nsId)
+		if err != nil {
+			common.CBLog.Error(err)
+			mapA := map[string]string{
+				"message": err.Error()}
+			return c.JSON(http.StatusInternalServerError, &mapA)
+		}
 	}
 
 	mapA := map[string]string{
@@ -191,7 +217,7 @@ func RestFetchImages(c echo.Context) error {
 // RestGetImage godoc
 // @Summary Get image
 // @Description Get image
-// @Tags Image
+// @Tags [MCIR] Image management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -201,7 +227,7 @@ func RestFetchImages(c echo.Context) error {
 // @Failure 500 {object} common.SimpleMsg
 // @Router /ns/{nsId}/resources/image/{imageId} [get]
 func RestGetImage(c echo.Context) error {
-	// Obsolete function. This is just for Swagger.
+	// This is a dummy function for Swagger.
 	return nil
 }
 
@@ -211,25 +237,26 @@ type RestGetAllImageResponse struct {
 }
 
 // RestGetAllImage godoc
-// @Summary List all images
-// @Description List all images
-// @Tags Image
+// @Summary List all images or images' ID
+// @Description List all images or images' ID
+// @Tags [MCIR] Image management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
-// @Success 200 {object} RestGetAllImageResponse
+// @Param option query string false "Option" Enums(id)
+// @Success 200 {object} JSONResult{[DEFAULT]=RestGetAllImageResponse,[ID]=common.IdList} "Different return structures by the given option param"
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
 // @Router /ns/{nsId}/resources/image [get]
 func RestGetAllImage(c echo.Context) error {
-	// Obsolete function. This is just for Swagger.
+	// This is a dummy function for Swagger.
 	return nil
 }
 
 // RestDelImage godoc
 // @Summary Delete image
 // @Description Delete image
-// @Tags Image
+// @Tags [MCIR] Image management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -238,14 +265,14 @@ func RestGetAllImage(c echo.Context) error {
 // @Failure 404 {object} common.SimpleMsg
 // @Router /ns/{nsId}/resources/image/{imageId} [delete]
 func RestDelImage(c echo.Context) error {
-	// Obsolete function. This is just for Swagger.
+	// This is a dummy function for Swagger.
 	return nil
 }
 
 // RestDelAllImage godoc
 // @Summary Delete all images
 // @Description Delete all images
-// @Tags Image
+// @Tags [MCIR] Image management
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID"
@@ -253,7 +280,7 @@ func RestDelImage(c echo.Context) error {
 // @Failure 404 {object} common.SimpleMsg
 // @Router /ns/{nsId}/resources/image [delete]
 func RestDelAllImage(c echo.Context) error {
-	// Obsolete function. This is just for Swagger.
+	// This is a dummy function for Swagger.
 	return nil
 }
 
@@ -265,14 +292,15 @@ type RestSearchImageRequest struct {
 // RestSearchImage godoc
 // @Summary Search image
 // @Description Search image
-// @Tags Image
+// @Tags [MCIR] Image management
 // @Accept  json
 // @Produce  json
+// @Param nsId path string true "Namespace ID"
 // @Param keywords body RestSearchImageRequest true "Keywords"
 // @Success 200 {object} RestGetAllImageResponse
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
-// @Router /ns/{nsId}/resources/searchImage [get]
+// @Router /ns/{nsId}/resources/searchImage [post]
 func RestSearchImage(c echo.Context) error {
 	nsId := c.Param("nsId")
 

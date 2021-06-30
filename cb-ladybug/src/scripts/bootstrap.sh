@@ -31,3 +31,12 @@ sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
 sudo apt-get update
 sudo apt-get install -y kubeadm=$K8S_VERSION kubelet=$K8S_VERSION kubectl=$K8S_VERSION
 sudo apt-mark hold kubeadm kubelet kubectl
+
+# install wireguard
+sudo add-apt-repository -y ppa:wireguard/wireguard
+sudo apt-get update
+sudo apt-get install -y wireguard
+
+# public ip nic up
+IFACE="$(ip route get 8.8.8.8 | awk '{ print $5; exit }')"
+sudo ifconfig ${IFACE}:1 $(dig +short myip.opendns.com @resolver1.opendns.com) netmask 255.255.255.255  broadcast 0.0.0.0 up

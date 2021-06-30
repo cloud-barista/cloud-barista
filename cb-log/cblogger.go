@@ -10,9 +10,7 @@
 package cblog
 
 import (
-	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	cblogformatter "github.com/cloud-barista/cb-log/formatter"
@@ -32,8 +30,21 @@ var (
 	cblogConfig   CBLOGCONFIG
 )
 
-// You can set up with Framework Name, a Framework Name is one of loggerName.
+// Get the logger with name you set. The name will be used as below (name: CB-SPIDER)
+// [CB-SPIDER].[INFO]: 2020-12-24 16:54:46 sample-with-config-path.go:27, main.main() - start.........
+// Read configuration file (log_conf.yaml) by the path set on environment variable (e.g., $CBLOG_ROOT)
 func GetLogger(loggerName string) *logrus.Logger {
+	return getLoggerHandler(loggerName, "")
+}
+
+// Read configuration file (log_conf.yaml) from the path you set
+func GetLoggerWithConfigPath(loggerName string, configFilePath string) *logrus.Logger {
+	return getLoggerHandler(loggerName, configFilePath)
+}
+
+// The handler for GetLogger() and GetLoggerWithConfigPath()
+func getLoggerHandler(loggerName string, configFilePath string) *logrus.Logger {
+
 	if thisLogger != nil {
 		return thisLogger.logrus
 	}
@@ -47,17 +58,17 @@ func GetLogger(loggerName string) *logrus.Logger {
 	}
 
 	// set config.
-	setup(loggerName)
+	setup(loggerName, configFilePath)
 	return thisLogger.logrus
 }
 
-func setup(loggerName string) {
-	cblogConfig = GetConfigInfos()
+func setup(loggerName string, configFilePath string) {
+	cblogConfig = GetConfigInfos(configFilePath)
 	thisLogger.logrus.SetReportCaller(true)
 
 	if cblogConfig.CBLOG.LOOPCHECK {
 		SetLevel(cblogConfig.CBLOG.LOGLEVEL)
-		go levelSetupLoop(loggerName)
+		go levelSetupLoop(loggerName, configFilePath)
 	} else {
 		SetLevel(cblogConfig.CBLOG.LOGLEVEL)
 	}
@@ -70,9 +81,9 @@ func setup(loggerName string) {
 // Now, this method is busy wait.
 // @TODO must change this  with file watch&event.
 // ref) https://github.com/fsnotify/fsnotify/blob/master/example_test.go
-func levelSetupLoop(loggerName string) {
+func levelSetupLoop(loggerName string, configFilePath string) {
 	for {
-		cblogConfig = GetConfigInfos()
+		cblogConfig = GetConfigInfos(configFilePath)
 		SetLevel(cblogConfig.CBLOG.LOGLEVEL)
 		time.Sleep(time.Second * 2)
 	}
@@ -97,26 +108,13 @@ func setRotateFileHook(loggerName string, logConfig *CBLOGCONFIG) {
 }
 
 func SetLevel(strLevel string) {
-	err := checkLevel(strLevel)
-	if err != nil {
-		logrus.Errorf("Failed to set log level: %v", err)
-	}
-	level, _ := logrus.ParseLevel(strLevel)
-	thisLogger.logrus.SetLevel(level)
-}
 
-func checkLevel(lvl string) error {
-	switch strings.ToLower(lvl) {
-	case "error":
-		return nil
-	case "warn", "warning":
-		return nil
-	case "info":
-		return nil
-	case "debug":
-		return nil
+	level, err := logrus.ParseLevel(strLevel)
+	if err != nil {
+		thisLogger.logrus.Warnf("Not available logging level: %v. Default logging level will be used: debug", strLevel)
+		level = logrus.DebugLevel
 	}
-	return fmt.Errorf("not a valid cblog Level: %q", lvl)
+	thisLogger.logrus.SetLevel(level)
 }
 
 func GetLevel() string {

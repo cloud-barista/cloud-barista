@@ -1,18 +1,3 @@
-/*
-Copyright © 2020 NAME HERE <EMAIL ADDRESS>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package cmd
 
 import (
@@ -28,33 +13,34 @@ var infoCmd = &cobra.Command{
 	Short: "Get information of Cloud-Barista System",
 	Long:  `Get information of Cloud-Barista System. Information about containers and container images`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("\n[Get info for Cloud-Barista runtimes]\n")
+		fmt.Println("\n[Get info for Cloud-Barista runtimes]")
+		fmt.Println()
 
 		if common.FileStr == "" {
 			fmt.Println("file is required")
 		} else {
-			common.FileStr = common.GenConfigPath(common.FileStr, common.CB_OPERATOR_MODE)
+			common.FileStr = common.GenConfigPath(common.FileStr, common.CBOperatorMode)
 			var cmdStr string
-			switch common.CB_OPERATOR_MODE {
-			case common.Mode_DockerCompose:
-				common.SysCall_docker_compose_ps()
+			switch common.CBOperatorMode {
+			case common.ModeDockerCompose:
+				common.SysCallDockerComposePs()
 
 				fmt.Println("")
 				fmt.Println("[v]Status of Cloud-Barista runtime images")
 				cmdStr = "sudo COMPOSE_PROJECT_NAME=cloud-barista docker-compose -f " + common.FileStr + " images"
 				//fmt.Println(cmdStr)
 				common.SysCall(cmdStr)
-			case common.Mode_Kubernetes:
+			case common.ModeKubernetes:
 				fmt.Println("[v]Status of Cloud-Barista Helm release")
-				cmdStr = "sudo helm status --namespace " + common.CB_K8s_Namespace + " " + common.CB_Helm_Release_Name
+				cmdStr = "sudo helm status --namespace " + common.CBK8sNamespace + " " + common.CBHelmReleaseName
 				common.SysCall(cmdStr)
 				fmt.Println()
 				fmt.Println("[v]Status of Cloud-Barista pods")
-				cmdStr = "sudo kubectl get pods -n " + common.CB_K8s_Namespace
+				cmdStr = "sudo kubectl get pods -n " + common.CBK8sNamespace
 				common.SysCall(cmdStr)
 				fmt.Println()
 				fmt.Println("[v]Status of Cloud-Barista container images")
-				cmdStr = `sudo kubectl get pods -n ` + common.CB_K8s_Namespace + ` -o jsonpath="{..image}" |\
+				cmdStr = `sudo kubectl get pods -n ` + common.CBK8sNamespace + ` -o jsonpath="{..image}" |\
 				tr -s '[[:space:]]' '\n' |\
 				sort |\
 				uniq`
@@ -70,7 +56,7 @@ func init() {
 	rootCmd.AddCommand(infoCmd)
 
 	pf := infoCmd.PersistentFlags()
-	pf.StringVarP(&common.FileStr, "file", "f", common.Not_Defined, "User-defined configuration file")
+	pf.StringVarP(&common.FileStr, "file", "f", common.NotDefined, "User-defined configuration file")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

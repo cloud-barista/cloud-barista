@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/cloud-barista/cb-ladybug/src/utils/app"
 	"github.com/cloud-barista/cb-ladybug/src/utils/config"
-	"github.com/go-resty/resty/v2"
+	logger "github.com/sirupsen/logrus"
 )
 
 // connection config
@@ -26,20 +27,21 @@ func NewConnection(name string) *Connection {
 }
 
 // get connection config
-func (conn *Connection) GET() (bool, error) {
+func (self *Connection) GET() (bool, error) {
 
-	conf := config.Config
-	resp, err := resty.New().R().
-		SetBasicAuth(conf.Username, conf.Password).
-		SetResult(&conn).
-		Get(conf.SpiderUrl + fmt.Sprintf("/connectionconfig/%s", conn.ConfigName))
-
-	if err = conn.response(resp, err); err != nil {
+	url := fmt.Sprintf("%s/connectionconfig/%s", *config.Config.SpiderUrl, self.ConfigName)
+	resp, err := app.ExecutHTTP(http.MethodGet, url, nil, &self)
+	if err != nil {
+		return false, err
+	}
+	if err = self.response(resp, err); err != nil {
 		return false, err
 	}
 	if resp.StatusCode() == http.StatusNotFound {
+		logger.Infof("Not found data (status=404, method=%s, url=%s)", http.MethodGet, url)
 		return false, nil
 	}
 
 	return true, nil
+
 }

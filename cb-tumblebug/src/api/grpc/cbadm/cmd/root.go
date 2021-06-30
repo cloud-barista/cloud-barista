@@ -1,4 +1,3 @@
-// Package cmd - 어플리케이션 실행을 위한 Cobra 기반의 CLI Commands 기능 제공
 package cmd
 
 import (
@@ -9,7 +8,7 @@ import (
 // ===== [ Constants and Variables ] =====
 
 const (
-	// CLIVersion - cbadm cli 버전
+	// CLIVersion : version of cbadm cli
 	CLIVersion = "1.0"
 )
 
@@ -37,11 +36,14 @@ var (
 	connConfigName string
 
 	resourceType string
-	specName     string
-	imageId      string
+	cspSpecName  string
+	cspImageId   string
 	host         string
 	action       string
 	metric       string
+
+	configId string
+	objKey   string
 
 	parser config.Parser
 )
@@ -54,7 +56,7 @@ var (
 
 // ===== [ Public Functions ] =====
 
-// NewRootCmd - 어플리케이션 진입점으로 사용할 Root Cobra Command 생성
+// NewRootCmd : Create Root Cobra Command
 func NewRootCmd() *cobra.Command {
 
 	rootCmd := &cobra.Command{
@@ -63,15 +65,15 @@ func NewRootCmd() *cobra.Command {
 		Long:  "This is a lightweight grpc cli tool for Cloud-Barista",
 	}
 
-	// 옵션 플래그 설정
+	// Option flags
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "./grpc_conf.yaml", "config file")
 	rootCmd.PersistentFlags().StringVarP(&inType, "input", "i", "yaml", "input format (json/yaml)")
 	rootCmd.PersistentFlags().StringVarP(&outType, "output", "o", "yaml", "output format (json/yaml)")
 
-	// Viper 를 사용하는 설정 파서 생성
+	// Make new config parser (which uses Viper)
 	parser = config.MakeParser()
 
-	//  Adds the commands for application.
+	//  Add subcommands for application.
 	rootCmd.AddCommand(NewVersionCmd())
 
 	rootCmd.AddCommand(NewDriverCmd())
@@ -91,6 +93,9 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.AddCommand(NewYamlGetCmd())
 	rootCmd.AddCommand(NewYamlListCmd())
 	rootCmd.AddCommand(NewYamlRemoveCmd())
+
+	rootCmd.AddCommand(NewUtilCmd())
+	rootCmd.AddCommand(NewConfigCmd())
 
 	return rootCmd
 }
