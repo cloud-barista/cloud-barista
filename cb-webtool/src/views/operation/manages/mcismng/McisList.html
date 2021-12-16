@@ -1,196 +1,157 @@
 {{define "McisList"}}
-	<!-- list -->
-					<div class="dashboard dashboard_cont">
-						
-						<div class="d_box box_m box_w100">
-							<div class="titbox">
-								<div class="tit initial"><strong>List of MCIS</strong></div>
-								<div class="top_info">
-									<ul>
-										<li>
-											<a href="javascript:void(0);">Filter</a>
-											<div class="infobox">
-												<div class="box">
-													<!-- <p>NS name</p> -->
-													<ul>
-														<li><a href="javascript:void(0);" onclick="commonPromptOpen('FilterMcisName', 'mcisListTable')">Name</a></li>
-														<li><a href="javascript:void(0);" onclick="commonPromptOpen('FilterMcisStatus', 'mcisListTable')">Status</a></li>
-														<li><a href="javascript:void(0);" onclick="commonPromptOpen('FilterMcisDesc', 'mcisListTable')">Description</a></li>
-													</ul>
-												</div>
-											</div>
-										</li>
-										<li>
-											<a href="javascript:void(0);">Sort</a>
-											<div class="infobox">
-												<div class="box">
-													<ul>
-														<li><a href="javascript:void(0);" onclick="tableSort('mcisListTable', 'Name')">Name</a></li>
-														<li><a href="javascript:void(0);" onclick="tableSort('mcisListTable', 'Status')">Status</a></li>
-														<li><a href="javascript:void(0);" onclick="tableSort('mcisListTable', 'Description')">Description</a></li>
-														
-													</ul>
-												</div>
-											</div>
-										</li>
-										<li>
-											<a href="javascript:void(0);">Action</a>
-											<div class="infobox">
-												<div class="box">
-													<ul>
-														<li>
-															<strong>Life Cycle</strong>
-															<ul>
-																<!-- <li><a href="javascript:void(0);" data-toggle="modal" data-target="#Life_Start">Start</a></li> -->
-																<li><a href="javascript:void(0);" data-toggle="modal" data-target="#MCIS_Life_Reboot" onClick="commonConfirmOpen('McisLifeCycleReboot')">Reboot</a></li>
-																<li><a href="javascript:void(0);" data-toggle="modal" data-target="#MCIS_Life_Suspend" onClick="commonConfirmOpen('McisLifeCycleSuspend')">Suspend</a></li>
-																<li><a href="javascript:void(0);" data-toggle="modal" data-target="#MCIS_Life_Resume" onClick="commonConfirmOpen('McisLifeCycleResume')">Resume</a></li>								
-																<li><a href="javascript:void(0);" data-toggle="modal" data-target="#MCIS_Life_Terminate" onClick="commonConfirmOpen('McisLifeCycleTerminate')">Terminate</a></li>
-															</ul>
-														</li>
-														<li class="divider"></li>
-														<li>
-															<strong>Manage</strong>
-															<ul>
-																<li><a href="javascript:void(0);" data-toggle="modal" data-target="#MCIS_n_New" onClick="commonConfirmOpen('AddNewMcis')">New</a></li>
-																<li><a href="javascript:void(0);" data-toggle="modal" data-target="#MCIS_n_New" onClick="commonConfirmOpen('DeleteMcis')">Delete</a></li>
-															</ul>
-														</li>
-														<li class="divider"></li>
-														<li>
-															<strong>Export</strong>
-															<ul>																
-																<li><a href="javascript:void(0);" data-toggle="modal" data-target="#MCIS_n_New" onClick="commonConfirmOpen('ExportScriptOfMcis')">Export Json</a></li>
-															</ul>
-														</li>
-													</ul>
-												</div>
-											</div>
-										</li>
-										<li><a href="javascript:void(0);"><img src="/assets/img/common/icon_question.png" alt=""/></a></li>
-									</ul>
-								</div>
-							</div>						
-							
-							<div class="ds_cont">
-								
-								<div class="dataTable status_list">
-									<table cellpadding="0" cellspacing="0" border="1"  id="mcisListTable">
-										<!-- <colgroup><col width=""><col width=""><col width="15%"><col width="15%"><col width="17%"><col width="18%"><col width="50px"></colgroup> -->
-										<thead>
-											<tr>
-												<th class="column-14percent">Status</th>
-												<th class="column-14percent">Name</th>
-												<th class="column-14percent">Cloud Connection</th>
-												<th class="column-14percent">Total Infras <span>Count of Total Servers</span></th>
-												<th class="column-14percent"># of Servers <span>Count of Run / Stop / Terminate / etc</span></th>
-												<th>Description</th>
-												<th class="column-60px"><input type="checkbox" name="" value="" id="th_chall" title="" /><label for="th_chall"></label></td>
-											</tr>
+<!-- list -->
+<div class="dashboard dashboard_cont">
 
-										</thead>
-										<tbody id="mcisList">
-											<!-- //
-											// mcis.ID, mcis.status, mcis.name -->
-											{{ $length := len .McisList }} 
-											{{ if eq $length 0 }}
-											<tr>
+	<div class="d_box box_m box_w100">
+		<div class="titbox">
+			<div class="tit initial"><strong>List of MCIS</strong></div>
+			<div class="tit_keyword">
+				<div class="keyword_box" id="searchMcisKeywords">
+				</div>
+				<!-- <input type="button" name="" class="btn_del_all" title="" value="필터 지우기"
+					onclick="delAllKeyword( 'mcislistfilter')" /> -->
+				<button name="" class="btn_del_all" title="" onclick="delAllKeyword( 'mcislistfilter')">필터 지우기</button>
+			</div>
+			<div class="top_info">
+				<!--									<div>-->
+				<!--										<input type="text" id="keywordMcis" placeholder="Input Keyword"-->
+				<!--											   class="pline image" onkeyup="searchKeywordByEnter(event, 'searchMcisKeywords'" />-->
+				<!--										<input type="submit" name="" class="btn_search_image" title="" value=""-->
+				<!--											   onclick="getCommonMcisList()" />-->
+				<!--									</div>-->
+
+				<ul>
+					<li>
+						<a href="javascript:void(0);">Filter</a>
+						<div class="infobox">
+							<div class="box">
+								<!-- <p>NS name</p> -->
+								<ul>
+									<li><a href="javascript:void(0);"
+											onclick="commonPromptOpen('FilterMcisName', 'mcisListTable')">Name</a></li>
+									<li><a href="javascript:void(0);"
+											onclick="commonPromptOpen('FilterMcisStatus', 'mcisListTable')">Status</a>
+									</li>
+									<li><a href="javascript:void(0);"
+											onclick="commonPromptOpen('FilterMcisDesc', 'mcisListTable')">Description</a>
+									</li>
+								</ul>
+							</div>
+						</div>
+					</li>
+					<li>
+						<a href="javascript:void(0);">Sort</a>
+						<div class="infobox">
+							<div class="box">
+								<ul>
+									<li><a href="javascript:void(0);"
+											onclick="tableSort('mcisListTable', 'Name')">Name</a></li>
+									<li><a href="javascript:void(0);"
+											onclick="tableSort('mcisListTable', 'Status')">Status</a></li>
+									<li><a href="javascript:void(0);"
+											onclick="tableSort('mcisListTable', 'Description')">Description</a></li>
+
+								</ul>
+							</div>
+						</div>
+					</li>
+					<li>
+						<a href="javascript:void(0);">Action</a>
+						<div class="infobox">
+							<div class="box">
+								<ul>
+									<li>
+										<strong>Life Cycle</strong>
+										<ul>
+											<!-- <li><a href="javascript:void(0);" data-toggle="modal" data-target="#Life_Start">Start</a></li> -->
+											<li><a href="javascript:void(0);" data-toggle="modal"
+													data-target="#MCIS_Life_Reboot"
+													onClick="changeLifeCycle('McisLifeCycleReboot')">Reboot</a></li>
+											<li><a href="javascript:void(0);" data-toggle="modal"
+													data-target="#MCIS_Life_Suspend"
+													onClick="changeLifeCycle('McisLifeCycleSuspend')">Suspend</a></li>
+											<li><a href="javascript:void(0);" data-toggle="modal"
+													data-target="#MCIS_Life_Resume"
+													onClick="changeLifeCycle('McisLifeCycleResume')">Resume</a></li>
+											<li><a href="javascript:void(0);" data-toggle="modal"
+													data-target="#MCIS_Life_Terminate"
+													onClick="changeLifeCycle('McisLifeCycleTerminate')">Terminate</a>
+											</li>
+										</ul>
+									</li>
+									<li class="divider"></li>
+									<li>
+										<strong>Manage</strong>
+										<ul>
+											<li><a href="javascript:void(0);" data-toggle="modal"
+													data-target="#MCIS_n_New"
+													onClick="changePage('/operation/manages/mcismng/regform')">New</a>
+											</li>
+											<li><a href="javascript:void(0);" data-toggle="modal"
+													data-target="#MCIS_n_New"
+													onClick="deleteCheckMCIS('DeleteMcis')">Delete</a></li>
+										</ul>
+									</li>
+									<li class="divider"></li>
+									<li>
+										<strong>Export</strong>
+										<ul>
+											<li><a href="javascript:void(0);" data-toggle="modal"
+													data-target="#MCIS_n_New"
+													onClick="commonConfirmOpen('ExportScriptOfMcis')">Export Json</a>
+											</li>
+										</ul>
+									</li>
+								</ul>
+							</div>
+						</div>
+					</li>
+					<li>
+						<a href="javascript:void(0);"><img src="/assets/img/common/icon_question.png" alt="" /></a>
+						<a href="javascript:void(0);" onClick="getCommonMcisList('mcismng', true, 'status')"><img
+								src="/assets/img/common/icon_refresh.png" alt="refresh" /></a>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		<div class="ds_cont">
+
+			<div class="dataTable status_list">
+				<table cellpadding="0" cellspacing="0" border="1" id="mcisListTable">
+					<!-- <colgroup><col width=""><col width=""><col width="15%"><col width="15%"><col width="17%"><col width="18%"><col width="50px"></colgroup> -->
+					<thead>
+						<tr>
+							<th class="column-20percent">Status</th>
+							<th class="column-20percent">Name</th>
+							<th class="column-14percent">Provider</th>
+							<th class="column-18percent">Total Infras <span>Count of Total Servers</span></th>
+							<!-- <th class="column-14percent"># of Servers <span>Count of Run / Stop / Terminate / etc</span></th> -->
+							<th class="column-18percent"># of Servers <span>Count of Run / Stop / Terminate</span></th>
+							<!--							<th>Description</th>-->
+							<th class="column-60px"><input type="checkbox" name="" value="" id="th_chall"
+									title="" /><label for="th_chall"></label></td>
+						</tr>
+
+					</thead>
+					<tbody id="mcisList">
+						<!-- <tr>
 												<td class="overlay hidden" data-th="" colspan="8">No Data</td>
-											</tr>
-											{{ end }}
-											{{range $index, $item := .McisList}}
+											</tr> -->
+					</tbody>
+				</table>
+			</div>
 
-											<tr onclick="clickListOfMcis('{{$item.ID}}', '{{$index}}' );" id="server_info_tr_{{$index}}" item="{{$item.ID}}|{{$index}}">
-												<td class="overlay hidden td_left column-14percent" data-th="Status">
-													<img src="/assets/img/contents/icon_{{$item.McisStatus}}.png" class="icon" alt=""/>{{$item.Status}}<span class="ov off"></span>
-													
-												</td>
-												<!-- <td class="overlay hidden td_left" data-th="Status">
-													<img src="/assets/img/contents/icon_stop.png" class="icon" alt=""/> '+sta+' <span class="ov off"></span>
-												</td> -->
-												<td class="btn_mtd ovm column-14percent" data-th="Name">{{$item.Name}}<span class="ov"></span></td>
-												
-												<td class="overlay hidden column-14percent" data-th="Cloud Connection">
-													{{ $item.ConnectionConfigProviderNames}}
-												</td>
-												{{ $vmStatusCountMap := $item.VmStatusCountMap}}
-												<td class="overlay hidden column-14percent" data-th="Total Infras">{{$vmStatusCountMap.TOTAL}}</td>
-												<td class="overlay hidden column-14percent" data-th="# of Servers">
-													<span class="bar" ></span> <span title="running">{{$vmStatusCountMap.running}}</span>
-													<span class="bar" >/</span> <span title="suspended">{{$vmStatusCountMap.suspended}}</span>
-													<span class="bar" >/</span> <span title="terminated">{{$vmStatusCountMap.terminated}}</span>
-													<span class="bar" >/</span> <span title="etc">{{$vmStatusCountMap.etc}}</span>
-												</td>
-												<td class="overlay hidden" data-th="Description">{{$item.Description}}</td>
-												<td class="overlay hidden column-60px"  data-th="">
-													<input type="checkbox" name="chk" value="{{$item.ID}}" id="td_ch_{{$index}}" title="" />
-													<label for="td_ch_{{$index}}"></label>
-
-													<!--MCIS 기본정보 hidden : 클릭시 보여주기 위해-->
-													<input type="hidden" name="mcisID" value="{{$item.ID}}" id="mcisID{{$index}}"/>
-													<input type="hidden" name="mcisName" value="{{$item.Name}}" id="mcisName{{$index}}"/>
-													<input type="hidden" name="mcisStatus" value="{{$item.McisStatus}}" id="mcisStatus{{$index}}"/>
-													<input type="hidden" name="mcisDescription" value="{{$item.Description}}" id="mcisDescription{{$index}}"/>
-													<input type="hidden" name="mcisCloudConnections" value="{{$item.ConnectionConfigProviderNames}}" id="mcisCloudConnections{{$index}}"/>
-													<input type="hidden" name="mcisVmTotalCount" value="{{$vmStatusCountMap.TOTAL}}" id="mcisVmTotalCount{{$index}}"/>
-													
-													<!-- MCIS의 VM들 이름, ID, 상태-->
-													{{range $vmStatusIndex, $vmStatusObj := $item.VmSimpleList}}													
-													<input type="hidden" name="vmID" id="mcisVmID_{{ $index}}_{{ $vmStatusIndex}}" value="{{$vmStatusObj.VmID}}" />
-													<input type="hidden" name="vmName" id="mcisVmName_{{ $index}}_{{ $vmStatusIndex}}" value="{{$vmStatusObj.VmName}}" />
-													<input type="hidden" name="vmStatus" id="mcisVmStatus_{{ $index}}_{{ $vmStatusIndex}}" value="{{$vmStatusObj.VmStatus}}" />
-
-
-													<!-- vm export 용 m_ 는 mcis의 첫글자 m-->
-													<input type="hidden" name="m_vmConnectionName" id="m_vmConnectionName_{{ $index}}_{{ $vmStatusIndex}}" value="{{$vmStatusObj.VmConnectionName}}" />
-													<input type="hidden" name="m_vmDescription" id="m_vmDescription_{{ $index}}_{{ $vmStatusIndex}}" value="{{$vmStatusObj.VmDescription}}" />
-													<input type="hidden" name="m_vmImageId" id="m_vmImageId_{{ $index}}_{{ $vmStatusIndex}}" value="{{$vmStatusObj.VmImageId}}" />
-													<input type="hidden" name="m_vmLabel" id="m_vmLabel_{{ $index}}_{{ $vmStatusIndex}}" value="{{$vmStatusObj.VmLabel}}" />
-													<input type="hidden" name="m_vmName" id="m_vmName_{{ $index}}_{{ $vmStatusIndex}}" value="{{$vmStatusObj.VmName}}" />
-													<input type="hidden" name="m_vmSecurityGroupIds" id="m_vmSecurityGroupIds_{{ $index}}_{{ $vmStatusIndex}}" value="{{$vmStatusObj.VmSecurityGroupIds}}" />
-													<input type="hidden" name="m_vmSpecId" id="m_vmSpecId_{{ $index}}_{{ $vmStatusIndex}}" value="{{$vmStatusObj.VmSpecId}}" />
-													<input type="hidden" name="m_vmSshKeyId" id="m_vmSshKeyId_{{ $index}}_{{ $vmStatusIndex}}" value="{{$vmStatusObj.VmSshKeyId}}" />
-													<input type="hidden" name="m_vmSubnetId" id="m_vmSubnetId_{{ $index}}_{{ $vmStatusIndex}}" value="{{$vmStatusObj.VmSubnetId}}" />
-													<input type="hidden" name="m_vmVnetId" id="m_vmVnetId_{{ $index}}_{{ $vmStatusIndex}}" value="{{$vmStatusObj.VmVnetId}}" />
-													<input type="hidden" name="m_vmGroupSize" id="m_vmGroupSize_{{ $index}}_{{ $vmStatusIndex}}" value="{{$vmStatusObj.VmGroupSize}}" />
-													<input type="hidden" name="m_vmUserAccount" id="m_vmUserAccount_{{ $index}}_{{ $vmStatusIndex}}" value="{{$vmStatusObj.VmUserAccount}}" />
-													<input type="hidden" name="m_vmUserPassword" id="m_vmUserPassword_{{ $index}}_{{ $vmStatusIndex}}" value="{{$vmStatusObj.VmUserPassword}}" />
-
-													<input type="hidden" name="vmStatus" id="m_exportFileName_{{ $index}}_{{ $vmStatusIndex}}" value="" />
-													<input type="hidden" name="vmStatus" id="m_vmExportScript_{{ $index}}_{{ $vmStatusIndex}}" value="" />
-													
-													{{ end }}
-
-													<!-- mcis export용 -->
-													<input type="hidden" name="m_mcisDescription" id="m_mcisDescription_{{ $index}}" value="{{$item.Description}}" />
-													<input type="hidden" name="m_mcisID" id="m_mcisID_{{ $index}}" value="{{$item.ID}}" />
-													<input type="hidden" name="m_mcisInstallMonAgent" id="m_mcisInstallMonAgent_{{ $index}}" value="{{$item.InstallMonAgent}}" />
-													<input type="hidden" name="m_mcisLabel" id="m_mcisLabel_{{ $index}}" value="{{$item.Label}}" />
-													<input type="hidden" name="m_mcisName" id="m_mcisName_{{ $index}}" value="{{$item.Name}}" />
-													<input type="hidden" name="m_mcisStatus" id="m_mcisStatus_{{ $index}}" value="{{$item.Status}}" />
-
-
-													<input type="hidden" name="m_exportFileName" id="m_exportFileName_{{ $index}}" value="" />
-													<input type="hidden" name="m_mcisExportScript" id="m_mcisExportScript_{{ $index}}" value="" />
-
-												</td>
-										
-											</tr>
-											{{ end }}
-										</tbody>
-									</table>
-								</div>
-								
-								<script>
-									/* scroll */
+			<script>
+				/* scroll */
 									// $(document).ready(function(){
 									// 	var url = CommonURL+"/ns/"+NAMESPACE+"/mcis";								
 									// 		show_mcis_list2(url);// mcis, server 상태표시								    
 									// });
-								</script>
-								
-								
-								<!-- <div class="pageing">
+			</script>
+
+
+			<!-- <div class="pageing">
 									<a href="#" class="btn_prev"><span>이전</span></a>
 									<a href="#" class="active">1</a>
 									<a href="#">2</a>
@@ -199,11 +160,11 @@
 									<a href="#">5</a>
 									<a href="#" class="btn_next"><span>다음</span></a>
 								</div> -->
-								
-							</div>
-							
-						</div>
-						
-					</div>
-					<!-- //list -->
+
+		</div>
+
+	</div>
+
+</div>
+<!-- //list -->
 {{end}}

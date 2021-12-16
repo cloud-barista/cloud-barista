@@ -91,7 +91,7 @@ func SetupAndRun(cmd *cobra.Command, args []string) {
 		defer ns.Close()
 	}
 
-	if cmd.Parent().Name() == "image" || cmd.Parent().Name() == "network" || cmd.Parent().Name() == "securitygroup" || cmd.Parent().Name() == "keypair" || cmd.Parent().Name() == "spec" {
+	if cmd.Parent().Name() == "image" || cmd.Parent().Name() == "network" || cmd.Parent().Name() == "securitygroup" || cmd.Parent().Name() == "keypair" || cmd.Parent().Name() == "spec" || cmd.Parent().Name() == "commonresource" || cmd.Parent().Name() == "defaultresource" {
 		// MCIR API
 		mcir = tb_api.NewMCIRManager()
 		err = mcir.SetConfigPath(configFile)
@@ -157,7 +157,7 @@ func SetupAndRun(cmd *cobra.Command, args []string) {
 		ns.SetInType(inType)
 		ns.SetOutType(outType)
 	}
-	if cmd.Parent().Name() == "image" || cmd.Parent().Name() == "network" || cmd.Parent().Name() == "securitygroup" || cmd.Parent().Name() == "keypair" || cmd.Parent().Name() == "spec" {
+	if cmd.Parent().Name() == "image" || cmd.Parent().Name() == "network" || cmd.Parent().Name() == "securitygroup" || cmd.Parent().Name() == "keypair" || cmd.Parent().Name() == "spec" || cmd.Parent().Name() == "commonresource" || cmd.Parent().Name() == "defaultresource" {
 		mcir.SetInType(inType)
 		mcir.SetOutType(outType)
 	}
@@ -273,6 +273,8 @@ func SetupAndRun(cmd *cobra.Command, args []string) {
 			result, err = mcir.FetchImageByParam(connConfigName, nameSpaceID)
 		case "search":
 			result, err = mcir.SearchImage(inData)
+		case "update":
+			result, err = mcir.UpdateImage(inData)
 		}
 	case "network":
 		switch cmd.Name() {
@@ -352,6 +354,18 @@ func SetupAndRun(cmd *cobra.Command, args []string) {
 		case "update":
 			result, err = mcir.UpdateSpec(inData)
 		}
+	case "commonresource":
+		switch cmd.Name() {
+		case "load":
+			result, err = mcir.LoadCommonResource()
+		}
+	case "defaultresource":
+		switch cmd.Name() {
+		case "load":
+			result, err = mcir.LoadDefaultResourceByParam(nameSpaceID, resourceType, connConfigName)
+			// case "delete":
+			// 	result, err = mcir.DeleteDefaultResource()
+		}
 	case "mcis":
 		switch cmd.Name() {
 		case "create":
@@ -363,7 +377,7 @@ func SetupAndRun(cmd *cobra.Command, args []string) {
 		case "get":
 			result, err = mcis.GetMcisInfoByParam(nameSpaceID, mcisID)
 		case "delete":
-			result, err = mcis.DeleteMcisByParam(nameSpaceID, mcisID)
+			result, err = mcis.DeleteMcisByParam(nameSpaceID, mcisID, option)
 		case "delete-all":
 			result, err = mcis.DeleteAllMcisByParam(nameSpaceID)
 		case "status-list":
@@ -405,7 +419,7 @@ func SetupAndRun(cmd *cobra.Command, args []string) {
 		case "command-vm":
 			result, err = mcis.CmdMcisVm(inData)
 		case "deploy-milkyway":
-			result, err = mcis.InstallAgentToMcis(inData)
+			result, err = mcis.InstallBenchmarkAgentToMcis(inData)
 		case "access-vm":
 			fmt.Printf("mcis access-vm command is not implemented")
 		case "benchmark":

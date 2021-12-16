@@ -1,90 +1,54 @@
 {{define "VmNetwork"}}
 <!-- Network -->
 <div class="tab-pane fade" id="Network">
-													
+
 	<div class="tab_ip_box">
-		<div class="tit"><strong>Server Network Configuration</strong> <a href="javascript:void(0);" class="btn_clear">Clear</a></div>
-		
+		<div class="tit"><strong>Server Network Configuration</strong> <a href="javascript:void(0);"
+				class="btn_clear">Clear</a></div>
+
 		<div class="nbox fnbox" id="NetworkDiv">
-			
+
 			<div class="tab_ipbox">
 				<div class="ipbox ipbox1">
 					<ul>
-						<!-- <li>
-							<label><span class="ch">*</span>Network Name</label>
-							<span class="sbox sbox_m">
-								<select class="selectbox white pline sel_2">
-									<option value="">Input / select Name</option>
-									{{ range $vNetItem := .VNetList}}	
-									<option value="{{ $vNetItem.ID }}">[{{ $vNetItem.ConnectionName }}] {{ $vNetItem.Name }} {{ $vNetItem.CspVNetName }}</option>
-									{{ end }}
-								</select>
-								<a href="javascript:void(0);" data-toggle="modal" data-target="#Network_Interface" class="btn_view btn_Interface">View</a>
-							</span>
-						</li> -->
-
-						<!-- <span class="sbox sbox_m">
-							<input type="text" name="es_specFilterKeyword" placeholder="Filter Items" class="pline ip_1 search_ip" id="filter_spec" onkeydown="filterEnterToHidden(this.id, 'vmSpec_info', 'es_specList');"/>
-							<input type="submit" name="" class="btn_search" value="" title="" onclick="filterToHidden('filter_spec', 'vmSpec_info', 'es_specList')"/>
-							<a href="javascript:void(0);" data-toggle="modal" data-target="#OS_HW_Spec" class="btn_spec">Assist</a>
-						</span>
-						<input type="text" name="tab_vmSpecInfo" placeholder="" class="gray ip_2"  id="tab_vmSpecInfo" readonly />
-						<input type="hidden" name="tab_vmSpecConnectionName" id="tab_vmSpecConnectionName"/>
-						 -->
 						<li>
 							<label>Network Name</label>
 							<span class="sbox">
-							<input type="text" name="" placeholder="Network Name" class="pline ip_2" title="" id="filter_networkName" onkeydown="filterEnterVnetGroupToHidden(this.id)"/>
-							<input type="submit" name="" class="btn_search" value="" title="" onclick="filterVnetGroupToHidden('filter_networkName', 'es_vNetList');"/>							
+								<input type="text" name="" placeholder="Network Name" class="pline" title=""
+									id="tab_vNet_name" />
+								<a href="javascript:void(0);" data-toggle="modal" data-target="#networkAssist"
+									class="btn_network">Assist</a>
 							</span>
 						</li>
 						<li>
 							<label>Description</label>
 							<span class="sbox">
-							<input type="text" name="" placeholder="Network Description" class="pline ip_2" title="" id="filter_networkDescription" onkeydown="filterEnterVnetGroupToHidden(this.id)"/>
-							<input type="submit" name="" class="btn_search" value="" title="" onclick="filterVnetGroupToHidden('filter_networkDescription', 'es_vNetList');"/>
+								<input type="text" name="" placeholder="Network Description" class="gray" title=""
+									id="tab_vNet_description" readonly />
 							</span>
 						</li>
+					</ul>
+				</div>
+
+				<div class="ipbox ipbox2">
+					<ul>
 						<li>
 							<label>CIDR Block</label>
 							<span class="sbox">
-							<input type="text" name="" value="" placeholder="Filter Items" class="pline ip_2" title="" id="filter_networkCidrBlock" onkeydown="filterEnterVnetGroupToHidden(this.id)"/>
-							<input type="submit" name="" class="btn_search" value="" title="" onclick="filterVnetGroupToHidden('filter_networkCidrBlock', 'es_vNetList');"/>
+								<input type="text" name="" value="" placeholder="Filter Items" class="gray" title=""
+									id="tab_vNet_cidrBlock" readonly />
+
 							</span>
 						</li>
 						<li>
 							<label>subnet Name</label>
 							<span class="sbox">
-							<input type="text" name="" value="" placeholder="Filter Items" class="pline ip_2" title="" id="filter_networkSubnetname" onkeydown="filterEnterVnetGroupToHidden(this.id)"/>
-							<input type="submit" name="" class="btn_search" value="" title="" onclick="filterVnetGroupToHidden('filter_networkSubnetname', 'es_vNetList');"/>
-							</span>
-						</li>
-					</ul>
-				</div>
-				<div class="ipbox ipbox2">
-					<ul>
-						<!-- region이 선택 된 경우 해당 region의 az -->
-						<li>
-							<label>Availability Zone</label>
-							<span class="sbox">
-							<select class="selectbox white pline sel_2" id="es_networkAvailabilityZone">
-								<option value="1">Select Zone Name</option>
-							</select>
-							</span>
-						</li>
-						<li>
-							<label>Interface Name</label>
-							<input type="text" name="" value="" placeholder="Filter Items" class="pline ip_2" title="" id="es_networkInterfaceName"/>
-							<span class="sbox sbox_m">
-								<select class="selectbox white pline sel_2">
-									<option value="1">Input / select Name</option>
-								</select>
-								<a href="javascript:void(0);" data-toggle="modal" data-target="#Network_Interface" class="btn_view btn_Interface">View</a>
-							</span>
-						</li>						
-					</ul>
+								<input type="text" name="" value="" placeholder="Filter Items" class="gray" title=""
+									id="tab_vNet_subnetName" readonly />
 
-					
+							</span>
+						</li>
+					</ul>
 				</div>
 
 			</div>
@@ -92,188 +56,22 @@
 				<div class="ipbox ipbox3">
 					<ul>
 						<li>
-							<input type="text" name="tab_vNetInfo" placeholder="" class="gray ip_2" id="tab_vNetInfo" readonly />
-							<input type="hidden" name="tab_vNetConnectionName" id="tab_vNetConnectionName"/>
+							<input type="hidden" name="tab_vNet_id" id="tab_vNet_id" />
+							<input type="hidden" name="tab_vNet_subnetId" id="tab_vNet_subnetId" />
+							<input type="hidden" name="tab_vNet_connectionName" id="tab_vNet_connectionName" />
 						</li>
-						<li>
-							<div class="dataTable status_list">
-								<table cellpadding="0" cellspacing="0" summary="" id="es_vNetList" style="display:none;">
-									<colgroup>
-										<col width="30%">
-										<col width="30%">
-										<col width="30%">			
-									</colgroup>
-									<thead>
-										<tr>
-											<th>VPC Name</th>
-											<th>CIDR Block</th>
-											<th>Subnet</th>
-											<th>Description</th>
-										</tr>
-									</thead>
-									<tbody id="e_vNetListTbody">
-										{{ $length := len .VNetList }} 
-										{{ if eq $length 0 }}
-										<tr>
-											<td class="overlay hidden" data-th="" colspan="4">No Data</td>
-										</tr>
-										{{ end }}
-		
-										{{range $vNetIndex, $vNetItem := .VNetList}}	
-										<tr onclick="setVnetValueToFormObj('es_vNetList', 'tab_vNet', '{{$vNetItem.ID}}','vNet', '{{$vNetIndex}}', 'e_vNetId');">
-												
-												<input type="hidden" id="vNet_id_{{$vNetIndex}}" value="{{$vNetItem.ID}}"/>
-												<input type="hidden" name="vNet_connectionName" id="vNet_connectionName_{{$vNetIndex}}" value="{{$vNetItem.ConnectionName}}"/>
-												<input type="hidden" name="vNet_name" id="vNet_name_{{$vNetIndex}}" value="{{$vNetItem.Name}}"/>
-												<input type="hidden" name="vNet_description" id="vNet_description_{{$vNetIndex}}" value="{{$vNetItem.Description}}"/>
-												<input type="hidden" name="vNet_cidrBlock" id="vNet_cidrBlock_{{$vNetIndex}}" value="{{$vNetItem.CidrBlock}}"/>
-												<input type="hidden" name="vNet_cspVnetName" id="vNet_cspVnetName_{{$vNetIndex}}" value="{{$vNetItem.CspVNetName}}"/>
-												
-												<input type="hidden" name="vNet_subnetInfos" id="vNet_subnetInfos_{{$vNetIndex}}" value="{{$vNetItem.SubnetInfos}}"/>
-												<input type="hidden" name="vNet_keyValueInfos" id="vNet_keyValueInfos_{{$vNetIndex}}" value="{{$vNetItem.KeyValueInfos}}"/>
-		
-												<input type="hidden" id="vNet_info_{{$vNetIndex}}" value="{{$vNetItem.ID}}|{{$vNetItem.Name}}|{{$vNetItem.CspVNetName}}|{{$vNetItem.CidrBlock}}|{{$vNetItem.SubnetInfos}}"/>
-												<!-- TODO : Interface Name, Availability Zon 추가-->
-											
-											<td class="overlay hidden" data-th="Name">{{$vNetItem.Name}}</td>
-											<td class="btn_mtd ovm td_left" data-th="CidrBlock">
-												{{$vNetItem.CidrBlock}}
-											</td>
-											<td class="btn_mtd ovm td_left" data-th="SubnetInfo">
-												{{range $subnetIndex, $subnetItem := .SubnetInfos}}
-												<input type="hidden" name="vNet_subnet_{{$vNetItem.ID}}" id="vNet_subnet_{{$vNetItem.ID}}_{{$subnetIndex}}" value="{{$subnetItem.IID.NameId}}"/>
-												{{$subnetIndex}} || {{$subnetItem.IID.NameId}} <p>
-												{{ end }}
-											</td>
-											<td class="overlay hidden" data-th="Description">{{$vNetItem.Description}}</td>
-										</tr>											
-										{{end}}
-										
-									</tbody>
-								</table>
-							</div>
-						</li>
+
 					</ul>
 				</div>
-			</div>			
+			</div>
 		</div>
-		<!-- TODO : 현단계에서는 modify 기능 없음(insert/delete만 가능하여 주석처리)-->
-		<!-- <div class="btn_n_box"><div class="add"><button class="network_btn_add" value="btn_add" name="">add</button></div></div>
-		
-		<div id="addDiv"></div>
-		
-		<script>
-			$(document).ready(function() {
-				//Server Network Configuration copy
-			  $('.network_btn_add').click(function() {
-				  var $btnbox = $('<div class="btn_n_box btn_ca"><button class="network_btn_del" name="btn_del" value="">del</button></div>');
-				  $('#NetworkDiv').clone().appendTo("#addDiv").append($btnbox.clone()); 
-				  $("#NetworkDiv").each(function(){
-					$('.network_btn_del').on('click', function() {
-					  $(this).parent().parent().remove();
-					});
-				});  
-			  });                                   
-			});
-		</script> -->
-		
-		<!-- 
-		<script>
-			$(document).on("click",".tab_ipbox .btn_add",function(){
-				var addDiv = 
-				'<div class="nbox" name="NetworkDiv">'+
-			
-					'<div class="tab_ipbox">'+
-					
-						'<div class="ipbox ipbox1">'+
-							'<ul>'+
-								'<li>'+
-									'<label><span class="ch">*</span>Network Name</label>'+
-									'<span class="sbox sbox_m">'+
-										'<select class="selectbox white pline sel_2">'+
-											'<option value="1">Input / select Name</option>'+
-										'</select>'+
-										'<a href="javascript:void(0);" class="btn_view btn_Interface">View</a>'+
-									'</span>'+
-								'</li>'+
-								'<li>'+
-									'<label>Description</label>'+
-									'<textarea  cols="" rows="" placeholder="Input Description" class="pline ta_1" title="" ></textarea>'+
-								'</li>'+
-							'</ul>'+
-						'</div>'+
-						'<div class="ipbox ipbox2">'+
-							'<ul>'+
-								'<li>'+
-									'<label>CIDR Block</label>'+
-									'<input type="text" name="" value="" placeholder="Filter Items" class="pline ip_2" title="" />'+
-								'</li>'+
-								'<li>'+
-									'<label><span class="ch">*</span>subnet Name</label>'+
-									'<span class="sbox sbox_m">'+
-										'<select class="selectbox white pline sel_2">'+
-											'<option value="1">Input / select Name</option>'+
-										'</select>'+
-										'<a href="javascript:void(0);" class="btn_view">View</a>'+
-									'</span>'+
-								'</li>'+
-								'<li>'+
-									'<label>Availability Zone</label>'+
-									'<select class="selectbox white pline sel_2">'+
-										'<option value="1">Select Zone Name</option>'+
-									'</select>'+
-								'</li>'+
-							'</ul>'+
-						'</div>'+
-					'</div>'+
-					
-					
-					'<div class="tab_ipbox tab_ipbox_2">'+
-						'<div class="ipbox ipbox1">'+
-							'<ul>'+
-								'<li>'+
-									'<label><span class="ch">*</span>Interface Name</label>'+
-									'<span class="sbox sbox_m">'+
-										'<select class="selectbox white pline sel_2">'+
-											'<option value="1">Input / select Name</option>'+
-										'</select>'+
-										'<a href="javascript:void(0);" class="btn_view btn_Interface">View</a>'+
-									'</span>'+
-								'</li>'+
-							'</ul>'+
-						'</div>'+
-						'<div class="ipbox ipbox1">'+
-							'<ul>'+
-								'<li>'+
-									'<label></label>'+
-									'<button class="btn_add" name="btn_add" value="">add</button>'+
-									'<button class="btn_del" name="btn_del" value="">del</button>'+
-								'</li>'+
-							'</ul>'+
-						'</div>'+
-					'</div>'+
-			
-				'</div>';
-				var divHtml = $( "div.nbox[name=NetworkDiv]:last" );
-				divHtml.after(addDiv);
-				$('select').niceSelect();
-			});
-		  $('.btn_add').on("click", function() {
-				divHtml.after(addDiv);
-		  });
-			$(document).on("click","button[name=btn_del]",function(){
-				var divHtml = $(this).after(addDiv);
-				divHtml.remove();
-			});
-		</script>	
-		 -->
-														
+
 	</div>
-	
+
 	<div class="btn_tab">
-  <a href="javascript:void(0);" class="btn_prev">Prev</a>
-  <a href="javascript:void(0);" class="btn_next">Next</a>
-</div>
+		<a href="javascript:void(0);" class="btn_prev">Prev</a>
+		<a href="javascript:void(0);" class="btn_next">Next</a>
+	</div>
 </div>
 <!-- //Network -->
 {{end}}

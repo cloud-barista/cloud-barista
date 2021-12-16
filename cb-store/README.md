@@ -12,7 +12,7 @@ You can choose NUTSDB or ETCD for repository of cb-store.
 
 ```
 [NOTE]
-cb-store is currently under development. (the latest version is 0.3.0 espresso)
+cb-store is currently under development.
 So, we do not recommend using the current release in production.
 Please note that the functionalities of cb-store are not stable and secure yet.
 If you have any difficulties in using cb-store, please let us know.

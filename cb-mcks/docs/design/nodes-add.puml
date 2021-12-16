@@ -1,0 +1,91 @@
+@startuml
+
+header **Cloud-Barista MCKS** (v0.5.0-affogato)
+title Add nodes
+hide footbox
+
+participant	"Webtool"		as webtool		#d1e0ff
+participant	"MCKS"		as provider
+database	"MCKS data"	as db
+participant	"Tumblebug"		as tumblebug	#d1e0ff
+participant	"Control plane"	as mNodes		#eeeeee
+participant	"Worker nodes"	as wNodes		#eeeeee
+
+
+activate webtool
+	webtool		->	provider		: POST\n/ns/:ns/clusters/:cluster/nodes \n{controlPlane:{},worker:{}}
+
+	activate provider
+
+		provider	->	tumblebug	: GET\n/ns/:ns/mcis/:mcis
+		tumblebug	-->	provider	: {mcis}
+		provider	->	webtool		: [if mcis does exist]\nerror 
+
+		'-- 1. join command
+		provider	<->	db			: select {control-plane}
+		provider	->		mNodes		: ssh (get a worker join command)
+		provider	<--		mNodes		: output (join-command)
+		provider	->		webtool		: [if there is an error]\nerror
+		provider	->		provider	: network cni & index
+
+		'-- 2.1. vpc
+		provider	->	tumblebug	: GET\n/ns/:ns/resources/vNet/:vpc
+		tumblebug	-->	provider	: {vpc}
+		provider	->	tumblebug	: [if it does not exist]\nPOST s/:ns/resources/vNet
+		tumblebug	-->	provider	: {vpc}
+		provider	->	webtool		: [if there is an error]\nerror
+
+		'-- 2.2. sg(fw)
+		provider	->	tumblebug	: GET\n/ns/:ns/resources/securityGroup/:sg
+		tumblebug	-->	provider	: {sg}
+		provider	->	tumblebug	: [if it does not exist]\nPOST /ns/:ns/resources/securityGroup
+		tumblebug	-->	provider	: {sg}
+		provider	->	webtool		: [if there is an error]\nerror
+
+		'-- 2.3. ssh
+		provider	->	tumblebug	: GET\n/ns/:ns/resources/sshKey/:key
+		tumblebug	-->	provider	: {keypair}
+		provider	->	tumblebug	: [if it does not exist]\nPOST /ns/:ns/resources/sshKey
+		tumblebug	-->	provider	: {keypair}
+		provider	->	webtool		: [if there is an error]\nerror
+		
+		'-- 2.4. image
+		provider	->	tumblebug	: GET\n/ns/:ns/resources/image/:image
+		tumblebug	-->	provider	: {image}
+		provider	->	tumblebug 	: [if it does not exist]\nPOST /ns/:ns/resources/image
+		tumblebug	-->	provider	: {image}
+		provider	->	webtool		: [if there is an error]\nerror
+
+		'-- 2.5. spec
+		provider	->	tumblebug	: GET\n/ns/:ns/resources/spec/:spec
+		tumblebug	-->	provider	: {image}
+		provider	->	tumblebug 	: [if it does not exist]\nPOST /ns/:ns/resources/spec
+		tumblebug	-->	provider	: {image}
+		provider	->	webtool		: [if there is an error]\nerror
+
+		'-- 2.6. mcis
+		
+		loop while node count
+			provider	->	tumblebug	: POST\n/ns/:ns/mcis/:mcis/vm:/vm
+			tumblebug	-->	provider 	: {vm}
+			provider	->	webtool		: [if there is an error]\nerror
+		end
+	
+		'-- 3. boostrap & provisioning
+		loop nodes
+			provider	<->o	wNodes		: test ssh connection
+			provider	<->o	wNodes		: copy scripts
+			provider	<->o	wNodes		: systemd
+			provider	<->o	wNodes		: bootstrap
+			provider	<->o	wNodes		: join command (ssh)
+			provider	->		webtool		: [if there is an error]\nerror
+		end
+
+		provider	->	db					: update {cluster}
+		provider	-->	webtool				: {nodes}
+
+	deactivate provider
+
+deactivate webtool
+
+@enduml

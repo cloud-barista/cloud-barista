@@ -7,6 +7,10 @@ import (
 	sp_api "github.com/cloud-barista/cb-spider/interface/api"
 	"github.com/cloud-barista/cb-tumblebug/src/api/grpc/logger"
 	tb_api "github.com/cloud-barista/cb-tumblebug/src/api/grpc/request"
+
+	core_common "github.com/cloud-barista/cb-tumblebug/src/core/common"
+	core_mcir "github.com/cloud-barista/cb-tumblebug/src/core/mcir"
+	core_mcis "github.com/cloud-barista/cb-tumblebug/src/core/mcis"
 )
 
 func main() {
@@ -98,7 +102,7 @@ func SimpleNSApiTest() {
 	ns.Close()
 }
 
-// ConfigNSApiTest - Call NS API using env config file
+// ConfigNSApiTest is to Call NS API using env config file
 func ConfigNSApiTest() {
 
 	fmt.Print("\n\n============= ConfigNSApiTest() =============\n")
@@ -127,7 +131,7 @@ func ConfigNSApiTest() {
 	ns.Close()
 }
 
-// DocTypeNSApiTest - Call NS API using input/output
+// DocTypeNSApiTest is to Call NS API using input/output
 func DocTypeNSApiTest() {
 
 	fmt.Print("\n\n============= DocTypeNSApiTest() =============\n")
@@ -230,7 +234,7 @@ nsId: ns-test
 	ns.Close()
 }
 
-// ConfigMCIRApiTest - Call MCIR API using env config file
+// ConfigMCIRApiTest is to Call MCIR API using env config file
 func ConfigMCIRApiTest() {
 
 	fmt.Print("\n\n============= ConfigMCIRApiTest() =============\n")
@@ -259,7 +263,7 @@ func ConfigMCIRApiTest() {
 	mcir.Close()
 }
 
-// ConfigMCISApiTest - Call MCIS API using env config file
+// ConfigMCISApiTest is to Call MCIS API using env config file
 func ConfigMCISApiTest() {
 
 	fmt.Print("\n\n============= ConfigMCISApiTest() =============\n")
@@ -288,7 +292,7 @@ func ConfigMCISApiTest() {
 	mcis.Close()
 }
 
-// CreateCIMApiTest - Call Create CIM API using parameter
+// CreateCIMApiTest is to Call Create CIM API using parameter
 func CreateCIMApiTest() {
 
 	fmt.Print("\n\n============= CreateCIMApiTest() =============\n")
@@ -323,11 +327,11 @@ func CreateCIMApiTest() {
 		CredentialName: "openstack-credential01",
 		ProviderName:   "OPENSTACK",
 		KeyValueInfoList: []sp_api.KeyValue{
-			sp_api.KeyValue{Key: "IdentityEndpoint", Value: "http://192.168.201.208:5000/v3"},
-			sp_api.KeyValue{Key: "Username", Value: "demo"},
-			sp_api.KeyValue{Key: "Password", Value: "openstack"},
-			sp_api.KeyValue{Key: "DomainName", Value: "Default"},
-			sp_api.KeyValue{Key: "ProjectID", Value: "b31474c562184bcbaf3496e08f5a6a4c"},
+			{Key: "IdentityEndpoint", Value: "http://192.168.201.208:5000/v3"},
+			{Key: "Username", Value: "demo"},
+			{Key: "Password", Value: "openstack"},
+			{Key: "DomainName", Value: "Default"},
+			{Key: "ProjectID", Value: "b31474c562184bcbaf3496e08f5a6a4c"},
 		},
 	}
 	result, err = cim.CreateCredentialByParam(reqCredential)
@@ -341,7 +345,7 @@ func CreateCIMApiTest() {
 		RegionName:   "openstack-region01",
 		ProviderName: "OPENSTACK",
 		KeyValueInfoList: []sp_api.KeyValue{
-			sp_api.KeyValue{Key: "Region", Value: "RegionOne"},
+			{Key: "Region", Value: "RegionOne"},
 		},
 	}
 	result, err = cim.CreateRegionByParam(reqRegion)
@@ -368,7 +372,7 @@ func CreateCIMApiTest() {
 	cim.Close()
 }
 
-// CreateNSApiTest - Call Create NS API using parameter
+// CreateNSApiTest is to Call Create NS API using parameter
 func CreateNSApiTest() {
 
 	fmt.Print("\n\n============= CreateNSApiTest() =============\n")
@@ -387,7 +391,7 @@ func CreateNSApiTest() {
 		logger.Fatal(err)
 	}
 
-	reqNs := &tb_api.NsReq{
+	reqNs := &core_common.NsReq{
 		Name:        "ns-test",
 		Description: "NameSpace for General Testing",
 	}
@@ -401,7 +405,7 @@ func CreateNSApiTest() {
 	ns.Close()
 }
 
-// CreateMCIRApiTest - Call Create MCIR API using parameter
+// CreateMCIRApiTest is to Call Create MCIR API using parameter
 func CreateMCIRApiTest() {
 
 	fmt.Print("\n\n============= CreateMCIRApiTest() =============\n")
@@ -422,15 +426,15 @@ func CreateMCIRApiTest() {
 
 	reqTbVNet := &tb_api.TbVNetCreateRequest{
 		NsId: "ns-test",
-		Item: tb_api.TbVNetReq{
+		Item: core_mcir.TbVNetReq{
 			Name:           "openstack-config01-test",
 			ConnectionName: "openstack-config01",
 			CidrBlock:      "192.168.0.0/16",
-			SubnetInfoList: []tb_api.SpiderSubnetReqInfo{
-				tb_api.SpiderSubnetReqInfo{
+			SubnetInfoList: []core_mcir.TbSubnetReq{
+				{
 					Name:         "openstack-config01-test",
 					IPv4_CIDR:    "192.168.1.0/24",
-					KeyValueList: []tb_api.KeyValue{},
+					KeyValueList: []core_common.KeyValue{},
 				},
 			},
 			Description: "",
@@ -445,7 +449,7 @@ func CreateMCIRApiTest() {
 
 	reqTbImage := &tb_api.TbImageInfoRequest{
 		NsId: "ns-test",
-		Item: tb_api.TbImageInfo{
+		Item: core_mcir.TbImageInfo{
 			Id:             "",
 			Name:           "openstack-config01-test",
 			ConnectionName: "openstack-config01",
@@ -455,7 +459,7 @@ func CreateMCIRApiTest() {
 			CreationDate:   "",
 			GuestOS:        "cirros",
 			Status:         "",
-			KeyValueList:   []tb_api.KeyValue{},
+			KeyValueList:   []core_common.KeyValue{},
 		},
 	}
 	result, err = mcir.CreateImageWithInfoByParam(reqTbImage)
@@ -467,13 +471,13 @@ func CreateMCIRApiTest() {
 
 	reqTbSecurityGroup := &tb_api.TbSecurityGroupCreateRequest{
 		NsId: "ns-test",
-		Item: tb_api.TbSecurityGroupReq{
+		Item: core_mcir.TbSecurityGroupReq{
 			Name:           "openstack-config01-test",
 			ConnectionName: "openstack-config01",
 			VNetId:         "openstack-config01-test",
 			Description:    "test description",
-			FirewallRules: &[]tb_api.SpiderSecurityRuleInfo{
-				tb_api.SpiderSecurityRuleInfo{
+			FirewallRules: &[]core_mcir.SpiderSecurityRuleInfo{
+				{
 					FromPort:   "1",
 					ToPort:     "65535",
 					IPProtocol: "tcp",
@@ -492,39 +496,39 @@ func CreateMCIRApiTest() {
 
 	reqTbSpecInfo := &tb_api.TbSpecInfoRequest{
 		NsId: "ns-test",
-		Item: tb_api.TbSpecInfo{
+		Item: core_mcir.TbSpecInfo{
 			Id:                    "",
 			Name:                  "openstack-config01-test",
 			ConnectionName:        "openstack-config01",
 			CspSpecName:           "m1.tiny",
-			Os_type:               "",
-			Num_vCPU:              0,
-			Num_core:              0,
-			Mem_GiB:               0,
-			Storage_GiB:           0,
+			OsType:                "",
+			NumvCPU:               0,
+			NumCore:               0,
+			MemGiB:                0,
+			StorageGiB:            0,
 			Description:           "",
-			Cost_per_hour:         0,
-			Num_storage:           0,
-			Max_num_storage:       0,
-			Max_total_storage_TiB: 0,
-			Net_bw_Gbps:           0,
-			Ebs_bw_Mbps:           0,
-			Gpu_model:             "",
-			Num_gpu:               0,
-			Gpumem_GiB:            0,
-			Gpu_p2p:               "",
+			CostPerHour:           0,
+			NumStorage:            0,
+			MaxNumStorage:         0,
+			MaxTotalStorageTiB:    0,
+			NetBwGbps:             0,
+			EbsBwMbps:             0,
+			GpuModel:              "",
+			NumGpu:                0,
+			GpuMemGiB:             0,
+			GpuP2p:                "",
 			OrderInFilteredResult: 0,
 			EvaluationStatus:      "",
-			EvaluationScore_01:    0.0,
-			EvaluationScore_02:    0.0,
-			EvaluationScore_03:    0.0,
-			EvaluationScore_04:    0.0,
-			EvaluationScore_05:    0.0,
-			EvaluationScore_06:    0.0,
-			EvaluationScore_07:    0.0,
-			EvaluationScore_08:    0.0,
-			EvaluationScore_09:    0.0,
-			EvaluationScore_10:    0.0,
+			EvaluationScore01:     0.0,
+			EvaluationScore02:     0.0,
+			EvaluationScore03:     0.0,
+			EvaluationScore04:     0.0,
+			EvaluationScore05:     0.0,
+			EvaluationScore06:     0.0,
+			EvaluationScore07:     0.0,
+			EvaluationScore08:     0.0,
+			EvaluationScore09:     0.0,
+			EvaluationScore10:     0.0,
 		},
 	}
 	result, err = mcir.CreateSpecWithInfoByParam(reqTbSpecInfo)
@@ -536,7 +540,7 @@ func CreateMCIRApiTest() {
 
 	reqTbSshKey := &tb_api.TbSshKeyCreateRequest{
 		NsId: "ns-test",
-		Item: tb_api.TbSshKeyReq{
+		Item: core_mcir.TbSshKeyReq{
 			Name:           "openstack-config01-test",
 			ConnectionName: "openstack-config01",
 			Description:    "",
@@ -552,7 +556,7 @@ func CreateMCIRApiTest() {
 	mcir.Close()
 }
 
-// CreateMCISApiTest - Call Create MCIS API using parameter
+// CreateMCISApiTest is to Call Create MCIS API using parameter
 func CreateMCISApiTest() {
 
 	fmt.Print("\n\n============= CreateMCISApiTest() =============\n")
@@ -573,14 +577,14 @@ func CreateMCISApiTest() {
 
 	reqTbMcis := &tb_api.TbMcisCreateRequest{
 		NsId: "ns-test",
-		Item: tb_api.TbMcisReq{
+		Item: core_mcis.TbMcisReq{
 			Name:            "mcis-01",
 			PlacementAlgo:   "",
 			InstallMonAgent: "no",
 			Description:     "",
 			Label:           "",
-			Vm: []tb_api.TbVmReq{
-				tb_api.TbVmReq{
+			Vm: []core_mcis.TbVmReq{
+				{
 					VmGroupSize:    "0",
 					Name:           "openstack-config01-test-01",
 					ConnectionName: "openstack-config01",
@@ -597,7 +601,7 @@ func CreateMCISApiTest() {
 					Description:    "description",
 					Label:          "label",
 				},
-				tb_api.TbVmReq{
+				{
 					VmGroupSize:    "0",
 					Name:           "openstack-config01-test-02",
 					ConnectionName: "openstack-config01",
@@ -628,7 +632,7 @@ func CreateMCISApiTest() {
 	mcis.Close()
 }
 
-// DeleteMCISApiTest - Call Delete MCIS API using parameter
+// DeleteMCISApiTest is to Call Delete MCIS API using parameter
 func DeleteMCISApiTest() {
 
 	fmt.Print("\n\n============= DeleteMCISApiTest() =============\n")
@@ -647,7 +651,12 @@ func DeleteMCISApiTest() {
 		logger.Fatal(err)
 	}
 
-	result, err := mcis.DeleteMcisByParam("ns-test", "mcis-01")
+	result, err := mcis.ControlMcisByParam("ns-test", "mcis-01", "terminate")
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	result, err = mcis.DeleteMcisByParam("ns-test", "mcis-01", "")
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -657,7 +666,7 @@ func DeleteMCISApiTest() {
 	mcis.Close()
 }
 
-// DeleteMCIRApiTest - Call Delete MCIR API using parameter
+// DeleteMCIRApiTest is to Call Delete MCIR API using parameter
 func DeleteMCIRApiTest() {
 
 	fmt.Print("\n\n============= DeleteMCIRApiTest() =============\n")
@@ -714,7 +723,7 @@ func DeleteMCIRApiTest() {
 	mcir.Close()
 }
 
-// DeleteNSApiTest - Call Delete NS API using parameter
+// DeleteNSApiTest is to Call Delete NS API using parameter
 func DeleteNSApiTest() {
 
 	fmt.Print("\n\n============= DeleteNSApiTest() =============\n")
@@ -743,7 +752,7 @@ func DeleteNSApiTest() {
 	ns.Close()
 }
 
-// DeleteCIMApiTest - Call Delete CIM API using parameter
+// DeleteCIMApiTest is to Call Delete CIM API using parameter
 func DeleteCIMApiTest() {
 
 	fmt.Print("\n\n============= DeleteCIMApiTest() =============\n")

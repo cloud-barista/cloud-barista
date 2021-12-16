@@ -6,59 +6,44 @@ function clean_mcis_sequence() {
 	local POSTFIX=$3
 	local TestSetFile=$4
 
-	echo '## 8. MCIS: Terminate'
-	OUTPUT=$(../8.mcis/terminate-mcis.sh $CSP $REGION $POSTFIX $TestSetFile)
-	echo "${OUTPUT}"
-	OUTPUT1=$(echo "${OUTPUT}" | grep -c 'No VM to terminate')
-	OUTPUT2=$(echo "${OUTPUT}" | grep -c 'Terminate is not allowed')
-	OUTPUT3=$(echo "${OUTPUT}" | grep -c 'does not exist')
+	# echo '## 8. MCIS: Refine first (remove failed VMs)'
+	# OUTPUT=$(../8.mcis/refine-mcis.sh -c $CSP -r $REGION -n $POSTFIX -f $TestSetFile)
 
-	if [ "${OUTPUT1}" != 1 ] && [ "${OUTPUT2}" != 1 ] && [ "${OUTPUT3}" != 1 ]; then
-		echo "============== sleep 30 before delete MCIS obj"
-		dozing 30
-	fi
+	# echo '## 8. MCIS: Terminate'
+	# OUTPUT=$(../8.mcis/terminate-mcis.sh -c $CSP -r $REGION -n $POSTFIX -f $TestSetFile)
+	# echo "${OUTPUT}"
+	# OUTPUT1=$(echo "${OUTPUT}" | grep -c 'No VM to terminate')
+	# OUTPUT2=$(echo "${OUTPUT}" | grep -c 'Terminate is not allowed')
+	# OUTPUT3=$(echo "${OUTPUT}" | grep -c 'does not exist')
 
-	../8.mcis/delete-mcis.sh $CSP $REGION $POSTFIX $TestSetFile
+	# if [ "${OUTPUT1}" != 1 ] && [ "${OUTPUT2}" != 1 ] && [ "${OUTPUT3}" != 1 ]; then
+	# 	echo "============== sleep 30 before delete MCIS obj"
+	# 	dozing 30
+	# fi
+
+	../8.mcis/delete-mcis.sh -c $CSP -r $REGION -n $POSTFIX -f $TestSetFile -x terminate
 }
 
 SECONDS=0
-
-FILE=../credentials.conf
-if [ ! -f "$FILE" ]; then
-	echo "$FILE does not exist."
-	exit
-fi
-
-TestSetFile=${4:-../testSet.env}
-if [ ! -f "$TestSetFile" ]; then
-	echo "$TestSetFile does not exist."
-	exit
-fi
-source $TestSetFile
-source ../conf.env
-source ../credentials.conf
 
 echo "####################################################################"
 echo "## Remove MCIS only"
 echo "####################################################################"
 
-CSP=${1}
-REGION=${2:-1}
-POSTFIX=${3:-developer}
-
-source ../common-functions.sh
-getCloudIndex $CSP
+source ../init.sh
 
 if [ "${INDEX}" == "0" ]; then
-	echo "[Parallel excution for all CSP regions]"
+	echo "[Parallel execution for all CSP regions]"
 else
-	echo "[Single excution for a CSP region]"
+	echo "[Single execution for a CSP region]"
 fi
 clean_mcis_sequence $CSP $REGION $POSTFIX $TestSetFile
 
-echo ""
+echo -e "${BOLD}"
 echo "[Cleaning related commands in history file executionStatus]"
-echo "Remove (MCIS) ${CSP} ${REGION} ${POSTFIX} ${TestSetFile}"
+echo -e ""
+echo -e "${NC}${BLUE}- Removing  (MCIS) ${CSP} ${REGION} ${POSTFIX} ${TestSetFile}"
+echo -e "${NC}"
 sed -i "/(MCIS) ${CSP} ${REGION} ${POSTFIX} ${TestSetFile//\//\\/}/d" ./executionStatus
 echo ""
 echo "[Executed Command List]"

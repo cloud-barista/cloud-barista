@@ -1,54 +1,27 @@
 #!/bin/bash
 
-#function register_cloud() {
-
-echo "[Check jq package (if not, install)]"
-if ! dpkg-query -W -f='${Status}' jq | grep "ok installed"; then sudo apt install -y jq; fi
-
-FILE=../credentials.conf
-if [ ! -f "$FILE" ]; then
-    echo "$FILE does not exist."
-    exit
-fi
-
-TestSetFile=${4:-../testSet.env}
-if [ ! -f "$TestSetFile" ]; then
-    echo "$TestSetFile does not exist."
-    exit
-fi
-source $TestSetFile
-source ../conf.env
-source ../credentials.conf
-
-echo "####################################################################"
-echo "## 1. Create Cloud Connction Config"
-echo "####################################################################"
-
-CSP=${1}
-REGION=${2:-1}
-POSTFIX=${3:-developer}
-
-source ../common-functions.sh
-getCloudIndex $CSP
-
-RESTSERVER=localhost
-
-# for Cloud Driver Info
-resp=$(
-    curl -H "${AUTH}" -sX POST http://$SpiderServer/spider/driver -H 'Content-Type: application/json' -d @- <<EOF
+function CallSpider() {
+    # for Cloud Driver Info
+    echo "[Cloud Driver] ${DriverName[$INDEX]}"
+    resp=$(
+        curl -H "${AUTH}" -sX POST http://$SpiderServer/spider/driver -H 'Content-Type: application/json' -d @- <<EOF
         {
              "ProviderName" : "${ProviderName[$INDEX]}",
              "DriverLibFileName" : "${DriverLibFileName[$INDEX]}",
              "DriverName" : "${DriverName[$INDEX]}"
          }
 EOF
-)
-echo ${resp} | jq ''
-echo ""
+    )
+    echo ${resp} |
+        jq -r '(["DriverName","ProviderName","DriverLibFileName"] | (., map(length*"-"))), ([.DriverName, .ProviderName, .DriverLibFileName]) | @tsv' |
+        column -t
+    echo ""
+    echo ""
 
-# for Cloud Credential Info
-resp=$(
-    curl -H "${AUTH}" -sX POST http://$SpiderServer/spider/credential -H 'Content-Type: application/json' -d @- <<EOF
+    # for Cloud Credential Info
+    echo "[Cloud Credential] ${CredentialName[$INDEX]}"
+    resp=$(
+        curl -H "${AUTH}" -sX POST http://$SpiderServer/spider/credential -H 'Content-Type: application/json' -d @- <<EOF
         {
              "ProviderName" : "${ProviderName[$INDEX]}",
              "CredentialName" : "${CredentialName[$INDEX]}",
@@ -76,15 +49,19 @@ resp=$(
              ]
          }
 EOF
-)
-echo ${resp} | jq '.message'
-echo ""
+    )
+    echo ${resp} | # jq '.message'
+        jq -r '(["CredentialName","ProviderName"] | (., map(length*"-"))), ([.CredentialName, .ProviderName]) | @tsv' |
+        column -t
+    echo ""
+    echo ""
 
-# for Cloud Region Info
-# Differenciate Cloud Region Value for Resource Group Name
-if [ "${CSP}" == "azure" ]; then
-    resp=$(
-        curl -H "${AUTH}" -sX POST http://$SpiderServer/spider/region -H 'Content-Type: application/json' -d @- <<EOF
+    # for Cloud Region Info
+    # Differenciate Cloud Region Value for Resource Group Name
+    if [ "${CSP}" == "azure" ]; then
+        echo "[Cloud Region] ${RegionName[$INDEX,$REGION]}"
+        resp=$(
+            curl -H "${AUTH}" -sX POST http://$SpiderServer/spider/region -H 'Content-Type: application/json' -d @- <<EOF
             {
             "ProviderName" : "${ProviderName[$INDEX]}",
             "KeyValueInfoList" : [
@@ -100,12 +77,16 @@ if [ "${CSP}" == "azure" ]; then
             "RegionName" : "${RegionName[$INDEX,$REGION]}"
         }
 EOF
-    )
-    echo ${resp} | jq ''
-    echo ""
-else
-    resp=$(
-        curl -H "${AUTH}" -sX POST http://$SpiderServer/spider/region -H 'Content-Type: application/json' -d @- <<EOF
+        )
+        echo ${resp} |
+            jq -r '(["RegionName","ProviderName","Region","Zone"] | (., map(length*"-"))), ([.RegionName, .ProviderName, .KeyValueInfoList[0].Value, .KeyValueInfoList[1].Value]) | @tsv' |
+            column -t
+        echo ""
+        echo ""
+    else
+        echo "[Cloud Region] ${RegionName[$INDEX,$REGION]}"
+        resp=$(
+            curl -H "${AUTH}" -sX POST http://$SpiderServer/spider/region -H 'Content-Type: application/json' -d @- <<EOF
             {
             "ProviderName" : "${ProviderName[$INDEX]}",
             "KeyValueInfoList" : [
@@ -121,14 +102,18 @@ else
             "RegionName" : "${RegionName[$INDEX,$REGION]}"
         }
 EOF
-    )
-    echo ${resp} | jq ''
-    echo ""
-fi
+        )
+        echo ${resp} |
+            jq -r '(["RegionName","ProviderName","Region","Zone"] | (., map(length*"-"))), ([.RegionName, .ProviderName, .KeyValueInfoList[0].Value, .KeyValueInfoList[1].Value]) | @tsv' |
+            column -t
+        echo ""
+        echo ""
+    fi
 
-# for Cloud Connection Config Info
-resp=$(
-    curl -H "${AUTH}" -sX POST http://$SpiderServer/spider/connectionconfig -H 'Content-Type: application/json' -d @- <<EOF
+    # for Cloud Connection Config Info
+    echo "[Cloud Connection Config] ${CONN_CONFIG[$INDEX,$REGION]}"
+    resp=$(
+        curl -H "${AUTH}" -sX POST http://$SpiderServer/spider/connectionconfig -H 'Content-Type: application/json' -d @- <<EOF
         {
             "ConfigName" : "${CONN_CONFIG[$INDEX,$REGION]}",
             "CredentialName" : "${CredentialName[$INDEX]}",
@@ -137,9 +122,50 @@ resp=$(
             "RegionName" : "${RegionName[$INDEX,$REGION]}"
         }
 EOF
-)
-echo ${resp} | jq ''
-echo ""
-#}
+    )
+    echo ${resp} |
+        jq -r '(["ConfigName","RegionName","CredentialName","DriverName","ProviderName"] | (., map(length*"-"))), ([.ConfigName, .RegionName, .CredentialName, .DriverName, .ProviderName]) | @tsv' |
+        column -t
+    echo ""
+}
 
-#register_cloud
+#function register_cloud() {
+
+echo "####################################################################"
+echo "## 1. Create Cloud Connction Config"
+echo "####################################################################"
+
+source ../init.sh
+
+echo "AUTH: $AUTH"
+echo "TumblebugServer: $TumblebugServer"
+echo "NSID: $NSID"
+echo "INDEX: $INDEX"
+echo "REGION: $REGION"
+echo "{CONN_CONFIG[$INDEX,$REGION]}: ${CONN_CONFIG[$INDEX,$REGION]}"
+echo "POSTFIX: $POSTFIX"
+echo ""
+
+if [ "${INDEX}" == "0" ]; then
+    echo "[Parallel execution for all CSP regions]"
+    INDEXX=${NumCSP}
+    for ((cspi = 1; cspi <= INDEXX; cspi++)); do
+        INDEXY=${NumRegion[$cspi]}
+        CSP=${CSPType[$cspi]}
+        echo "[$cspi] $CSP details"
+        for ((cspj = 1; cspj <= INDEXY; cspj++)); do
+            echo "[$cspi,$cspj] ${RegionName[$cspi,$cspj]}"
+
+            CallSpider
+
+        done
+
+    done
+    wait
+
+else
+    echo ""
+
+    CallSpider
+
+fi

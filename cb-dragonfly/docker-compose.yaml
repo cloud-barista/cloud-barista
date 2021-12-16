@@ -6,7 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: cloudbaristaorg/cb-dragonfly:espresso-v0.1-kafka
+    image: cloudbaristaorg/cb-dragonfly:dev
     container_name: cb-dragonfly
     volumes:
       - ./conf/:/go/src/github.com/cloud-barista/cb-dragonfly/conf/
@@ -27,12 +27,6 @@ services:
     restart: always
     security_opt:
       - no-new-privileges
-#    extra_hosts:
-#      - "external-cb-dragonfly:192.168.130.7"
-    networks:
-      cb-dragonfly:
-        aliases:
-          - cb-dragonfly
 
   # zookeeper for CB-Dragonfly
   cb-dragonfly-zookeeper:
@@ -41,12 +35,8 @@ services:
     ports:
       - 2181:2181
     restart: always
-    networks:
-      cb-dragonfly:
-        aliases:
-          - cb-dragonfly-zookeeper
 
-  # etcd for CB-Dragonfly
+  # kafka for CB-Dragonfly
   cb-dragonfly-kafka:
     image: wurstmeister/kafka:2.12-2.4.1
     container_name: cb-dragonfly-kafka
@@ -55,8 +45,14 @@ services:
       KAFKA_PORT: 9092
       KAFKA_ZOOKEEPER_CONNECT: cb-dragonfly-zookeeper:2181
       KAFKA_DELETE_TOPIC_ENABLE: "true"
-      KAFKA_LOG_RETENTION_MS: 10000
-      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 5000
+      KAFKA_LOG_RETENTION_HOURS: 1
+      # 1 hours (delete logs)
+      KAFKA_LOG_RETENTION_BYTES: 524288000
+      # 500 MB
+      KAFKA_LOG_SEGMENT_BYTES: 262144000
+      # 250 MB
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 600000
+      # 10 min (check interval)
       KAFKA_MESSAGE_TIMESTAMP_TYPE: LogAppendTime
       KAFKA_LOG_MESSAGE_TIMESTAMP_TYPE: LogAppendTime
     volumes:
@@ -64,20 +60,14 @@ services:
     ports:
       - 9092:9092
     restart: always
-    networks:
-      cb-dragonfly:
-        aliases:
-          - cb-dragonfly-kafka
-#    extra_hosts:
-#      - "external-cb-dragonfly:192.168.130.7"
 
   # InfluxDB for CB-Dragonfly
   cb-dragonfly-influxdb:
     image: influxdb:1.8-alpine
     container_name: cb-dragonfly-influxdb
     ports:
-      - 28083:8083
       - 28086:8086
+      - 28088:8088
     environment:
       - PRE_CREATE_DB=cbmon
       - INFLUXDB_DB=cbmon
@@ -85,10 +75,6 @@ services:
       - INFLUXDB_ADMIN_PASSWORD=password
       - INFLUXDB_HTTP_AUTH_ENABLED=true
     restart: always
-    networks:
-      cb-dragonfly:
-        aliases:
-          - cb-dragonfly-influxdb
 
   # Kapacitor for CB-Dragonfly
   cb-dragonfly-kapacitor:
@@ -104,10 +90,6 @@ services:
     depends_on:
       - cb-dragonfly-influxdb
     restart: always
-    networks:
-      cb-dragonfly:
-        aliases:
-          - cb-dragonfly-kapacitor
 
   # Chronograf for CB-Dragonfly
   cb-dragonfly-chronograf:
@@ -128,10 +110,6 @@ services:
       - cb-dragonfly-influxdb
       - cb-dragonfly-kapacitor
       - cb-dragonfly
-    networks:
-      cb-dragonfly:
-        aliases:
-          - cb-dragonfly-chronograf
 
 #  cb-dragonfly-zk-web:
 #    image: goodguide/zk-web
@@ -145,6 +123,3 @@ services:
 #      cb-dragonfly:
 #        aliases:
 #          - cb-dragonfly-zk-web
-
-networks:
-  cb-dragonfly:

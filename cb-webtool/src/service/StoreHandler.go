@@ -14,15 +14,18 @@ import (
 
 	"github.com/cloud-barista/cb-webtool/src/model"
 	"github.com/cloud-barista/cb-webtool/src/model/spider"
-	"github.com/cloud-barista/cb-webtool/src/model/tumblebug"
+	// "github.com/cloud-barista/cb-webtool/src/model/tumblebug"
+	tbcommon "github.com/cloud-barista/cb-webtool/src/model/tumblebug/common"
+	// tbmcir "github.com/cloud-barista/cb-webtool/src/model/tumblebug/mcir"
+	// tbmcis "github.com/cloud-barista/cb-webtool/src/model/tumblebug/mcis"
 	util "github.com/cloud-barista/cb-webtool/src/util"
 )
 
 // 로그인할 때, NameSpace 저장(Create, Delete, Update) 외에는 이 funtion 사용
 // 없으면 tb 조회
-func GetStoredNameSpaceList(c echo.Context) ([]tumblebug.NameSpaceInfo, model.WebStatus) {
+func GetStoredNameSpaceList(c echo.Context) ([]tbcommon.TbNsInfo, model.WebStatus) {
 	fmt.Println("====== GET STORED NAME SPACE ========")
-	nameSpaceList := []tumblebug.NameSpaceInfo{}
+	nameSpaceList := []tbcommon.TbNsInfo{}
 	nameSpaceErr := model.WebStatus{}
 	store := echosession.FromContext(c)
 
@@ -36,13 +39,13 @@ func GetStoredNameSpaceList(c echo.Context) ([]tumblebug.NameSpaceInfo, model.We
 		}
 	} else {
 		log.Println(storedNameSpaceList)
-		nameSpaceList = storedNameSpaceList.([]tumblebug.NameSpaceInfo)
+		nameSpaceList = storedNameSpaceList.([]tbcommon.TbNsInfo)
 		nameSpaceErr.StatusCode = 200
 	}
 	return nameSpaceList, nameSpaceErr
 }
 
-func SetStoreNameSpaceList(c echo.Context, nameSpaceList []tumblebug.NameSpaceInfo) error {
+func SetStoreNameSpaceList(c echo.Context, nameSpaceList []tbcommon.TbNsInfo) error {
 	fmt.Println("====== SET NAME SPACE ========")
 	store := echosession.FromContext(c)
 	store.Set(util.STORE_NAMESPACELIST, nameSpaceList)

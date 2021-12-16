@@ -1,4 +1,18 @@
-package restapiserver
+/*
+Copyright 2019 The Cloud-Barista Authors.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+// Package server is to handle REST API
+package server
 
 import (
 	"github.com/cloud-barista/cb-tumblebug/src/core/common"
@@ -50,11 +64,12 @@ const (
  ██║  ██║███████╗██║  ██║██████╔╝   ██║   
  ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═════╝    ╚═╝   
 
- Multi-cloud infrastructure managemenet framework
+ Multi-cloud infrastructure management framework
  ________________________________________________`
 )
 
-func ApiServer() {
+// RunServer func start Rest API server
+func RunServer(port string) {
 
 	e := echo.New()
 
@@ -101,11 +116,11 @@ func ApiServer() {
 	e.GET("/tumblebug/region", rest_common.RestGetRegionList)
 	e.GET("/tumblebug/region/:regionName", rest_common.RestGetRegion)
 
-	e.GET("/tumblebug/lookupSpecs", rest_mcir.RestLookupSpecList)
-	e.GET("/tumblebug/lookupSpec", rest_mcir.RestLookupSpec)
+	e.POST("/tumblebug/lookupSpecs", rest_mcir.RestLookupSpecList)
+	e.POST("/tumblebug/lookupSpec", rest_mcir.RestLookupSpec)
 
-	e.GET("/tumblebug/lookupImages", rest_mcir.RestLookupImageList)
-	e.GET("/tumblebug/lookupImage", rest_mcir.RestLookupImage)
+	e.POST("/tumblebug/lookupImages", rest_mcir.RestLookupImageList)
+	e.POST("/tumblebug/lookupImage", rest_mcir.RestLookupImage)
 
 	e.POST("/tumblebug/inspectResources", rest_common.RestInspectResources)
 
@@ -121,6 +136,11 @@ func ApiServer() {
 	e.DELETE("/tumblebug/object", rest_common.RestDeleteObject)
 	e.DELETE("/tumblebug/objects", rest_common.RestDeleteObjects)
 
+	e.GET("/tumblebug/loadCommonResource", rest_mcir.RestLoadCommonResource)
+	e.GET("/tumblebug/ns/:nsId/loadDefaultResource", rest_mcir.RestLoadDefaultResource)
+	e.DELETE("/tumblebug/ns/:nsId/defaultResources", rest_mcir.RestDelAllDefaultResources)
+
+	// Route for NameSpace subgroup
 	g := e.Group("/tumblebug/ns", common.NsValidation())
 
 	//Namespace Management
@@ -133,6 +153,7 @@ func ApiServer() {
 
 	//MCIS Management
 	g.POST("/:nsId/mcis", rest_mcis.RestPostMcis)
+	g.POST("/:nsId/mcisDynamic", rest_mcis.RestPostMcisDynamic)
 	g.GET("/:nsId/mcis/:mcisId", rest_mcis.RestGetMcis)
 	g.GET("/:nsId/mcis", rest_mcis.RestGetAllMcis)
 	g.PUT("/:nsId/mcis/:mcisId", rest_mcis.RestPutMcis)
@@ -147,17 +168,18 @@ func ApiServer() {
 	g.DELETE("/:nsId/mcis/:mcisId/vm/:vmId", rest_mcis.RestDelMcisVm)
 	//g.DELETE("/:nsId/mcis/:mcisId/vm", rest_mcis.RestDelAllMcisVm)
 
-	g.GET("/:nsId/mcis/:mcisId/testListVmId", rest_mcis.RestTestListVmId) // for debug
+	//g.POST("/:nsId/mcis/recommend", rest_mcis.RestPostMcisRecommend)
 
-	g.POST("/:nsId/mcis/recommend", rest_mcis.RestPostMcisRecommend)
+	g.POST("/:nsId/mcisRecommendVm", rest_mcis.RestRecommendVm)
 
-	g.POST("/:nsId/testRecommendVm", rest_mcis.RestRecommendVm)
+	g.GET("/:nsId/control/mcis/:mcisId", rest_mcis.RestGetControlMcis)
+	g.GET("/:nsId/control/mcis/:mcisId/vm/:vmId", rest_mcis.RestGetControlMcisVm)
 
 	g.POST("/:nsId/cmd/mcis/:mcisId", rest_mcis.RestPostCmdMcis)
 	g.POST("/:nsId/cmd/mcis/:mcisId/vm/:vmId", rest_mcis.RestPostCmdMcisVm)
-	g.POST("/:nsId/install/mcis/:mcisId", rest_mcis.RestPostInstallAgentToMcis)
+	g.POST("/:nsId/installBenchmarkAgent/mcis/:mcisId", rest_mcis.RestPostInstallBenchmarkAgentToMcis)
 	g.POST("/:nsId/benchmark/mcis/:mcisId", rest_mcis.RestGetBenchmark)
-	g.POST("/:nsId/benchmarkall/mcis/:mcisId", rest_mcis.RestGetAllBenchmark)
+	g.POST("/:nsId/benchmarkAll/mcis/:mcisId", rest_mcis.RestGetAllBenchmark)
 
 	//MCIS AUTO Policy
 	g.POST("/:nsId/policy/mcis/:mcisId", rest_mcis.RestPostMcisPolicy)
@@ -174,21 +196,21 @@ func ApiServer() {
 	g.POST("/:nsId/resources/image", rest_mcir.RestPostImage)
 	g.GET("/:nsId/resources/image/:resourceId", rest_mcir.RestGetResource)
 	g.GET("/:nsId/resources/image", rest_mcir.RestGetAllResources)
-	g.PUT("/:nsId/resources/image/:imageId", rest_mcir.RestPutImage)
+	g.PUT("/:nsId/resources/image/:resourceId", rest_mcir.RestPutImage)
 	g.DELETE("/:nsId/resources/image/:resourceId", rest_mcir.RestDelResource)
 	g.DELETE("/:nsId/resources/image", rest_mcir.RestDelAllResources)
 
 	g.POST("/:nsId/resources/sshKey", rest_mcir.RestPostSshKey)
 	g.GET("/:nsId/resources/sshKey/:resourceId", rest_mcir.RestGetResource)
 	g.GET("/:nsId/resources/sshKey", rest_mcir.RestGetAllResources)
-	g.PUT("/:nsId/resources/sshKey/:sshKeyId", rest_mcir.RestPutSshKey)
+	g.PUT("/:nsId/resources/sshKey/:resourceId", rest_mcir.RestPutSshKey)
 	g.DELETE("/:nsId/resources/sshKey/:resourceId", rest_mcir.RestDelResource)
 	g.DELETE("/:nsId/resources/sshKey", rest_mcir.RestDelAllResources)
 
 	g.POST("/:nsId/resources/spec", rest_mcir.RestPostSpec)
 	g.GET("/:nsId/resources/spec/:resourceId", rest_mcir.RestGetResource)
 	g.GET("/:nsId/resources/spec", rest_mcir.RestGetAllResources)
-	g.PUT("/:nsId/resources/spec/:specId", rest_mcir.RestPutSpec)
+	g.PUT("/:nsId/resources/spec/:resourceId", rest_mcir.RestPutSpec)
 	g.DELETE("/:nsId/resources/spec/:resourceId", rest_mcir.RestDelResource)
 	g.DELETE("/:nsId/resources/spec", rest_mcir.RestDelAllResources)
 
@@ -203,25 +225,25 @@ func ApiServer() {
 	g.POST("/:nsId/resources/securityGroup", rest_mcir.RestPostSecurityGroup)
 	g.GET("/:nsId/resources/securityGroup/:resourceId", rest_mcir.RestGetResource)
 	g.GET("/:nsId/resources/securityGroup", rest_mcir.RestGetAllResources)
-	g.PUT("/:nsId/resources/securityGroup/:securityGroupId", rest_mcir.RestPutSecurityGroup)
+	g.PUT("/:nsId/resources/securityGroup/:resourceId", rest_mcir.RestPutSecurityGroup)
 	g.DELETE("/:nsId/resources/securityGroup/:resourceId", rest_mcir.RestDelResource)
 	g.DELETE("/:nsId/resources/securityGroup", rest_mcir.RestDelAllResources)
 
 	g.POST("/:nsId/resources/vNet", rest_mcir.RestPostVNet)
 	g.GET("/:nsId/resources/vNet/:resourceId", rest_mcir.RestGetResource)
 	g.GET("/:nsId/resources/vNet", rest_mcir.RestGetAllResources)
-	g.PUT("/:nsId/resources/vNet/:vNetId", rest_mcir.RestPutVNet)
+	g.PUT("/:nsId/resources/vNet/:resourceId", rest_mcir.RestPutVNet)
 	g.DELETE("/:nsId/resources/vNet/:resourceId", rest_mcir.RestDelResource)
 	g.DELETE("/:nsId/resources/vNet", rest_mcir.RestDelAllResources)
 
-	/*
-		g.POST("/:nsId/resources/subnet", mcir.RestPostSubnet)
-		g.GET("/:nsId/resources/subnet/:subnetId", mcir.RestGetSubnet)
-		g.GET("/:nsId/resources/subnet", mcir.RestGetAllSubnet)
-		g.PUT("/:nsId/resources/subnet/:subnetId", mcir.RestPutSubnet)
-		g.DELETE("/:nsId/resources/subnet/:subnetId", mcir.RestDelSubnet)
-		g.DELETE("/:nsId/resources/subnet", mcir.RestDelAllSubnet)
+	g.POST("/:nsId/resources/vNet/:vNetId/subnet", rest_mcir.RestPostSubnet)
+	// g.GET("/:nsId/resources/vNet/:vNetId/subnet/:subnetId", rest_mcir.RestGetSubnet)
+	// g.GET("/:nsId/resources/vNet/:vNetId/subnet", rest_mcir.RestGetAllSubnet)
+	// g.PUT("/:nsId/resources/vNet/:vNetId/subnet/:subnetId", rest_mcir.RestPutSubnet)
+	g.DELETE("/:nsId/resources/vNet/:parentResourceId/subnet/:childResourceId", rest_mcir.RestDelChildResource)
+	// g.DELETE("/:nsId/resources/vNet/:vNetId/subnet", rest_mcir.RestDelAllSubnet)
 
+	/*
 		g.POST("/:nsId/resources/publicIp", mcir.RestPostPublicIp)
 		g.GET("/:nsId/resources/publicIp/:publicIpId", mcir.RestGetPublicIp)
 		g.GET("/:nsId/resources/publicIp", mcir.RestGetAllPublicIp)
@@ -245,6 +267,9 @@ func ApiServer() {
 	g.GET("/:nsId/checkResource/:resourceType/:resourceId", rest_mcir.RestCheckResource)
 	g.GET("/:nsId/checkMcis/:mcisId", rest_mcis.RestCheckMcis)
 	g.GET("/:nsId/mcis/:mcisId/checkVm/:vmId", rest_mcis.RestCheckVm)
+
+	// g.POST("/:nsId/registerExistingResources", rest_mcir.RestRegisterExistingResources)
+
 	// Temporal test API for development of UpdateAssociatedObjectList
 	g.PUT("/:nsId/testAddObjectAssociation/:resourceType/:resourceId", rest_mcir.RestTestAddObjectAssociation)
 	g.PUT("/:nsId/testDeleteObjectAssociation/:resourceType/:resourceId", rest_mcir.RestTestDeleteObjectAssociation)
@@ -257,5 +282,6 @@ func ApiServer() {
 	fmt.Printf(noticeColor, apidashboard)
 	fmt.Println("\n ")
 
-	e.Logger.Fatal(e.Start(":1323"))
+	port = fmt.Sprintf(":%s", port)
+	e.Logger.Fatal(e.Start(port))
 }

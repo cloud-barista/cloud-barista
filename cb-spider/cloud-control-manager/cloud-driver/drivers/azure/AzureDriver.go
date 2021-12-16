@@ -14,9 +14,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-06-01/compute"
-	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-04-01/network"
-	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2017-05-10/resources"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2021-03-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2021-02-01/network"
+	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2020-10-01/resources"
 	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/Azure/go-autorest/autorest/to"
 
@@ -33,9 +33,8 @@ func (AzureDriver) GetDriverVersion() string {
 }
 
 const (
-        cspTimeout time.Duration = 6000
+	cspTimeout time.Duration = 6000
 )
-
 
 func (AzureDriver) GetDriverCapability() idrv.DriverCapabilityInfo {
 	var drvCapabilityInfo idrv.DriverCapabilityInfo
@@ -111,6 +110,10 @@ func (driver *AzureDriver) ConnectCloud(connectionInfo idrv.ConnectionInfo) (ico
 	if err != nil {
 		return nil, err
 	}
+	Ctx, sshKeyClient, err := getSshKeyClient(connectionInfo.CredentialInfo)
+	if err != nil {
+		return nil, err
+	}
 
 	iConn := azcon.AzureCloudConnection{
 		CredentialInfo:      connectionInfo.CredentialInfo,
@@ -127,6 +130,7 @@ func (driver *AzureDriver) ConnectCloud(connectionInfo idrv.ConnectionInfo) (ico
 		VMImageClient:       VMImageClient,
 		DiskClient:          DiskClient,
 		VmSpecClient:        VmSpecClient,
+		SshKeyClient:        sshKeyClient,
 	}
 	return &iConn, nil
 }
@@ -270,6 +274,20 @@ func getSubnetClient(credential idrv.CredentialInfo) (context.Context, *network.
 	return ctx, &subnetClient, nil
 }
 
+func getSshKeyClient(credential idrv.CredentialInfo) (context.Context, *compute.SSHPublicKeysClient, error) {
+	config := auth.NewClientCredentialsConfig(credential.ClientId, credential.ClientSecret, credential.TenantId)
+	authorizer, err := config.Authorizer()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	sshClientClient := compute.NewSSHPublicKeysClient(credential.SubscriptionId)
+	sshClientClient.Authorizer = authorizer
+	ctx, _ := context.WithTimeout(context.Background(), cspTimeout*time.Second)
+
+	return ctx, &sshClientClient, nil
+}
+
 func getVMImageClient(credential idrv.CredentialInfo) (context.Context, *compute.VirtualMachineImagesClient, error) {
 	config := auth.NewClientCredentialsConfig(credential.ClientId, credential.ClientSecret, credential.TenantId)
 	authorizer, err := config.Authorizer()
@@ -311,5 +329,3 @@ func getVmSpecClient(credential idrv.CredentialInfo) (context.Context, *compute.
 
 	return ctx, &vmSpecClient, nil
 }
-
-var CloudDriver AzureDriver

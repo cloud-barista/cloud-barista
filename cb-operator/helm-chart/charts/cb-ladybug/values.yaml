@@ -5,7 +5,7 @@ replicaCount: 1
 
 image:
   repository: cloudbaristaorg/cb-ladybug
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 env:
 - name: SPIDER_URL
@@ -41,8 +41,8 @@ securityContext: {}
 
 service:
   type: ClusterIP
-  restPort: 8080
-# grpcPort: 50252
+  restPort: 1592
+  grpcPort: 50256
 
 ingress:
   enabled: false

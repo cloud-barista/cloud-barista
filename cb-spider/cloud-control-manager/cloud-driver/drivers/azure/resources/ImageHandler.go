@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-06-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2021-03-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 
 	call "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/call-log"
@@ -132,9 +132,9 @@ func (imageHandler *AzureImageHandler) ListImage() ([]*irs.ImageInfo, error) {
 
 	var imageList []*irs.ImageInfo
 
-	//publishers := []string{"OpenLogic", "CoreOS", "Debian", "SUSE", "RedHat", "Canonical", "MicrosoftWindowsServer"}
 	publishers, err := imageHandler.VMImageClient.ListPublishers(context.TODO(), imageHandler.Region.Region)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return nil, err
 	}
@@ -158,24 +158,23 @@ func (imageHandler *AzureImageHandler) ListImage() ([]*irs.ImageInfo, error) {
 					continue
 				}
 				for _, sku := range *skus.Value {
-					imageVersionList, err := imageHandler.VMImageClient.List(context.TODO(), imageHandler.Region.Region, *publisher.Name, *offer.Name, *sku.Name, "", to.Int32Ptr(1), "")
+					imageVersionList, err := imageHandler.VMImageClient.List(context.TODO(), imageHandler.Region.Region, *publisher.Name, *offer.Name, *sku.Name, "", nil, "")
 					if err != nil {
 						continue
 					}
 					if len(*imageVersionList.Value) == 0 {
 						continue
 					}
-
-					latestVmImage := (*imageVersionList.Value)[0]
-					imageIdArr := strings.Split(*latestVmImage.ID, "/")
-					imageLastVersion := imageIdArr[len(imageIdArr)-1]
-
-					vmImage, err := imageHandler.VMImageClient.Get(context.TODO(), imageHandler.Region.Region, *publisher.Name, *offer.Name, *sku.Name, imageLastVersion)
-					if err != nil {
-						continue
+					for _, version := range *imageVersionList.Value {
+						imageIdArr := strings.Split(*version.ID, "/")
+						imageVersion := imageIdArr[len(imageIdArr)-1]
+						vmImage, err := imageHandler.VMImageClient.Get(context.TODO(), imageHandler.Region.Region, *publisher.Name, *offer.Name, *sku.Name, imageVersion)
+						if err != nil {
+							continue
+						}
+						vmImageInfo := imageHandler.setterVMImage(vmImage)
+						imageList = append(imageList, vmImageInfo)
 					}
-					vmImageInfo := imageHandler.setterVMImage(vmImage)
-					imageList = append(imageList, vmImageInfo)
 				}
 			}
 			return
@@ -184,7 +183,6 @@ func (imageHandler *AzureImageHandler) ListImage() ([]*irs.ImageInfo, error) {
 
 	publisherWg.Wait()
 	LoggingInfo(hiscallInfo, start)
-
 	return imageList, nil
 }
 
@@ -194,38 +192,50 @@ func (imageHandler *AzureImageHandler) GetImage(imageIID irs.IID) (irs.ImageInfo
 
 	imageArr := strings.Split(imageIID.NameId, ":")
 
-	// 해당 이미지 publisher, offer, skus 기준 version 목록 조회 (latest 기준 조회 불가)
-	vmImageList, err := imageHandler.VMImageClient.List(imageHandler.Ctx, imageHandler.Region.Region, imageArr[0], imageArr[1], imageArr[2], "", to.Int32Ptr(1), "")
-	if err != nil {
-		LoggingError(hiscallInfo, err)
-		return irs.ImageInfo{}, err
+	// 이미지 URN 형식 검사
+	if len(imageArr) != 4 {
+		formatErr := errors.New("invalid format for image ID, imageId=" + imageIID.NameId)
+		cblogger.Error(formatErr.Error())
+		LoggingError(hiscallInfo, formatErr)
+		return irs.ImageInfo{}, formatErr
 	}
 
-	var imageVersion string
-	if &vmImageList == nil {
-		getErr := errors.New(fmt.Sprintf("could not found image with imageId %s", imageIID.NameId))
-		LoggingError(hiscallInfo, getErr)
-		return irs.ImageInfo{}, getErr
-	}
-	if vmImageList.Value == nil {
-		getErr := errors.New(fmt.Sprintf("could not found image with imageId %s", imageIID.NameId))
-		LoggingError(hiscallInfo, getErr)
-		return irs.ImageInfo{}, getErr
-	}
-	if len(*vmImageList.Value) == 0 {
-		getErr := errors.New(fmt.Sprintf("could not found image with imageId %s", imageIID.NameId))
-		LoggingError(hiscallInfo, getErr)
-		return irs.ImageInfo{}, getErr
-	} else {
-		latestVmImage := (*vmImageList.Value)[0]
-		imageIdArr := strings.Split(*latestVmImage.ID, "/")
-		imageVersion = imageIdArr[len(imageIdArr)-1]
-	}
+	// 해당 이미지 publisher, offer, skus 기준 version 목록 조회 (latest 기준 조회 기능 미활용)
+	/*
+		imageVersion := imageArr[3]
+		if strings.EqualFold(imageVersion, "latest") {
+			vmImageList, err := imageHandler.VMImageClient.List(imageHandler.Ctx, imageHandler.Region.Region, imageArr[0], imageArr[1], imageArr[2], "", to.Int32Ptr(1), "name desc")
+			if err != nil {
+				LoggingError(hiscallInfo, err)
+				return irs.ImageInfo{}, err
+			}
+			if &vmImageList == nil {
+				getErr := errors.New(fmt.Sprintf("could not found image with imageId %s", imageIID.NameId))
+				LoggingError(hiscallInfo, getErr)
+				return irs.ImageInfo{}, getErr
+			}
+			if vmImageList.Value == nil {
+				getErr := errors.New(fmt.Sprintf("could not found image with imageId %s", imageIID.NameId))
+				LoggingError(hiscallInfo, getErr)
+				return irs.ImageInfo{}, getErr
+			}
+			if len(*vmImageList.Value) == 0 {
+				getErr := errors.New(fmt.Sprintf("could not found image with imageId %s", imageIID.NameId))
+				LoggingError(hiscallInfo, getErr)
+				return irs.ImageInfo{}, getErr
+			} else {
+				latestVmImage := (*vmImageList.Value)[0]
+				imageIdArr := strings.Split(*latestVmImage.ID, "/")
+				imageVersion = imageIdArr[len(imageIdArr)-1]
+			}
+		}
+	*/
 
 	// 1개의 버전 정보를 기준으로 이미지 정보 조회
 	start := call.Start()
-	vmImage, err := imageHandler.VMImageClient.Get(imageHandler.Ctx, imageHandler.Region.Region, imageArr[0], imageArr[1], imageArr[2], imageVersion)
+	vmImage, err := imageHandler.VMImageClient.Get(imageHandler.Ctx, imageHandler.Region.Region, imageArr[0], imageArr[1], imageArr[2], imageArr[3])
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return irs.ImageInfo{}, err
 	}
@@ -242,6 +252,7 @@ func (imageHandler *AzureImageHandler) DeleteImage(imageIID irs.IID) (bool, erro
 	start := call.Start()
 	future, err := imageHandler.Client.Delete(imageHandler.Ctx, imageHandler.Region.ResourceGroup, imageIID.NameId)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return false, err
 	}
@@ -249,6 +260,7 @@ func (imageHandler *AzureImageHandler) DeleteImage(imageIID irs.IID) (bool, erro
 
 	err = future.WaitForCompletionRef(imageHandler.Ctx, imageHandler.Client.Client)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return false, err
 	}

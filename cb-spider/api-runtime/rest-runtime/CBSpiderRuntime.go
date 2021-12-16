@@ -11,6 +11,7 @@ package restruntime
 import (
 	"crypto/subtle"
 	"fmt"
+	"strings"
 	"time"
 
 	"net/http"
@@ -56,8 +57,14 @@ func init() {
 	cr.StartTime = currentTime.Format("2006.01.02 15:04:05 Mon")
 	cr.MiddleStartTime = currentTime.Format("2006.01.02.15:04:05")
 	cr.ShortStartTime = fmt.Sprintf("T%02d:%02d:%02d", currentTime.Hour(), currentTime.Minute(), currentTime.Second())
-	cr.HostIPorName = getHostIPorName()
-	cr.ServicePort = ":1024"
+
+	// REST and GO SERVER_ADDRESS since v0.4.4
+	cr.ServerIPorName = getServerIPorName("SERVER_ADDRESS")
+	cr.ServerPort = getServerPort("SERVER_ADDRESS")
+
+	// REST SERVICE_ADDRESS for AdminWeb since v0.4.4
+	cr.ServiceIPorName = getServiceIPorName("SERVICE_ADDRESS")
+	cr.ServicePort = getServicePort("SERVICE_ADDRESS")
 }
 
 // REST API Return struct for boolean type
@@ -80,17 +87,39 @@ type SimpleMsg struct {
 	Message string `json:"message" example:"Any message"`
 }
 
-func getHostIPorName() string {
-	if os.Getenv("LOCALHOST") == "ON" {
-		return "localhost"
+//// CB-Spider Servcie Address Configuration
+////   cf)  https://github.com/cloud-barista/cb-spider/wiki/CB-Spider-Service-Address-Configuration
+
+// REST and GO SERVER_ADDRESS since v0.4.4
+
+// unset                           # default: like 'curl ifconfig.co':1024
+// SERVER_ADDRESS="1.2.3.4:3000"  # => 1.2.3.4:3000
+// SERVER_ADDRESS=":3000"         # => like 'curl ifconfig.co':3000
+// SERVER_ADDRESS="localhost"      # => localhost:1024
+// SERVER_ADDRESS="1.2.3.4:3000"        # => 1.2.3.4::3000
+func getServerIPorName(env string) string {
+
+	hostEnv := os.Getenv(env) // SERVER_ADDRESS or SERVICE_ADDRESS
+
+	if hostEnv == "" {
+		return getPublicIP()
 	}
 
-	// temporary trick for shared public IP Host or VirtualBox VM, etc.
-	// user can setup spider server's IP manually.
-	if os.Getenv("LOCALHOST") != "OFF" {
-		return os.Getenv("LOCALHOST")
+	// "1.2.3.4" or "localhost"
+	if !strings.Contains(hostEnv, ":") {
+		return hostEnv
 	}
 
+	strs := strings.Split(hostEnv, ":")
+	fmt.Println(len(strs))
+	if strs[0] == "" { // ":31024"
+		return getPublicIP()
+	} else { // "1.2.3.4:31024" or "localhost:31024"
+		return strs[0]
+	}
+}
+
+func getPublicIP() string {
 	ip, err := pubip.Get()
 	if err != nil {
 		cblog.Error(err)
@@ -102,6 +131,45 @@ func getHostIPorName() string {
 	}
 
 	return ip.String()
+}
+
+func getServerPort(env string) string {
+	// default REST Service Port
+	servicePort := ":1024"
+
+	hostEnv := os.Getenv(env) // SERVER_ADDRESS or SERVICE_ADDRESS
+	if hostEnv == "" {
+		return servicePort
+	}
+
+	// "1.2.3.4" or "localhost"
+	if !strings.Contains(hostEnv, ":") {
+		return servicePort
+	}
+
+	// ":31024" or "1.2.3.4:31024" or "localhost:31024"
+	strs := strings.Split(hostEnv, ":")
+	servicePort = ":" + strs[1]
+
+	return servicePort
+}
+
+// unset  SERVER_ADDRESS => SERVICE_ADDRESS
+func getServiceIPorName(env string) string {
+	hostEnv := os.Getenv(env)
+	if hostEnv == "" {
+		return cr.ServerIPorName
+	}
+	return getServerIPorName(env)
+}
+
+// unset  SERVER_ADDRESS => SERVICE_ADDRESS
+func getServicePort(env string) string {
+	hostEnv := os.Getenv(env)
+	if hostEnv == "" {
+		return cr.ServerPort
+	}
+	return getServerPort(env)
 }
 
 func RunServer() {
@@ -116,79 +184,91 @@ func RunServer() {
 		{"GET", "/swagger/*", echoSwagger.WrapHandler},
 
 		//----------EndpointInfo
-		{"GET", "/endpointinfo", endpointInfo},
+		{"GET", "/endpointinfo", EndpointInfo},
 
 		//----------CloudOS
-		{"GET", "/cloudos", listCloudOS},
+		{"GET", "/cloudos", ListCloudOS},
+
+		//----------CloudOSMetaInfo
+		{"GET", "/cloudos/metainfo/:CloudOSName", GetCloudOSMetaInfo},
 
 		//----------CloudDriverInfo
-		{"POST", "/driver", registerCloudDriver},
-		{"GET", "/driver", listCloudDriver},
-		{"GET", "/driver/:DriverName", getCloudDriver},
-		{"DELETE", "/driver/:DriverName", unRegisterCloudDriver},
+		{"POST", "/driver", RegisterCloudDriver},
+		{"GET", "/driver", ListCloudDriver},
+		{"GET", "/driver/:DriverName", GetCloudDriver},
+		{"DELETE", "/driver/:DriverName", UnRegisterCloudDriver},
 
 		//----------CredentialInfo
-		{"POST", "/credential", registerCredential},
-		{"GET", "/credential", listCredential},
-		{"GET", "/credential/:CredentialName", getCredential},
-		{"DELETE", "/credential/:CredentialName", unRegisterCredential},
+		{"POST", "/credential", RegisterCredential},
+		{"GET", "/credential", ListCredential},
+		{"GET", "/credential/:CredentialName", GetCredential},
+		{"DELETE", "/credential/:CredentialName", UnRegisterCredential},
 
 		//----------RegionInfo
-		{"POST", "/region", registerRegion},
-		{"GET", "/region", listRegion},
-		{"GET", "/region/:RegionName", getRegion},
-		{"DELETE", "/region/:RegionName", unRegisterRegion},
+		{"POST", "/region", RegisterRegion},
+		{"GET", "/region", ListRegion},
+		{"GET", "/region/:RegionName", GetRegion},
+		{"DELETE", "/region/:RegionName", UnRegisterRegion},
 
 		//----------ConnectionConfigInfo
-		{"POST", "/connectionconfig", createConnectionConfig},
-		{"GET", "/connectionconfig", listConnectionConfig},
-		{"GET", "/connectionconfig/:ConfigName", getConnectionConfig},
-		{"DELETE", "/connectionconfig/:ConfigName", deleteConnectionConfig},
+		{"POST", "/connectionconfig", CreateConnectionConfig},
+		{"GET", "/connectionconfig", ListConnectionConfig},
+		{"GET", "/connectionconfig/:ConfigName", GetConnectionConfig},
+		{"DELETE", "/connectionconfig/:ConfigName", DeleteConnectionConfig},
 
 		//-------------------------------------------------------------------//
 
 		//----------Image Handler
-		{"POST", "/vmimage", createImage},
-		{"GET", "/vmimage", listImage},
-		{"GET", "/vmimage/:Name", getImage},
-		{"DELETE", "/vmimage/:Name", deleteImage},
+		{"POST", "/vmimage", CreateImage},
+		{"GET", "/vmimage", ListImage},
+		{"GET", "/vmimage/:Name", GetImage},
+		{"DELETE", "/vmimage/:Name", DeleteImage},
 
 		//----------VMSpec Handler
-		{"GET", "/vmspec", listVMSpec},
-		{"GET", "/vmspec/:Name", getVMSpec},
-		{"GET", "/vmorgspec", listOrgVMSpec},
-		{"GET", "/vmorgspec/:Name", getOrgVMSpec},
+		{"GET", "/vmspec", ListVMSpec},
+		{"GET", "/vmspec/:Name", GetVMSpec},
+		{"GET", "/vmorgspec", ListOrgVMSpec},
+		{"GET", "/vmorgspec/:Name", GetOrgVMSpec},
 
 		//----------VPC Handler
-		{"POST", "/vpc", createVPC},
-		{"GET", "/vpc", listVPC},
-		{"GET", "/vpc/:Name", getVPC},
-		{"DELETE", "/vpc/:Name", deleteVPC},
+		{"POST", "/regvpc", RegisterVPC},
+		{"DELETE", "/regvpc/:Name", UnregisterVPC},
+
+		{"POST", "/vpc", CreateVPC},
+		{"GET", "/vpc", ListVPC},
+		{"GET", "/vpc/:Name", GetVPC},
+		{"DELETE", "/vpc/:Name", DeleteVPC},
 		//-- for subnet
-		{"POST", "/vpc/:VPCName/subnet", addSubnet},
-		{"DELETE", "/vpc/:VPCName/subnet/:SubnetName", removeSubnet},
-		{"DELETE", "/vpc/:VPCName/cspsubnet/:Id", removeCSPSubnet},
+		{"POST", "/vpc/:VPCName/subnet", AddSubnet},
+		{"DELETE", "/vpc/:VPCName/subnet/:SubnetName", RemoveSubnet},
+		{"DELETE", "/vpc/:VPCName/cspsubnet/:Id", RemoveCSPSubnet},
 		//-- for management
-		{"GET", "/allvpc", listAllVPC},
-		{"DELETE", "/cspvpc/:Id", deleteCSPVPC},
+		{"GET", "/allvpc", ListAllVPC},
+		{"DELETE", "/cspvpc/:Id", DeleteCSPVPC},
 
 		//----------SecurityGroup Handler
-		{"POST", "/securitygroup", createSecurity},
-		{"GET", "/securitygroup", listSecurity},
-		{"GET", "/securitygroup/:Name", getSecurity},
-		{"DELETE", "/securitygroup/:Name", deleteSecurity},
+		{"POST", "/regsecuritygroup", RegisterSecurity},
+		{"DELETE", "/regsecuritygroup/:Name", UnregisterSecurity},
+
+		{"POST", "/securitygroup", CreateSecurity},
+		{"GET", "/securitygroup", ListSecurity},
+		{"GET", "/securitygroup/:Name", GetSecurity},
+		{"DELETE", "/securitygroup/:Name", DeleteSecurity},
 		//-- for management
-		{"GET", "/allsecuritygroup", listAllSecurity},
-		{"DELETE", "/cspsecuritygroup/:Id", deleteCSPSecurity},
+		{"GET", "/allsecuritygroup", ListAllSecurity},
+		{"DELETE", "/cspsecuritygroup/:Id", DeleteCSPSecurity},
 
 		//----------KeyPair Handler
-		{"POST", "/keypair", createKey},
-		{"GET", "/keypair", listKey},
-		{"GET", "/keypair/:Name", getKey},
-		{"DELETE", "/keypair/:Name", deleteKey},
+		{"POST", "/regkeypair", RegisterKey},
+		{"DELETE", "/regkeypair/:Name", UnregisterKey},
+
+		{"POST", "/keypair", CreateKey},
+		{"GET", "/keypair", ListKey},
+		{"GET", "/keypair/:Name", GetKey},
+		{"DELETE", "/keypair/:Name", DeleteKey},
 		//-- for management
-		{"GET", "/allkeypair", listAllKey},
-		{"DELETE", "/cspkeypair/:Id", deleteCSPKey},
+		{"GET", "/allkeypair", ListAllKey},
+		{"DELETE", "/cspkeypair/:Id", DeleteCSPKey},
 		/*
 			//----------VNic Handler
 			{"POST", "/vnic", createVNic},
@@ -203,22 +283,27 @@ func RunServer() {
 			{"DELETE", "/publicip/:PublicIPId", deletePublicIP},
 		*/
 		//----------VM Handler
-		{"POST", "/vm", startVM},
-		{"GET", "/vm", listVM},
-		{"GET", "/vm/:Name", getVM},
-		{"DELETE", "/vm/:Name", terminateVM},
+		{"POST", "/regvm", RegisterVM},
+		{"DELETE", "/regvm/:Name", UnregisterVM},
+
+		{"POST", "/vm", StartVM},
+		{"GET", "/vm", ListVM},
+		{"GET", "/vm/:Name", GetVM},
+		{"DELETE", "/vm/:Name", TerminateVM},
 		//-- for management
-		{"GET", "/allvm", listAllVM},
-		{"DELETE", "/cspvm/:Id", terminateCSPVM},
+		{"GET", "/allvm", ListAllVM},
+		{"DELETE", "/cspvm/:Id", TerminateCSPVM},
 
-		{"GET", "/vmstatus", listVMStatus},
-		{"GET", "/vmstatus/:Name", getVMStatus},
+		{"GET", "/vmstatus", ListVMStatus},
+		{"GET", "/vmstatus/:Name", GetVMStatus},
 
-		{"GET", "/controlvm/:Name", controlVM}, // suspend, resume, reboot
+		{"GET", "/controlvm/:Name", ControlVM}, // suspend, resume, reboot
+		// only for AdminWeb
+		{"PUT", "/controlvm/:Name", ControlVM}, // suspend, resume, reboot
 
 		//-------------------------------------------------------------------//
 		//----------SSH RUN
-		{"POST", "/sshrun", sshRun},
+		{"POST", "/sshrun", SSHRun},
 
 		//----------AdminWeb Handler
 		{"GET", "/adminweb", aw.Frame},
@@ -299,7 +384,7 @@ func ApiServer(routes []route) {
 
 	spiderBanner()
 
-	e.Logger.Fatal(e.Start(cr.ServicePort))
+	e.Logger.Fatal(e.Start(cr.ServerPort))
 }
 
 //================ API Info
@@ -311,17 +396,17 @@ func apiInfo(c echo.Context) error {
 }
 
 //================ Endpoint Info
-func endpointInfo(c echo.Context) error {
+func EndpointInfo(c echo.Context) error {
 	cblog.Info("call endpointInfo()")
 
 	endpointInfo := fmt.Sprintf("\n  <CB-Spider> Multi-Cloud Infrastructure Federation Framework\n")
-	adminWebURL := "http://" + cr.HostIPorName + cr.ServicePort + "/spider/adminweb"
+	adminWebURL := "http://" + cr.ServiceIPorName + cr.ServicePort + "/spider/adminweb"
 	endpointInfo += fmt.Sprintf("     - AdminWeb: %s\n", adminWebURL)
-	restEndPoint := "http://" + cr.HostIPorName + cr.ServicePort + "/spider"
+	restEndPoint := "http://" + cr.ServiceIPorName + cr.ServicePort + "/spider"
 	endpointInfo += fmt.Sprintf("     - REST API: %s\n", restEndPoint)
-	// swaggerURL := "http://" + cr.HostIPorName + cr.ServicePort + "/spider/swagger/index.html"
+	// swaggerURL := "http://" + cr.ServiceIPorName + cr.ServicePort + "/spider/swagger/index.html"
 	// endpointInfo += fmt.Sprintf("     - Swagger : %s\n", swaggerURL)
-	gRPCServer := "grpc://" + cr.HostIPorName + cr.GoServicePort
+	gRPCServer := "grpc://" + cr.ServiceIPorName + cr.GoServicePort
 	endpointInfo += fmt.Sprintf("     - Go   API: %s\n", gRPCServer)
 
 	return c.String(http.StatusOK, endpointInfo)
@@ -331,14 +416,14 @@ func spiderBanner() {
 	fmt.Println("\n  <CB-Spider> Multi-Cloud Infrastructure Federation Framework")
 
 	// AdminWeb
-	adminWebURL := "http://" + cr.HostIPorName + cr.ServicePort + "/spider/adminweb"
+	adminWebURL := "http://" + cr.ServiceIPorName + cr.ServicePort + "/spider/adminweb"
 	fmt.Printf("     - AdminWeb: %s\n", adminWebURL)
 
 	// REST API EndPoint
-	restEndPoint := "http://" + cr.HostIPorName + cr.ServicePort + "/spider"
+	restEndPoint := "http://" + cr.ServiceIPorName + cr.ServicePort + "/spider"
 	fmt.Printf("     - REST API: %s\n", restEndPoint)
 
 	// Swagger
-	// swaggerURL := "http://" + cr.HostIPorName + cr.ServicePort + "/spider/swagger/index.html"
+	// swaggerURL := "http://" + cr.ServiceIPorName + cr.ServicePort + "/spider/swagger/index.html"
 	// fmt.Printf("     - Swagger : %s\n", swaggerURL)
 }

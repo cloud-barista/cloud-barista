@@ -15,10 +15,11 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-06-01/compute"
-	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-04-01/network"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2021-03-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2021-02-01/network"
 	"github.com/Azure/go-autorest/autorest/to"
 
 	call "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/call-log"
@@ -29,6 +30,9 @@ import (
 const (
 	ProvisioningStateCode string = "ProvisioningState/succeeded"
 	VM                           = "VM"
+	PremiumSSD                   = "PremiumSSD"
+	StandardSSD                  = "StandardSSD"
+	StandardHHD                  = "StandardHHD"
 )
 
 type AzureVMHandler struct {
@@ -40,6 +44,7 @@ type AzureVMHandler struct {
 	NicClient      *network.InterfacesClient
 	PublicIPClient *network.PublicIPAddressesClient
 	DiskClient     *compute.DisksClient
+	SshKeyClient   *compute.SSHPublicKeysClient
 }
 
 func (vmHandler *AzureVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, error) {
@@ -47,9 +52,10 @@ func (vmHandler *AzureVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, e
 	hiscallInfo := GetCallLogScheme(vmHandler.Region, call.VM, vmReqInfo.IId.NameId, "StartVM()")
 
 	// Check VM Exists
-	vm, err := vmHandler.Client.Get(vmHandler.Ctx, vmHandler.Region.ResourceGroup, vmReqInfo.IId.NameId, compute.InstanceView)
+	vm, err := vmHandler.Client.Get(vmHandler.Ctx, vmHandler.Region.ResourceGroup, vmReqInfo.IId.NameId, compute.InstanceViewTypesInstanceView)
 	if vm.ID != nil {
 		createErr := errors.New(fmt.Sprintf("virtualMachine with name %s already exist", vmReqInfo.IId.NameId))
+		cblogger.Error(createErr.Error())
 		LoggingError(hiscallInfo, createErr)
 		return irs.VMInfo{}, createErr
 	}
@@ -57,6 +63,7 @@ func (vmHandler *AzureVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, e
 	// Check login method (keypair, password)
 	if vmReqInfo.VMUserPasswd != "" && vmReqInfo.KeyPairIID.NameId != "" {
 		createErr := errors.New("specify one login method, Password or Keypair")
+		cblogger.Error(createErr.Error())
 		LoggingError(hiscallInfo, createErr)
 		return irs.VMInfo{}, createErr
 	}
@@ -65,6 +72,7 @@ func (vmHandler *AzureVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, e
 	// PublicIP 생성
 	publicIPIId, err := CreatePublicIP(vmHandler, vmReqInfo)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return irs.VMInfo{}, err
 	}
@@ -73,6 +81,7 @@ func (vmHandler *AzureVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, e
 	// VNic 생성
 	vNicIId, err := CreateVNic(vmHandler, vmReqInfo, publicIPIId)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return irs.VMInfo{}, err
 	}
@@ -100,35 +109,50 @@ func (vmHandler *AzureVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, e
 			},
 		},
 	}
-
+	// TODO : disksize
+	vmImage := vmReqInfo.ImageIID.SystemId
+	if vmImage == ""{
+		vmImage = vmReqInfo.ImageIID.NameId
+	}
 	// Image 설정
-	if strings.Contains(vmReqInfo.ImageIID.SystemId, ":") {
-		imageArr := strings.Split(vmReqInfo.ImageIID.SystemId, ":")
+	if strings.Contains(vmImage, ":") {
+		imageArr := strings.Split(vmImage, ":")
 		// URN 기반 퍼블릭 이미지 설정
 		vmOpts.StorageProfile = &compute.StorageProfile{
 			ImageReference: &compute.ImageReference{
-				Publisher: &imageArr[0],
-				Offer:     &imageArr[1],
-				Sku:       &imageArr[2],
-				Version:   &imageArr[3],
+				Publisher: to.StringPtr(imageArr[0]),
+				Offer:     to.StringPtr(imageArr[1]),
+				Sku:       to.StringPtr(imageArr[2]),
+				Version:   to.StringPtr(imageArr[3]),
 			},
 		}
 	} else {
 		// 사용자 프라이빗 이미지 설정
 		vmOpts.StorageProfile = &compute.StorageProfile{
 			ImageReference: &compute.ImageReference{
-				ID: &vmReqInfo.ImageIID.NameId,
+				ID: to.StringPtr(vmImage),
+			},
+		}
+	}
+	if vmReqInfo.RootDiskType != "" {
+		storageType := getVMDiskTypeInitType(vmReqInfo.RootDiskType)
+		vmOpts.StorageProfile.OsDisk = &compute.OSDisk{
+			CreateOption: compute.DiskCreateOptionTypesFromImage,
+			ManagedDisk: &compute.ManagedDiskParameters{
+				StorageAccountType: storageType,
 			},
 		}
 	}
 
 	// KeyPair 설정
 	if vmReqInfo.KeyPairIID.NameId != "" {
-		publicKey, err := GetPublicKey(vmHandler.CredentialInfo, vmReqInfo.KeyPairIID.NameId)
+		key, err := GetRawKey(vmReqInfo.KeyPairIID, vmHandler.Region.ResourceGroup, vmHandler.SshKeyClient, vmHandler.Ctx)
 		if err != nil {
+			cblogger.Error(err.Error())
 			LoggingError(hiscallInfo, err)
 			return irs.VMInfo{}, err
 		}
+		publicKey := *key.PublicKey
 		vmOpts.OsProfile.LinuxConfiguration = &compute.LinuxConfiguration{
 			SSH: &compute.SSHConfiguration{
 				PublicKeys: &[]compute.SSHPublicKey{
@@ -139,14 +163,13 @@ func (vmHandler *AzureVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, e
 				},
 			},
 		}
-	} else {
-		vmOpts.OsProfile.AdminPassword = to.StringPtr(vmReqInfo.VMUserPasswd)
-	}
-
-	// VM 정보 태깅 설정
-	if vmReqInfo.KeyPairIID.NameId != "" {
 		vmOpts.Tags = map[string]*string{
 			"keypair":  to.StringPtr(vmReqInfo.KeyPairIID.NameId),
+			"publicip": to.StringPtr(publicIPIId.NameId),
+		}
+	} else {
+		vmOpts.OsProfile.AdminPassword = to.StringPtr(vmReqInfo.VMUserPasswd)
+		vmOpts.Tags = map[string]*string{
 			"publicip": to.StringPtr(publicIPIId.NameId),
 		}
 	}
@@ -154,6 +177,7 @@ func (vmHandler *AzureVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, e
 	start := call.Start()
 	future, err := vmHandler.Client.CreateOrUpdate(vmHandler.Ctx, vmHandler.Region.ResourceGroup, vmReqInfo.IId.NameId, vmOpts)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return irs.VMInfo{}, err
 	}
@@ -161,12 +185,14 @@ func (vmHandler *AzureVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, e
 
 	err = future.WaitForCompletionRef(vmHandler.Ctx, vmHandler.Client.Client)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return irs.VMInfo{}, err
 	}
 
-	vm, err = vmHandler.Client.Get(vmHandler.Ctx, vmHandler.Region.ResourceGroup, vmReqInfo.IId.NameId, compute.InstanceView)
+	vm, err = vmHandler.Client.Get(vmHandler.Ctx, vmHandler.Region.ResourceGroup, vmReqInfo.IId.NameId, compute.InstanceViewTypesInstanceView)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 	}
 
@@ -179,13 +205,15 @@ func (vmHandler *AzureVMHandler) SuspendVM(vmIID irs.IID) (irs.VMStatus, error) 
 	hiscallInfo := GetCallLogScheme(vmHandler.Region, call.VM, vmIID.NameId, "SuspendVM()")
 
 	start := call.Start()
-	future, err := vmHandler.Client.PowerOff(vmHandler.Ctx, vmHandler.Region.ResourceGroup, vmIID.NameId)
+	future, err := vmHandler.Client.PowerOff(vmHandler.Ctx, vmHandler.Region.ResourceGroup, vmIID.NameId, to.BoolPtr(false))
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return irs.Failed, err
 	}
 	err = future.WaitForCompletionRef(vmHandler.Ctx, vmHandler.Client.Client)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return irs.Failed, err
 	}
@@ -193,6 +221,7 @@ func (vmHandler *AzureVMHandler) SuspendVM(vmIID irs.IID) (irs.VMStatus, error) 
 	// Get VM Status
 	vmStatus, err := vmHandler.GetVMStatus(vmIID)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return irs.Failed, err
 	}
@@ -209,11 +238,13 @@ func (vmHandler *AzureVMHandler) ResumeVM(vmIID irs.IID) (irs.VMStatus, error) {
 	start := call.Start()
 	future, err := vmHandler.Client.Start(vmHandler.Ctx, vmHandler.Region.ResourceGroup, vmIID.NameId)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return irs.Failed, err
 	}
 	err = future.WaitForCompletionRef(vmHandler.Ctx, vmHandler.Client.Client)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return irs.Failed, err
 	}
@@ -230,11 +261,13 @@ func (vmHandler *AzureVMHandler) RebootVM(vmIID irs.IID) (irs.VMStatus, error) {
 	start := call.Start()
 	future, err := vmHandler.Client.Restart(vmHandler.Ctx, vmHandler.Region.ResourceGroup, vmIID.NameId)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return irs.Failed, err
 	}
 	err = future.WaitForCompletionRef(vmHandler.Ctx, vmHandler.Client.Client)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return irs.Failed, err
 	}
@@ -252,11 +285,12 @@ func (vmHandler *AzureVMHandler) TerminateVM(vmIID irs.IID) (irs.VMStatus, error
 	// VM OSDisk 이름 가져오기
 	vmInfo, err := vmHandler.GetVM(vmIID)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return irs.Failed, err
 	}
 	osDiskName := vmInfo.VMBootDisk
-/* Detach may not be required for dynamic public IP mode. by powerkim. 2021.04.30.
+	/* Detach may not be required for dynamic public IP mode. by powerkim. 2021.04.30.
 	// TODO: nested flow 개선
 	// VNic에서 PublicIP 연결해제
 	vNicDetachStatus, err := DetachVNic(vmHandler, vmInfo)
@@ -264,12 +298,13 @@ func (vmHandler *AzureVMHandler) TerminateVM(vmIID irs.IID) (irs.VMStatus, error
 		LoggingError(hiscallInfo, err)
 		return vNicDetachStatus, err
 	}
-*/
+	*/
 
 	// VM 삭제
 	start := call.Start()
-	future, err := vmHandler.Client.Delete(vmHandler.Ctx, vmHandler.Region.ResourceGroup, vmIID.NameId)
+	future, err := vmHandler.Client.Delete(vmHandler.Ctx, vmHandler.Region.ResourceGroup, vmIID.NameId, to.BoolPtr(false))
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return irs.Failed, err
 	}
@@ -277,6 +312,7 @@ func (vmHandler *AzureVMHandler) TerminateVM(vmIID irs.IID) (irs.VMStatus, error
 
 	err = future.WaitForCompletionRef(vmHandler.Ctx, vmHandler.Client.Client)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return irs.Failed, err
 	}
@@ -285,6 +321,7 @@ func (vmHandler *AzureVMHandler) TerminateVM(vmIID irs.IID) (irs.VMStatus, error
 	// VNic 삭제
 	vNicStatus, err := DeleteVNic(vmHandler, vmInfo)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return vNicStatus, err
 	}
@@ -293,6 +330,7 @@ func (vmHandler *AzureVMHandler) TerminateVM(vmIID irs.IID) (irs.VMStatus, error
 	// PublicIP 삭제
 	publicIPStatus, err := DeletePublicIP(vmHandler, vmInfo)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return publicIPStatus, err
 	}
@@ -301,6 +339,7 @@ func (vmHandler *AzureVMHandler) TerminateVM(vmIID irs.IID) (irs.VMStatus, error
 	// OS Disk 삭제
 	diskStatus, err := DeleteVMDisk(vmHandler, osDiskName)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return diskStatus, err
 	}
@@ -316,6 +355,7 @@ func (vmHandler *AzureVMHandler) ListVMStatus() ([]*irs.VMStatusInfo, error) {
 	start := call.Start()
 	serverList, err := vmHandler.Client.List(vmHandler.Ctx, vmHandler.Region.ResourceGroup)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return []*irs.VMStatusInfo{}, err
 	}
@@ -359,6 +399,7 @@ func (vmHandler *AzureVMHandler) GetVMStatus(vmIID irs.IID) (irs.VMStatus, error
 	start := call.Start()
 	instanceView, err := vmHandler.Client.InstanceView(vmHandler.Ctx, vmHandler.Region.ResourceGroup, vmIID.NameId)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return irs.Failed, err
 	}
@@ -376,6 +417,7 @@ func (vmHandler *AzureVMHandler) ListVM() ([]*irs.VMInfo, error) {
 	start := call.Start()
 	serverList, err := vmHandler.Client.List(vmHandler.Ctx, vmHandler.Region.ResourceGroup)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return []*irs.VMInfo{}, err
 	}
@@ -395,8 +437,9 @@ func (vmHandler *AzureVMHandler) GetVM(vmIID irs.IID) (irs.VMInfo, error) {
 	hiscallInfo := GetCallLogScheme(vmHandler.Region, call.VM, vmIID.NameId, "GetVM()")
 
 	start := call.Start()
-	vm, err := vmHandler.Client.Get(vmHandler.Ctx, vmHandler.Region.ResourceGroup, vmIID.NameId, compute.InstanceView)
+	vm, err := vmHandler.Client.Get(vmHandler.Ctx, vmHandler.Region.ResourceGroup, vmIID.NameId, compute.InstanceViewTypesInstanceView)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return irs.VMInfo{}, err
 	}
@@ -424,22 +467,30 @@ func getVmStatus(instanceView compute.VirtualMachineInstanceView) irs.VMStatus {
 	}
 
 	// Set VM Status Info
-	var resultStatus string
-	switch powerState {
-	case "starting":
-		resultStatus = "Creating"
-	case "running":
-		resultStatus = "Running"
-	case "stopping":
-		resultStatus = "Suspending"
-	case "stopped":
-		resultStatus = "Suspended"
-	case "deleting":
-		resultStatus = "Terminating"
-	default:
-		resultStatus = "Failed"
+	resultStatus := irs.Failed
+
+	if provisioningState == "creating" {
+		resultStatus = irs.Creating
 	}
-	return irs.VMStatus(resultStatus)
+	if provisioningState == "succeeded" && powerState == "running" {
+		resultStatus = irs.Running
+	}
+	if provisioningState == "updating" && powerState == "stopping" {
+		resultStatus = irs.Suspending
+	}
+	if provisioningState == "succeeded" && powerState == "stopped" {
+		resultStatus = irs.Suspended
+	}
+	if provisioningState == "updating" && powerState == "starting" {
+		resultStatus = irs.Resuming
+	}
+	if provisioningState == "succeeded" && powerState == "starting" {
+		resultStatus = irs.Rebooting
+	}
+	if provisioningState == "deleting" {
+		resultStatus = irs.Terminating
+	}
+	return resultStatus
 }
 
 func (vmHandler *AzureVMHandler) mappingServerInfo(server compute.VirtualMachine) irs.VMInfo {
@@ -536,6 +587,12 @@ func (vmHandler *AzureVMHandler) mappingServerInfo(server compute.VirtualMachine
 	if server.VirtualMachineProperties.StorageProfile.OsDisk.Name != nil {
 		vmInfo.VMBootDisk = *server.VirtualMachineProperties.StorageProfile.OsDisk.Name
 	}
+	if server.VirtualMachineProperties.StorageProfile.OsDisk.DiskSizeGB != nil {
+		vmInfo.RootDiskSize = strconv.Itoa(int(*server.VirtualMachineProperties.StorageProfile.OsDisk.DiskSizeGB))
+	}
+	if server.VirtualMachineProperties.StorageProfile.OsDisk.ManagedDisk != nil{
+		vmInfo.RootDiskType = getVMDiskInfoType(server.VirtualMachineProperties.StorageProfile.OsDisk.ManagedDisk.StorageAccountType)
+	}
 
 	// Get StartTime
 	if server.VirtualMachineProperties.InstanceView != nil {
@@ -550,10 +607,10 @@ func (vmHandler *AzureVMHandler) mappingServerInfo(server compute.VirtualMachine
 	// Get Keypair
 	tagList := server.Tags
 	for key, val := range tagList {
-		if key == "keypair" {
-			vmInfo.KeyPairIId = irs.IID{NameId: *val, SystemId: *val}
+		if key == "keypair" && val != nil {
+			vmInfo.KeyPairIId = irs.IID{NameId: *val, SystemId: GetSshKeyIdByName(vmHandler.CredentialInfo, vmHandler.Region, *val)}
 		}
-		if key == "publicip" {
+		if key == "publicip" && val != nil {
 			vmInfo.KeyValueList = []irs.KeyValue{
 				{Key: "publicip", Value: *val},
 			}
@@ -582,7 +639,7 @@ func CreatePublicIP(vmHandler *AzureVMHandler, vmReqInfo irs.VMReqInfo) (irs.IID
 			Name: network.PublicIPAddressSkuName("Basic"),
 		},
 		PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
-			PublicIPAddressVersion:   network.IPVersion("IPv4"),
+			PublicIPAddressVersion: network.IPVersion("IPv4"),
 			//PublicIPAllocationMethod: network.IPAllocationMethod("Static"),
 			PublicIPAllocationMethod: network.IPAllocationMethod("Dynamic"),
 			IdleTimeoutInMinutes:     to.Int32Ptr(4),
@@ -748,6 +805,32 @@ func DeleteVNic(vmHandler *AzureVMHandler, vmInfo irs.VMInfo) (irs.VMStatus, err
 	}
 
 	return irs.Terminating, nil
+}
+
+func getVMDiskTypeInitType(diskType string) compute.StorageAccountTypes {
+	switch diskType {
+	case PremiumSSD :
+		return compute.StorageAccountTypesPremiumLRS
+	case StandardSSD :
+		return compute.StorageAccountTypesStandardSSDLRS
+	case StandardHHD :
+		return compute.StorageAccountTypesStandardLRS
+	default:
+		return compute.StorageAccountTypesPremiumLRS
+	}
+}
+
+func getVMDiskInfoType(diskType compute.StorageAccountTypes) string {
+	switch diskType {
+	case compute.StorageAccountTypesPremiumLRS :
+		return PremiumSSD
+	case compute.StorageAccountTypesStandardSSDLRS :
+		return 	StandardSSD
+	case compute.StorageAccountTypesStandardLRS :
+		return StandardHHD
+	default:
+		return string(diskType)
+	}
 }
 
 // VM 삭제 시 VM Disk 자동 삭제 (nested flow 적용)

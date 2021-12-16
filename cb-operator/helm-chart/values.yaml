@@ -1,57 +1,76 @@
 cb-dragonfly:
-  enabled : true
+  enabled: true
   service:
     type: NodePort
     restNodePort: 30090
-    grpcNodePort: 30254
+    grpcNodePort: 30999
     #monitorNodePort: 30094
   persistence:
-    enabled: true
+    enabled: false
     size: 1Gi
     accessMode: 'ReadWriteOnce'
 
 cb-restapigw:
-  enabled : true
+  enabled: true
   service:
     type: NodePort
     restNodePort: 30080
     webAdminNodePort: 30081    
 
+cb-restapigw-readonly:
+  enabled: true
+  service:
+    type: NodePort
+    restNodePort: 30070
+    webAdminNodePort: 30071    
+
 cb-spider:
-  enabled : true
+  enabled: true
   service:
     type: NodePort
     restNodePort: 31024
     grpcNodePort: 32048
   persistence:
-    enabled: true
+    enabled: false
     size: 1Gi
     accessMode: 'ReadWriteOnce'
+    storageClass: 'manual' # for debug
 
 cb-tumblebug:
-  enabled : true
+  enabled: true
   service:
     type: NodePort
     restNodePort: 31323
     grpcNodePort: 30252
   persistence:
-    enabled: true
+    enabled: false
+    size: 1Gi
+    accessMode: 'ReadWriteOnce'
+
+cb-mcks:
+  enabled: true
+  service:
+    type: NodePort
+    restNodePort: 31470
+    grpcNodePort: 30254
+  persistence:
+    enabled: false
     size: 1Gi
     accessMode: 'ReadWriteOnce'
 
 cb-ladybug:
-  enabled : true
+  enabled: false
   service:
     type: NodePort
-    restNodePort: 31080
-#   grpcNodePort: 30252
+    restNodePort: 31592
+    grpcNodePort: 30256
   persistence:
-    enabled: true
+    enabled: false
     size: 1Gi
     accessMode: 'ReadWriteOnce'
 
 cb-webtool:
-  enabled : true
+  enabled: true
   service:
     type: NodePort
     nodePort: 31234    
@@ -61,7 +80,7 @@ cb-webtool:
 # hostPath PV
 
 docker-registry:
-  enabled : false
+  enabled: false
   fullnameOverride: "docker-registry"
   # secrets:
   #   htpasswd: "admin:$2y$05$SDxx.8dOmr23n3WMpCqK1.5rB9m15nTD7QiG6IX2u4DORzPMlxEBS"
@@ -75,13 +94,13 @@ docker-registry:
     size: 1Gi
     accessMode: 'ReadWriteOnce'
 
-weave-scope:
-  enabled : false
-  service:
-    type: NodePort
-    nodePort: 30040
-    port: 4040
-    targetPort: 4040
+# weave-scope:
+#   enabled: true
+#   service:
+#     type: NodePort
+#     nodePort: 30040
+#     port: 4040
+#     targetPort: 4040
     
 
 # sub-chart : grafana
@@ -171,3 +190,18 @@ prometheus:
 # sub-chart : metric-server
 metricServer:
   enabled: true
+
+# sub-chart : etcd
+etcd:
+  enabled: true
+  persistence:
+    enabled: false
+  auth:
+    rbac:
+      enabled: false
+      allowNoneAuthentication: true
+      rootPassword: ""
+
+# sub-chart : ingress
+ingress:
+  enabled: false

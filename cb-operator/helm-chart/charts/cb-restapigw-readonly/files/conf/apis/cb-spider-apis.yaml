@@ -1,0 +1,413 @@
+definitions:
+  # CB-Spider에서 지원하는 CloudOS 목록 표시
+  - name: 'Spider GET /cloudos'
+    active: true
+    endpoint: /spider/cloudos
+    # hosts:
+    #   - host: http://cb-spider:1024
+    #     weight: 0
+    method: GET
+    # timeout: 10m
+    # output_encoding: json
+    # except_querystrings: []
+    # except_headers: []
+    # health_check:
+    #   url: ""
+    #   timeout: 0s
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        # timeout: 10m
+        # method: GET
+        url_pattern: /spider/cloudos
+        # encoding: json
+        # group: ""
+        # blacklist: []
+        # whitelist: []
+        # mapping: {}
+        # is_collection: false
+        # wrap_collection_to_json: false
+        # target: ""
+        # middleware: null
+        # disable_host_sanitize: false
+        # lb_mode: ""
+        middleware:
+          mw-http:
+            return_error_details: GET_cloudos
+
+  # Cloud Driver
+  - name: 'Spider GET /driver'
+    active: true
+    endpoint: /spider/driver
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/driver
+        middleware:
+          mw-http:
+            return_error_details: GET_drivers
+
+  - name: 'Spider GET /driver/:DriverName'
+    active: true
+    endpoint: /spider/driver/:DriverName
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/driver/{{.DriverName}}
+        middleware:
+          mw-http:
+            return_error_details: GET_driver
+
+  # Cloud Credential
+  - name: 'Spider GET /credential'
+    active: true
+    endpoint: /spider/credential
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/credential
+        middleware:
+          mw-http:
+            return_error_details: GET_credentials
+
+  - name: 'Spider GET /credential/:CredentialName'
+    active: true
+    endpoint: /spider/credential/:CredentialName
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/credential/{{.CredentialName}}
+        middleware:
+          mw-http:
+            return_error_details: GET_credential
+
+  # Cloud Region
+  - name: 'Spider GET /region'
+    active: true
+    endpoint: /spider/region
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/region
+        middleware:
+          mw-http:
+            return_error_details: GET_regions
+
+  - name: 'Spider GET /region/:RegionName'
+    active: true
+    endpoint: /spider/region/:RegionName
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/region/{{.RegionName}}
+        middleware:
+          mw-http:
+            return_error_details: GET_region
+
+  # Cloud Connection Config
+  - name: 'Spider GET /connectionconfig'
+    active: true
+    endpoint: /spider/connectionconfig
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/connectionconfig
+        middleware:
+          mw-http:
+            return_error_details: GET_connectionconfigs
+
+  - name: 'Spider GET /connectionconfig/:ConfigName'
+    active: true
+    endpoint: /spider/connectionconfig/:ConfigName
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/connectionconfig/{{.ConfigName}}
+        middleware:
+          mw-http:
+            return_error_details: GET_connectionconfig
+
+  # VM Image
+  - name: 'Spider GET /vmimage'
+    active: true
+    endpoint: /spider/vmimage
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/vmimage
+        middleware:
+          mw-http:
+            return_error_details: GET_vmimages
+
+  - name: 'Spider GET /vmimage/:VMImageName'
+    active: true
+    endpoint: /spider/vmimage/:VMImageName
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/vmimage/{{.VMImageName}}
+        middleware:
+          mw-http:
+            return_error_details: GET_vmimage
+
+  # VM Spec
+  - name: 'Spider GET /vmspec'
+    active: true
+    endpoint: /spider/vmspec
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/vmspec
+        middleware:
+          mw-http:
+            return_error_details: GET_vmspecs
+
+  - name: 'Spider GET /vmspec/:VMSpecName'
+    active: true
+    endpoint: /spider/vmspec/:VMSpecName
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/vmspec/{{.VMSpecName}}
+        middleware:
+          mw-http:
+            return_error_details: GET_vmspec
+
+  # Org VM Spec
+  - name: 'Spider GET /vmorgspec'
+    active: true
+    endpoint: /spider/vmorgspec
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/vmorgspec
+        middleware:
+          mw-http:
+            return_error_details: GET_vmorgspecs
+
+  - name: 'Spider GET /vmorgspec/:VMOrgSpecName'
+    active: true
+    endpoint: /spider/vmorgspec/:VMOrgSpecName
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/vmorgspec/{{.VMOrgSpecName}}
+        middleware:
+          mw-http:
+            return_error_details: GET_vmorgspec
+
+  # VPC
+  - name: 'Spider GET /vpc'
+    active: true
+    endpoint: /spider/vpc
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/vpc
+        middleware:
+          mw-http:
+            return_error_details: GET_vpcs
+
+  - name: 'Spider GET /vpc/:VpcName'
+    active: true
+    endpoint: /spider/vpc/:VpcName
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/vpc/{{.VpcName}}
+        middleware:
+          mw-http:
+            return_error_details: GET_vpc
+
+  - name: 'Spider GET /allvpc'
+    active: true
+    endpoint: /spider/allvpc
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/allvpc
+        middleware:
+          mw-http:
+            return_error_details: GET_allvpcs
+
+  # Security Group
+  - name: 'Spider GET /securitygroup'
+    active: true
+    endpoint: /spider/securitygroup
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/securitygroup
+        middleware:
+          mw-http:
+            return_error_details: GET_securitygroups
+
+  - name: 'Spider GET /securitygroup/:SecurityGroupName'
+    active: true
+    endpoint: /spider/securitygroup/:SecurityGroupName
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/securitygroup/{{.SecurityGroupName}}
+        middleware:
+          mw-http:
+            return_error_details: GET_securitygroup
+
+  - name: 'Spider GET /allsecuritygroup'
+    active: true
+    endpoint: /spider/allsecuritygroup
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/allsecuritygroup
+        middleware:
+          mw-http:
+            return_error_details: GET_allsecuritygroups
+
+  # KeyPair
+  - name: 'Spider GET /keypair'
+    active: true
+    endpoint: /spider/keypair
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/keypair
+        middleware:
+          mw-http:
+            return_error_details: GET_keypairs
+
+  - name: 'Spider GET /keypair/:KeyPairName'
+    active: true
+    endpoint: /spider/keypair/:KeyPairName
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/keypair/{{.KeyPairName}}
+        middleware:
+          mw-http:
+            return_error_details: GET_keypair
+
+  - name: 'Spider GET /allkeypair'
+    active: true
+    endpoint: /spider/allkeypair
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/allkeypair
+        middleware:
+          mw-http:
+            return_error_details: GET_allkeypairs
+
+  # VM
+  - name: 'Spider GET /vm'
+    active: true
+    endpoint: /spider/vm
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/vm
+        middleware:
+          mw-http:
+            return_error_details: GET_vms
+
+  - name: 'Spider GET /vm/:VMName'
+    active: true
+    endpoint: /spider/vm/:VMName
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/vm/{{.VMName}}
+        middleware:
+          mw-http:
+            return_error_details: GET_vm
+
+  - name: 'Spider GET /allvm'
+    active: true
+    endpoint: /spider/allvm
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/allvm
+        middleware:
+          mw-http:
+            return_error_details: GET_allvms
+
+  # VM status
+  - name: 'Spider GET /vmstatus'
+    active: true
+    endpoint: /spider/vmstatus
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/vmstatus
+        middleware:
+          mw-http:
+            return_error_details: GET_vmstatuses
+
+  - name: 'Spider GET /vmstatus/:VMName'
+    active: true
+    endpoint: /spider/vmstatus/:VMName
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-spider:1024
+          weight: 0
+        url_pattern: /spider/vmstatus/{{.VMName}}
+        middleware:
+          mw-http:
+            return_error_details: GET_vmstatus

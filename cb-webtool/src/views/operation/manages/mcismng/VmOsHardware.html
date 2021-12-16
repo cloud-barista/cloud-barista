@@ -1,155 +1,84 @@
 {{define "VmOsHardware"}}
-	<!-- OS/HW -->
-	<div class="tab-pane fade show active" id="OS_HW">
-													
-		<div class="tab_ip_box">
-			<div class="tit"><strong>Server OS / HW Configuration</strong> <a href="javascript:void(0);" class="btn_clear">Clear</a></div>
-			
-			<div class="tab_ipbox">
-				<div class="ipbox ipbox1">
-					<ul>
-						<!-- 등록 된 VM Image 목록-->
-						<li>
-							<label><span class="ch">*</span>OS Platform</label>
-							<!-- <select class="selectbox white pline sel_1" id="e_imageID">
-								<option value="">All</option>
-								{{ range $vmImageItem := .VMImageList}}
-								<option value="{{ $vmImageItem.ID }}">[{{ $vmImageItem.ConnectionName }}] {{ $vmImageItem.Name }}  {{ $vmImageItem.CspImageName }}</option>
-								{{ end }}
-							</select> -->
-							<span class="sbox">
-								<input type="text" name="" value="" placeholder="Filter Items" class="pline ip_1 search_ip" id="filter_image" onkeydown="filterEnterToHidden(this.id, 'vmImage_info', 'es_imageList');"/>
-								<input type="submit" name="" class="btn_search" value="" title="" onclick="filterToHidden('filter_image', 'vmImage_info', 'es_imageList')"/>
-							</span>
-							<input type="text" name="tab_vmImageInfo" placeholder="" class="gray ip_2" id="tab_vmImageInfo" readonly />
-							<input type="hidden" name="tab_vmImageConnectionName" id="tab_vmImageConnectionName"/>
-						</li>
-					</ul>
-					<div class="dataTable status_list">						
-						<table cellpadding="0" cellspacing="0" summary="" id="es_imageList" style="display:none;">
-							<colgroup>
-								<col width="16%">
-								<col width="14%">
-								<col width="15%">
-								<col width="15%">
-								<col width="15%">
-								<col width="*">					
-							</colgroup>
-							<thead>
-								<tr>
-									<th>Image Name</th>
-									<th>Connection Name</th>
-									<th>CspImageId</th>
-									<th>CspImageName</th>
-									<th>Os</th>
-									<th>Desc</th>
-								</tr>
-							</thead>
-							<tbody id="es_imageListTbody">
-								{{ $length := len .VMImageList }} 
-								{{ if eq $length 0 }}
-								<tr>
-									<td class="overlay hidden" data-th="" colspan="8">No Data</td>
-								</tr>
-								{{ end }}
+<!-- OS/HW -->
+<div class="tab-pane fade show active" id="OS_HW">
 
-								{{range $vmInageIndex, $vmImageItem := .VMImageList}}	
-								
-								<tr onclick="setValueToFormObj('es_imageList', 'tab_vmImage', 'vmImage', '{{$vmInageIndex}}', 'e_imageId');">
-										<input type="hidden" id="vmImage_id_{{$vmInageIndex}}" value="{{$vmImageItem.ID}}"/>
-										<input type="hidden" name="vmImage_connectionName" id="vmImage_connectionName_{{$vmInageIndex}}" value="{{$vmImageItem.ConnectionName}}"/>
-										<input type="hidden" name="vmImage_info" id="vmImage_info_{{$vmInageIndex}}" value="{{$vmImageItem.ID}}|{{$vmImageItem.Name}}|{{$vmImageItem.ConnectionName}}|{{$vmImageItem.CspImageId}}|{{$vmImageItem.CspImageName}}|{{$vmImageItem.GuestOS}}|{{$vmImageItem.Description}}"/>										
-									<td class="overlay hidden" data-th="Name">{{$vmImageItem.Name}}</td>
-									<td class="btn_mtd ovm td_left" data-th="ConnectionName">
-										{{$vmImageItem.ConnectionName}}
-									</td>
-									<td class="overlay hidden" data-th="CspImageId">{{$vmImageItem.CspImageId}}</td>
-									<td class="overlay hidden" data-th="CspImageName">{{$vmImageItem.CspImageName}}</td>
-									<td class="overlay hidden" data-th="GuestOS">{{$vmImageItem.GuestOS}}</td>
-									<td class="overlay hidden" data-th="Description">{{$vmImageItem.Description}}</td>
-								</tr>											
-								{{end}}
+	<div class="tab_ip_box">
+		<div class="tit"><strong>Server OS / HW Configuration</strong> <a href="javascript:void(0);"
+				class="btn_clear">Clear</a></div>
 
-							</tbody>
-						</table>
-					</div>
-				</div>
-				<div class="ipbox ipbox2">
-					<ul>
-						<li>
-							<label><span class="ch">*</span>HW Spec</label>
-							<!-- <select class="selectbox white pline sel_1" id="e_specId">
-								<option value="">All</option>
-								{{ range $vmSpecItem := .VMSpecList}}
-								<option value="{{ $vmSpecItem.ID }}">[{{ $vmSpecItem.Name }}] {{ $vmSpecItem.CspSpecName }}  {{ $vmSpecItem.NumVCPU }} {{ $vmSpecItem.NumCore }}</option>
-								{{ end }}
+		<div class="tab_ipbox">
+			<div class="ipbox ipbox1">
+				<ul>
+					<!-- 등록 된 VM Image 목록-->
+					<li>
+						<label><span class="ch">*</span>Image Name</label>
+						<span class="sbox">
+							<input type="text" id="tab_vmImage_name" name="tab_vmImage_name" value="" placeholder="Filter Items" class="pline"/>
+							<a href="javascript:void(0);" data-toggle="modal" data-target="#imageAssist"
+								class="btn_image">Assist</a>
+						</span>
+						<input type="hidden" name="tab_vmImage_connectionName" id="tab_vmImage_connectionName" />
+						<input type="hidden" name="tab_vmImage_id" id="tab_vmImage_id" />
+					</li>
+					<li><label>CspImageId</label><span class="sbox">
+							<input type="text" id="tab_vmImage_cspImageId" name="tab_vmImage_cspImageId" value="" placeholder="" class="gray" title="" readonly />
+						</span></li>
+					<li><label>CspImageName</label><span class="sbox">
+							<input type="text" id="tab_vmImage_cspImageName" name="tab_vmImage_cspImageName" value="" placeholder="" class="gray" title="" readonly />
+						</span></li>
+					<li><label>GuestOS</label><span class="sbox">
+							<input type="text" id="tab_vmImage_guestOS" name="tab_vmImage_guestOS" value="" placeholder="" class="gray" title="" readonly />
+						</span></li>
+					<li><label>Description</label><span class="sbox">
+							<input type="text" id="tab_vmImage_description" name="tab_vmImage_description" value="" placeholder="" class="gray" title="" readonly />
+						</span></li>
+				</ul>
 
-							</select>
-							<span class="sbox sbox_m">
-								<input type="text" name="e_specFilterKeyword" placeholder="Filter Items" class="pline ip_1 search_ip" title="" id="e_specFilterKeyword"/>
-								<input type="submit" name="" class="btn_search" value="" title="" onclick="hardwareSpecFilter('e_specId', 'e_specFilterKeyword')"/>
-								<a href="javascript:void(0);" data-toggle="modal" data-target="#OS_HW_Spec" class="btn_spec">Assist</a>
-							</span>
-							<input type="text" name="" value="" placeholder="" class="gray ip_2" title=""readonly /> -->
+			</div>
+			<div class="ipbox ipbox2">
+				<ul>
+					<li>
+						<label><span class="ch">*</span>Spec Name</label>
+						<span class="sbox sbox_m">
+							<input type="text" name="tab_vmSpec_name" placeholder="Filter Items" class="pline"
+								id="tab_vmSpec_name" />
+							<a href="javascript:void(0);" data-toggle="modal" data-target="#specAssist"
+								class="btn_spec">Assist</a>
+						</span>
+						<input type="hidden" name="tab_vmSpec_id" id="tab_vmSpec_id" />
+						<input type="hidden" name="tab_vmSpec_connectionName" id="tab_vmSpec_connectionName" />
+					</li>
 
-							<span class="sbox sbox_m">
-								<input type="text" name="es_specFilterKeyword" placeholder="Filter Items" class="pline ip_1 search_ip" id="filter_spec" onkeydown="filterEnterToHidden(this.id, 'vmSpec_info', 'es_specList');"/>
-								<input type="submit" name="" class="btn_search" value="" title="" onclick="filterToHidden('filter_spec', 'vmSpec_info', 'es_specList')"/>
-								<a href="javascript:void(0);" data-toggle="modal" data-target="#OS_HW_Spec_Assist" class="btn_spec">Assist</a>
-							</span>
-							<input type="text" name="tab_vmSpecInfo" placeholder="" class="gray ip_2"  id="tab_vmSpecInfo" readonly />
-							<input type="hidden" name="tab_vmSpecConnectionName" id="tab_vmSpecConnectionName"/>
-						</li>
-					</ul>
-					
-					<div class="dataTable status_list" >
-							<table cellpadding="0" cellspacing="0" id="es_specList" style="display:none;">
-								<colgroup>
-									<col width="30%">
-									<col width="30%">
-									<col width="30%">			
-								</colgroup>
-								<thead>
-									<tr>
-										<th>Spec Name</th>
-										<th>Connection Name</th>
-										<th>CSP Spec Name</th>
-									</tr>
-								</thead>
-								<tbody id="e_specListTbody">
-									{{ $length := len .VMSpecList }} 
-									{{ if eq $length 0 }}
-									<tr>
-										<td class="overlay hidden" data-th="" colspan="8">No Data</td>
-									</tr>
-									{{ end }}
+					<li><label>CspSpecName</label>
+						<span class="sbox">
+							<input type="text" id="tab_vmSpec_cspSpecName" name="tab_vmSpec_cspSpecName" value="" placeholder="" class="gray" title="" readonly />
+						</span>
+					</li>
+					<li><label>Memory</label>
+						<span class="sbox">
+							<input type="text" id="tab_vmSpec_memGiB" name="tab_vmSpec_memGiB" value="" placeholder="" class="gray" title="" readonly />
+						</span>
+					</li>
+					<li><label>VCPU</label>
+						<span class="sbox">
+							<input type="text" id="tab_vmSpec_numvCPU" name="tab_vmSpec_numvCPU" value="" placeholder="" class="gray" title="" readonly />
+						</span>
+					</li>
+					<li><label>GPU</label>
+						<span class="sbox">
+							<input type="text" id="tab_vmSpec_numGpu" name="tab_vmSpec_numGpu" value="" placeholder="" class="gray" title="" readonly />
+						</span>
+					</li>
 
-									{{range $vmSpecIndex, $vmSpecItem := .VMSpecList}}	
-									<tr onclick="setValueToFormObj('es_specList', 'tab_vmSpec', 'vmSpec', '{{$vmSpecIndex}}', 'e_specId');">
-											<input type="hidden" id="vmSpec_id_{{$vmSpecIndex}}" value="{{$vmSpecItem.ID}}"/>
-											<input type="hidden" name="vmSpec_connectionName" id="vmSpec_connectionName_{{$vmSpecIndex}}" value="{{$vmSpecItem.ConnectionName}}"/>
-											<input type="hidden" name="vmSpec_info" id="vmSpec_info_{{$vmSpecIndex}}" value="{{$vmSpecItem.ID}}|{{$vmSpecItem.Name}}|{{$vmSpecItem.ConnectionName}}|{{$vmSpecItem.CspSpecName}}"/>
-										
-										<td class="overlay hidden" data-th="Name">{{$vmSpecItem.Name}}</td>
-										<td class="btn_mtd ovm td_left" data-th="ConnectionName">
-											{{$vmSpecItem.ConnectionName}}
-										</td>
-										<td class="overlay hidden" data-th="CspSpecName">{{$vmSpecItem.CspSpecName}}</td>
-									</tr>											
-									{{end}}
-									
-								</tbody>
-							</table>
-						
-					</div>
+				</ul>
 
-				</div>
 			</div>
 		</div>
-  
-		<div class="btn_tab">
-			<a href="javascript:void(0);" class="btn_next">Next</a>
-		</div>
 	</div>
-	<!-- //OS/HW -->
+
+	<div class="btn_tab">
+		<a href="javascript:void(0);" class="btn_next">Next</a>
+	</div>
+</div>
+<!-- //OS/HW -->
 {{end}}

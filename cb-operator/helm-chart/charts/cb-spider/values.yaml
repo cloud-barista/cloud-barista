@@ -5,15 +5,21 @@ replicaCount: 1
 
 image:
   repository: cloudbaristaorg/cb-spider
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 env:
-- name: LOCALHOST
-  value: "OFF"
+#- name: SERVER_ADDRESS
+#  value: ""
+- name: SERVICE_ADDRESS
+  value: ":31024"
 - name: PLUGIN_SW
   value: "OFF"
 - name: MEERKAT
   value: "OFF"
+- name: API_USERNAME
+  value: ""
+- name: API_PASSWORD
+  value: ""
 
 imagePullSecrets: []
 nameOverride: ""
@@ -48,13 +54,13 @@ ingress:
       paths: []
   tls: []
 
-resources: {}
+resources: 
   # limits:
   #   cpu: 100m
   #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
 
 # persistence:
 #   accessMode: 'ReadWriteMany'

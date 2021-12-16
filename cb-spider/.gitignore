@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+*.gz
 
 # Test binary, build with `go test -c`
 *.test
@@ -33,9 +34,15 @@ api-runtime/rest-runtime/log/cblogs.log
 conf/config.yaml
 
 interface/cbadm
-interface/spider
+interface/spctl
 
 .history/
 
 cloud-control-manager/cloud-driver/drivers/ncp/*
 cloud-control-manager/cloud-driver/drivers/ncp-plugin/*
+
+cloud-control-manager/cloud-driver/drivers/tencent/main/conf/testConfigTencent.yaml
+
+utils/clone-mc-meta-info/vm-image/data/*
+utils/clone-mc-meta-info/vm-image/test/*
+utils/clone-mc-meta-info/vm-image/az-data/*

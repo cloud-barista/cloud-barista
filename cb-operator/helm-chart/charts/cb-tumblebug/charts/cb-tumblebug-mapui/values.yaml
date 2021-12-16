@@ -1,0 +1,61 @@
+replicaCount: 1
+
+image:
+  repository: cloudbaristaorg/cb-mapui
+  pullPolicy: Always
+
+env:
+  
+  
+
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "cb-tumblebug-mapui"
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name:
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: NodePort
+  port: 1324
+  nodePort: 31324
+
+ingress:
+  enabled: false
+  annotations: {}
+  hosts:
+    - host: cloud-barista.local
+      paths: ["/*"]
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+

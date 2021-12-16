@@ -1,9 +1,12 @@
 package request
 
 import (
+	"errors"
+	"fmt"
 	"sync"
 	"time"
 
+	"github.com/cloud-barista/cb-dragonfly/pkg/config"
 	"google.golang.org/grpc"
 
 	pb "github.com/cloud-barista/cb-dragonfly/pkg/api/grpc/protobuf/cbdragonfly"
@@ -18,6 +21,7 @@ var once sync.Once
 var monApi MonitoringAPI
 
 type MonitoringAPI struct {
+	serverAddr string
 	conn       *grpc.ClientConn
 	monClient  *pb.MONClient
 	monRequest *MonitoringRequest
@@ -26,17 +30,25 @@ type MonitoringAPI struct {
 	outType    string
 }
 
-//func InitMonitoringAPI(timeout *time.Duration, inType string, outType string) MonitoringAPI {
 func InitMonitoringAPI() *MonitoringAPI {
 	// initialize monitoring api
 	once.Do(func() {
 		monApi = MonitoringAPI{
-			timeout: TimeoutMinutes * time.Minute,
-			inType:  ConvertType,
-			outType: ConvertType,
+			serverAddr: fmt.Sprintf("%s:%d", "127.0.0.1", config.GetGrpcInstance().GrpcServer.Port),
+			timeout:    TimeoutMinutes * time.Minute,
+			inType:     ConvertType,
+			outType:    ConvertType,
 		}
 	})
 	return &monApi
+}
+
+func (monApi *MonitoringAPI) SetServerAddr(addr string) error {
+	if addr == "" {
+		return errors.New("parameter is empty")
+	}
+	monApi.serverAddr = addr
+	return nil
 }
 
 func GetMonitoringAPI() *MonitoringAPI {
@@ -44,8 +56,9 @@ func GetMonitoringAPI() *MonitoringAPI {
 }
 
 func (monApi *MonitoringAPI) Open() error {
+
 	// connect to grpc server
-	clientConn, err := ConnectGRPC()
+	clientConn, err := ConnectGRPC(monApi.serverAddr)
 	if err != nil {
 		return err
 	}
@@ -95,4 +108,8 @@ func (monApi *MonitoringAPI) GetVMOnDemandMonInfo(metricName string, vmMonQueryR
 
 func (monApi *MonitoringAPI) GetMCISMonInfo(mcisMonQueryRequest pb.VMMCISMonQryRequest) (string, error) {
 	return monApi.monRequest.GetMCISMonInfo(mcisMonQueryRequest)
+}
+
+func (monApi *MonitoringAPI) InstallAgent(installAgentRequest pb.InstallAgentRequest) (string, error) {
+	return monApi.monRequest.InstallAgent(installAgentRequest)
 }

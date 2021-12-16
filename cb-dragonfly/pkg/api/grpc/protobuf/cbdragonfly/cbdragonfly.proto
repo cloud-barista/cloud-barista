@@ -65,7 +65,7 @@ service MON {
 	rpc GetMonConfig (Empty) returns (MonitoringConfigResponse) {}
 	rpc ResetMonConfig (Empty) returns (MonitoringConfigResponse) {}
 
-	rpc InstallTelegraf (InstallTelegrafRequest) returns (MessageResponse) {}
+	rpc InstallAgent (InstallAgentRequest) returns (MessageResponse) {}
 }
 
 //////////////////////////////////
@@ -428,7 +428,7 @@ message MonitoringConfigInfo {
 // Agent 설치 메시지 정의
 //////////////////////////////////
 
-message InstallTelegrafRequest {
+message InstallAgentRequest {
 	string ns_id = 1 [json_name="ns_id", (gogoproto.jsontag) = "ns_id", (gogoproto.moretags) = "yaml:\"ns_id\""];
 	string mcis_id = 2 [json_name="mcis_id", (gogoproto.jsontag) = "mcis_id", (gogoproto.moretags) = "yaml:\"mcis_id\""];
 	string vm_id = 3 [json_name="vm_id", (gogoproto.jsontag) = "vm_id", (gogoproto.moretags) = "yaml:\"vm_id\""];
@@ -436,4 +436,5 @@ message InstallTelegrafRequest {
 	string user_name = 5 [json_name="user_name", (gogoproto.jsontag) = "user_name", (gogoproto.moretags) = "yaml:\"user_name\""];
 	string ssh_key = 6 [json_name="ssh_key", (gogoproto.jsontag) = "ssh_key", (gogoproto.moretags) = "yaml:\"ssh_key\""];
 	string csp_type = 7 [json_name="csp_type", (gogoproto.jsontag) = "csp_type", (gogoproto.moretags) = "yaml:\"csp_type\""];
+	string port = 8 [json_name="port", (gogoproto.jsontag) = "port", (gogoproto.moretags) = "yaml:\"port\""];
 }

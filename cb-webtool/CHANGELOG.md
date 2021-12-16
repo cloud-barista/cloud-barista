@@ -1,13 +1,28 @@
-
-# v0.4.0-CafeMocha (2021.06.30.)
+# v0.5.0 (Affogato, 2021.12.16.)
 ### API Change
-- 모니터링 Ploicy, Threshold 추가
-- UI에서 직접 Framework 직접호출 방식 -> go server를 통해 호출하는 방식으로 변경
+- 성능개선 : MCIS/MCKS Manage에 Go routine 적용
+- CB-Spider v0.4.19, CB-Tumblebug v0.4.16, CB-MCKS v0.4.6, CB-Dragonfly v0.4.4 버전의 변경된 API 반영
+
+### Feature
+- 작업내역 표시 추가
+- MCIS, VM Create 고도화
+- 처리결과 return 방식 통합
+- 지도 표시 추가
+
+### Bug Fix
+- chart 표시 보완
+
+
+
+# v0.4.0 (Cafe Mocha, 2021.06.30.)
+### API Change
+- 모니터링 Policy, Threshold 추가
+- UI에서 직접 Framework 직접호출 방식 -> Go server를 통해 호출하는 방식으로 변경
 
 ### Feature
 - MCIS, VM 생성 시 Import/Export 기능 추가
 - VM 생성 시 Expert 기능 추가
-- cb-tumblebug & cb-spider & cb-dragonfly & cb-ladybug 변경된 API 반영
+- CB-Tumblebug & CB-Spider & CB-Dragonfly & cb-ladybug 변경된 API 반영
 - credential에 provider별 설정기능 보완
 - table 검색, 정렬기능 추가
 - Main화면 추가
@@ -19,7 +34,7 @@
 
 # v0.3.0-espresso (2020.12.10.)
 ### API Change
-- cb-tumblebug v0.2.9 / cb-dragonfly v0.2.8 버전의 변경된 API 반영
+- CB-Tumblebug v0.2.9 / CB-Dragonfly v0.2.8 버전의 변경된 API 반영
   - 호환성 테스트 완료 (각 프레임워크의 v0.3.0-espresso 버전과 동일)
 ### Feature
 - 신규 디자인 반영및 구조 변경
@@ -45,7 +60,7 @@
 - Dashboard 변경및 메인 내용 영문화 적용
 - 환경 & 리소스 설정 기능 변경 및 보완
 - 환경 변수에 로그인 계정 설정 추가
-- cb-tumblebug & cb-spider & cb-dragonfly 변경된 API 반영
+- CB-Tumblebug & CB-Spider & CB-Dragonfly 변경된 API 반영
 
 ### Bug Fix
 - 환경 & 리소스 설정 버그 수정

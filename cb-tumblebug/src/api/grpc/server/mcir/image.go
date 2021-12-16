@@ -17,7 +17,7 @@ import (
 
 // ===== [ Implementations ] =====
 
-// CreateImageWithInfo - Image 생성
+// CreateImageWithInfo is to Image 생성
 func (s *MCIRService) CreateImageWithInfo(ctx context.Context, req *pb.TbImageInfoRequest) (*pb.TbImageInfoResponse, error) {
 	logger := logger.NewLogger()
 
@@ -46,7 +46,7 @@ func (s *MCIRService) CreateImageWithInfo(ctx context.Context, req *pb.TbImageIn
 	return resp, nil
 }
 
-// CreateImageWithID - Image 생성
+// CreateImageWithID is to Image 생성
 func (s *MCIRService) CreateImageWithID(ctx context.Context, req *pb.TbImageCreateRequest) (*pb.TbImageInfoResponse, error) {
 	logger := logger.NewLogger()
 
@@ -75,7 +75,7 @@ func (s *MCIRService) CreateImageWithID(ctx context.Context, req *pb.TbImageCrea
 	return resp, nil
 }
 
-// ListImage - Image 목록
+// ListImage is to Image 목록
 func (s *MCIRService) ListImage(ctx context.Context, req *pb.ResourceAllQryRequest) (*pb.ListTbImageInfoResponse, error) {
 	logger := logger.NewLogger()
 
@@ -97,7 +97,7 @@ func (s *MCIRService) ListImage(ctx context.Context, req *pb.ResourceAllQryReque
 	return resp, nil
 }
 
-// ListImageId
+// ListImageId is to list image IDs
 func (s *MCIRService) ListImageId(ctx context.Context, req *pb.ResourceAllQryRequest) (*pb.ListIdResponse, error) {
 	logger := logger.NewLogger()
 
@@ -119,7 +119,7 @@ func (s *MCIRService) ListImageId(ctx context.Context, req *pb.ResourceAllQryReq
 	return resp, nil
 }
 
-// GetImage - Image 조회
+// GetImage is to Image 조회
 func (s *MCIRService) GetImage(ctx context.Context, req *pb.ResourceQryRequest) (*pb.TbImageInfoResponse, error) {
 	logger := logger.NewLogger()
 
@@ -141,7 +141,7 @@ func (s *MCIRService) GetImage(ctx context.Context, req *pb.ResourceQryRequest) 
 	return resp, nil
 }
 
-// DeleteImage - Image 삭제
+// DeleteImage is to Image 삭제
 func (s *MCIRService) DeleteImage(ctx context.Context, req *pb.ResourceQryRequest) (*pb.MessageResponse, error) {
 	logger := logger.NewLogger()
 
@@ -156,22 +156,30 @@ func (s *MCIRService) DeleteImage(ctx context.Context, req *pb.ResourceQryReques
 	return resp, nil
 }
 
-// DeleteAllImage - Image 전체 삭제
-func (s *MCIRService) DeleteAllImage(ctx context.Context, req *pb.ResourceAllQryRequest) (*pb.MessageResponse, error) {
+// DeleteAllImage is to Image 전체 삭제
+func (s *MCIRService) DeleteAllImage(ctx context.Context, req *pb.ResourceAllQryRequest) (*pb.IdListResponse, error) {
 	logger := logger.NewLogger()
 
 	logger.Debug("calling MCIRService.DeleteAllImage()")
 
-	err := mcir.DelAllResources(req.NsId, req.ResourceType, req.Force)
+	content, err := mcir.DelAllResources(req.NsId, req.ResourceType, "", req.Force)
 	if err != nil {
 		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.DeleteAllImage()")
 	}
 
-	resp := &pb.MessageResponse{Message: "All " + req.ResourceType + "s has been deleted"}
+	// MCIR 객체에서 GRPC 메시지로 복사
+	var grpcObj pb.IdListResponse
+	err = gc.CopySrcToDest(&content, &grpcObj)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.DeleteAllImage()")
+	}
+
+	// resp := &pb.MessageResponse{Message: "All " + req.ResourceType + "s has been deleted"}
+	resp := &grpcObj
 	return resp, nil
 }
 
-// FetchImage - Image 가져오기
+// FetchImage is to Image 가져오기
 func (s *MCIRService) FetchImage(ctx context.Context, req *pb.FetchImageQryRequest) (*pb.MessageResponse, error) {
 	logger := logger.NewLogger()
 
@@ -197,7 +205,7 @@ func (s *MCIRService) FetchImage(ctx context.Context, req *pb.FetchImageQryReque
 	return resp, nil
 }
 
-// SearchImage - Image 검색
+// SearchImage is to Image 검색
 func (s *MCIRService) SearchImage(ctx context.Context, req *pb.SearchImageQryRequest) (*pb.ListTbImageInfoResponse, error) {
 	logger := logger.NewLogger()
 
@@ -216,6 +224,35 @@ func (s *MCIRService) SearchImage(ctx context.Context, req *pb.SearchImageQryReq
 	}
 
 	resp := &pb.ListTbImageInfoResponse{Items: grpcObj}
+	return resp, nil
+}
+
+// UpdateImage is to update images
+func (s *MCIRService) UpdateImage(ctx context.Context, req *pb.TbUpdateImageRequest) (*pb.TbImageInfoResponse, error) {
+	logger := logger.NewLogger()
+
+	logger.Debug("calling MCIRService.UpdateImage()")
+
+	// GRPC 메시지에서 MCIR 객체로 복사
+	var mcirObj mcir.TbImageInfo
+	err := gc.CopySrcToDest(&req.Item, &mcirObj)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.UpdateImage()")
+	}
+
+	content, err := mcir.UpdateImage(req.NsId, req.ImageId, mcirObj)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.UpdateImage()")
+	}
+
+	// MCIR 객체에서 GRPC 메시지로 복사
+	var grpcObj pb.TbImageInfo
+	err = gc.CopySrcToDest(&content, &grpcObj)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.UpdateImage()")
+	}
+
+	resp := &pb.TbImageInfoResponse{Item: &grpcObj}
 	return resp, nil
 }
 

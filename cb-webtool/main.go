@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"os"
 
 	//"github.com/cloud-barista/cb-webtool/src/controller"
 	"github.com/cloud-barista/cb-webtool/src/controller"
@@ -265,7 +266,7 @@ func main() {
 			"operation/manages/mcismng/VmConfigureExpert",
 			"operation/manages/mcismng/VmConfigureImport",
 
-			"operation/manages/mcismng/VmAssistPopup",
+			"templates/VmAssistPopup",
 
 			"operation/manages/mcismng/VmOsHardware",
 			"operation/manages/mcismng/VmNetwork",
@@ -347,6 +348,7 @@ func main() {
 			"templates/Header",
 			"templates/Modal",
 			"templates/Footer",
+			"templates/VmAssistPopup",
 		},
 		DisableCache: true,
 	})
@@ -404,6 +406,20 @@ func main() {
 		DisableCache: true,
 	})
 
+	websocketTemplate := echotemplate.NewMiddleware(echotemplate.TemplateConfig{
+		Root:      "src/views",
+		Extension: ".html",
+		// Master:    "setting/namespaces/NameSpaceMng",
+		Partials: []string{
+			"templates/Top",
+			"templates/TopBox",
+			"templates/LNBPopup",
+			"templates/Header",
+			"templates/Footer",
+		}, //
+		DisableCache: true,
+	})
+
 	// "setting/connections/CloudConnectionModal", --> Region, Credential, Driver modal로 쪼개짐
 
 	// // mcis 매핑할 middleware 추가
@@ -426,6 +442,34 @@ func main() {
 
 	e.GET("/", controller.Index)
 
+	/////// API 로 호출하는 경우 start////////
+
+	e.POST("/api/auth/login", controller.ApiLogin)
+
+	restrictedGroup := e.Group("/api/auth/restricted/")
+	restrictedGroup.Use(middleware.JWT([]byte(os.Getenv("LoginAccessSecret"))))
+	restrictedGroup.GET("", controller.Restricted)
+	restrictedGroup.GET("user", controller.ApiUserInfo)
+	restrictedGroup.GET("namespaceList", controller.ApiNamespaceList)
+
+	// e.POST("/api/auth/login", controller.ApiLoginProc)
+	// e.POST("/api/auth/logout", controller.ApiLogoutProc)
+	// e.GET("/api/auth/user", controller.ApiUserInfo)
+
+	// e.GET("/api/namespaces/list", controller.ApiNamespaceList)
+
+	/////// API 로 호출하는 경우 finish////////
+
+	/////// Websocket start ///////////
+	//e.GET("/ws", hello)  // 이것도 인증 거친것들만 해야하지 않나?? 그런데 경로가.. ws:: 이라...
+	// e.GET("ws/helloWS", controller.HelloNetWebSocket)
+	e.GET("ws/helloGorilla", controller.HelloGorillaWebSocket)
+	e.GET("ws/websocketdata", controller.GetWebSocketData) //TODO :  naming rule상 목록조회이므로 List로 바꿀 것
+
+	//e.GET("ws/oneshot", controller.WebSocketOneShot)
+
+	//////  Websocket end /////////
+
 	defaultGroup := e.Group("/operation/about", aboutTemplate)
 	defaultGroup.GET("/about", controller.About)
 
@@ -437,10 +481,14 @@ func main() {
 	mainGroup.GET("", controller.MainForm)
 	mainGroup.GET("/apitestmng", controller.ApiTestMngForm)
 
+	websocketGroup := e.Group("/websocket", websocketTemplate)
+	websocketGroup.GET("/websocketForm", controller.HelloForm) // websocket test
+
 	loginGroup := e.Group("/login", loginTemplate)
 
 	loginGroup.GET("", controller.LoginForm)
 	loginGroup.POST("/proc", controller.LoginProc)
+	loginGroup.POST("/token", controller.LoginToken) // Login 후 Token만 반환
 	e.GET("/logout", controller.LogoutProc)
 	// loginGroup.POST("/process", controller.LoginProcess)
 	//login 관련
@@ -502,8 +550,8 @@ func main() {
 	policyGroup := e.Group("/operation/policies", policyTemplate)
 	policyGroup.GET("/policy/mngform", controller.McisPolicyMngForm)
 	policyGroup.GET("/mcis/:mcisID/vm/:vmID/agent/mngform", controller.VmMonitoringAgentRegForm)
-	policyGroup.POST("/mcis/:mcisID/vm/:vmID/agent/reg/proc", controller.VmMonitoringAgentRegProc) // namespace 등록 처리
-	policyGroup.GET("/mcis/:mcisID/metric/:metric", controller.GetVmMonitoringInfoData)
+	e.POST("/operation/policies/mcis/:mcisID/vm/:vmID/agent/reg/proc", controller.VmMonitoringAgentRegProc) // namespace 등록 처리
+	e.GET("/operation/policies/mcis/:mcisID/metric/:metric", controller.GetMcisPolicyInfoData)
 
 	// MCIS
 	// e.GET("/Manage/MCIS/reg", controller.McisRegForm)
@@ -556,7 +604,7 @@ func main() {
 	mcksRegGroup.GET("", controller.McksRegForm)                              // MCKS 생성 + Node생성 form
 	mcksRegGroup.GET("/:clusterUID/:clusterName", controller.McksNodeRegForm) // MCKS의 Node생성 : name까지 주는 이유는 별도처리하지 않고 node추가화면으로 바로 보내기 때문
 
-	e.GET("/operation/manages/mcksmng/list", controller.GetMcisList)
+	e.GET("/operation/manages/mcksmng/list", controller.GetMcksList)
 	e.POST("/operation/manages/mcksmng/reg/proc", controller.McksRegProc)
 	e.DELETE("/operation/manages/mcksmng/:clusteruID/:clusterName", controller.McksDelProc)
 	e.POST("/operation/manages/mcksmng/:clusteruID/:clusterName/reg/proc", controller.NodeRegProc)
@@ -642,10 +690,12 @@ func main() {
 
 	e.GET("/setting/resources/machineimage/lookupimages", controller.LookupCspVirtualMachineImageList) // TODO : Image 전체목록인가? 확인필요
 	//resourcesGroup.GET("/machineimage/lookupimage", controller.LookupVirtualMachineImageList)          // TODO : Image 전체목록인가? 확인필요
-	resourcesGroup.GET("/machineimage/lookupimage/:imageID", controller.LookupVirtualMachineImageData) // TODO : Image 상세 정보인가? 확인필요
-	e.POST("/setting/resources/machineimage/fetchimages", controller.FetchVirtualMachineImageList)     // TODO : Image 정보 갱신인가? 확인필요
+	// resourcesGroup.GET("/machineimage/lookupimage/:imageID", controller.LookupVirtualMachineImageData) // TODO : Image 상세 정보인가? 확인필요
+	e.GET("/setting/resources/machineimage/lookupimage", controller.LookupVirtualMachineImageData) // TODO : Image 상세 정보인가? 확인필요
+	e.POST("/setting/resources/machineimage/fetchimages", controller.FetchVirtualMachineImageList) // TODO : Image 정보 갱신인가? 확인필요
 
-	resourcesGroup.GET("/machineimage/searchimage", controller.SearchVirtualMachineImageList)
+	//resourcesGroup.GET("/machineimage/searchimage", controller.SearchVirtualMachineImageList)
+	e.POST("/setting/resources/machineimage/searchimage", controller.SearchVirtualMachineImageList)
 
 	resourcesGroup.GET("/vmspec/mngform", controller.VmSpecMngForm) // Form + SshKeyMng 같이 앞으로 넘길까?
 	resourcesGroup.GET("/vmspec/list", controller.GetVmSpecList)
@@ -654,9 +704,11 @@ func main() {
 	resourcesGroup.DELETE("/vmspec/del/:vmSpecID", controller.VmSpecDelProc) // DelProc + SskKey 같이 앞으로 넘길까
 	// resourcesGroup.PUT("/vmspec/put/:vmSpecID", controller.VmSpecPutProc)	// TODO : put 만들어야 함
 
-	resourcesGroup.GET("/vmspec/lookupvmspec", controller.LookupVmSpecList)             // TODO : Image 전체목록인가? 확인필요
-	resourcesGroup.GET("/vmspec/lookupvmspec/:vmSpecName", controller.LookupVmSpecData) // TODO : Image 상세 정보인가? 확인필요
-	resourcesGroup.POST("/vmspec/fetchvmspec", controller.FetchVmSpecList)              // TODO : Image 정보 갱신인가? 확인필요
+	// resourcesGroup.GET("/vmspec/lookupvmspec", controller.LookupVmSpecList)             // TODO : Image 전체목록인가? 확인필요
+	e.GET("/setting/resources/vmspec/lookupvmspecs", controller.LookupVmSpecList) // TODO : Image 전체목록인가? 확인필요
+	// resourcesGroup.GET("/vmspec/lookupvmspec/:vmSpecName", controller.LookupVmSpecData) // TODO : Image 상세 정보인가? 확인필요
+	e.GET("/setting/resources/vmspec/lookupvmspec", controller.LookupVmSpecData) // TODO : Image 상세 정보인가? 확인필요
+	resourcesGroup.POST("/vmspec/fetchvmspec", controller.FetchVmSpecList)       // TODO : Image 정보 갱신인가? 확인필요
 	// resourcesGroup.POST("/vmspec/filterspecs", controller.FilterVmSpecList)	// TODO : post방식의 filterspec 생성필요
 	e.POST("/setting/resources/vmspec/filterspecsbyrange", controller.FilterVmSpecListByRange) // TODO : post방식의 filterspec 생성필요
 

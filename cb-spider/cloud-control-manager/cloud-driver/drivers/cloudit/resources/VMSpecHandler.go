@@ -45,7 +45,7 @@ func setterVMSpec(region string, vmSpec specs.VMSpecInfo) *irs.VMSpecInfo {
 	return vmSpecInfo
 }
 
-func (vmSpecHandler *ClouditVMSpecHandler) ListVMSpec(Region string) ([]*irs.VMSpecInfo, error) {
+func (vmSpecHandler *ClouditVMSpecHandler) ListVMSpec() ([]*irs.VMSpecInfo, error) {
 	// log HisCall
 	hiscallInfo := GetCallLogScheme(vmSpecHandler.Client.IdentityEndpoint, call.VMSPEC, VMSpec, "ListVMSpec()")
 
@@ -60,6 +60,7 @@ func (vmSpecHandler *ClouditVMSpecHandler) ListVMSpec(Region string) ([]*irs.VMS
 	list, err := specs.List(vmSpecHandler.Client, &requestOpts)
 	if err != nil {
 		getError := errors.New(fmt.Sprintf("failed to get VM spec list, err : %s", err.Error()))
+		cblogger.Error(getError.Error())
 		LoggingError(hiscallInfo, getError)
 		return nil, getError
 	}
@@ -67,19 +68,20 @@ func (vmSpecHandler *ClouditVMSpecHandler) ListVMSpec(Region string) ([]*irs.VMS
 
 	vmSpecList := make([]*irs.VMSpecInfo, len(*list))
 	for i, spec := range *list {
-		vmSpecList[i] = setterVMSpec(Region, spec)
+		vmSpecList[i] = setterVMSpec(vmSpecHandler.CredentialInfo.IdentityEndpoint, spec)
 	}
 	return vmSpecList, nil
 }
 
-func (vmSpecHandler *ClouditVMSpecHandler) GetVMSpec(Region string, Name string) (irs.VMSpecInfo, error) {
+func (vmSpecHandler *ClouditVMSpecHandler) GetVMSpec(Name string) (irs.VMSpecInfo, error) {
 	// log HisCall
 	hiscallInfo := GetCallLogScheme(vmSpecHandler.Client.IdentityEndpoint, call.VMSPEC, Name, "GetVMSpec()")
 
 	start := call.Start()
-	specInfo, err := vmSpecHandler.GetVMSpecByName(Region, Name)
+	specInfo, err := vmSpecHandler.GetVMSpecByName(vmSpecHandler.CredentialInfo.IdentityEndpoint, Name)
 	if err != nil {
 		notFoundErr := errors.New(fmt.Sprintf("failed to get VM spec, err : %s", err.Error()))
+		cblogger.Error(notFoundErr.Error())
 		LoggingError(hiscallInfo, notFoundErr)
 		return irs.VMSpecInfo{}, notFoundErr
 	}
@@ -88,7 +90,7 @@ func (vmSpecHandler *ClouditVMSpecHandler) GetVMSpec(Region string, Name string)
 	return *specInfo, nil
 }
 
-func (vmSpecHandler *ClouditVMSpecHandler) ListOrgVMSpec(Region string) (string, error) {
+func (vmSpecHandler *ClouditVMSpecHandler) ListOrgVMSpec() (string, error) {
 	// log HisCall
 	hiscallInfo := GetCallLogScheme(vmSpecHandler.Client.IdentityEndpoint, call.VMSPEC, VMSpec, "ListOrgVMSpec()")
 
@@ -103,6 +105,7 @@ func (vmSpecHandler *ClouditVMSpecHandler) ListOrgVMSpec(Region string) (string,
 	list, err := specs.List(vmSpecHandler.Client, &requestOpts)
 	if err != nil {
 		getErr := errors.New(fmt.Sprintf("failed to get VM spec list, err : %s", err.Error()))
+		cblogger.Error(getErr.Error())
 		LoggingError(hiscallInfo, getErr)
 		return "", getErr
 	}
@@ -114,6 +117,7 @@ func (vmSpecHandler *ClouditVMSpecHandler) ListOrgVMSpec(Region string) (string,
 	jsonResult.Result = *list
 	jsonBytes, err := json.Marshal(jsonResult)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return "", err
 	}
@@ -123,14 +127,15 @@ func (vmSpecHandler *ClouditVMSpecHandler) ListOrgVMSpec(Region string) (string,
 	return jsonString, nil
 }
 
-func (vmSpecHandler *ClouditVMSpecHandler) GetOrgVMSpec(Region string, Name string) (string, error) {
+func (vmSpecHandler *ClouditVMSpecHandler) GetOrgVMSpec(Name string) (string, error) {
 	// log HisCall
 	hiscallInfo := GetCallLogScheme(vmSpecHandler.Client.IdentityEndpoint, call.VMSPEC, Name, "GetOrgVMSpec()")
 
 	start := call.Start()
-	specInfo, err := vmSpecHandler.GetVMSpecByName(Region, Name)
+	specInfo, err := vmSpecHandler.GetVMSpecByName(vmSpecHandler.CredentialInfo.IdentityEndpoint, Name)
 	if err != nil {
 		notFoundErr := errors.New(fmt.Sprintf("failed to get VM spec, err : %s", err.Error()))
+		cblogger.Error(notFoundErr.Error())
 		LoggingError(hiscallInfo, notFoundErr)
 		return "", notFoundErr
 	}
@@ -138,6 +143,7 @@ func (vmSpecHandler *ClouditVMSpecHandler) GetOrgVMSpec(Region string, Name stri
 
 	jsonBytes, err := json.Marshal(specInfo)
 	if err != nil {
+		cblogger.Error(err.Error())
 		LoggingError(hiscallInfo, err)
 		return "", err
 	}

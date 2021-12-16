@@ -1,0 +1,162 @@
+definitions:
+  # Health
+  - name: 'Dragonfly GET /healthcheck'
+    active: true
+    endpoint: /dragonfly/healthcheck
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-dragonfly:9090
+          weight: 0
+        url_pattern: /dragonfly/healthcheck
+        middleware:
+          mw-http:
+            return_error_details: GET_healthcheck
+
+  # Get Monitoring Config
+  - name: 'Dragonfly GET /config'
+    active: true
+    endpoint: /dragonfly/config
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-dragonfly:9090
+          weight: 0
+        url_pattern: /dragonfly/config
+        middleware:
+          mw-http:
+            return_error_details: GET_config
+
+  # Get MCIS VM Monitoring data
+  - name: 'Dragonfly GET /mcis/:mcisId/vm/:vmId/agent_ip/:agentIp/mcis_metric/:metric_name/mcis-monitoring-info'
+    active: true
+    endpoint: /dragonfly/ns/:nsId/mcis/:mcisId/vm/:vmId/agent_ip/:agentIp/mcis_metric/:metric_name/mcis-monitoring-info
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-dragonfly:9090
+          weight: 0
+        url_pattern: /dragonfly/ns/{{.NsId}}/mcis/{{.McisId}}/vm/{{.VmId}}/agent_ip/{{.AgentIp}}/mcis_metric/{{.Metric_name}}/mcis-monitoring-info
+        middleware:
+          mw-http:
+            return_error_details: GET_VM_Monitoring_data
+
+  # Get MCIS VM On-demand Monitoring data
+  - name: 'Dragonfly GET /mcis/:mcisId/vm/:vmId/agent_ip/:agentIp/mcis_metric/:metric_name/ondemand-monitoring-info'
+    active: true
+    endpoint: /dragonfly/ns/:nsId/mcis/:mcisId/vm/:vmId/agent_ip/:agentIp/mcis_metric/:metric_name/ondemand-monitoring-info
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-dragonfly:9090
+          weight: 0
+        url_pattern: /dragonfly/ns/{{.NsId}}/mcis/{{.McisId}}/vm/{{.VmId}}/agent_ip/{{.AgentIp}}/mcis_metric/{{.Metric_name}}/ondemand-monitoring-info
+        middleware:
+          mw-http:
+            return_error_details: GET_VM_OnDemand_Monitoring_data
+
+  # Get MCIS VM Monitoring data
+  - name: 'Dragonfly GET /mcis/:mcisId/vm/:vmId/metric/:metric_name/info'
+    active: true
+    endpoint: /dragonfly/ns/:nsId/mcis/:mcisId/vm/:vmId/metric/:metric_name/info
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-dragonfly:9090
+          weight: 0
+        url_pattern: /dragonfly/ns/{{.NsId}}/mcis/{{.McisId}}/vm/{{.VmId}}/metric/{{.Metric_name}}/info
+        middleware:
+          mw-http:
+            return_error_details: GET_VM_Monitoring_data
+
+  # Get Agent Metadata
+  - name: 'Dragonfly GET /agent/metadata'
+    active: true
+    endpoint: /dragonfly/agent/metadata
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-dragonfly:9090
+          weight: 0
+        url_pattern: /dragonfly/agent/metadata
+        middleware:
+          mw-http:
+            return_error_details: GET_agent_metadata
+
+  # List Alarm Event Handlers
+  - name: 'Dragonfly GET /alert/eventhandlers'
+    active: true
+    endpoint: /dragonfly/alert/eventhandlers
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-dragonfly:9090
+          weight: 0
+        url_pattern: /dragonfly/alert/eventhandlers
+        middleware:
+          mw-http:
+            return_error_details: GET_alert_eventhandlers
+        is_collection: true
+        wrap_collection_to_json: false
+        mapping:
+          collection: data
+
+  # Get Alarm Event Handler
+  - name: 'Dragonfly GET /alert/eventhandler/type/:type/event/:eventName'
+    active: true
+    endpoint: /dragonfly/alert/eventhandler/type/:type/event/:eventName
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-dragonfly:9090
+          weight: 0
+        url_pattern: /dragonfly/alert/eventhandler/type/{{.Type}}/event/{{.EventName}}
+        middleware:
+          mw-http:
+            return_error_details: GET_alert_eventhandler
+
+  # List Alert Tasks
+  - name: 'Dragonfly GET /alert/tasks'
+    active: true
+    endpoint: /dragonfly/alert/tasks
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-dragonfly:9090
+          weight: 0
+        url_pattern: /dragonfly/alert/tasks
+        middleware:
+          mw-http:
+            return_error_details: GET_alert_tasks
+        is_collection: true
+        wrap_collection_to_json: false
+        mapping:
+          collection: data
+
+  # Get Alert Task
+  - name: 'Dragonfly GET /alert/task/:taskId'
+    active: true
+    endpoint: /dragonfly/alert/task/:taskId
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-dragonfly:9090
+          weight: 0
+        url_pattern: /dragonfly/alert/task/{{.TaskId}}
+        middleware:
+          mw-http:
+            return_error_details: GET_alert_task
+
+  # List Event Logs of Alert Task
+  - name: 'Dragonfly GET /alert/task/:taskId/events'
+    active: true
+    endpoint: /dragonfly/alert/task/:taskId/events
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-dragonfly:9090
+          weight: 0
+        url_pattern: /dragonfly/alert/task/{{.TaskId}}/events
+        middleware:
+          mw-http:
+            return_error_details: GET_event_logs

@@ -17,7 +17,7 @@ influxdb:
 
 kapacitor:
   enabled: true
-  nameOverride: "cb-dragonfly-kapacitor"
+  nameOverride: "dragonfly-kapacitor"
   envVars:
     #KAPACITOR_INFLUXDB_0_URLS_0: http://cb-dragonfly-influxdb:8086
     KAPACITOR_INFLUXDB_0_USERNAME: cbmon
@@ -70,8 +70,14 @@ kafka:
     ADVERTISED_PORT: 32000
     #    advertised.listeners: PLAINTEXT://localhost:9092
     DELETE_TOPIC_ENABLE: "true"
-    LOG_RETENTION_MS: 10000
-    LOG_RETENTION_CHECK_INTERVAL_MS: 5000
+    LOG_RETENTION_HOURS: 1
+    # 1 hours (delete logs)
+    LOG_RETENTION_BYTES: "524288000"
+    # 500 MB
+    LOG_SEGMENT_BYTES: "262144000"
+    # 250 MB
+    LOG_RETENTION_CHECK_INTERVAL_MS: 600000
+    # 10 min (check interval)
     MESSAGE_TIMESTAMP_TYPE: LogAppendTime
     LOG_MESSAGE_TIMESTAMP_TYPE: LogAppendTime
     #   LISTENERS: PLAINTEXT://:9092
@@ -79,7 +85,7 @@ kafka:
     zookeeper.connection.timeout.ms: 18000
     zookeeper.session.timeout.ms: 10000
 
-## external : zookeeper      
+## external : zookeeper
 
 zookeeper:
   enabled: true
@@ -92,8 +98,6 @@ zookeeper:
   exporters:
     jmx:
       enabled: false
-  zookeeper:
-    enabled: false
 
 
 

@@ -5,6 +5,9 @@
 *.so
 *.dylib
 
+# environment files
+*.env
+
 # Test binary, build with `go test -c`
 *.test
 
@@ -16,3 +19,6 @@
 
 bin/
 vendor/
+
+# data file on cb-store
+meta_db/

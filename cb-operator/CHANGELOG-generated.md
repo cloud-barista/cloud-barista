@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.4.0](https://github.com/cloud-barista/cb-operator/tree/v0.4.0) (2021-06-30)
+
+**Implemented enhancements:**
+
+- TODO: Update APIGW image tag & conf files [\#117](https://github.com/cloud-barista/cb-operator/issues/117)
+
 ## [v0.3.2-test](https://github.com/cloud-barista/cb-operator/tree/v0.3.2-test) (2021-02-05)
 
 ## [v0.3.1](https://github.com/cloud-barista/cb-operator/tree/v0.3.1) (2021-02-04)

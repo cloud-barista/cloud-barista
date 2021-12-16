@@ -35,7 +35,9 @@ func NewVMCmd() *cobra.Command {
 
 	//  Adds the commands for application.
 	vmCmd.AddCommand(NewVMStartCmd())
-	vmCmd.AddCommand(NewVMControlCmd())
+	vmCmd.AddCommand(NewVMSuspendCmd())
+	vmCmd.AddCommand(NewVMResumeCmd())
+	vmCmd.AddCommand(NewVMRebootCmd())
 	vmCmd.AddCommand(NewVMListStatusCmd())
 	vmCmd.AddCommand(NewVMGetStatusCmd())
 	vmCmd.AddCommand(NewVMListCmd())
@@ -43,6 +45,8 @@ func NewVMCmd() *cobra.Command {
 	vmCmd.AddCommand(NewVMTerminateCmd())
 	vmCmd.AddCommand(NewVMListAllCmd())
 	vmCmd.AddCommand(NewVMTerminateCSPCmd())
+	vmCmd.AddCommand(NewVMRegisterCmd())
+	vmCmd.AddCommand(NewVMUnregisterCmd())
 
 	return vmCmd
 }
@@ -74,13 +78,13 @@ func NewVMStartCmd() *cobra.Command {
 	return startCmd
 }
 
-// NewVMControlCmd - VM 제어 기능을 수행하는 Cobra Command 생성
-func NewVMControlCmd() *cobra.Command {
+// NewVMSuspendCmd - VM Suspend 제어 기능을 수행하는 Cobra Command 생성
+func NewVMSuspendCmd() *cobra.Command {
 
 	controlCmd := &cobra.Command{
-		Use:   "control",
-		Short: "This is control command for vm",
-		Long:  "This is control command for vm",
+		Use:   "suspend",
+		Short: "This is suspend control command for vm",
+		Long:  "This is suspend control command for vm",
 		Run: func(cmd *cobra.Command, args []string) {
 			logger := logger.NewLogger()
 			if connectionName == "" {
@@ -91,13 +95,8 @@ func NewVMControlCmd() *cobra.Command {
 				logger.Error("failed to validate --name parameter")
 				return
 			}
-			if action == "" {
-				logger.Error("failed to validate --action parameter")
-				return
-			}
 			logger.Debug("--cname parameter value : ", connectionName)
 			logger.Debug("--name parameter value : ", vmName)
-			logger.Debug("--action parameter value : ", action)
 
 			SetupAndRun(cmd, args)
 		},
@@ -105,7 +104,66 @@ func NewVMControlCmd() *cobra.Command {
 
 	controlCmd.PersistentFlags().StringVarP(&connectionName, "cname", "", "", "connection name")
 	controlCmd.PersistentFlags().StringVarP(&vmName, "name", "n", "", "vm name")
-	controlCmd.PersistentFlags().StringVarP(&action, "action", "a", "", "action name")
+
+	return controlCmd
+}
+
+// NewVMResumeCmd - VM Resume 제어 기능을 수행하는 Cobra Command 생성
+func NewVMResumeCmd() *cobra.Command {
+
+	controlCmd := &cobra.Command{
+		Use:   "resume",
+		Short: "This is resume control command for vm",
+		Long:  "This is resume control command for vm",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger := logger.NewLogger()
+			if connectionName == "" {
+				logger.Error("failed to validate --cname parameter")
+				return
+			}
+			if vmName == "" {
+				logger.Error("failed to validate --name parameter")
+				return
+			}
+			logger.Debug("--cname parameter value : ", connectionName)
+			logger.Debug("--name parameter value : ", vmName)
+
+			SetupAndRun(cmd, args)
+		},
+	}
+
+	controlCmd.PersistentFlags().StringVarP(&connectionName, "cname", "", "", "connection name")
+	controlCmd.PersistentFlags().StringVarP(&vmName, "name", "n", "", "vm name")
+
+	return controlCmd
+}
+
+// NewVMRebootCmd - VM Reboot 제어 기능을 수행하는 Cobra Command 생성
+func NewVMRebootCmd() *cobra.Command {
+
+	controlCmd := &cobra.Command{
+		Use:   "reboot",
+		Short: "This is reboot control command for vm",
+		Long:  "This is reboot control command for vm",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger := logger.NewLogger()
+			if connectionName == "" {
+				logger.Error("failed to validate --cname parameter")
+				return
+			}
+			if vmName == "" {
+				logger.Error("failed to validate --name parameter")
+				return
+			}
+			logger.Debug("--cname parameter value : ", connectionName)
+			logger.Debug("--name parameter value : ", vmName)
+
+			SetupAndRun(cmd, args)
+		},
+	}
+
+	controlCmd.PersistentFlags().StringVarP(&connectionName, "cname", "", "", "connection name")
+	controlCmd.PersistentFlags().StringVarP(&vmName, "name", "n", "", "vm name")
 
 	return controlCmd
 }
@@ -278,7 +336,7 @@ func NewVMListAllCmd() *cobra.Command {
 func NewVMTerminateCSPCmd() *cobra.Command {
 
 	terminateCSPCmd := &cobra.Command{
-		Use:   "deletecsp",
+		Use:   "terminatecsp",
 		Short: "This is terminate csp command for vm",
 		Long:  "This is terminate csp command for vm",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -302,4 +360,61 @@ func NewVMTerminateCSPCmd() *cobra.Command {
 	terminateCSPCmd.PersistentFlags().StringVarP(&cspID, "id", "", "", "csp id")
 
 	return terminateCSPCmd
+}
+
+// NewVMRegisterCmd - VM Register 등록 기능을 수행하는 Cobra Command 생성
+func NewVMRegisterCmd() *cobra.Command {
+
+	registerCmd := &cobra.Command{
+		Use:   "register",
+		Short: "This is register command for vm",
+		Long:  "This is register command for vm",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger := logger.NewLogger()
+			readInDataFromFile()
+			if inData == "" {
+				logger.Error("failed to validate --indata parameter")
+				return
+			}
+			logger.Debug("--indata parameter value : \n", inData)
+			logger.Debug("--infile parameter value : ", inFile)
+
+			SetupAndRun(cmd, args)
+		},
+	}
+
+	registerCmd.PersistentFlags().StringVarP(&inData, "indata", "d", "", "input string data")
+	registerCmd.PersistentFlags().StringVarP(&inFile, "infile", "f", "", "input file path")
+
+	return registerCmd
+}
+
+// NewVMUnregisterCmd - VM Register 제거 기능을 수행하는 Cobra Command 생성
+func NewVMUnregisterCmd() *cobra.Command {
+
+	unregisterCmd := &cobra.Command{
+		Use:   "unregister",
+		Short: "This is unregister command for vm",
+		Long:  "This is unregister command for vm",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger := logger.NewLogger()
+			if connectionName == "" {
+				logger.Error("failed to validate --cname parameter")
+				return
+			}
+			if vmName == "" {
+				logger.Error("failed to validate --name parameter")
+				return
+			}
+			logger.Debug("--cname parameter value : ", connectionName)
+			logger.Debug("--name parameter value : ", vmName)
+
+			SetupAndRun(cmd, args)
+		},
+	}
+
+	unregisterCmd.PersistentFlags().StringVarP(&connectionName, "cname", "", "", "connection name")
+	unregisterCmd.PersistentFlags().StringVarP(&vmName, "name", "n", "", "vm name")
+
+	return unregisterCmd
 }

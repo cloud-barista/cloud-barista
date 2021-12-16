@@ -33,6 +33,8 @@ WORKDIR /app/src
 
 COPY --from=builder /go/src/github.com/cloud-barista/cb-tumblebug/assets/ /app/assets/
 
+COPY --from=builder /go/src/github.com/cloud-barista/cb-tumblebug/scripts/ /app/scripts/
+
 COPY --from=builder /go/src/github.com/cloud-barista/cb-tumblebug/conf/ /app/conf/
 
 COPY --from=builder /go/src/github.com/cloud-barista/cb-tumblebug/src/cb-tumblebug /app/src/
@@ -42,6 +44,7 @@ ENV CBTUMBLEBUG_ROOT /app
 ENV CBSTORE_ROOT /app
 ENV CBLOG_ROOT /app
 ENV SPIDER_CALL_METHOD REST
+ENV DRAGONFLY_CALL_METHOD REST
 ENV SPIDER_REST_URL http://cb-spider:1024/spider
 ENV DRAGONFLY_REST_URL http://cb-dragonfly:9090/dragonfly
 

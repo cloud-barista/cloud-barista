@@ -11,7 +11,6 @@ package service
 import (
 	"context"
 
-	cm "github.com/cloud-barista/cb-spider/api-runtime/common-runtime"
 	gc "github.com/cloud-barista/cb-spider/api-runtime/grpc-runtime/common"
 	"github.com/cloud-barista/cb-spider/api-runtime/grpc-runtime/logger"
 	pb "github.com/cloud-barista/cb-spider/api-runtime/grpc-runtime/stub/cbspider"
@@ -38,7 +37,8 @@ func (s *CCMService) StartVM(ctx context.Context, req *pb.VMCreateRequest) (*pb.
 	for _, sgName := range req.Item.SecurityGroupNames {
 		// SG NameID format => {VPC NameID} + cm.SG_DELIMITER + {SG NameID}
 		// transform: SG NameID => {VPC NameID}-{SG NameID}
-		sgIID := cres.IID{NameId: req.Item.VpcName + cm.SG_DELIMITER + sgName, SystemId: ""}
+		// sgIID := cres.IID{NameId: req.Item.VpcName + cm.SG_DELIMITER + sgName, SystemId: ""}
+		sgIID := cres.IID{sgName, ""}
 		sgIIDList = append(sgIIDList, sgIID)
 	}
 	// (2) create VMReqInfo with SecurityGroup IID List
@@ -51,6 +51,9 @@ func (s *CCMService) StartVM(ctx context.Context, req *pb.VMCreateRequest) (*pb.
 
 		VMSpecName: req.Item.VmSpecName,
 		KeyPairIID: cres.IID{NameId: req.Item.KeyPairName, SystemId: ""},
+
+		RootDiskType: req.Item.RootDiskType,
+		RootDiskSize: req.Item.RootDiskSize,
 
 		VMUserId:     req.Item.VmUserId,
 		VMUserPasswd: req.Item.VmUserPasswd,
@@ -225,6 +228,47 @@ func (s *CCMService) TerminateCSPVM(ctx context.Context, req *pb.CSPVMQryRequest
 	}
 
 	resp := &pb.StatusResponse{Status: string(result)}
+	return resp, nil
+}
+
+// RegisterVM - VM 등록
+func (s *CCMService) RegisterVM(ctx context.Context, req *pb.VMRegisterRequest) (*pb.VMInfoResponse, error) {
+	logger := logger.NewLogger()
+
+	logger.Debug("calling CCMService.RegisterVM()")
+
+	userIId := cres.IID{req.Item.Name, req.Item.CspId}
+
+	// Call common-runtime API
+	result, err := cmrt.RegisterVM(req.ConnectionName, userIId)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "CCMService.RegisterVM()")
+	}
+
+	// CCM 객체에서 GRPC 메시지로 복사
+	var grpcObj pb.VMInfo
+	err = gc.CopySrcToDest(result, &grpcObj)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "CCMService.RegisterVM()")
+	}
+
+	resp := &pb.VMInfoResponse{Item: &grpcObj}
+	return resp, nil
+}
+
+// UnregisterVM - VM 제거
+func (s *CCMService) UnregisterVM(ctx context.Context, req *pb.VMUnregiserQryRequest) (*pb.BooleanResponse, error) {
+	logger := logger.NewLogger()
+
+	logger.Debug("calling CCMService.UnregisterVM()")
+
+	// Call common-runtime API
+	result, err := cmrt.UnregisterResource(req.ConnectionName, rsVM, req.Name)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "CCMService.UnregisterVM()")
+	}
+
+	resp := &pb.BooleanResponse{Result: result}
 	return resp, nil
 }
 

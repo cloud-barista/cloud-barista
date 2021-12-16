@@ -38,6 +38,31 @@ type TencentVMHandler struct {
 	Client *cvm.Client
 }
 
+//VM 이름으로 중복 생성을 막아야 해서 VM존재 여부를 체크함.
+func (vmHandler *TencentVMHandler) isExist(vmName string) (bool, error) {
+	cblogger.Infof("VM조회(Name기반) : %s", vmName)
+	request := cvm.NewDescribeInstancesRequest()
+	request.Filters = []*cvm.Filter{
+		&cvm.Filter{
+			Name:   common.StringPtr("instance-name"),
+			Values: common.StringPtrs([]string{vmName}),
+		},
+	}
+
+	response, err := vmHandler.Client.DescribeInstances(request)
+	if err != nil {
+		cblogger.Error(err)
+		return false, err
+	}
+
+	if *response.Response.TotalCount < 1 {
+		return false, nil
+	}
+
+	cblogger.Infof("VM 정보 찾음 - VmId:[%s] / VmName:[%s]", *response.Response.InstanceSet[0].InstanceId, *response.Response.InstanceSet[0].InstanceName)
+	return true, nil
+}
+
 // VM생성 시 Zone이 필수라서 Credential의 Zone에만 생성함.
 func (vmHandler *TencentVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, error) {
 	cblogger.Info(vmReqInfo)
@@ -49,6 +74,19 @@ func (vmHandler *TencentVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo,
 		return irs.VMInfo{}, errors.New("Connection 정보에 Zone 정보가 없습니다")
 	}
 
+	//=================================================
+	// 동일 이름 생성 방지 추가(cb-spider 요청 필수 기능)
+	//=================================================
+	isExist, errExist := vmHandler.isExist(vmReqInfo.IId.NameId)
+	if errExist != nil {
+		cblogger.Error(errExist)
+		return irs.VMInfo{}, errExist
+	}
+	if isExist {
+		return irs.VMInfo{}, errors.New("A VM with the name " + vmReqInfo.IId.NameId + " already exists.")
+	}
+
+	/* 2021-10-26 이슈 #480에 의해 제거
 	// 2021-04-28 cbuser 추가에 따른 Local KeyPair만 VM 생성 가능하도록 강제
 	//=============================
 	// KeyPair의 PublicKey 정보 처리
@@ -66,6 +104,7 @@ func (vmHandler *TencentVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo,
 		cblogger.Error(errKeyPair)
 		return irs.VMInfo{}, errKeyPair
 	}
+	*/
 
 	callogger := call.GetLogger("HISCALL")
 	callLogInfo := call.CLOUDLOGSCHEMA{
@@ -87,6 +126,8 @@ func (vmHandler *TencentVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo,
 		SubnetId: common.StringPtr(vmReqInfo.SubnetIID.SystemId),
 	}
 
+	request.InstanceChargeType = common.StringPtr("POSTPAID_BY_HOUR")
+
 	request.InternetAccessible = &cvm.InternetAccessible{
 		// 	InternetChargeType: common.StringPtr("TRAFFIC_POSTPAID_BY_HOUR"),
 		PublicIpAssigned:        common.BoolPtr(true),
@@ -104,7 +145,7 @@ func (vmHandler *TencentVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo,
 	cblogger.Debug("SystemId 기반으로 처리하기 위해 IID 기반의 보안그룹 배열을 SystemId 기반 보안그룹 배열로 조회및 변환함.")
 	var newSecurityGroupIds []string
 	for _, curSecurityGroup := range vmReqInfo.SecurityGroupIIDs {
-		cblogger.Infof("보안그룹 변환 : [%s]", curSecurityGroup)
+		cblogger.Debugf("보안그룹 변환 : [%s]", curSecurityGroup)
 		newSecurityGroupIds = append(newSecurityGroupIds, curSecurityGroup.SystemId)
 	}
 
@@ -119,11 +160,38 @@ func (vmHandler *TencentVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo,
 		Zone: common.StringPtr(vmHandler.Region.Zone),
 	}
 
-	//=============================
-	// SystemDisk 처리
-	//=============================
+	/* 이슈 #348에 의해 RootDisk 기능 지원하면서 기존 로직 제거
 	request.SystemDisk = &cvm.SystemDisk{
-		DiskType: common.StringPtr("CLOUD_PREMIUM"),
+		DiskType: common.StringPtr("CLOUD_PREMIUM"), //일부 인스턴스의 경우 기본 스토리지가 없는 스펙이 있어서 강제로 CLOUD_PREMIUM 지정
+	}
+	*/
+
+	//=============================
+	// SystemDisk 처리 - 이슈 #348에 의해 RootDisk 기능 지원
+	//=============================
+	if vmReqInfo.RootDiskType != "" || vmReqInfo.RootDiskSize != "" {
+		request.SystemDisk = &cvm.SystemDisk{}
+		//=============================
+		// Root Disk Type 변경
+		//=============================
+		if vmReqInfo.RootDiskType != "" {
+			request.SystemDisk.DiskType = common.StringPtr(vmReqInfo.RootDiskType)
+		}
+
+		//=============================
+		// Root Disk Size 변경
+		//=============================
+		if vmReqInfo.RootDiskSize != "" {
+			if !strings.EqualFold(vmReqInfo.RootDiskSize, "default") {
+				iDiskSize, err := strconv.ParseInt(vmReqInfo.RootDiskSize, 10, 64)
+				if err != nil {
+					cblogger.Error(err)
+					return irs.VMInfo{}, err
+				}
+
+				request.SystemDisk.DiskSize = common.Int64Ptr(iDiskSize)
+			}
+		}
 	}
 
 	//=============================
@@ -137,13 +205,13 @@ func (vmHandler *TencentVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo,
 		return irs.VMInfo{}, err
 	}
 	userData := string(fileDataCloudInit)
-	userData = strings.ReplaceAll(userData, "{{username}}", CBDefaultVmUserName)
-	userData = strings.ReplaceAll(userData, "{{public_key}}", keyPairInfo.PublicKey)
+	//userData = strings.ReplaceAll(userData, "{{username}}", CBDefaultVmUserName)
+	//userData = strings.ReplaceAll(userData, "{{public_key}}", keyPairInfo.PublicKey)
 	userDataBase64 := base64.StdEncoding.EncodeToString([]byte(userData))
 	cblogger.Debugf("cloud-init data : [%s]", userDataBase64)
 	request.UserData = common.StringPtr(userDataBase64)
 
-	cblogger.Info("===== 요청 객체====")
+	cblogger.Debug("===== 요청 객체====")
 	spew.Config.Dump(request)
 	callLogStart := call.Start()
 	response, err := vmHandler.Client.RunInstances(request)
@@ -391,12 +459,13 @@ func (vmHandler *TencentVMHandler) GetVM(vmIID irs.IID) (irs.VMInfo, error) {
 
 func (vmHandler *TencentVMHandler) ExtractDescribeInstances(curVm *cvm.Instance) (irs.VMInfo, error) {
 	//cblogger.Info("ExtractDescribeInstances", curVm)
-	spew.Dump(curVm)
+	//spew.Dump(curVm)
 
 	//VM상태와 무관하게 항상 값이 존재하는 항목들만 초기화
 	vmInfo := irs.VMInfo{
 		IId:        irs.IID{SystemId: *curVm.InstanceId},
 		VMSpecName: *curVm.InstanceType,
+		VMUserId:   "cb-user",
 		//KeyPairIId: irs.IID{SystemId: *curVm.},
 	}
 

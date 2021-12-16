@@ -15,7 +15,7 @@ $(document).ready(function () {
 });
 /* scroll */
 $(document).ready(function () {
-//checkbox all
+    //checkbox all
     // $("#th_chall").click(function () {
     //     if ($("#th_chall").prop("checked")) {
     //         $("input[name=chk]").prop("checked", true);
@@ -56,27 +56,27 @@ $(document).ready(function () {
 // }
 
 // area 표시
-function displaySshKeyInfo(targetAction){
-    if( targetAction == "REG"){
+function displaySshKeyInfo(targetAction) {
+    if (targetAction == "REG") {
         $('#sshKeyCreateBox').toggleClass("active");
         $('#sskKeyInfoBox').removeClass("view");
         $('#sshKeyListTable').removeClass("on");
         var offset = $("#sshKeyCreateBox").offset();
         // var offset = $("#" + target+"").offset();
-        $("#TopWrap").animate({scrollTop : offset.top}, 300);
+        $("#TopWrap").animate({ scrollTop: offset.top }, 300);
 
         // form 초기화
         $("#regCspSshKeyName").val('');
         //$("#regProvider").val('');
         //$("#regCregConnectionNameidrBlock").val('');
-
-    }else if ( targetAction == "REG_SUCCESS"){
+        goFocus('sshKeyCreateBox');
+    } else if (targetAction == "REG_SUCCESS") {
         $('#sshKeyCreateBox').removeClass("active");
         $('#sskKeyInfoBox').removeClass("view");
         $('#sshKeyListTable').addClass("on");
-        
+
         var offset = $("#sshKeyCreateBox").offset();
-        $("#TopWrap").animate({scrollTop : offset.top}, 0);
+        $("#TopWrap").animate({ scrollTop: offset.top }, 0);
 
         // form 초기화
         $("#regCspSshKeyName").val('');
@@ -84,30 +84,30 @@ function displaySshKeyInfo(targetAction){
         $("#regCregConnectionNameidrBlock").val('');
 
         getSshKeyList("name");
-    }else if ( targetAction == "DEL"){
+    } else if (targetAction == "DEL") {
         $('#sshKeyCreateBox').removeClass("active");
         $('#sskKeyInfoBox').addClass("view");
         $('#sshKeyListTable').removeClass("on");
 
         var offset = $("#sskKeyInfoBox").offset();
-        $("#TopWrap").animate({scrollTop : offset.top}, 300);
+        $("#TopWrap").animate({ scrollTop: offset.top }, 300);
 
-    }else if ( targetAction == "DEL_SUCCESS"){
+    } else if (targetAction == "DEL_SUCCESS") {
         $('#sshKeyCreateBox').removeClass("active");
         $('#sskKeyInfoBox').removeClass("view");
         $('#sshKeyListTable').addClass("on");
 
         var offset = $("#sskKeyInfoBox").offset();
-        $("#TopWrap").animate({scrollTop : offset.top}, 0);
+        $("#TopWrap").animate({ scrollTop: offset.top }, 0);
 
         getSshKeyList("name");
-    }else if ( targetAction == "CLOSE"){
+    } else if (targetAction == "CLOSE") {
         $('#sshKeyCreateBox').removeClass("active");
         $('#sskKeyInfoBox').removeClass("view");
         $('#sshKeyListTable').addClass("on");
 
         var offset = $("#sskKeyInfoBox").offset();
-        $("#TopWrap").animate({scrollTop : offset.top}, 0);
+        $("#TopWrap").animate({ scrollTop: offset.top }, 0);
     }
 }
 
@@ -128,54 +128,56 @@ function getSshKeyList(sort_type) {
 
         if (data == null) {
             html += '<tr><td class="overlay hidden" data-th="" colspan="5">No Data</td></tr>'
-            
+
             $("#sList").empty();
             $("#sList").append(html);
-                
+
             ModalDetail()
         } else {
             if (data.length) { // null exception if not exist
                 if (sort_type) {
                     console.log("check : ", sort_type);
                     data.filter(list => list.name !== "").sort((a, b) => (a[sort_type] < b[sort_type] ? - 1 : a[sort_type] > b[sort_type] ? 1 : 0)).map((item, index) => (
-                        html += '<tr onclick="showSshKeyInfo(\'' + item.cspSshKeyName + '\');">' 
-                            + '<td class="overlay hidden column-50px" data-th="">' 
-                            + '<input type="hidden" id="ssh_info_' + index + '" value="' + item.name + '|' + item.connectionName + '|' + item.cspSshKeyName + '"/>' 
-                            + '<input type="checkbox" name="chk" value="' + item.name + '" id="raw_'  + index + '" title="" /><label for="td_ch1"></label> <span class="ov off"></span></td>' 
-                            + '<td class="btn_mtd ovm" data-th="Name">' + item.id 
-                            // + '<a href="javascript:void(0);"><img src="/assets/img/contents/icon_copy.png" class="td_icon" alt=""/></a> <span class="ov"></span></td>'
-                            + '</td>'
-                            + '<td class="overlay hidden" data-th="connectionName">' + item.connectionName + '</td>' 
-                            + '<td class="overlay hidden" data-th="cspSshKeyName">' + item.cspSshKeyName + '</td>'  
-                            // + '<td class="overlay hidden column-60px" data-th=""><a href="javascript:void(0);"><img src="/assets/img/contents/icon_link.png" class="icon" alt=""/></a></td>' 
-                            + '</tr>'
+                        //html += '<tr onclick="showSshKeyInfo(\'' + item.cspSshKeyName + '\');">'
+                        html += '<tr onclick="showSshKeyInfo(\'' + item.id + '\');">'
+                        + '<td class="overlay hidden column-50px" data-th="">'
+                        + '<input type="hidden" id="ssh_info_' + index + '" value="' + item.name + '|' + item.connectionName + '|' + item.cspSshKeyName + '"/>'
+                        + '<input type="checkbox" name="chk" value="' + item.name + '" id="raw_' + index + '" title="" /><label for="td_ch1"></label> <span class="ov off"></span></td>'
+                        + '<td class="btn_mtd ovm" data-th="Name">' + item.id
+                        // + '<a href="javascript:void(0);"><img src="/assets/img/contents/icon_copy.png" class="td_icon" alt=""/></a> <span class="ov"></span></td>'
+                        + '</td>'
+                        + '<td class="overlay hidden" data-th="connectionName">' + item.connectionName + '</td>'
+                        + '<td class="overlay hidden" data-th="cspSshKeyName">' + item.cspSshKeyName + '</td>'
+                        // + '<td class="overlay hidden column-60px" data-th=""><a href="javascript:void(0);"><img src="/assets/img/contents/icon_link.png" class="icon" alt=""/></a></td>' 
+                        + '</tr>'
                     ))
                 } else {
                     data.filter((list) => list.name !== "").map((item, index) => (
-                        html += '<tr onclick="showSshKeyInfo(\'' + item.cspSshKeyName + '\');">' 
-                            + '<td class="overlay hidden column-50px" data-th="">' 
-                            + '<input type="hidden" id="ssh_info_' + index + '" value="' + item.name  + '"/>'
-                            + '<input type="checkbox" name="chk" value="' + item.name + '" id="raw_' + index + '" title="" /><label for="td_ch1"></label> <span class="ov off"></span></td>' 
-                            + '<td class="btn_mtd ovm" data-th="id">' + item.id + '<span class="ov"></span></td>' 
-                            + '<td class="overlay hidden" data-th="connectionName">' + item.connectionName + '</td>' 
-                            + '<td class="overlay hidden" data-th="cspSshKeyName">' + item.cspSshKeyName + '</td>' 
-                            // + '<td class="overlay hidden column-60px" data-th=""><a href="javascript:void(0);"><img src="/assets/img/contents/icon_link.png" class="icon" alt=""/></a></td>' 
-                            + '</tr>'
+                        //html += '<tr onclick="showSshKeyInfo(\'' + item.cspSshKeyName + '\');">'
+                        html += '<tr onclick="showSshKeyInfo(\'' + item.id + '\');">'
+                        + '<td class="overlay hidden column-50px" data-th="">'
+                        + '<input type="hidden" id="ssh_info_' + index + '" value="' + item.name + '"/>'
+                        + '<input type="checkbox" name="chk" value="' + item.name + '" id="raw_' + index + '" title="" /><label for="td_ch1"></label> <span class="ov off"></span></td>'
+                        + '<td class="btn_mtd ovm" data-th="id">' + item.id + '<span class="ov"></span></td>'
+                        + '<td class="overlay hidden" data-th="connectionName">' + item.connectionName + '</td>'
+                        + '<td class="overlay hidden" data-th="cspSshKeyName">' + item.cspSshKeyName + '</td>'
+                        // + '<td class="overlay hidden column-60px" data-th=""><a href="javascript:void(0);"><img src="/assets/img/contents/icon_link.png" class="icon" alt=""/></a></td>' 
+                        + '</tr>'
                     ))
-    
+
                 }
-    
+
                 $("#sList").empty();
                 $("#sList").append(html);
-                
+
                 ModalDetail()
-    
+
             }
         }
-        
-    // }).catch(function(error){
-    //     console.log("get sshKeyList error : ",error);        
-    // });
+
+        // }).catch(function(error){
+        //     console.log("get sshKeyList error : ",error);        
+        // });
     }).catch((error) => {
         console.warn(error);
         console.log(error.response)
@@ -194,30 +196,30 @@ function getSshKeyList(sort_type) {
 //     fnMove(target)
 // }
 
-function deleteSshKey(){
-// function goDelete() {
+function deleteSshKey() {
+    // function goDelete() {
     var selSshKeyId = "";
     var count = 0;
 
-    $( "input[name='chk']:checked" ).each (function (){
+    $("input[name='chk']:checked").each(function () {
         count++;
-        selSshKeyId = selSshKeyId + $(this).val()+"," ;
+        selSshKeyId = selSshKeyId + $(this).val() + ",";
     });
-    selSshKeyId = selSshKeyId.substring(0,selSshKeyId.lastIndexOf( ","));
-    
+    selSshKeyId = selSshKeyId.substring(0, selSshKeyId.lastIndexOf(","));
+
     console.log("sshKeyId : ", selSshKeyId);
     console.log("count : ", count);
 
-    if(selSshKeyId == ''){
+    if (selSshKeyId == '') {
         alert("삭제할 대상을 선택하세요.");
         return false;
     }
 
-    if(count != 1){
+    if (count != 1) {
         alert("삭제할 대상을 하나만 선택하세요.");
         return false;
     }
-    
+
     // var url = CommonURL + "/ns/" + NAMESPACE + "/resources/sshKey/" + selSshKeyId;
     var url = "" + "" + selSshKeyId;
     var url = "/setting/resources" + "/sshkey/del/" + selSshKeyId;
@@ -233,17 +235,17 @@ function deleteSshKey(){
             // commonAlert("Success Delete SSH Key.");
             commonAlert(data.message);
             // location.reload(true);
-          
+
             displaySshKeyInfo("DEL_SUCCESS");
             //getSshKeyList("name");
 
             getSshKeyList("name");
-        }else{
+        } else {
             commonAlert(data.error);
         }
-    // }).catch(function(error){
-    //     console.log("get delete error : ",error);        
-    // });
+        // }).catch(function(error){
+        //     console.log("get delete error : ",error);        
+        // });
     }).catch((error) => {
         console.warn(error);
         console.log(error.response)
@@ -259,17 +261,17 @@ function showSshKeyInfo(sshKeyId) {
     // var apiInfo = "{{ .apiInfo}}";
     // var url = CommonURL+"/ns/"+NAMESPACE+"/resources/sshKey/"+ sshKeyId;
     var url = "/setting/resources" + "/sshkey/" + sshKeyId;
-    console.log("ssh key URL : ",url)
+    console.log("ssh key URL : ", url)
 
-    return axios.get(url,{
-        headers:{
+    return axios.get(url, {
+        headers: {
             // 'Authorization': apiInfo
         }
-    
-    }).then(result=>{
+
+    }).then(result => {
         var data = result.data.SshKeyInfo
-        console.log("Show Data : ",data);
-        
+        console.log("Show Data : ", data);
+
         var dtlCspSshKeyName = data.cspSshKeyName;
         var dtlDescription = data.description;
         var dtlUserID = data.userID;
@@ -279,24 +281,24 @@ function showSshKeyInfo(sshKeyId) {
         var dtlFingerprint = data.fingerprint;
 
 
-       $('#dtlCspSshKeyName').empty();
-       $('#dtlDescription').empty();
-       $('#dtlUserID').empty();
-       $('#dtlConnectionName').empty();
-       $('#dtlPublicKey').empty();
-       $('#dtlPrivateKey').empty();
-       $('#dtlFingerprint').empty();
+        $('#dtlCspSshKeyName').empty();
+        $('#dtlDescription').empty();
+        $('#dtlUserID').empty();
+        $('#dtlConnectionName').empty();
+        $('#dtlPublicKey').empty();
+        $('#dtlPrivateKey').empty();
+        $('#dtlFingerprint').empty();
 
-       $('#dtlCspSshKeyName').val(dtlCspSshKeyName);
-       $('#dtlDescription').val(dtlDescription);
-       $('#dtlUserID').val(dtlUserID);
-       $('#dtlConnectionName').val(dtlConnectionName);
-       $('#dtlPublicKey').val(dtlPublicKey);
-       $('#dtlPrivateKey').val(dtlPrivateKey);
-       $('#dtlFingerprint').val(dtlFingerprint);
-    // }).catch(function(error){
-    //     console.log("get sshKey error : ",error);        
-    // });
+        $('#dtlCspSshKeyName').val(dtlCspSshKeyName);
+        $('#dtlDescription').val(dtlDescription);
+        $('#dtlUserID').val(dtlUserID);
+        $('#dtlConnectionName').val(dtlConnectionName);
+        $('#dtlPublicKey').val(dtlPublicKey);
+        $('#dtlPrivateKey').val(dtlPrivateKey);
+        $('#dtlFingerprint').val(dtlFingerprint);
+        // }).catch(function(error){
+        //     console.log("get sshKey error : ",error);        
+        // });
     }).catch((error) => {
         console.warn(error);
         console.log(error.response)
@@ -328,7 +330,7 @@ function createSSHKey() {
     // var url = CommonURL+"/ns/"+NAMESPACE+"/resources/sshKey"
     var url = "" + "";
     var url = "/setting/resources" + "/sshkey/reg"
-    console.log("ssh key URL : ",url)
+    console.log("ssh key URL : ", url)
     var obj = {
         name: cspSshKeyName,
         connectionName: connectionName
@@ -355,9 +357,9 @@ function createSSHKey() {
             } else {
                 commonAlert("Fail Create SSH Key")
             }
-        // }).catch(function(error){
-        //     console.log("get create error : ",error);        
-        // });
+            // }).catch(function(error){
+            //     console.log("get create error : ",error);        
+            // });
         }).catch((error) => {
             console.warn(error);
             console.log(error.response)
@@ -402,6 +404,7 @@ function ModalDetail() {
     });
 }
 
+
 // function getConnectionInfo(provider){
 //     // var url = SpiderURL+"/connectionconfig";
 //     console.log("provider : ",provider)
@@ -425,7 +428,7 @@ function ModalDetail() {
 //                 html += '<option value="'+data[i].ConfigName+'" item="'+data[i].ProviderName+'">'+data[i].ConfigName+'</option>';
 //                 configName = data[i].ConfigName
 //                 confArr.push(data[i].ConfigName)
-                
+
 //             }
 //         }
 //         if(count == 0){
@@ -438,6 +441,6 @@ function ModalDetail() {
 //         $("#regConnectionName").empty();
 //         $("#regConnectionName").append(html);
 
-        
+
 //     })
 // }

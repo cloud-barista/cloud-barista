@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-
-	// "io/ioutil"
+	// "github.com/davecgh/go-spew/spew"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -23,7 +23,6 @@ import (
 
 	"github.com/labstack/echo"
 
-	//db "mzc/src/databases/store"
 	"github.com/cloud-barista/cb-webtool/src/model"
 	"github.com/cloud-barista/cb-webtool/src/service"
 	"github.com/cloud-barista/cb-webtool/src/util"
@@ -37,23 +36,6 @@ type TokenDetails struct {
 	AtExpires    int64
 	RtExpires    int64
 }
-
-// type ReqInfo struct {
-// 	Email    string `email`
-// 	Password string `password`
-// }
-
-// func Index(c echo.Context) error {
-
-// 	// fmt.Println("=========== DashBoard start ==============")
-// 	// if loginInfo := CallLoginInfo(c); loginInfo.UserID != "" {
-
-// 	// 	return c.Redirect(http.StatusTemporaryRedirect, "/dashboard")
-
-// 	// }
-// 	fmt.Println("=========== Index Controller nothing ==============")
-// 	return c.Redirect(http.StatusTemporaryRedirect, "/login")
-// }
 
 func Index(c echo.Context) error {
 	fmt.Println("============== index ===============")
@@ -95,10 +77,14 @@ func MainForm(c echo.Context) error {
 		return c.Redirect(http.StatusTemporaryRedirect, "/login")
 	}
 	// store := echosession.FromContext(c)
+
+	//defaultNameSpaceID := loginInfo.DefaultNameSpaceID
+
 	workingStep := map[string]string{}
 
+	//option := c.QueryParam("option")
 	// 최신 namespacelist 가져오기
-	// nameSpaceInfoList, nsStatus := service.GetNameSpaceList()
+	//nameSpaceInfoList, nsStatus := service.GetNameSpaceListByOption(option)
 	nameSpaceInfoList, nsStatus := service.GetStoredNameSpaceList(c)
 	// store.Set("namespace", nameSpaceInfoList)
 	// log.Println(" nsList  ", nsList)
@@ -146,8 +132,6 @@ func MainForm(c echo.Context) error {
 	// } else {
 	workingStep["DRIVER"] = "FAIL"
 	// }
-
-	// defaultNameSpaceID := loginInfo.DefaultNameSpaceID
 
 	// vNetInfoList, _ := service.GetVnetList(defaultNameSpaceID)
 	// store.Set("vnet", vNetInfoList)
@@ -223,10 +207,11 @@ func MainForm(c echo.Context) error {
 	// if len(nameSpaceInfoList) == 1 { // namespace가 1개이면 mcis 체크
 	// 	defaultNameSpace := nameSpaceInfoList[0]
 	// 	// mcis가 있으면 dashboard로 ( dashboard에서 mcis가 없으면 mcis 생성화면으로 : TODO 현재 미완성으로 MCIS관리화면으로 이동)
-	// 	mcisList, _ := service.GetMcisList(defaultNameSpace.ID)
-	// 	if len(mcisList) > 0 {
-	// 		log.Println(" mcisList  ", len(mcisList))
-	// 		return c.Redirect(http.StatusTemporaryRedirect, "/operation/manages/mcismng/mngform")
+	//mcisList, _ := service.GetMcisListByID(defaultNameSpaceID)
+	//if len(mcisList) > 0 {
+	//	log.Println(" mcisList  ", len(mcisList))
+	//	return c.Redirect(http.StatusTemporaryRedirect, "/operation/manages/mcismng/mngform")
+
 	// 	} else {
 	// 		log.Println(" mcisList is null ", mcisList)
 	// 		return c.Redirect(http.StatusTemporaryRedirect, "/operation/manages/mcismng/regform")
@@ -284,7 +269,6 @@ func ApiCall(c echo.Context) error {
 	} else if params["ApiTarget"] == "LADYBUG" {
 		apiTarget = util.LADYBUG
 	}
-
 	apiMethod := ""
 	if params["ApiMethod"] == "GET" {
 		apiMethod = http.MethodGet
@@ -455,9 +439,21 @@ func LoginProc(c echo.Context) error {
 	paramUserID := c.FormValue("userID")
 	paramPass := c.FormValue("password")
 	fmt.Println("paramUser & getPass : ", paramUserID, paramPass)
+	params := echo.Map{}
+	if err := c.Bind(&params); err != nil {
+		fmt.Println("err = ", err) // bind Error는 나지만 크게 상관없는 듯.
+	}
+	fmt.Println(params)
+	// spew.Dump(c.Request().Body)
+	var bodyBytes []byte
+	if c.Request().Body != nil {
+		bodyBytes, _ = ioutil.ReadAll(c.Request().Body)
+		str := string(bodyBytes)
+		println("body ", str)
+	}
 
 	// echoSession에서 가져오기
-	storedUser, ok := util.GerUserInfo(c, paramUserID)
+	storedUser, ok := util.GetUserInfo(c, paramUserID)
 	// result, ok := store.Get(paramUserID)
 
 	if !ok {
@@ -586,6 +582,87 @@ func LoginProc(c echo.Context) error {
 	// 	"status":  "403",
 	// })
 
+}
+
+type SignUpForm struct {
+	UserID     string `json:"userID" form:"userID" query:"userID"`
+	Identifier string `json:"identifier" form:"identifier" query:"identifier"`
+	Password   string `json:"password" form:"password" query:"password"`
+}
+
+// Login 하고 Login정보만 return(token)
+func LoginToken(c echo.Context) error {
+	paramUserID := c.FormValue("userID")
+	paramPass := c.FormValue("password")
+	fmt.Println("token : paramUser & getPass : ", paramUserID, paramPass)
+
+	form := new(SignUpForm)
+
+	if err := c.Bind(form); err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+	log.Printf("#####################")
+	values, _ := c.FormParams()
+	log.Printf("%v\n", values)
+	log.Printf("%v", c.Response().Header())
+	log.Printf("#####################")
+
+	// // if paramUserID == "" {
+	// paramUserID = c.Param("userID")
+	// paramPass = c.Param("password")
+	// paramUserID = c.Form("userID")
+	// paramPass = c.Form("password")
+	// // // }
+	// fmt.Println("paramUser & getPass ---------: ", paramUserID, paramPass)
+
+	// echoSession에서 가져오기
+	storedUser, ok := util.GetUserInfo(c, paramUserID)
+
+	if !ok {
+		log.Println(" login proc err  ", ok)
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{ //401
+			"message": " 정보가 없으니 다시 등록바랍니다.",
+			"status":  "fail",
+		})
+	}
+
+	fmt.Println("Stored USER:", storedUser)
+	if paramUserID != storedUser["userid"] || paramPass != storedUser["password"] {
+		log.Println(" invalid id or pass  ")
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{ //401
+			"message": "invalid user or password",
+			"status":  "fail",
+		})
+	}
+
+	newToken, createTokenErr := createToken(paramUserID)
+	if createTokenErr != nil {
+		log.Println(" login proc err  ", createTokenErr)
+		return c.JSON(http.StatusUnauthorized, map[string]interface{}{ //401
+			"message": " 로그인 처리 요류",
+			"status":  "fail",
+		})
+	}
+	log.Println("newToken  ", newToken)
+
+	storedUser["accesstoken"] = newToken.AccessToken
+	storedUser["refreshtoken"] = newToken.RefreshToken
+
+	util.SetStore(c, paramUserID, storedUser)
+
+	loginInfo := model.LoginInfo{
+		UserID:               paramUserID,
+		Username:             paramUserID,
+		AccessToken:          storedUser["accesstoken"],
+		DefaultNameSpaceID:   storedUser["defaultnamespaceid"],
+		DefaultNameSpaceName: storedUser["defaultnamespacename"],
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message":   "success",
+		"status":    "200",
+		"LoginInfo": loginInfo,
+	})
 }
 
 // ----------- 로그인이 성공하면 Namespace가 없으면 생성 ----------/
@@ -759,19 +836,19 @@ func createToken(userID string) (*TokenDetails, error) {
 
 // Login 없이 접근가능
 // Login이 필요없는 화면에서 호출하는게 의미 있나? 없이 써도 되는 듯.
-func accessible(c echo.Context) error {
-	return c.String(http.StatusOK, "Accessible")
-}
+// func accessible(c echo.Context) error {
+// 	return c.String(http.StatusOK, "Accessible")
+// }
 
-// Token이 있어야 접근가능
-// login 이 필요한 page에서 호출하여 값이 true일 때만 접근가능
-func restricted(c echo.Context) error {
-	user := c.Get("UserID").(*jwt.Token)
-	// user := c.Get("email").(*jwt.Token)
-	claims := user.Claims.(jwt.MapClaims)
-	userID := claims["userid"].(string)
-	return c.String(http.StatusOK, "Welcome "+userID+"!")
-}
+// // Token이 있어야 접근가능
+// // login 이 필요한 page에서 호출하여 값이 true일 때만 접근가능
+// func restricted(c echo.Context) error {
+// 	user := c.Get("UserID").(*jwt.Token)
+// 	// user := c.Get("email").(*jwt.Token)
+// 	claims := user.Claims.(jwt.MapClaims)
+// 	userID := claims["userid"].(string)
+// 	return c.String(http.StatusOK, "Welcome "+userID+"!")
+// }
 
 func RegUser(c echo.Context) error {
 	//comURL := GetCommonURL()

@@ -16,30 +16,35 @@ var FileStr string
 // CBOperatorMode is a variable that holds current cb-operator's mode.
 var CBOperatorMode string
 
-// ModeDockerCompose is a variable that holds string indicating Docker Compose mode.
-var ModeDockerCompose string = "DockerCompose"
+const (
+	// ModeDockerCompose is a variable that holds string indicating Docker Compose mode.
+	ModeDockerCompose = "DockerCompose"
 
-// ModeKubernetes is a variable that holds string indicating Kubernetes mode.
-var ModeKubernetes string = "Kubernetes"
+	// ModeKubernetes is a variable that holds string indicating Kubernetes mode.
+	ModeKubernetes = "Kubernetes"
 
-// DefaultDockerComposeConfig is a variable that holds path to docker-compose.yaml
-var DefaultDockerComposeConfig string = "../docker-compose-mode-files/docker-compose.yaml"
+	// DefaultDockerComposeConfig is a variable that holds path to docker-compose.yaml
+	DefaultDockerComposeConfig = "../docker-compose-mode-files/docker-compose.yaml"
 
-// DefaultKubernetesConfig is a variable that holds path to helm-chart/values.yaml
-var DefaultKubernetesConfig string = "../helm-chart/values.yaml"
+	// DefaultKubernetesConfig is a variable that holds path to helm-chart/values.yaml
+	DefaultKubernetesConfig string = "../helm-chart/values.yaml"
 
-// NotDefined is a variable that holds the string "Not_Defined"
-var NotDefined string = "Not_Defined"
+	// NotDefined is a variable that holds the string "Not_Defined"
+	NotDefined string = "Not_Defined"
 
-// CBK8sNamespace is a variable that holds the K8s namespace that CB-Operator will use.
-var CBK8sNamespace string = "cloud-barista"
+	// CBComposeProjectName is a variable that holds the default COMPOSE_PROJECT_NAME that CB-Operator will use.
+	CBComposeProjectName string = "cloud-barista"
 
-// CBHelmReleaseName is a variable that holds the K8s Helm release name that CB-Operator will use.
-var CBHelmReleaseName string = "cloud-barista"
+	// CBK8sNamespace is a variable that holds the K8s namespace that CB-Operator will use.
+	CBK8sNamespace string = "cloud-barista"
+
+	// CBHelmReleaseName is a variable that holds the K8s Helm release name that CB-Operator will use.
+	CBHelmReleaseName string = "cloud-barista"
+)
 
 // SysCall executes user-passed command via system call.
 func SysCall(cmdStr string) {
-	//cmdStr := "sudo docker-compose -f " + common.FileStr + " up"
+	//cmdStr := "docker-compose -f " + common.FileStr + " up"
 	cmd := exec.Command("/bin/sh", "-c", cmdStr)
 
 	cmdReader, _ := cmd.StdoutPipe()
@@ -59,7 +64,7 @@ func SysCall(cmdStr string) {
 	err = cmd.Wait()
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		//os.Exit(1)
 	}
 
 }
@@ -67,7 +72,8 @@ func SysCall(cmdStr string) {
 // SysCallDockerComposePs executes `docker-compose ps` command via system call.
 func SysCallDockerComposePs() {
 	fmt.Println("\n[v]Status of Cloud-Barista runtimes")
-	cmdStr := "sudo COMPOSE_PROJECT_NAME=cloud-barista docker-compose -f " + FileStr + " ps"
+	//cmdStr := "COMPOSE_PROJECT_NAME=cloud-barista docker-compose -f " + FileStr + " ps"
+	cmdStr := fmt.Sprintf("COMPOSE_PROJECT_NAME=%s docker-compose -f %s ps", CBComposeProjectName, FileStr)
 	SysCall(cmdStr)
 }
 

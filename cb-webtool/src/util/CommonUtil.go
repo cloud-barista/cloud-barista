@@ -23,7 +23,7 @@ import (
 	// "github.com/cloud-barista/cb-webtool/src/model"
 )
 
-func GerUserInfo(c echo.Context, userID string) (map[string]string, bool) {
+func GetUserInfo(c echo.Context, userID string) (map[string]string, bool) {
 	store := echosession.FromContext(c) // store내 param은 모두 소문자.
 	result, ok := store.Get(userID)
 	if !ok && userID == "admin" { // admin일 때 해당 정보가 없으면 admin정보를 다시 set.
@@ -121,7 +121,7 @@ func GetVmStatus(vmStatus string) string {
 		// 	vmStatusResuming++
 	} else if returnVmStatus == VM_STATUS_INCLUDE {
 		returnVmStatus = VM_STATUS_INCLUDE
-	} else if ( returnVmStatus == VM_STATUS_SUSPENDED || returnVmStatus == VM_STATUS_STOPPED) {
+	} else if returnVmStatus == VM_STATUS_SUSPENDED || returnVmStatus == VM_STATUS_STOPPED {
 		returnVmStatus = VM_STATUS_SUSPENDED
 	} else if returnVmStatus == VM_STATUS_TERMINATED {
 		returnVmStatus = VM_STATUS_TERMINATED

@@ -5,11 +5,25 @@ import (
 
 	"github.com/labstack/echo/v4"
 
+	"github.com/cloud-barista/cb-dragonfly/pkg/api/core/metric"
 	"github.com/cloud-barista/cb-dragonfly/pkg/api/rest"
-	"github.com/cloud-barista/cb-dragonfly/pkg/core/metric"
 )
 
-// 멀티 클라우드 인트라 서비스 모니터링 메트릭 수집
+// GetMCISMetric 멀티 클라우드 인트라 서비스 모니터링 메트릭 수집
+// @Summary Get MCIS on-demand monitoring metric info
+// @Description 멀티 클라우드 인프라 VM 온디맨드 모니터링 정보 조회
+// @Tags [Monitoring] Monitoring management
+// @Accept  json
+// @Produce  json
+// @Param ns_id path string true "네임스페이스 아이디"
+// @Param mcis_id path string true "MCIS 아이디"
+// @Param vm_id path string true "VM 아이디"
+// @Param agent_ip path string true "에이전트 아이피"
+// @Param metric_name path string true "메트릭 정보"
+// @Success 200 {object} rest.JSONResult{[DEFAULT]=CBMCISMetric,[Mrtt]=MCBMCISMetric} "Different return structures by the given param"
+// @Failure 404 {object} rest.SimpleMsg
+// @Failure 500 {object} rest.SimpleMsg
+// @Router /ns/{ns_id}/mcis/{mcis_id}/vm/{vm_id}/agent_ip/{agent_ip}/mcis_metric/{metric_name}/mcis-monitoring-info [get]
 func GetMCISMetric(c echo.Context) error {
 	nsId := c.Param("ns_id")
 	mcisId := c.Param("mcis_id")

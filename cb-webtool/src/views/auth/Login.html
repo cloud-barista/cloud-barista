@@ -77,6 +77,24 @@
         </div>
         <!-- //id/password lost -->
 
+        <!-- popup alert : 원래는 공통으로 사용하는 modal.html을 import 하지만 login만 따로... alertArea에 대한 style 정의 필요 -->
+        <div class="modal fade" id="alertArea" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    
+                    <div class="modal-body">
+                        <div class="txt"><span id="alertText"></div>
+                        <div class="btnbox">
+                            <input type="hidden" id="alertOkAction" value="">
+                            <button type="button" class="btn_ok" data-dismiss="modal" onclick="commonAlertClose()">OK</button>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+        <!-- //popup alert -->
+
         <!-- // SelectNamespace Modal-->
         <div id="sss">
         {{template "SelectNamespaceModal" .}}

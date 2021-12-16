@@ -11,6 +11,8 @@ influxdb:
       value: "cbrestapigw"
     - name: INFLUXDB_DATA_ENGINE
       value: "tsm1"
+  persistence:
+    enabled: false
 
 # sub-chart : grafana conf.
 grafana:
@@ -41,7 +43,7 @@ replicaCount: 1
 
 image:
   repository: cloudbaristaorg/cb-restapigw
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 imagePullSecrets: []
 nameOverride: ""

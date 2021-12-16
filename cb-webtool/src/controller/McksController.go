@@ -68,10 +68,10 @@ func McksMngForm(c echo.Context) error {
 	}
 
 	defaultNameSpaceID := loginInfo.DefaultNameSpaceID
-	
+
 	mcksSimpleInfoList := []ladybug.ClusterSimpleInfo{} // 표에 뿌려줄 정보
-	totalMcksStatusCountMap := make(map[string]int)   
-	totalClusterCount := 0;
+	totalMcksStatusCountMap := make(map[string]int)
+	totalClusterCount := 0
 
 	// 최신 namespacelist 가져오기
 	nsList, _ := service.GetNameSpaceList()
@@ -82,15 +82,14 @@ func McksMngForm(c echo.Context) error {
 	connectionConfigCountMap, providerCount := service.GetCloudConnectionCountMap(cloudConnectionConfigInfoList)
 	totalConnectionCount := len(cloudConnectionConfigInfoList)
 
-
 	// 모든 MCKS 조회
 	clusterList, clusterErr := service.GetClusterList(defaultNameSpaceID)
 	if clusterErr.StatusCode != 200 && clusterErr.StatusCode != 201 {
 		echotemplate.Render(c, http.StatusOK,
 			"operation/manages/mcksmng/McksMng", // 파일명
 			map[string]interface{}{
-				"Message": clusterErr.Message,
-				"Status":  clusterErr.StatusCode,
+				"Message":            clusterErr.Message,
+				"Status":             clusterErr.StatusCode,
 				"LoginInfo":          loginInfo,
 				"DefaultNameSpaceID": defaultNameSpaceID,
 				"NameSpaceList":      nsList,
@@ -114,7 +113,7 @@ func McksMngForm(c echo.Context) error {
 
 	totalMcksStatusCountMap = service.GetMcksStatusCountMap(clusterList)
 	////////////// return value 에 set
-	
+
 	for _, mcksInfo := range clusterList {
 		mcksSimpleInfo := ladybug.ClusterSimpleInfo{}
 		mcksSimpleInfo.UID = mcksInfo.UID
@@ -148,8 +147,8 @@ func McksMngForm(c echo.Context) error {
 	return echotemplate.Render(c, http.StatusOK,
 		"operation/manages/mcksmng/McksMng", // 파일명
 		map[string]interface{}{
-			"Message": clusterErr.Message,
-			"Status":  clusterErr.StatusCode,
+			"Message":            clusterErr.Message,
+			"Status":             clusterErr.StatusCode,
 			"LoginInfo":          loginInfo,
 			"DefaultNameSpaceID": defaultNameSpaceID,
 			"NameSpaceList":      nsList,
@@ -177,20 +176,39 @@ func GetMcksList(c echo.Context) error {
 	// store := echosession.FromContext(c)
 	defaultNameSpaceID := loginInfo.DefaultNameSpaceID
 	// TODO : defaultNameSpaceID 가 없으면 설정화면으로 보낼 것
-	mcksList, respStatus := service.GetClusterList(defaultNameSpaceID)
-	if respStatus.StatusCode != 200 && respStatus.StatusCode != 201 {
-		return c.JSON(respStatus.StatusCode, map[string]interface{}{
-			"error":  respStatus.Message,
-			"status": respStatus.StatusCode,
+
+	optionParam := c.QueryParam("option")
+	if optionParam == "id" {
+		mcksList, respStatus := service.GetClusterListByID(defaultNameSpaceID)
+		if respStatus.StatusCode != 200 && respStatus.StatusCode != 201 {
+			return c.JSON(respStatus.StatusCode, map[string]interface{}{
+				"error":  respStatus.Message,
+				"status": respStatus.StatusCode,
+			})
+		}
+
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"message":            "success",
+			"status":             respStatus.StatusCode,
+			"DefaultNameSpaceID": defaultNameSpaceID,
+			"McksList":           mcksList,
+		})
+	} else {
+		mcksList, respStatus := service.GetClusterList(defaultNameSpaceID)
+		if respStatus.StatusCode != 200 && respStatus.StatusCode != 201 {
+			return c.JSON(respStatus.StatusCode, map[string]interface{}{
+				"error":  respStatus.Message,
+				"status": respStatus.StatusCode,
+			})
+		}
+
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"message":            "success",
+			"status":             respStatus.StatusCode,
+			"DefaultNameSpaceID": defaultNameSpaceID,
+			"McksList":           mcksList,
 		})
 	}
-
-	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message":            "success",
-		"status":             respStatus.StatusCode,
-		"DefaultNameSpaceID": defaultNameSpaceID,
-		"McksList":           mcksList,
-	})
 }
 
 // Cluster 등록 처리
@@ -216,19 +234,30 @@ func McksRegProc(c echo.Context) error {
 
 	defaultNameSpaceID := loginInfo.DefaultNameSpaceID
 	// TODO : defaultNameSpaceID 가 없으면 설정화면으로 보낼 것
-	clusterInfo, respStatus := service.RegCluster(defaultNameSpaceID, clusterReq)
-	log.Println("RegMcis service returned")
-	if respStatus.StatusCode != 200 && respStatus.StatusCode != 201 {
-		return c.JSON(respStatus.StatusCode, map[string]interface{}{
-			"error":  respStatus.Message,
-			"status": respStatus.StatusCode,
-		})
-	}
+	//clusterInfo, respStatus := service.RegCluster(defaultNameSpaceID, clusterReq)
+	//log.Println("RegCluster service returned")
+	//if respStatus.StatusCode != 200 && respStatus.StatusCode != 201 {
+	//	return c.JSON(respStatus.StatusCode, map[string]interface{}{
+	//		"error":  respStatus.Message,
+	//		"status": respStatus.StatusCode,
+	//	})
+	//}
+	//
+	//return c.JSON(http.StatusOK, map[string]interface{}{
+	//	"message":     "success",
+	//	"status":      respStatus.StatusCode,
+	//	"ClusterInfo": clusterInfo,
+	//})
 
+	// Async로 변경
+	taskKey := defaultNameSpaceID + "||" + "mcks" + "||" + clusterReq.Name                                               // TODO : 공통 function으로 뺄 것.
+	service.StoreWebsocketMessage(util.TASK_TYPE_MCKS, taskKey, util.MCKS_LIFECYCLE_CREATE, util.TASK_STATUS_REQUEST, c) // session에 작업내용 저장
+	go service.RegClusterByAsync(defaultNameSpaceID, clusterReq, c)
+	// 원래는 호출 결과를 return하나 go routine으로 바꾸면서 요청성공으로 return
+	log.Println("before return")
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message":     "success",
-		"status":      respStatus.StatusCode,
-		"ClusterInfo": clusterInfo,
+		"message": "success",
+		"status":  200,
 	})
 }
 
@@ -247,19 +276,29 @@ func McksDelProc(c echo.Context) error {
 	clusterName := c.Param("clusterName")
 	log.Println("clusterName= " + clusterName)
 
-	resultStatusInfo, respStatus := service.DelCluster(defaultNameSpaceID, clusterName)
-	log.Println("DelMCKS service returned")
-	if respStatus.StatusCode != 200 && respStatus.StatusCode != 201 {
-		return c.JSON(respStatus.StatusCode, map[string]interface{}{
-			"error":  respStatus.Message,
-			"status": respStatus.StatusCode,
-		})
-	}
+	taskKey := defaultNameSpaceID + "||" + "mcks" + "||" + clusterName
+	service.StoreWebsocketMessage(util.TASK_TYPE_MCKS, taskKey, util.MCKS_LIFECYCLE_DELETE, util.TASK_STATUS_REQUEST, c) // session에 작업내용 저장
+
+	// resultStatusInfo, respStatus := service.DelCluster(defaultNameSpaceID, clusterName)
+	//log.Println("DelMCKS service returned")
+	//if respStatus.StatusCode != 200 && respStatus.StatusCode != 201 {
+	//	return c.JSON(respStatus.StatusCode, map[string]interface{}{
+	//		"error":  respStatus.Message,
+	//		"status": respStatus.StatusCode,
+	//	})
+	//}
+	//
+	//return c.JSON(http.StatusOK, map[string]interface{}{
+	//	"message":    "success",
+	//	"status":     respStatus.StatusCode,
+	//	"StatusInfo": resultStatusInfo,
+	//})
+
+	go service.DelClusterByAsync(defaultNameSpaceID, clusterName, c)
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message":    "success",
-		"status":     respStatus.StatusCode,
-		"StatusInfo": resultStatusInfo,
+		"message": "success",
+		"status":  200,
 	})
 }
 
@@ -336,7 +375,7 @@ func NodeRegProc(c echo.Context) error {
 	defaultNameSpaceID := loginInfo.DefaultNameSpaceID
 
 	nodeInfo, respStatus := service.RegNode(defaultNameSpaceID, clusterName, nodeRegReq)
-	log.Println("RegMcis service returned")
+	log.Println("RegNode service returned")
 	if respStatus.StatusCode != 200 && respStatus.StatusCode != 201 {
 		return c.JSON(respStatus.StatusCode, map[string]interface{}{
 			"error":  respStatus.Message,

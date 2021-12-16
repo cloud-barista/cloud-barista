@@ -8,7 +8,6 @@ const (
 	AVG                   AggregateType = "avg"
 	LAST                  AggregateType = "last"
 	ReadConnectionTimeout               = 6
-	DELTOPICS                           = "delTopics/"
 )
 
 func (a AggregateType) ToString() string {

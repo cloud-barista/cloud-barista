@@ -30,7 +30,9 @@
 | --- |   |   |   |
 | cb-tumblebug | http://{{host}}:31323/tumblebug | http://{{host}}:30080/tumblebug | http://{{host}}:30252  |
 | --- |   |   |   |
-| cb-ladybug | http://{{host}}:31080/ladybug | http://{{host}}:30080/ladybug |   |
+| cb-mcks | http://{{host}}:31470/mcks | http://{{host}}:30080/mcks |   |
+| --- |   |   |   |
+| cb-ladybug | http://{{host}}:31592/ladybug | http://{{host}}:30080/ladybug |   |
 | --- |   |   |   |
 | cb-dragonfly | http://{{host}}:30090/dragonfly | http://{{host}}:30080/dragonfly | <!--30094/udp--> http://{{host}}:30254  |
 

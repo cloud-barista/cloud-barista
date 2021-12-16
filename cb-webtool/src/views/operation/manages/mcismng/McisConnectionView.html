@@ -22,6 +22,9 @@
 					<li>
 						<label>Available Zone</label>
 						<input type="text" name="" value="가용영역(Zone)" placeholder="" title="" readonly id="server_connection_view_zone"/>
+
+						<input type="hidden" name="mapLatitude" value="" id="server_location_latitude"/>
+						<input type="hidden" name="mapLongitude" value="" id="server_location_longitude"/>
 					</li>
 				</ul>
 			</div>
@@ -42,7 +45,10 @@
 		<!-- <div>
 			<div id="regionMap" style="width:800px; height:300px;"></div>
 		</div>			 -->
-		<div class="tab_map"><img src="/assets/img/contents/img_tab_map.jpg" alt=""></div>
+		<div class="tab_map">
+			<div class="map" id="map" style="height:300px;"></div>
+<!--			<img src="/assets/img/contents/img_tab_map.jpg" alt="">-->
+		</div>
 	</div>
 
 	

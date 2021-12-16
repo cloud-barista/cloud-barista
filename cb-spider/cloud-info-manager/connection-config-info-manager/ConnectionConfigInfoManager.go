@@ -10,9 +10,10 @@ package connectionconfiginfomanager
 
 import (
 	"fmt"
-
+	"strings"
 	"github.com/cloud-barista/cb-store/config"
 	"github.com/sirupsen/logrus"
+	// import cycle mini "github.com/cloud-barista/cb-spider/spider-mini/mini"
 )
 
 var cblog *logrus.Logger
@@ -50,6 +51,13 @@ func CreateConnectionConfig(configName string, providerName string, driverName s
 
 	}
 
+	// trim user inputs
+	configName = strings.TrimSpace(configName)
+	providerName = strings.ToUpper(strings.TrimSpace(providerName))
+	driverName = strings.TrimSpace(driverName)
+	credentialName = strings.TrimSpace(credentialName)
+	regionName = strings.TrimSpace(regionName)
+
 	// check the existence of the key to be inserted
 	tmpcncInfo, err := getInfo(configName)
         if tmpcncInfo != nil {
@@ -73,6 +81,15 @@ func CreateConnectionConfig(configName string, providerName string, driverName s
 	}
 
 	cncInfo := &ConnectionConfigInfo{configName, providerName, driverName, credentialName, regionName}
+
+	/* import Cycle
+	if os.Getenv("EXPERIMENTAL_MINI_CLONE") == "ON" {
+		// Notify the CloneNCacheManager about the new Region inserted,
+		// and then the CloneNCacheManager schedules it immediately  
+		mini.InsertNewCloneNCache(configName)
+	}
+	*/
+
 	return cncInfo, nil
 }
 
@@ -93,7 +110,7 @@ func GetConnectionConfig(configName string) (*ConnectionConfigInfo, error) {
 	cblog.Info("call GetConnectionConfig()")
 
 	if configName == "" {
-		return nil, fmt.Errorf("ConnectionName is empty!")
+		return nil, fmt.Errorf("ConfigName is empty!")
 	}
 
 	cncInfo, err := getInfo(configName)
@@ -109,7 +126,7 @@ func DeleteConnectionConfig(configName string) (bool, error) {
 	cblog.Info("call DeleteConnectionConfig()")
 
 	if configName == "" {
-		return false, fmt.Errorf("ConnectionName is empty!")
+		return false, fmt.Errorf("ConfigName is empty!")
 	}
 
 	result, err := deleteInfo(configName)
@@ -125,7 +142,7 @@ func DeleteConnectionConfig(configName string) (bool, error) {
 
 func checkParams(configName string, providerName string, driverName string, credentialName string, regionName string) error {
 	if configName == "" {
-		return fmt.Errorf("ConnectionName is empty!")
+		return fmt.Errorf("ConfigName is empty!")
 	}
 	if providerName == "" {
 		return fmt.Errorf("ProviderName is empty!")
@@ -139,5 +156,6 @@ func checkParams(configName string, providerName string, driverName string, cred
 	if regionName == "" {
 		return fmt.Errorf("RegionName is empty!")
 	}
+
 	return nil
 }

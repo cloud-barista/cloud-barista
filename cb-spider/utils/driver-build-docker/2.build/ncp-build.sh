@@ -11,19 +11,29 @@
 #
 # by CB-Spider Team, 2021.05.
 
-
 # You have to run in driver build container.
 echo "\$HOME" path is $HOME
 echo "\$CBSPIDER_ROOT" path is $CBSPIDER_ROOT
 
+echo "# cd" $CBSPIDER_ROOT
+cd $CBSPIDER_ROOT
+
+echo "# go get -v github.com/NaverCloudPlatform/ncloud-sdk-go-v2@v1.1.7"
+go get -v github.com/NaverCloudPlatform/ncloud-sdk-go-v2@v1.1.7
+
+cd $HOME
+
+echo "# git clone https://github.com/cloud-barista/ncp.git" $HOME"/ncp;"
 git clone https://github.com/cloud-barista/ncp.git $HOME/ncp;
 
 ln -s $HOME/ncp/ncp $CBSPIDER_ROOT/cloud-control-manager/cloud-driver/drivers;
 ln -s $HOME/ncp/ncp-plugin $CBSPIDER_ROOT/cloud-control-manager/cloud-driver/drivers;
 
+echo "# cd "$CBSPIDER_ROOT"/cloud-control-manager/cloud-driver/drivers/ncp-plugin;"
 cd $CBSPIDER_ROOT/cloud-control-manager/cloud-driver/drivers/ncp-plugin;
+
+echo "# ./build_driver_lib.sh" 
 ./build_driver_lib.sh
 
 rm $CBSPIDER_ROOT/cloud-control-manager/cloud-driver/drivers/ncp;
 rm $CBSPIDER_ROOT/cloud-control-manager/cloud-driver/drivers/ncp-plugin;
-

@@ -8,7 +8,7 @@ cb-log is a logger library for the Cloud-Barista Multi-Cloud Framework.
 
 ```
 [NOTE]
-cb-log is currently under development. (the latest version is 0.3.0 espresso)
+cb-log is currently under development.
 So, we do not recommend using the current release in production.
 Please note that the functionalities of cb-log are not stable and secure yet.
 If you have any difficulties in using cb-log, please let us know.

@@ -24,31 +24,34 @@ var removeCmd = &cobra.Command{
 			var cmdStr string
 			switch common.CBOperatorMode {
 			case common.ModeKubernetes:
-				cmdStr = "sudo helm uninstall --namespace " + common.CBK8sNamespace + " " + common.CBHelmReleaseName
+				cmdStr = fmt.Sprintf("helm uninstall --namespace %s %s", common.CBK8sNamespace, common.CBHelmReleaseName)
 				common.SysCall(cmdStr)
 
-				cmdStr = "sudo kubectl delete pvc cb-spider -n " + common.CBK8sNamespace
+				cmdStr = fmt.Sprintf("kubectl delete pvc cb-spider -n %s", common.CBK8sNamespace)
 				common.SysCall(cmdStr)
 
-				cmdStr = "sudo kubectl delete pvc cb-tumblebug -n " + common.CBK8sNamespace
+				cmdStr = fmt.Sprintf("kubectl delete pvc cb-tumblebug -n %s", common.CBK8sNamespace)
 				common.SysCall(cmdStr)
 
-				cmdStr = "sudo kubectl delete pvc cb-ladybug -n " + common.CBK8sNamespace
+				cmdStr = fmt.Sprintf("kubectl delete pvc cb-ladybug -n %s", common.CBK8sNamespace)
 				common.SysCall(cmdStr)
 
-				cmdStr = "sudo kubectl delete pvc cb-dragonfly -n " + common.CBK8sNamespace
+				cmdStr = fmt.Sprintf("kubectl delete pvc cb-dragonfly -n %s", common.CBK8sNamespace)
+				common.SysCall(cmdStr)
+
+				cmdStr = fmt.Sprintf("kubectl delete pvc data-cloud-barista-etcd-0 -n %s", common.CBK8sNamespace)
 				common.SysCall(cmdStr)
 
 				//fallthrough
 			case common.ModeDockerCompose:
 				if volFlag && imgFlag {
-					cmdStr = "sudo COMPOSE_PROJECT_NAME=cloud-barista docker-compose -f " + common.FileStr + " down -v --rmi all"
+					cmdStr = fmt.Sprintf("COMPOSE_PROJECT_NAME=%s docker-compose -f %s down -v --rmi all", common.CBComposeProjectName, common.FileStr)
 				} else if volFlag {
-					cmdStr = "sudo COMPOSE_PROJECT_NAME=cloud-barista docker-compose -f " + common.FileStr + " down -v"
+					cmdStr = fmt.Sprintf("COMPOSE_PROJECT_NAME=%s docker-compose -f %s down -v", common.CBComposeProjectName, common.FileStr)
 				} else if imgFlag {
-					cmdStr = "sudo COMPOSE_PROJECT_NAME=cloud-barista docker-compose -f " + common.FileStr + " down --rmi all"
+					cmdStr = fmt.Sprintf("COMPOSE_PROJECT_NAME=%s docker-compose -f %s down --rmi all", common.CBComposeProjectName, common.FileStr)
 				} else {
-					cmdStr = "sudo COMPOSE_PROJECT_NAME=cloud-barista docker-compose -f " + common.FileStr + " down"
+					cmdStr = fmt.Sprintf("COMPOSE_PROJECT_NAME=%s docker-compose -f %s down", common.CBComposeProjectName, common.FileStr)
 				}
 
 				//fmt.Println(cmdStr)

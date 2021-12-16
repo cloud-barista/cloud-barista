@@ -199,12 +199,9 @@ func InitializeDriver() {
 	//	config.Cblogger.Info("serverPort:" + etcdServerPort)
 
 	etcdcli, err := clientv3.New(clientv3.Config{
-		// Original
-		// Endpoints:   []string{"http://" + etcdServerPort}, // @TODO set multiple Server
-
 		// ETCD Endpoints에 지정된 Server 들을 CLI 로 지정하는 방식 적용 (Modified by ccambomorris)
 		Endpoints:   strings.Split(etcdServerPort, ","),
-		DialTimeout: 5 * time.Second,
+		DialTimeout: 120 * time.Second,
 		DialOptions: []grpc.DialOption{grpc.WithBlock()},
 	})
 

@@ -1,3 +1,17 @@
+/*
+Copyright 2019 The Cloud-Barista Authors.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+// Package mcir is to handle REST API for mcir
 package mcir
 
 import (
@@ -10,13 +24,14 @@ import (
 	"github.com/cloud-barista/cb-tumblebug/src/core/mcir"
 )
 
-// JSONResult's data field will be overridden by the specific type
+// JSONResult is a dummy struct for Swagger annotations.
 type JSONResult struct {
 	//Code    int          `json:"code" `
 	//Message string       `json:"message"`
 	//Data    interface{}  `json:"data"`
 }
 
+// RestDelAllResources is a common function to handle 'DelAllResources' REST API requests.
 // Dummy functions for Swagger exist in [mcir/*.go]
 func RestDelAllResources(c echo.Context) error {
 
@@ -25,18 +40,20 @@ func RestDelAllResources(c echo.Context) error {
 	// c.Path(): /tumblebug/ns/:nsId/resources/spec/:specId
 
 	forceFlag := c.QueryParam("force")
+	subString := c.QueryParam("match")
 
-	err := mcir.DelAllResources(nsId, resourceType, forceFlag)
+	output, err := mcir.DelAllResources(nsId, resourceType, subString, forceFlag)
 	if err != nil {
 		common.CBLog.Error(err)
 		mapA := map[string]string{"message": err.Error()}
 		return c.JSON(http.StatusConflict, &mapA)
 	}
 
-	mapA := map[string]string{"message": "All " + resourceType + "s has been deleted"}
-	return c.JSON(http.StatusOK, &mapA)
+	//mapA := map[string]string{"message": "All " + resourceType + "s has been deleted"}
+	return c.JSON(http.StatusOK, output)
 }
 
+// RestDelResource is a common function to handle 'DelResource' REST API requests.
 // Dummy functions for Swagger exist in [mcir/*.go]
 func RestDelResource(c echo.Context) error {
 
@@ -60,6 +77,32 @@ func RestDelResource(c echo.Context) error {
 	return c.JSON(http.StatusOK, &mapA)
 }
 
+// RestDelChildResource is a common function to handle 'DelChildResource' REST API requests.
+// Dummy functions for Swagger exist in [mcir/*.go]
+func RestDelChildResource(c echo.Context) error {
+
+	nsId := c.Param("nsId")
+
+	childResourceType := strings.Split(c.Path(), "/")[7]
+	// c.Path(): /tumblebug/ns/:nsId/resources/vNet/:vNetId/subnet/:subnetId
+
+	parentResourceId := c.Param("parentResourceId")
+	childResourceId := c.Param("childResourceId")
+
+	forceFlag := c.QueryParam("force")
+
+	err := mcir.DelChildResource(nsId, childResourceType, parentResourceId, childResourceId, forceFlag)
+	if err != nil {
+		common.CBLog.Error(err)
+		mapA := map[string]string{"message": err.Error()}
+		return c.JSON(http.StatusInternalServerError, &mapA)
+	}
+
+	mapA := map[string]string{"message": "The " + childResourceType + " " + childResourceId + " has been deleted"}
+	return c.JSON(http.StatusOK, &mapA)
+}
+
+// RestGetAllResources is a common function to handle 'GetAllResources' REST API requests.
 // Dummy functions for Swagger exist in [mcir/*.go]
 func RestGetAllResources(c echo.Context) error {
 
@@ -157,6 +200,7 @@ func RestGetAllResources(c echo.Context) error {
 	}
 }
 
+// RestGetResource is a common function to handle 'GetResource' REST API requests.
 // Dummy functions for Swagger exist in [mcir/*.go]
 func RestGetResource(c echo.Context) error {
 
@@ -179,10 +223,10 @@ func RestGetResource(c echo.Context) error {
 // RestCheckResource godoc
 // @Summary Check resources' existence
 // @Description Check resources' existence
-// @Tags [Admin] System management
+// @Tags [Infra resource] MCIR Common
 // @Accept  json
 // @Produce  json
-// @Param nsId path string true "Namespace ID"
+// @Param nsId path string true "Namespace ID" default(ns01)
 // @Param resourceType path string true "Resource Type"
 // @Param resourceId path string true "Resource ID"
 // @Success 200 {object} common.SimpleMsg
@@ -274,3 +318,113 @@ func RestTestGetAssociatedObjectCount(c echo.Context) error {
 	mapA := map[string]int{"associatedObjectCount": associatedObjectCount}
 	return c.JSON(http.StatusOK, &mapA)
 }
+
+// RestLoadCommonResource godoc
+// @Summary Load Common Resources from internal asset files
+// @Description Load Common Resources from internal asset files (Spec, Image)
+// @Tags [Admin] Multi-Cloud environment configuration
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} common.IdList
+// @Failure 404 {object} common.SimpleMsg
+// @Router /loadCommonResource [get]
+func RestLoadCommonResource(c echo.Context) error {
+
+	output, err := mcir.LoadCommonResource()
+
+	if err != nil {
+		common.CBLog.Error(err)
+		mapA := map[string]string{"message": err.Error()}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+	return c.JSON(http.StatusOK, output)
+}
+
+// RestLoadDefaultResource godoc
+// @Summary Load Default Resource from internal asset file
+// @Description Load Default Resource from internal asset file
+// @Tags [Infra resource] MCIR Common
+// @Accept  json
+// @Produce  json
+// @Param nsId path string true "Namespace ID" default(ns01)
+// @Param option query string true "Option" Enums(all,vnet,sg,sshkey)
+// @Param connectionName query string false "connectionName of cloud for designated resource" default()
+// @Success 200 {object} common.SimpleMsg
+// @Failure 404 {object} common.SimpleMsg
+// @Router /ns/{nsId}/loadDefaultResource [get]
+func RestLoadDefaultResource(c echo.Context) error {
+	nsId := c.Param("nsId")
+	resType := c.QueryParam("option")
+
+	// default of connectionConfig is empty string. with empty string, register all resources.
+	connectionName := c.QueryParam("connectionName")
+
+	err := mcir.LoadDefaultResource(nsId, resType, connectionName)
+
+	if err != nil {
+		common.CBLog.Error(err)
+		mapA := map[string]string{"message": err.Error()}
+		return c.JSON(http.StatusNotFound, &mapA)
+	}
+	mapA := map[string]string{"message": "Done"}
+	return c.JSON(http.StatusOK, &mapA)
+}
+
+// RestDelAllDefaultResources godoc
+// @Summary Delete all Default Resource Objects in the given namespace
+// @Description Delete all Default Resource Objects in the given namespace
+// @Tags [Infra resource] MCIR Common
+// @Accept  json
+// @Produce  json
+// @Param nsId path string true "Namespace ID" default(ns01)
+// @Success 200 {object} common.IdList
+// @Failure 404 {object} common.SimpleMsg
+// @Router /ns/{nsId}/defaultResources [delete]
+func RestDelAllDefaultResources(c echo.Context) error {
+
+	nsId := c.Param("nsId")
+
+	output, err := mcir.DelAllDefaultResources(nsId)
+	if err != nil {
+		common.CBLog.Error(err)
+		mapA := map[string]string{"message": err.Error()}
+		return c.JSON(http.StatusConflict, &mapA)
+	}
+
+	//mapA := map[string]string{"message": "All default resources have been deleted"}
+	return c.JSON(http.StatusOK, output)
+}
+
+/*
+// Request structure for RestRegisterExistingResources
+type RestRegisterExistingResourcesRequest struct {
+	ConnectionName string `json:"connectionName"`
+}
+
+// RestRegisterExistingResources godoc
+// @Summary Register resources which are existing in CSP and/or CB-Spider
+// @Description Register resources which are existing in CSP and/or CB-Spider
+// @Tags
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} common.IdList
+// @Failure 404 {object} common.SimpleMsg
+// @Router /ns/{nsId}/registerExistingResources [post]
+func RestRegisterExistingResources(c echo.Context) error {
+
+	nsId := c.Param("nsId")
+
+	u := &RestRegisterExistingResourcesRequest{}
+	if err := c.Bind(u); err != nil {
+		return err
+	}
+
+	result, err := mcir.RegisterExistingResources(nsId, u.ConnectionName)
+	if err != nil {
+		common.CBLog.Error(err)
+		mapA := map[string]string{"message": err.Error()}
+		return c.JSON(http.StatusConflict, &mapA)
+	}
+	return c.JSON(http.StatusOK, result)
+}
+*/

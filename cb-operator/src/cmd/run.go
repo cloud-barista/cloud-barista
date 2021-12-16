@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cloud-barista/cb-operator/src/common"
 	"github.com/spf13/cobra"
@@ -17,39 +18,58 @@ var runCmd = &cobra.Command{
 		fmt.Println()
 
 		if common.FileStr == "" {
-			fmt.Println("file is required")
+			fmt.Println("--file (-f) argument is required but not provided.")
 		} else {
-			/*
-				var configuration mcisReq
-
-				viper.SetConfigFile(fileStr)
-				if err := viper.ReadInConfig(); err != nil {
-				fmt.Printf("Error reading config file, %s", err)
-				}
-				err := viper.Unmarshal(&configuration)
-				if err != nil {
-				fmt.Printf("Unable to decode into struct, %v", err)
-				}
-
-				common.PrintJsonPretty(configuration)
-			*/
 			common.FileStr = common.GenConfigPath(common.FileStr, common.CBOperatorMode)
 
 			var cmdStr string
 			switch common.CBOperatorMode {
 			case common.ModeDockerCompose:
-				cmdStr = "sudo COMPOSE_PROJECT_NAME=cloud-barista docker-compose -f " + common.FileStr + " up"
+				cmdStr = fmt.Sprintf("COMPOSE_PROJECT_NAME=%s docker-compose -f %s up", common.CBComposeProjectName, common.FileStr)
 				//fmt.Println(cmdStr)
 				common.SysCall(cmdStr)
 			case common.ModeKubernetes:
-				// For Kubernetes 1.19 and above (included)
-				cmdStr = "sudo kubectl create ns " + common.CBK8sNamespace + " --dry-run=client -o yaml | kubectl apply -f -"
-				// For Kubernetes 1.18 and below (included)
-				//cmdStr = "sudo kubectl create ns " + common.CBK8sNamespace + " --dry-run -o yaml | kubectl apply -f -"
+				if k8sprovider == common.NotDefined {
+					fmt.Print(`--k8sprovider argument is required but not provided.
+					e.g.
+					--k8sprovider=gke
+					--k8sprovider=eks
+					--k8sprovider=aks
+					--k8sprovider=mcks
+					--k8sprovider=minikube
+					--k8sprovider=kubeadm
+					`)
+
+					break
+				}
+
+				// For Kubernetes 1.19 and above
+				cmdStr = fmt.Sprintf("kubectl create ns %s --dry-run=client -o yaml | kubectl apply -f -", common.CBK8sNamespace)
+				// For Kubernetes 1.18 and below
+				//cmdStr = fmt.Sprintf("kubectl create ns %s --dry-run -o yaml | kubectl apply -f -", common.CBK8sNamespace)
 				common.SysCall(cmdStr)
-				cmdStr = "sudo helm install --namespace " + common.CBK8sNamespace + " " + common.CBHelmReleaseName + " -f " + common.FileStr + " ../helm-chart --debug"
-				//fmt.Println(cmdStr)
-				common.SysCall(cmdStr)
+
+				// cmdStr = fmt.Sprintf("helm install --namespace %s %s -f %s ../helm-chart --debug", common.CBK8sNamespace, common.CBHelmReleaseName, common.FileStr)
+				// if strings.ToLower(k8sprovider) == "gke" {
+				// 	cmdStr += " --set metricServer.enabled=false"
+				// }
+				// //fmt.Println(cmdStr)
+				// common.SysCall(cmdStr)
+
+				if strings.ToLower(k8sprovider) == "gke" || strings.ToLower(k8sprovider) == "eks" || strings.ToLower(k8sprovider) == "aks" {
+					cmdStr = fmt.Sprintf("helm install --namespace %s %s -f %s ../helm-chart --debug", common.CBK8sNamespace, common.CBHelmReleaseName, common.FileStr)
+					cmdStr += " --set cb-restapigw.service.type=LoadBalancer"
+					cmdStr += " --set cb-webtool.service.type=LoadBalancer"
+
+					if strings.ToLower(k8sprovider) == "gke" {
+						cmdStr += " --set metricServer.enabled=false"
+					}
+
+					common.SysCall(cmdStr)
+				} else {
+					cmdStr = fmt.Sprintf("helm install --namespace %s %s -f %s ../helm-chart --debug", common.CBK8sNamespace, common.CBHelmReleaseName, common.FileStr)
+					common.SysCall(cmdStr)
+				}
 			default:
 
 			}
@@ -64,17 +84,8 @@ func init() {
 
 	pf := runCmd.PersistentFlags()
 	pf.StringVarP(&common.FileStr, "file", "f", common.NotDefined, "User-defined configuration file")
-
-	/*
-		switch common.CBOperatorMode {
-		case common.ModeDockerCompose:
-			pf.StringVarP(&common.FileStr, "file", "f", "../docker-compose-mode-files/docker-compose.yaml", "Path to Cloud-Barista Docker Compose YAML file")
-		case common.ModeKubernetes:
-			pf.StringVarP(&common.FileStr, "file", "f", "../helm-chart/values.yaml", "Path to Cloud-Barista Helm chart file")
-		default:
-
-		}
-	*/
+	pf.StringVarP(&k8sprovider, "k8sprovider", "", common.NotDefined, "Kind of Managed K8s services")
+	// runCmd.MarkPersistentFlagRequired("k8sprovider")
 
 	//	cobra.MarkFlagRequired(pf, "file")
 

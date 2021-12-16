@@ -17,7 +17,7 @@ import (
 
 // ===== [ Implementations ] =====
 
-// CreateSpecWithInfo - Spec 생성
+// CreateSpecWithInfo is to Spec 생성
 func (s *MCIRService) CreateSpecWithInfo(ctx context.Context, req *pb.TbSpecInfoRequest) (*pb.TbSpecInfoResponse, error) {
 	logger := logger.NewLogger()
 
@@ -46,7 +46,7 @@ func (s *MCIRService) CreateSpecWithInfo(ctx context.Context, req *pb.TbSpecInfo
 	return resp, nil
 }
 
-// CreateSpecWithSpecName - Spec 생성
+// CreateSpecWithSpecName is to Spec 생성
 func (s *MCIRService) CreateSpecWithSpecName(ctx context.Context, req *pb.TbSpecCreateRequest) (*pb.TbSpecInfoResponse, error) {
 	logger := logger.NewLogger()
 
@@ -75,7 +75,7 @@ func (s *MCIRService) CreateSpecWithSpecName(ctx context.Context, req *pb.TbSpec
 	return resp, nil
 }
 
-// ListSpec - Spec 목록
+// ListSpec is to Spec 목록
 func (s *MCIRService) ListSpec(ctx context.Context, req *pb.ResourceAllQryRequest) (*pb.ListTbSpecInfoResponse, error) {
 	logger := logger.NewLogger()
 
@@ -97,7 +97,7 @@ func (s *MCIRService) ListSpec(ctx context.Context, req *pb.ResourceAllQryReques
 	return resp, nil
 }
 
-// ListSpecId
+// ListSpecId is to list spec IDs
 func (s *MCIRService) ListSpecId(ctx context.Context, req *pb.ResourceAllQryRequest) (*pb.ListIdResponse, error) {
 	logger := logger.NewLogger()
 
@@ -119,7 +119,7 @@ func (s *MCIRService) ListSpecId(ctx context.Context, req *pb.ResourceAllQryRequ
 	return resp, nil
 }
 
-// GetSpec - Spec 조회
+// GetSpec is to Spec 조회
 func (s *MCIRService) GetSpec(ctx context.Context, req *pb.ResourceQryRequest) (*pb.TbSpecInfoResponse, error) {
 	logger := logger.NewLogger()
 
@@ -141,7 +141,7 @@ func (s *MCIRService) GetSpec(ctx context.Context, req *pb.ResourceQryRequest) (
 	return resp, nil
 }
 
-// DeleteSpec - Spec 삭제
+// DeleteSpec is to Spec 삭제
 func (s *MCIRService) DeleteSpec(ctx context.Context, req *pb.ResourceQryRequest) (*pb.MessageResponse, error) {
 	logger := logger.NewLogger()
 
@@ -156,22 +156,30 @@ func (s *MCIRService) DeleteSpec(ctx context.Context, req *pb.ResourceQryRequest
 	return resp, nil
 }
 
-// DeleteAllSpec - Spec 전체 삭제
-func (s *MCIRService) DeleteAllSpec(ctx context.Context, req *pb.ResourceAllQryRequest) (*pb.MessageResponse, error) {
+// DeleteAllSpec is to Spec 전체 삭제
+func (s *MCIRService) DeleteAllSpec(ctx context.Context, req *pb.ResourceAllQryRequest) (*pb.IdListResponse, error) {
 	logger := logger.NewLogger()
 
 	logger.Debug("calling MCIRService.DeleteAllSpec()")
 
-	err := mcir.DelAllResources(req.NsId, req.ResourceType, req.Force)
+	content, err := mcir.DelAllResources(req.NsId, req.ResourceType, "", req.Force)
 	if err != nil {
 		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.DeleteAllSpec()")
 	}
 
-	resp := &pb.MessageResponse{Message: "All " + req.ResourceType + "s has been deleted"}
+	// MCIR 객체에서 GRPC 메시지로 복사
+	var grpcObj pb.IdListResponse
+	err = gc.CopySrcToDest(&content, &grpcObj)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.DeleteAllSpec()")
+	}
+
+	// resp := &pb.MessageResponse{Message: "All " + req.ResourceType + "s has been deleted"}
+	resp := &grpcObj
 	return resp, nil
 }
 
-// FetchSpec - Spec 가져오기
+// FetchSpec is to Spec 가져오기
 func (s *MCIRService) FetchSpec(ctx context.Context, req *pb.FetchSpecQryRequest) (*pb.MessageResponse, error) {
 	logger := logger.NewLogger()
 
@@ -202,7 +210,7 @@ func (s *MCIRService) FetchSpec(ctx context.Context, req *pb.FetchSpecQryRequest
 	return resp, nil
 }
 
-// FilterSpec
+// FilterSpec is to filter specs
 func (s *MCIRService) FilterSpec(ctx context.Context, req *pb.TbSpecInfoRequest) (*pb.ListTbSpecInfoResponse, error) {
 	logger := logger.NewLogger()
 
@@ -231,7 +239,7 @@ func (s *MCIRService) FilterSpec(ctx context.Context, req *pb.TbSpecInfoRequest)
 	return resp, nil
 }
 
-// FilterSpecsByRange
+// FilterSpecsByRange is filter specs by range
 func (s *MCIRService) FilterSpecsByRange(ctx context.Context, req *pb.FilterSpecsByRangeRequest) (*pb.ListTbSpecInfoResponse, error) {
 	logger := logger.NewLogger()
 
@@ -260,7 +268,7 @@ func (s *MCIRService) FilterSpecsByRange(ctx context.Context, req *pb.FilterSpec
 	return resp, nil
 }
 
-// SortSpecs
+// SortSpecs is to sort specs
 func (s *MCIRService) SortSpecs(ctx context.Context, req *pb.SortSpecsRequest) (*pb.ListTbSpecInfoResponse, error) {
 	logger := logger.NewLogger()
 
@@ -289,8 +297,8 @@ func (s *MCIRService) SortSpecs(ctx context.Context, req *pb.SortSpecsRequest) (
 	return resp, nil
 }
 
-// UpdateSpec
-func (s *MCIRService) UpdateSpec(ctx context.Context, req *pb.TbSpecInfoRequest) (*pb.TbSpecInfoResponse, error) {
+// UpdateSpec is to update specs
+func (s *MCIRService) UpdateSpec(ctx context.Context, req *pb.TbUpdateSpecRequest) (*pb.TbSpecInfoResponse, error) {
 	logger := logger.NewLogger()
 
 	logger.Debug("calling MCIRService.UpdateSpec()")
@@ -302,7 +310,7 @@ func (s *MCIRService) UpdateSpec(ctx context.Context, req *pb.TbSpecInfoRequest)
 		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.UpdateSpec()")
 	}
 
-	content, err := mcir.UpdateSpec(req.NsId, mcirObj)
+	content, err := mcir.UpdateSpec(req.NsId, req.SpecId, mcirObj)
 	if err != nil {
 		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.UpdateSpec()")
 	}

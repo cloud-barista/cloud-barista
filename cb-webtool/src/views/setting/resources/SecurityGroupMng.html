@@ -1,90 +1,104 @@
 {{ template "Top" .}}
-	
-		<div id="lnb">
-			
-			<div class="bg"></div>
-				
-			<div class="m_box">
-				
-				{{template "TopBox" .}}
-	
-				{{template "LNBPopup" .}}
-				
-				<!-- menu -->
-				{{template "MenuLeft" .}}
-				<!-- //menu -->
-				
-			</div>
-			
-			<div class="bottom"></div>
-			<a href="javascript:;" id="m_close"></a>
-			
-		</div>		
-	
-		{{template "Header" .}}
-	
-		{{template "Modal" .}}
-				
-				<!-- contents -->
-				<div class="contbox">
-					
-					<div class="titlebox">
-						<div class="tit"><img src="/assets/img/common/icon_cont.png" alt=""/>Resources / <strong>Security</strong></div>
-						<div class="location">Home  <span>></span>  Setting  <span>></span>  Resources  <span>></span>  <strong>Security</strong></div>
-					</div>
-					
-					<!-- list -->
-					<div class="dashboard dashboard_cont">
-						
-						<div class="d_box box_m box_w100">
-							<div class="titbox">
-								<div class="tit initial"><strong>Security Group</strong></div>
-								<div class="top_info">
+
+<div id="lnb">
+
+	<div class="bg"></div>
+
+	<div class="m_box">
+
+		{{template "TopBox" .}}
+
+		{{template "LNBPopup" .}}
+
+		<!-- menu -->
+		{{template "MenuLeft" .}}
+		<!-- //menu -->
+
+	</div>
+
+	<div class="bottom"></div>
+	<a href="javascript:;" id="m_close"></a>
+
+</div>
+
+{{template "Header" .}}
+
+{{template "Modal" .}}
+
+<!-- contents -->
+<div class="contbox">
+
+	<div class="titlebox">
+		<div class="tit"><img src="/assets/img/common/icon_cont.png" alt="" />Resources / <strong>Security</strong>
+		</div>
+		<div class="location">Home <span>></span> Setting <span>></span> Resources <span>></span>
+			<strong>Security</strong></div>
+	</div>
+
+	<!-- list -->
+	<div class="dashboard dashboard_cont">
+
+		<div class="d_box box_m box_w100">
+			<div class="titbox">
+				<div class="tit initial"><strong>Security Group</strong></div>
+				<div class="top_info">
+					<ul>
+						<li>
+							<a href="javascript:void(0);">Filter</a>
+							<div class="infobox">
+								<div class="box">
 									<ul>
-										<li>
-											<a href="javascript:void(0);">Filter</a>
-											<div class="infobox">
-												<div class="box">
-													<ul>
-														<li><a href="javascript:void(0);" onclick="commonPromptOpen('RsFltSecurityGroupName', 'securityGroupList')">Security Group Name</a></li>
-														<li><a href="javascript:void(0);" onclick="commonPromptOpen('RsFltConnectionName', 'securityGroupList')">Connection Name</a></li>
-													</ul>
-												</div>
-											</div>
-										</li>
-										<li>
-											<a href="javascript:void(0);">Sort</a>
-											<div class="infobox">
-												<div class="box">
-													<ul>
-														<li><a href="javascript:void(0);" onclick="tableSort('securityGroupList', 'SecurityGroup Name')">Security Group Name</a></li>
-														<li><a href="javascript:void(0);" onclick="tableSort('securityGroupList', 'Connection Name<')">Connection Name<</a></li>
-														<!--
-														<li><a href="javascript:void(0);" onclick='getSGList("cspSecurityGroupName")'>Security Group Name</a></li>
-														<li><a href="javascript:void(0);" onclick='getSGList("connectionName")'>Connection Name</a></li>
-														-->
-													</ul>
-												</div>
-											</div>
-										</li>
-										<li>
-											<a href="javascript:void(0);">Action</a>
-											<div class="infobox">
-												<div class="box">
-													<ul>
-														<li><a href="javascript:void(0);" data-toggle="modal" data-target="#RegistBox" onClick="commonConfirmOpen('AddNewSecurityGroup')">Add</a></li>
-														<li><a href="javascript:void(0);" data-toggle="modal" data-target="#UnRegist" onClick="commonConfirmOpen('DeleteSecurityGroup')">Delete</a></li>
-													</ul>
-												</div>
-											</div>
-										</li>
-										<li><a href="javascript:void(0);"><img src="/assets/img/common/icon_question.png" alt=""/></a></li>
+										<li><a href="javascript:void(0);"
+												onclick="commonPromptOpen('RsFltSecurityGroupName', 'securityGroupList')">Security
+												Group Name</a></li>
+										<li><a href="javascript:void(0);"
+												onclick="commonPromptOpen('RsFltConnectionName', 'securityGroupList')">Connection
+												Name</a></li>
 									</ul>
 								</div>
 							</div>
-	
-							<!-- popup Regist -->
-							<!-- <div class="modal fade layerpopup" id="RegistBox" tabindex="-1" role="dialog" aria-hidden="true" id="modal_reg">
+						</li>
+						<li>
+							<a href="javascript:void(0);">Sort</a>
+							<div class="infobox">
+								<div class="box">
+									<ul>
+										<li><a href="javascript:void(0);"
+												onclick="tableSort('securityGroupList', 'SecurityGroup Name')">Security
+												Group Name</a></li>
+										<li><a href="javascript:void(0);"
+												onclick="tableSort('securityGroupList', 'Connection Name<')">Connection
+												Name<< /a>
+										</li>
+										<!--
+														<li><a href="javascript:void(0);" onclick='getSGList("cspSecurityGroupName")'>Security Group Name</a></li>
+														<li><a href="javascript:void(0);" onclick='getSGList("connectionName")'>Connection Name</a></li>
+														-->
+									</ul>
+								</div>
+							</div>
+						</li>
+						<li>
+							<a href="javascript:void(0);">Action</a>
+							<div class="infobox">
+								<div class="box">
+									<ul>
+										<li><a href="javascript:void(0);" data-toggle="modal" data-target="#RegistBox"
+												onClick="displaySecurityGroupInfo('REG')">Add</a></li>
+										<li><a href="javascript:void(0);" data-toggle="modal" data-target="#UnRegist"
+												onClick="commonConfirmOpen('DeleteSecurityGroup')">Delete</a></li>
+									</ul>
+								</div>
+							</div>
+						</li>
+						<li><a href="javascript:void(0);"><img src="/assets/img/common/icon_question.png" alt="" /></a>
+						</li>
+					</ul>
+				</div>
+			</div>
+
+			<!-- popup Regist -->
+			<!-- <div class="modal fade layerpopup" id="RegistBox" tabindex="-1" role="dialog" aria-hidden="true" id="modal_reg">
 								<div class="modal-dialog" role="document">
 									<div class="modal-content">
 										
@@ -99,10 +113,10 @@
 									</div>
 								</div>
 							</div> -->
-							<!-- //popup Regist -->
-	
-							<!-- popup UnRegist -->
-							<!-- <div class="modal fade layerpopup" id="UnRegist" tabindex="-1" role="dialog" aria-hidden="true">
+			<!-- //popup Regist -->
+
+			<!-- popup UnRegist -->
+			<!-- <div class="modal fade layerpopup" id="UnRegist" tabindex="-1" role="dialog" aria-hidden="true">
 								<div class="modal-dialog" role="document">
 									<div class="modal-content">
 										
@@ -117,127 +131,137 @@
 									</div>
 								</div>
 							</div> -->
-							<!-- //popup UnRegist -->
-							
-							<div class="ds_cont">
-								
-								<div class="dataTable status_list" id="securityGroupListTable">
-									<table cellpadding="0" cellspacing="0" border="1" summary="" id="securityGroupList">
-                                        <!-- <colgroup>
+			<!-- //popup UnRegist -->
+
+			<div class="ds_cont">
+
+				<div class="dataTable status_list" id="securityGroupListTable">
+					<table cellpadding="0" cellspacing="0" border="1" summary="" id="securityGroupList">
+						<!-- <colgroup>
                                             <col width="50px">
                                             <col width="">
                                             <col width="">
                                             <col width="">
                                             <col width="60px">
                                         </colgroup> -->
-										<thead>
-											<tr>
-												<th class="column-50px"><input type="checkbox" name="" value="" id="th_chall" title="" /><label for="th_chall"></label></td>
-												<th>SecurityGroup Name</th>
-												<th>Connection Name</th>
-												<th>Description</th>
-												<!-- <th class="column-60px"></th> -->
-											</tr>
-										</thead>
-										<tbody id="sgList">
-											{{ $length := len .SecurityGroupList }} 
-											{{ if eq $length 0 }}
-											<tr>
-												<td class="overlay hidden" data-th="" colspan="5">No Data</td>
-											</tr>
-											{{ end }}
+						<thead>
+							<tr>
+								<th class="column-50px"><input type="checkbox" name="" value="" id="th_chall"
+										title="" /><label for="th_chall"></label></td>
+								<th>SecurityGroup Name</th>
+								<th>Connection Name</th>
+								<th>Description</th>
+								<!-- <th class="column-60px"></th> -->
+							</tr>
+						</thead>
+						<tbody id="sgList">
+							{{ $length := len .SecurityGroupList }}
+							{{ if eq $length 0 }}
+							<tr>
+								<td class="overlay hidden" data-th="" colspan="5">No Data</td>
+							</tr>
+							{{ end }}
 
-											{{range $index, $item := .SecurityGroupList}}														
-											<tr onclick="showSecurityGroupInfo('{{$item.CspSecurityGroupName }}');">
-												<td class="overlay hidden column-50px" data-th="">
-													<input type="hidden" id="sg_info_{{$index }}" value="{{$item.CspSecurityGroupName}}"/>
-													<input type="checkbox" name="chk" value="{{$item.CspSecurityGroupName}}" id="raw_{{$index}}" title="" />
-													<label for="td_ch1"></label> <span class="ov off"></span></td>
-												<td class="btn_mtd ovm" data-th="cspSecurityGroupName">{{$item.CspSecurityGroupName }}<span class="ov"></span></td>
-												<td class="overlay hidden" data-th="connectionName">{{$item.ConnectionName }}</td>
-												<td class="overlay hidden" data-th="description">{{$item.Description }}</td>
-												<!-- <td class="overlay hidden column-60px" data-th=""><a href="javascript:void(0);">
+							{{range $index, $item := .SecurityGroupList}}
+							<tr onclick="showSecurityGroupInfo('{{$item.CspSecurityGroupName }}');">
+								<td class="overlay hidden column-50px" data-th="">
+									<input type="hidden" id="sg_info_{{$index }}"
+										value="{{$item.CspSecurityGroupName}}" />
+									<input type="checkbox" name="chk" value="{{$item.CspSecurityGroupName}}"
+										id="raw_{{$index}}" title="" />
+									<label for="td_ch1"></label> <span class="ov off"></span>
+								</td>
+								<td class="btn_mtd ovm" data-th="cspSecurityGroupName">{{$item.CspSecurityGroupName
+									}}<span class="ov"></span></td>
+								<td class="overlay hidden" data-th="connectionName">{{$item.ConnectionName }}</td>
+								<td class="overlay hidden" data-th="description">{{$item.Description }}</td>
+								<!-- <td class="overlay hidden column-60px" data-th=""><a href="javascript:void(0);">
 													<img src="/assets/img/contents/icon_link.png" class="icon" alt=""/></a>
 												</td> -->
-											</tr>
-											{{ end }}
-										</tbody>
-									</table>
-								</div>
-								
-							</div>
-							
-						</div>
-						
-					</div>
-					<!-- //list -->
-										
-					<!-- Modify -->
-					<div class="dashboard dashboard_cont server_status" id="securityGroupInfoBox">
-						
-						<div class="d_box box_m box_w100">
-							<div class="titbox_n">
-								<div class="tit initial"><strong>Security Group Info</strong> [<span class="stxt"></span>]</div>
-							</div>
-							
-							<div class="ds_cont">
-								<div class="register_box">
-									
-									<div class="top_ipbox">
-										<div class="ipbox ipbox1">
-											<ul>
-												<li class="reg_1">
-													<label>Security Group Name</label>
-													<span class="sbox">
-														<input type="text" id="dtlCspSecurityGroupName" name="dtlCspSecurityGroupName" value="" placeholder="" class="gray" title="" readonly />
-													</span>
-                                                </li>
+							</tr>
+							{{ end }}
+						</tbody>
+					</table>
+				</div>
 
-												<li class="reg_1">
-													<label>Description</label>
-													<textarea id="dtlDescription" name="dtlDescription" cols="" rows="" placeholder="Description" class="gray" title="" readonly ></textarea>
-												</li>
-											</ul>
-										</div>
-										<div class="ipbox ipbox2">
-											<ul>
-												<li class="reg_2">
-                                                    <label>Cloud Provider</label>
-                                                    <input type="text" id="dtlProvider" name="dtlProvider" value="" placeholder="" class="gray" title="" readonly />
-												</li>
-												<li class="reg_2">
-                                                    <label>Cloud Connection</label>
-                                                    <input type="text" id="dtlConnectionName" name="dtlConnectionName" value="" placeholder="" class="gray" title="" readonly />
-												</li>
-												<li class="reg_2">
-													<label>VPC Id</label>
-													<input type="text" id="dtlvNetId" name="dtlvNetId" value="" placeholder="" class="gray" title="" readonly />
-												</li>
-												<li>
-													<label>Firewall RuleSet</label>
-													<div class="reg_stxt">
-														
-														<div class="bubble_box">
-															<div class="box">
-																<span class="s_txt">Inbound</span>
-																<div class="bb_info" id="dtlInbound"></div>
-															</div>, 
-															<div class="box">
-																<span class="s_txt">Outbound</span>
-																<div class="bb_info" id="dtlOutbound"></div>
-															</div>
-															<div class="box">
-																<span class="s_txt">CIDR</span>
-																<div class="bb_info" id="dtlCidr"></div>
-															</div>
-														</div>
-													</div>
-                                                </li>                                                
-											</ul>
+			</div>
+
+		</div>
+
+	</div>
+	<!-- //list -->
+
+	<!-- Modify -->
+	<div class="dashboard dashboard_cont server_status" id="securityGroupInfoBox">
+
+		<div class="d_box box_m box_w100">
+			<div class="titbox_n">
+				<div class="tit initial"><strong>Security Group Info</strong> [<span class="stxt"></span>]</div>
+			</div>
+
+			<div class="ds_cont">
+				<div class="register_box">
+
+					<div class="top_ipbox">
+						<div class="ipbox ipbox1">
+							<ul>
+								<li class="reg_1">
+									<label>Security Group Name</label>
+									<span class="sbox">
+										<input type="text" id="dtlCspSecurityGroupName" name="dtlCspSecurityGroupName"
+											value="" placeholder="" class="gray" title="" readonly />
+									</span>
+								</li>
+
+								<li class="reg_1">
+									<label>Description</label>
+									<textarea id="dtlDescription" name="dtlDescription" cols="" rows=""
+										placeholder="Description" class="gray" title="" readonly></textarea>
+								</li>
+							</ul>
+						</div>
+						<div class="ipbox ipbox2">
+							<ul>
+								<li class="reg_2">
+									<label>Cloud Provider</label>
+									<input type="text" id="dtlProvider" name="dtlProvider" value="" placeholder=""
+										class="gray" title="" readonly />
+								</li>
+								<li class="reg_2">
+									<label>Cloud Connection</label>
+									<input type="text" id="dtlConnectionName" name="dtlConnectionName" value=""
+										placeholder="" class="gray" title="" readonly />
+								</li>
+								<li class="reg_2">
+									<label>VPC Id</label>
+									<input type="text" id="dtlvNetId" name="dtlvNetId" value="" placeholder=""
+										class="gray" title="" readonly />
+								</li>
+								<li>
+									<label>Firewall RuleSet</label>
+									<div class="reg_stxt">
+
+										<div class="bubble_box">
+											<div class="box">
+												<span class="s_txt">Inbound</span>
+												<div class="bb_info" id="dtlInbound"></div>
+											</div>,
+											<div class="box">
+												<span class="s_txt">Outbound</span>
+												<div class="bb_info" id="dtlOutbound"></div>
+											</div>
+											<div class="box">
+												<span class="s_txt">CIDR</span>
+												<div class="bb_info" id="dtlCidr"></div>
+											</div>
 										</div>
 									</div>
-									
-								<!-- 수정기능 없음				
+								</li>
+							</ul>
+						</div>
+					</div>
+
+					<!-- 수정기능 없음				
 									<div class="btnbox">
 										<div class="btn_center">
 											<button name="" value="" class="btn_co btn_cr_b w135 btn_cancel">Cancel</button> 
@@ -245,190 +269,205 @@
 										</div>
 									</div>
 								 -->
-								</div>
-							</div>
-							
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+	<!-- //Modify -->
+
+
+	<!-- Register Security -->
+	<div class="dashboard dashboard_cont register_cont" id="securityGroupCreateBox">
+
+		<div class="d_box box_m box_w100">
+			<div class="titbox_n">
+				<div class="tit initial cg"><strong>Create Security Group</strong></div>
+			</div>
+
+			<div class="ds_cont">
+				<div class="register_box reg">
+
+					<div class="top_ipbox">
+						<div class="ipbox ipbox1">
+							<ul>
+								<li class="reg_1">
+									<label><span class="ch">*</span>Security Group Name</label>
+									<input type="text" name="reg_cspSecurityGroupName" id="regCspSecurityGroupName"
+										value="" placeholder="Input Name" class="pline" title="" />
+								</li>
+								<li class="reg_1">
+									<label>Description</label>
+									<textarea name="reg_description" id="regDescription" cols="" rows=""
+										placeholder="Description" class="pline" title=""></textarea>
+								</li>
+							</ul>
 						</div>
-						
-					</div>
-					<!-- //Modify -->
-					
-					
-					<!-- Register Security -->
-					<div class="dashboard dashboard_cont register_cont" id="securityGroupCreateBox">
-						
-						<div class="d_box box_m box_w100">
-							<div class="titbox_n">
-								<div class="tit initial cg"><strong>Create Security Group</strong></div>
-							</div>
-							
-							<div class="ds_cont">
-								<div class="register_box reg">
-									
-									<div class="top_ipbox">
-										<div class="ipbox ipbox1">
-											<ul>
-												<li class="reg_1">
-													<label><span class="ch">*</span>Security Group Name</label>
-													<input type="text" name="reg_cspSecurityGroupName" id="regCspSecurityGroupName" value="" placeholder="Input Name" class="pline" title="" />
-												</li>
-												<li class="reg_1">
-													<label>Description</label>
-													<textarea name="reg_description" id="regDescription" cols="" rows="" placeholder="Description" class="pline" title=""></textarea>
-												</li>
-											</ul>
-										</div>
-										<div class="ipbox ipbox2">
-											<ul>
-												<li>
-													<label>Cloud Provider</label>
-													<select class="selectbox white pline w3" name="ProviderName" id="regProvider" onchange="getConnectionListForSelectbox(this.value, 'regConnectionName')">
-														<option value="" selected>Select Cloud Provider</option>
-                                                        {{ range $item := .CloudOSList}}	
-														<option value="{{ $item }}">{{ $item }}</option>
-														{{ end }}
-														<option value="MOCK">MOCK</option>	<!-- 임시로 MOCK 추가-->
-                                                    </select>
-												</li>
-												<li>
-													<label><span class="ch">*</span>Connection</label>
-													<select class="selectbox white pline w3" name="reg_connectionName" id="regConnectionName" onchange="getVnetInfoListForSelectbox(this.value, 'regVNetId')" >
-														<option value="1">Selected Connection</option>
-													</select>
-												</li>
-												<li>
-                                                    <label><span class="ch">*</span>VPC Id</label>
-                                                    <select class="selectbox white pline w3" name="reg_vNetId" id="regVNetId" >
-														<option value="1">Selected VPC Id</option>
-													</select>
-												</li>										
-												<li>
-													<label><span class="ch">*</span>Firewall RuleSet</label>
-													<div class="reg_stxt">
-														
-														<div class="bubble_box">
-															<div class="box">
-																<span class="s_txt">Inbound</span>
-																<div class="bb_info" id="regInbound"></div>
-															</div>, 
-															<div class="box">
-																<span class="s_txt">Outbound</span>
-																<div class="bb_info" id="regOutbound"></div>
-															</div>
-														</div>
-														
-														<a href="javascript:void(0);" class="ma btn_register" onClick="displayInOutBoundRegModal(true)">Edit</a><!-- inbound/outbound 추가버튼--> 
-													</div>
-												</li>
-											</ul>
-										</div>
-									</div>
-									
-									<div class="btnbox">
-										<div class="btn_center">
-											<button name="" value="" class="btn_co btn_cr_b w135 btn_cancel" onclick="displaySecurityGroupInfo('CLOSE')">Cancel</button> 
-											<button name="" value="" class="btn_co btn_cr_g w135 btn_ok" onclick="createSecurityGroup()">Ok</button> 
-										</div>
-									</div>
-								
-								</div>
-							</div>
-							
-						</div>
-						
-					</div>
-					<!-- //Register Security -->
-										
-					<!-- register inbound outbound -->
-					<div class="register_box modal fade" id="firewallRegisterBox" tabindex="-1" role="dialog" aria-hidden="true">
-						
-						<div class="modal-dialog modal-dialog-centered" role="document">
-							<div class="modal-content">
-								
-								<div class="modal-body">
-									<div class="pop-body">
-										
-										<div class="title_box">
-											<div class="title">Firewall RuleSet</div>
-										</div>
-										
-										<div class="pop-cont">
-											
-											<!-- table scrollbar -->
-											<div class="dtbox scrollbar-inner">
-												<div class="dataTable dt_overlay">
-													<table cellpadding="0" cellspacing="0" border="1" summary="" id="firewallRSlistTbl">
-														<!-- <colgroup><col width="20%"><col width="20%"><col width="20%"><col width=""><col width="100px"></colgroup> -->
-														<thead>
-															<tr>
-																<th class="column-16percent">FromPort</th>
-																<th class="column-16percent">ToPort</th>
-																<th class="column-16percent">IPProtocol</th>
-																<th>Direction</th>
-																<th class="column-16percent">CIDR</th>
-																<th class="column-80px"></th>
-															</tr>
-														</thead>
-														<tbody id="fwrsList">
-                                                    
-															<tr class="ip" name="tr_Input">
-																<td class="btn_mtd column-16percent" data-th="fromPort">
-																	<input type="text" value="" name="fromport" placeholder="" class="pline" title="" /> 
-																	<span class="ov off"></span>
-																</td>
-																<td class="overlay hidden column-16percent" data-th="toPort">
-																	<input type="text" name="toport" value="" placeholder="" class="pline" title="" />
-																</td>
-																<td class="overlay hidden column-16percent" data-th="ipProtocol">
-																	<select class="selectbox white pline" name="ipprotocol">
-																		<option value="tcp">TCP</option>
-																		<option value="udp">UDP</option>
-																		<option value="*">ALL</option>
-																	</select>
-																</td>
-																<td class="overlay hidden" data-th="direction">
-																	<select class="selectbox white pline" name="direction">
-																		<option value="inbound">Inbound</option>
-																		<option value="outbound">Outbound</option>
-																	</select>
-																</td>
-																<td class="btn_mtd column-16percent" data-th="cidr">
-																	<input type="text" value="" name="cidr" placeholder="" class="pline" title="" /> 
-																	<span class="ov off"></span>
-																</td>
-																<td class="overlay hidden column-80px" data-th="">
-																	<button class="btn btn_add" name="btn_add">add</button>
-																	<button class="btn btn_del" name="delInput">del</button>
-																</td>
-															</tr>
-														</tbody>
-													</table>
-												</div>
+						<div class="ipbox ipbox2">
+							<ul>
+								<li>
+									<label>Cloud Provider</label>
+									<select class="selectbox white pline w3" name="ProviderName" id="regProvider"
+										onchange="getConnectionListForSelectbox(this.value, 'regConnectionName')">
+										<option value="" selected>Select Cloud Provider</option>
+										{{ range $item := .CloudOSList}}
+										<option value="{{ $item }}">{{ $item }}</option>
+										{{ end }}
+										<option value="MOCK">MOCK</option> <!-- 임시로 MOCK 추가-->
+									</select>
+								</li>
+								<li>
+									<label><span class="ch">*</span>Connection</label>
+									<select class="selectbox white pline w3" name="reg_connectionName"
+										id="regConnectionName"
+										onchange="getVnetInfoListForSelectbox(this.value, 'regVNetId')">
+										<option value="1">Selected Connection</option>
+									</select>
+								</li>
+								<li>
+									<label><span class="ch">*</span>VPC Id</label>
+									<select class="selectbox white pline w3" name="reg_vNetId" id="regVNetId">
+										<option value="1">Selected VPC Id</option>
+									</select>
+								</li>
+								<li>
+									<label><span class="ch">*</span>Firewall RuleSet</label>
+									<div class="reg_stxt">
+
+										<div class="bubble_box">
+											<div class="box">
+												<span class="s_txt">Inbound</span>
+												<div class="bb_info" id="regInbound"></div>
+											</div>,
+											<div class="box">
+												<span class="s_txt">Outbound</span>
+												<div class="bb_info" id="regOutbound"></div>
 											</div>
-											<!-- //table scrollbar -->
-																	
-											<div class="b_txt"><span class="ch">*</span>  방화벽 RuleSet에 추가할 서버를 정의하고 하단의 <span class="txt">“추가 적용” 버튼</span>을 클릭하여 서버 풀에 추가합니다.</div>
 										</div>
-										
+
+										<a href="javascript:void(0);" class="ma btn_register"
+											onClick="displayInOutBoundRegModal(true)">Edit</a>
+										<!-- inbound/outbound 추가버튼-->
 									</div>
-									
-									<div class="btnbox">
-										<div class="btn_right">
-											<button name="" value="" class="btn_apply btn_co btn_cr_g" onclick="applyFirewallRuleSet()"><span>Apply</span></button> 
-											<button name="" value="" class="btn_cancel btn_co btn_cr_b" data-dismiss="modal">cancel</button> 
-										</div>
-									</div>
-								</div>
-								
-							</div>
-							
+								</li>
+							</ul>
 						</div>
-													
 					</div>
-					<!-- //register -->
+
+					<div class="btnbox">
+						<div class="btn_center">
+							<button name="" value="" class="btn_co btn_cr_b w135 btn_cancel"
+								onclick="displaySecurityGroupInfo('CLOSE')">Cancel</button>
+							<button name="" value="" class="btn_co btn_cr_g w135 btn_ok"
+								onclick="createSecurityGroup()">Ok</button>
+						</div>
+					</div>
 
 				</div>
-				<!-- //contents -->
-				
+			</div>
+
+		</div>
+
+	</div>
+	<!-- //Register Security -->
+
+	<!-- register inbound outbound -->
+	<div class="register_box modal fade" id="firewallRegisterBox" tabindex="-1" role="dialog" aria-hidden="true">
+
+		<div class="modal-dialog modal-dialog-centered" role="document">
+			<div class="modal-content">
+
+				<div class="modal-body">
+					<div class="pop-body">
+
+						<div class="title_box">
+							<div class="title">Firewall RuleSet</div>
+						</div>
+
+						<div class="pop-cont">
+
+							<!-- table scrollbar -->
+							<div class="dtbox scrollbar-inner">
+								<div class="dataTable dt_overlay">
+									<table cellpadding="0" cellspacing="0" border="1" summary="" id="firewallRSlistTbl">
+										<!-- <colgroup><col width="20%"><col width="20%"><col width="20%"><col width=""><col width="100px"></colgroup> -->
+										<thead>
+											<tr>
+												<th class="column-16percent">FromPort</th>
+												<th class="column-16percent">ToPort</th>
+												<th class="column-16percent">IPProtocol</th>
+												<th>Direction</th>
+												<th class="column-16percent">CIDR</th>
+												<th class="column-80px"></th>
+											</tr>
+										</thead>
+										<tbody id="fwrsList">
+
+											<tr class="ip" name="tr_Input">
+												<td class="btn_mtd column-16percent" data-th="fromPort">
+													<input type="text" value="" name="fromport" placeholder=""
+														class="pline" title="" />
+													<span class="ov off"></span>
+												</td>
+												<td class="overlay hidden column-16percent" data-th="toPort">
+													<input type="text" name="toport" value="" placeholder=""
+														class="pline" title="" />
+												</td>
+												<td class="overlay hidden column-16percent" data-th="ipProtocol">
+													<select class="selectbox white pline" name="ipprotocol">
+														<option value="tcp">TCP</option>
+														<option value="udp">UDP</option>
+														<option value="*">ALL</option>
+													</select>
+												</td>
+												<td class="overlay hidden" data-th="direction">
+													<select class="selectbox white pline" name="direction">
+														<option value="inbound">Inbound</option>
+														<option value="outbound">Outbound</option>
+													</select>
+												</td>
+												<td class="btn_mtd column-16percent" data-th="cidr">
+													<input type="text" value="" name="cidr" placeholder="" class="pline"
+														title="" />
+													<span class="ov off"></span>
+												</td>
+												<td class="overlay hidden column-80px" data-th="">
+													<button class="btn btn_add" name="btn_add">add</button>
+													<button class="btn btn_del" name="delInput">del</button>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+							<!-- //table scrollbar -->
+
+							<div class="b_txt"><span class="ch">*</span> 방화벽 RuleSet에 추가할 서버를 정의하고 하단의 <span
+									class="txt">“추가 적용” 버튼</span>을 클릭하여 서버 풀에 추가합니다.</div>
+						</div>
+
+					</div>
+
+					<div class="btnbox">
+						<div class="btn_right">
+							<button name="" value="" class="btn_apply btn_co btn_cr_g"
+								onclick="applyFirewallRuleSet()"><span>Apply</span></button>
+							<button name="" value="" class="btn_cancel btn_co btn_cr_b"
+								data-dismiss="modal">cancel</button>
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+		</div>
+
+	</div>
+	<!-- //register -->
+
+</div>
+<!-- //contents -->
+
 <script src="/assets/js/setting/resources/securitygroupmng.js"></script>
 {{template "Footer" .}}

@@ -20,6 +20,8 @@ import (
 	// spider "github.com/cloud-barista/cb-webtool/src/model/spider"
 	"github.com/cloud-barista/cb-webtool/src/model/spider"
 
+	tbcommon "github.com/cloud-barista/cb-webtool/src/model/tumblebug/common"
+
 	util "github.com/cloud-barista/cb-webtool/src/util"
 )
 
@@ -297,11 +299,11 @@ func GetRegionList() ([]spider.RegionInfo, model.WebStatus) {
 	return regionList["region"], model.WebStatus{StatusCode: respStatus}
 }
 
-func GetRegionData(regionName string) (*spider.RegionInfo, model.WebStatus) {
-	var originalUrl = "/region/{{region_name}}"
+func GetRegionData(regionName string) (*tbcommon.TbRegion, model.WebStatus) {
+	var originalUrl = "/region/{regionName}"
 
 	var paramMapper = make(map[string]string)
-	paramMapper["{{region_name}}"] = regionName
+	paramMapper["{regionName}"] = regionName
 	urlParam := util.MappingUrlParameter(originalUrl, paramMapper)
 
 	url := util.SPIDER + urlParam
@@ -311,7 +313,8 @@ func GetRegionData(regionName string) (*spider.RegionInfo, model.WebStatus) {
 
 	resp, err := util.CommonHttp(url, nil, http.MethodGet)
 	// defer body.Close()
-	regionInfo := spider.RegionInfo{}
+	// regionInfo := spider.RegionInfo{}
+	regionInfo := tbcommon.TbRegion{}
 	if err != nil {
 		fmt.Println(err)
 		return &regionInfo, model.WebStatus{StatusCode: 500, Message: err.Error()}

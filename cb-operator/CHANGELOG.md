@@ -1,5 +1,37 @@
+# v0.5.0 (Affogato, 2021.12.16.)
 
-# v0.4.0 (Cafe Mocha) (2021.06.30.)
+## What's Changed
+* [Workflow] Update CHANGELOG-generated.md by @jihoon-seo in [#132](https://github.com/cloud-barista/cb-operator/pull/132)
+* Add support for GKE by @jihoon-seo in [#134](https://github.com/cloud-barista/cb-operator/pull/134)
+* Remove `sudo` from Docker Compose & K8s mode by @jihoon-seo in [#141](https://github.com/cloud-barista/cb-operator/pull/141)
+* Add etcd Helm chart, and Update Helm chart, `docker-compose.yaml` & `cb-operator` by @jihoon-seo in [#142](https://github.com/cloud-barista/cb-operator/pull/142)
+* CB-Dragonfly FW config 파일 최신화 by @inno-cloudbarista in [#140](https://github.com/cloud-barista/cb-operator/pull/140)
+* Update Helm chart and docker-compose.yaml by @jihoon-seo in [#145](https://github.com/cloud-barista/cb-operator/pull/145)
+* Add 'operator update' subcommand by @jihoon-seo in [#150](https://github.com/cloud-barista/cb-operator/pull/150)
+* Add initContainers to wait for etcd by @jihoon-seo in [#147](https://github.com/cloud-barista/cb-operator/pull/147)
+* Update cb-webtool env vars by @jihoon-seo in [#151](https://github.com/cloud-barista/cb-operator/pull/151)
+* Upload doc images by @jihoon-seo in [#153](https://github.com/cloud-barista/cb-operator/pull/153)
+* Update cb-operator by @jihoon-seo in [#156](https://github.com/cloud-barista/cb-operator/pull/156)
+* change some variables to constant(#152) by @computerphilosopher in [#163](https://github.com/cloud-barista/cb-operator/pull/163)
+* Add build-test GitHub workflow [ci skip test] by @jihoon-seo in [#158](https://github.com/cloud-barista/cb-operator/pull/158)
+* Reflect renaming: CB-Ladybug → CB-MCKS by @jihoon-seo in [#162](https://github.com/cloud-barista/cb-operator/pull/162)
+* Update 'paths-to-ignore' in build test workflow by @jihoon-seo in [#165](https://github.com/cloud-barista/cb-operator/pull/165)
+* Fix build test workflow by @jihoon-seo in [#167](https://github.com/cloud-barista/cb-operator/pull/167)
+* Update CB-Dragonfly config files by @jihoon-seo in [#164](https://github.com/cloud-barista/cb-operator/pull/164)
+* Add Chronograf to docker-compose-df-only by @seokho-son in [#168](https://github.com/cloud-barista/cb-operator/pull/168)
+* Update Kong conf in docker-compose-mode by @jihoon-seo in [#170](https://github.com/cloud-barista/cb-operator/pull/170)
+* Change docker compose df only image version by @seokho-son in [#173](https://github.com/cloud-barista/cb-operator/pull/173)
+* Update CB-Dragonfly Docker-compose & HelmChart config file by @hyokyungk in [#172](https://github.com/cloud-barista/cb-operator/pull/172)
+* Fix error in df config for helm chart by @seokho-son in [#174](https://github.com/cloud-barista/cb-operator/pull/174)
+* Update config files by @jihoon-seo in [#175](https://github.com/cloud-barista/cb-operator/pull/175)
+
+## New Contributors
+* @computerphilosopher made their first contribution in [#163](https://github.com/cloud-barista/cb-operator/pull/163)
+* @hyokyungk made their first contribution in [#172](https://github.com/cloud-barista/cb-operator/pull/172)
+
+**Full Changelog**: https://github.com/cloud-barista/cb-operator/compare/v0.4.0...v0.5.0
+
+# v0.4.0 (Cafe Mocha, 2021.06.30.)
 
 ### Feature
 

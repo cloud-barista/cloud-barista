@@ -5,10 +5,6 @@ metadata:
   labels:
     {{- include "cb-restapigw.labels" .  | nindent 4 }}
 data:
-# cb-restapigw-methodByMethod.yaml: |-
-#   {{ range .Files.Lines "files/conf/cb-restapigw-methodByMethod.yaml" }}
-#   {{ . }}
-#   {{ end }}
   cb-restapigw.yaml: |-
     {{ range .Files.Lines "files/conf/cb-restapigw.yaml" }}
     {{ . }}

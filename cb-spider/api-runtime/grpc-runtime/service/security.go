@@ -10,9 +10,7 @@ package service
 
 import (
 	"context"
-	"strings"
 
-	cm "github.com/cloud-barista/cb-spider/api-runtime/common-runtime"
 	gc "github.com/cloud-barista/cb-spider/api-runtime/grpc-runtime/common"
 	"github.com/cloud-barista/cb-spider/api-runtime/grpc-runtime/logger"
 	pb "github.com/cloud-barista/cb-spider/api-runtime/grpc-runtime/stub/cbspider"
@@ -34,9 +32,9 @@ func (s *CCMService) CreateSecurity(ctx context.Context, req *pb.SecurityCreateR
 	logger.Debug("calling CCMService.CreateSecurity()")
 
 	// check the input Name to include the SecurityGroup Delimiter
-	if strings.Contains(req.Item.Name, cm.SG_DELIMITER) {
-		return nil, gc.NewGrpcStatusErr(cm.SG_DELIMITER+" cannot be used in Security Group name!!", "", "CCMService.CreateSecurity()")
-	}
+	//if strings.Contains(req.Item.Name, cm.SG_DELIMITER) {
+	//	return nil, gc.NewGrpcStatusErr(cm.SG_DELIMITER+" cannot be used in Security Group name!!", "", "CCMService.CreateSecurity()")
+	//}
 
 	// GRPC 메시지에서 CCM 객체로 복사
 	var reqInfo cres.SecurityReqInfo
@@ -44,10 +42,11 @@ func (s *CCMService) CreateSecurity(ctx context.Context, req *pb.SecurityCreateR
 	if err != nil {
 		return nil, gc.ConvGrpcStatusErr(err, "", "CCMService.CreateSecurity()")
 	}
+
 	// SG NameID format => {VPC NameID} + cm.SG_DELIMITER + {SG NameID}
 	// transform: SG NameID => {VPC NameID} + cm.SG_DELIMITER + {SG NameID}
 	//reqInfo.IId = cres.IID{NameId: req.Item.VpcName + cm.SG_DELIMITER + req.Item.Name, SystemId: ""}
-	reqInfo.IId = cres.IID{NameId: req.Item.VpcName + cm.SG_DELIMITER + req.Item.Name, SystemId: req.Item.Name} // for NCP: fixed NameID => SystemID, Driver: (1)search systemID with fixed NameID (2)replace fixed NameID into SysemID
+	reqInfo.IId = cres.IID{NameId: req.Item.Name, SystemId: req.Item.Name} // for NCP: fixed NameID => SystemID, Driver: (1)search systemID with fixed NameID (2)replace fixed NameID into SysemID
 	reqInfo.VpcIID = cres.IID{NameId: req.Item.VpcName, SystemId: ""}
 
 	// Call common-runtime API
@@ -161,6 +160,47 @@ func (s *CCMService) DeleteCSPSecurity(ctx context.Context, req *pb.CSPSecurityQ
 	result, _, err := cmrt.DeleteCSPResource(req.ConnectionName, rsSG, req.Id)
 	if err != nil {
 		return nil, gc.ConvGrpcStatusErr(err, "", "CCMService.DeleteCSPSecurity()")
+	}
+
+	resp := &pb.BooleanResponse{Result: result}
+	return resp, nil
+}
+
+// RegisterSecurity - Security 등록
+func (s *CCMService) RegisterSecurity(ctx context.Context, req *pb.SecurityRegisterRequest) (*pb.SecurityInfoResponse, error) {
+	logger := logger.NewLogger()
+
+	logger.Debug("calling CCMService.RegisterSecurity()")
+
+	userIId := cres.IID{req.Item.Name, req.Item.CspId}
+
+	// Call common-runtime API
+	result, err := cmrt.RegisterSecurity(req.ConnectionName, req.Item.VpcName, userIId)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "CCMService.RegisterSecurity()")
+	}
+
+	// CCM 객체에서 GRPC 메시지로 복사
+	var grpcObj pb.SecurityInfo
+	err = gc.CopySrcToDest(result, &grpcObj)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "CCMService.RegisterSecurity()")
+	}
+
+	resp := &pb.SecurityInfoResponse{Item: &grpcObj}
+	return resp, nil
+}
+
+// UnregisterSecurity - Security 제거
+func (s *CCMService) UnregisterSecurity(ctx context.Context, req *pb.SecurityUnregiserQryRequest) (*pb.BooleanResponse, error) {
+	logger := logger.NewLogger()
+
+	logger.Debug("calling CCMService.UnregisterSecurity()")
+
+	// Call common-runtime API
+	result, err := cmrt.UnregisterResource(req.ConnectionName, rsSG, req.Name)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "CCMService.UnregisterSecurity()")
 	}
 
 	resp := &pb.BooleanResponse{Result: result}

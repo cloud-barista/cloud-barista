@@ -21,6 +21,18 @@ spec:
       serviceAccountName: {{ include "cb-dragonfly.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: wait-for-etcd
+          image: darthcabs/tiny-tools:1
+          args:
+          - /bin/bash
+          - -c
+          - >
+            set -x;
+            while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://cloud-barista-etcd:2379/health)" != "200" ]]; do 
+              echo '.'
+              sleep 15;
+            done
       containers:
         - name: {{ .Chart.Name }}
           securityContext:

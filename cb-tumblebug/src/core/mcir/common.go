@@ -1,22 +1,44 @@
+/*
+Copyright 2019 The Cloud-Barista Authors.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+// Package mcir is to manage multi-cloud infra resource
 package mcir
 
 import (
+	"bufio"
+	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	//uuid "github.com/google/uuid"
 	"github.com/cloud-barista/cb-spider/interface/api"
 	"github.com/cloud-barista/cb-tumblebug/src/core/common"
 	"github.com/go-resty/resty/v2"
-	"github.com/xwb1989/sqlparser"
 
 	// CB-Store
 	cbstore_utils "github.com/cloud-barista/cb-store/utils"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
+
+	"reflect"
+
+	validator "github.com/go-playground/validator/v10"
 )
 
 // CB-Store
@@ -25,43 +47,83 @@ import (
 
 //var SPIDER_REST_URL string
 
+// use a single instance of Validate, it caches struct info
+var validate *validator.Validate
+
 func init() {
 	//cblog = config.Cblogger
 	//store = cbstore.GetStore()
 	//SPIDER_REST_URL = os.Getenv("SPIDER_REST_URL")
+
+	validate = validator.New()
+
+	// register function to get tag name from json tags.
+	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+		if name == "-" {
+			return ""
+		}
+		return name
+	})
+
+	// register validation for 'Tb*Req'
+	// NOTE: only have to register a non-pointer type for 'Tb*Req', validator
+	// internally dereferences during it's type checks.
+	validate.RegisterStructValidation(TbImageReqStructLevelValidation, TbImageReq{})
+	validate.RegisterStructValidation(TbSecurityGroupReqStructLevelValidation, TbSecurityGroupReq{})
+	validate.RegisterStructValidation(TbSpecReqStructLevelValidation, TbSpecReq{})
+	validate.RegisterStructValidation(TbSshKeyReqStructLevelValidation, TbSshKeyReq{})
+	validate.RegisterStructValidation(TbVNetReqStructLevelValidation, TbVNetReq{})
 }
 
 // DelAllResources deletes all TB MCIR object of given resourceType
-func DelAllResources(nsId string, resourceType string, forceFlag string) error {
+func DelAllResources(nsId string, resourceType string, subString string, forceFlag string) (common.IdList, error) {
+
+	deletedResources := common.IdList{}
+	deleteStatus := ""
 
 	err := common.CheckString(nsId)
 	if err != nil {
 		common.CBLog.Error(err)
-		return err
+		return deletedResources, err
 	}
 
 	resourceIdList, err := ListResourceId(nsId, resourceType)
 	if err != nil {
-		return err
+		return deletedResources, err
 	}
 
 	if len(resourceIdList) == 0 {
-		return nil
+		errString := "There is no " + resourceType + " resource in " + nsId
+		err := fmt.Errorf(errString)
+		common.CBLog.Error(err)
+		return deletedResources, err
 	}
 
 	for _, v := range resourceIdList {
-		err := DelResource(nsId, resourceType, v, forceFlag)
-		if err != nil {
-			return err
+		// if subSting is provided, check the resourceId contains the subString.
+		if subString == "" || strings.Contains(v, subString) {
+			deleteStatus = ""
+
+			err := DelResource(nsId, resourceType, v, forceFlag)
+			common.CBLog.Error(err)
+
+			if err != nil {
+				deleteStatus = err.Error()
+			} else {
+				deleteStatus = " [Done]"
+			}
+
+			deletedResources.IdList = append(deletedResources.IdList, resourceType+": "+v+deleteStatus)
 		}
 	}
-	return nil
+	return deletedResources, nil
 }
 
 // DelResource deletes the TB MCIR object
 func DelResource(nsId string, resourceType string, resourceId string, forceFlag string) error {
 
-	fmt.Printf("DelResource() called; %s %s %s \n", nsId, resourceType, resourceId) // for debug
+	fmt.Printf("DelResource() called; %s %s %s %s \n", nsId, resourceType, resourceId, forceFlag) // for debug
 
 	err := common.CheckString(nsId)
 	if err != nil {
@@ -76,6 +138,11 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 	}
 	check, err := CheckResource(nsId, resourceType, resourceId)
 
+	if err != nil {
+		common.CBLog.Error(err)
+		return err
+	}
+
 	if !check {
 		errString := "The " + resourceType + " " + resourceId + " does not exist."
 		//mapA := map[string]string{"message": errString}
@@ -85,26 +152,26 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 		return err
 	}
 
-	if err != nil {
-		common.CBLog.Error(err)
-		return err
-	}
-
 	key := common.GenResourceKey(nsId, resourceType, resourceId)
 	fmt.Println("key: " + key)
 
 	keyValue, _ := common.CBStore.Get(key)
-	/*
-		if keyValue == nil {
-			mapA := map[string]string{"message": "Failed to find the resource with given ID."}
-			mapB, _ := json.Marshal(mapA)
-			err := fmt.Errorf("Failed to find the resource with given ID.")
-			return http.StatusNotFound, mapB, err
-		}
-	*/
-	//fmt.Println("keyValue: " + keyValue.Key + " / " + keyValue.Value)
+	// In CheckResource() above, calling 'CBStore.Get()' and checking err parts exist.
+	// So, in here, we don't need to check whether keyValue == nil or err != nil.
+
+	associatedList, _ := GetAssociatedObjectList(nsId, resourceType, resourceId)
+	if len(associatedList) == 0 {
+		// continue
+	} else {
+		errString := " [Failed]" + " Associated with [" + strings.Join(associatedList[:], ", ") + "]"
+		err := fmt.Errorf(errString)
+		common.CBLog.Error(err)
+		return err
+	}
 
 	//cspType := common.GetResourcesCspType(nsId, resourceType, resourceId)
+
+	var childResources interface{}
 
 	if os.Getenv("SPIDER_CALL_METHOD") == "REST" {
 
@@ -126,19 +193,8 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 				return err
 			}
 
-			sql := "DELETE FROM `image` WHERE `id` = '" + resourceId + "';"
-			fmt.Println("sql: " + sql)
-			// https://stackoverflow.com/questions/42486032/golang-sql-query-syntax-validator
-			_, err = sqlparser.Parse(sql)
-			if err != nil {
-				common.CBLog.Error(err)
-			}
-
-			stmt, err := common.MYDB.Prepare(sql)
-			if err != nil {
-				fmt.Println(err.Error())
-			}
-			_, err = stmt.Exec()
+			// "DELETE FROM `image` WHERE `id` = '" + resourceId + "';"
+			_, err = common.ORM.Delete(&TbImageInfo{Namespace: nsId, Id: resourceId})
 			if err != nil {
 				fmt.Println(err.Error())
 			} else {
@@ -165,26 +221,8 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 				return err
 			}
 
-			//delete related recommend spec
-			err = DelRecommendSpec(nsId, resourceId, content.Num_vCPU, content.Mem_GiB, content.Storage_GiB)
-			if err != nil {
-				common.CBLog.Error(err)
-				return err
-			}
-
-			sql := "DELETE FROM `spec` WHERE `id` = '" + resourceId + "';"
-			fmt.Println("sql: " + sql)
-			// https://stackoverflow.com/questions/42486032/golang-sql-query-syntax-validator
-			_, err = sqlparser.Parse(sql)
-			if err != nil {
-				common.CBLog.Error(err)
-			}
-
-			stmt, err := common.MYDB.Prepare(sql)
-			if err != nil {
-				fmt.Println(err.Error())
-			}
-			_, err = stmt.Exec()
+			// "DELETE FROM `spec` WHERE `id` = '" + resourceId + "';"
+			_, err = common.ORM.Delete(&TbSpecInfo{Namespace: nsId, Id: resourceId})
 			if err != nil {
 				fmt.Println(err.Error())
 			} else {
@@ -201,7 +239,7 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 				return err
 			}
 			tempReq.ConnectionName = temp.ConnectionName
-			url = common.SPIDER_REST_URL + "/keypair/" + temp.Name
+			url = common.SpiderRestUrl + "/keypair/" + temp.CspSshKeyName
 		case common.StrVNet:
 			temp := TbVNetInfo{}
 			err = json.Unmarshal([]byte(keyValue.Value), &temp)
@@ -210,7 +248,8 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 				return err
 			}
 			tempReq.ConnectionName = temp.ConnectionName
-			url = common.SPIDER_REST_URL + "/vpc/" + temp.Name
+			url = common.SpiderRestUrl + "/vpc/" + temp.CspVNetName
+			childResources = temp.SubnetInfoList
 		case common.StrSecurityGroup:
 			temp := TbSecurityGroupInfo{}
 			err = json.Unmarshal([]byte(keyValue.Value), &temp)
@@ -219,7 +258,7 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 				return err
 			}
 			tempReq.ConnectionName = temp.ConnectionName
-			url = common.SPIDER_REST_URL + "/securitygroup/" + temp.Name
+			url = common.SpiderRestUrl + "/securitygroup/" + temp.CspSecurityGroupName
 		/*
 			case "subnet":
 				temp := subnetInfo{}
@@ -244,7 +283,7 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 
 		fmt.Println("url: " + url)
 
-		client := resty.New()
+		client := resty.New().SetCloseConnection(true)
 
 		resp, err := client.R().
 			SetHeader("Content-Type", "application/json").
@@ -278,28 +317,28 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 				return err
 			}
 
-			err = common.CBStore.Delete(key)
-			if err != nil {
-				common.CBLog.Error(err)
-				return err
-			}
-			return nil
+			// err = common.CBStore.Delete(key)
+			// if err != nil {
+			// 	common.CBLog.Error(err)
+			// 	return err
+			// }
+			// return nil
 		case resp.StatusCode() >= 400 || resp.StatusCode() < 200:
 			err := fmt.Errorf(string(resp.Body()))
 			common.CBLog.Error(err)
 			return err
 		default:
-			err := common.CBStore.Delete(key)
-			if err != nil {
-				common.CBLog.Error(err)
-				return err
-			}
-			return nil
+			// err := common.CBStore.Delete(key)
+			// if err != nil {
+			// 	common.CBLog.Error(err)
+			// 	return err
+			// }
+			// return nil
 		}
 
 	} else {
 
-		// CCM API 설정
+		// Set CCM gRPC API
 		ccm := api.NewCloudResourceHandler()
 		err := ccm.SetConfigPath(os.Getenv("CBTUMBLEBUG_ROOT") + "/conf/grpc_conf.yaml")
 		if err != nil {
@@ -323,19 +362,8 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 				return err
 			}
 
-			sql := "DELETE FROM `image` WHERE `id` = '" + resourceId + "';"
-			fmt.Println("sql: " + sql)
-			// https://stackoverflow.com/questions/42486032/golang-sql-query-syntax-validator
-			_, err = sqlparser.Parse(sql)
-			if err != nil {
-				common.CBLog.Error(err)
-			}
-
-			stmt, err := common.MYDB.Prepare(sql)
-			if err != nil {
-				fmt.Println(err.Error())
-			}
-			_, err = stmt.Exec()
+			// "DELETE FROM `image` WHERE `id` = '" + resourceId + "';"
+			_, err = common.ORM.Delete(&TbImageInfo{Namespace: nsId, Id: resourceId})
 			if err != nil {
 				fmt.Println(err.Error())
 			} else {
@@ -361,31 +389,14 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 				return err
 			}
 
-			//delete related recommend spec
-			err = DelRecommendSpec(nsId, resourceId, content.Num_vCPU, content.Mem_GiB, content.Storage_GiB)
-			if err != nil {
-				common.CBLog.Error(err)
-				return err
-			}
-
-			sql := "DELETE FROM `spec` WHERE `id` = '" + resourceId + "';"
-			fmt.Println("sql: " + sql)
-			// https://stackoverflow.com/questions/42486032/golang-sql-query-syntax-validator
-			_, err = sqlparser.Parse(sql)
-			if err != nil {
-				common.CBLog.Error(err)
-			}
-
-			stmt, err := common.MYDB.Prepare(sql)
-			if err != nil {
-				fmt.Println(err.Error())
-			}
-			_, err = stmt.Exec()
+			// "DELETE FROM `spec` WHERE `id` = '" + resourceId + "';"
+			_, err = common.ORM.Delete(&TbSpecInfo{Namespace: nsId, Id: resourceId})
 			if err != nil {
 				fmt.Println(err.Error())
 			} else {
 				fmt.Println("Data deleted successfully..")
 			}
+
 			return nil
 
 		case common.StrSSHKey:
@@ -416,6 +427,7 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 				return err
 			}
 
+			childResources = temp.SubnetInfoList
 		case common.StrSecurityGroup:
 			temp := TbSecurityGroupInfo{}
 			err := json.Unmarshal([]byte(keyValue.Value), &temp)
@@ -435,32 +447,309 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 			return err
 		}
 
-		err = common.CBStore.Delete(key)
+		// err = common.CBStore.Delete(key)
+		// if err != nil {
+		// 	common.CBLog.Error(err)
+		// 	return err
+		// }
+		// return nil
+
+	}
+
+	if resourceType == common.StrVNet {
+		// var subnetKeys []string
+		fmt.Printf("childResources: %s", childResources) // for debug
+		subnets := childResources.([]TbSubnetInfo)
+		for _, v := range subnets {
+			subnetKey := common.GenChildResourceKey(nsId, common.StrSubnet, resourceId, v.Id)
+			// subnetKeys = append(subnetKeys, subnetKey)
+			fmt.Printf("subnetKey: %s", subnetKey) // for debug
+			err = common.CBStore.Delete(subnetKey)
+			if err != nil {
+				common.CBLog.Error(err)
+				// return err
+			}
+		}
+	}
+
+	err = common.CBStore.Delete(key)
+	if err != nil {
+		common.CBLog.Error(err)
+		return err
+	}
+	return nil
+}
+
+// DelChildResource deletes the TB MCIR object
+func DelChildResource(nsId string, resourceType string, parentResourceId string, resourceId string, forceFlag string) error {
+
+	fmt.Printf("DelChildResource() called; %s %s %s %s \n", nsId, resourceType, parentResourceId, resourceId) // for debug
+
+	var parentResourceType string
+	switch resourceType {
+	case common.StrSubnet:
+		parentResourceType = common.StrVNet
+	default:
+		err := fmt.Errorf("Not valid child resource type.")
+		return err
+	}
+
+	err := common.CheckString(nsId)
+	if err != nil {
+		common.CBLog.Error(err)
+		return err
+	}
+
+	err = common.CheckString(parentResourceId)
+	if err != nil {
+		common.CBLog.Error(err)
+		return err
+	}
+
+	err = common.CheckString(resourceId)
+	if err != nil {
+		common.CBLog.Error(err)
+		return err
+	}
+
+	check, err := CheckResource(nsId, parentResourceType, parentResourceId)
+
+	if !check {
+		errString := "The " + parentResourceType + " " + parentResourceId + " does not exist."
+		//mapA := map[string]string{"message": errString}
+		//mapB, _ := json.Marshal(mapA)
+		err := fmt.Errorf(errString)
+		//return http.StatusNotFound, mapB, err
+		return err
+	}
+
+	if err != nil {
+		common.CBLog.Error(err)
+		return err
+	}
+
+	check, err = CheckChildResource(nsId, resourceType, parentResourceId, resourceId)
+
+	if !check {
+		errString := "The " + resourceType + " " + resourceId + " does not exist."
+		//mapA := map[string]string{"message": errString}
+		//mapB, _ := json.Marshal(mapA)
+		err := fmt.Errorf(errString)
+		//return http.StatusNotFound, mapB, err
+		return err
+	}
+
+	if err != nil {
+		common.CBLog.Error(err)
+		return err
+	}
+
+	parentResourceKey := common.GenResourceKey(nsId, parentResourceType, parentResourceId)
+	fmt.Println("parentResourceKey: " + parentResourceKey)
+
+	childResourceKey := common.GenChildResourceKey(nsId, resourceType, parentResourceId, resourceId)
+	fmt.Println("childResourceKey: " + childResourceKey)
+
+	parentKeyValue, _ := common.CBStore.Get(parentResourceKey)
+	/*
+		if keyValue == nil {
+			mapA := map[string]string{"message": "Failed to find the resource with given ID."}
+			mapB, _ := json.Marshal(mapA)
+			err := fmt.Errorf("Failed to find the resource with given ID.")
+			return http.StatusNotFound, mapB, err
+		}
+	*/
+	//fmt.Println("keyValue: " + keyValue.Key + " / " + keyValue.Value)
+
+	//cspType := common.GetResourcesCspType(nsId, resourceType, resourceId)
+
+	if os.Getenv("SPIDER_CALL_METHOD") == "REST" {
+
+		var url string
+
+		// Create Req body
+		type JsonTemplate struct {
+			ConnectionName string
+		}
+		tempReq := JsonTemplate{}
+
+		switch resourceType {
+		case common.StrSubnet:
+			temp := TbVNetInfo{}
+			err = json.Unmarshal([]byte(parentKeyValue.Value), &temp)
+			if err != nil {
+				common.CBLog.Error(err)
+				return err
+			}
+			tempReq.ConnectionName = temp.ConnectionName
+			// url = common.SpiderRestUrl + "/vpc/" + temp.Name
+			url = fmt.Sprintf("%s/vpc/%s/subnet/%s", common.SpiderRestUrl, temp.Name, resourceId)
+		default:
+			err := fmt.Errorf("invalid resourceType")
+			//return http.StatusBadRequest, nil, err
+			return err
+		}
+
+		fmt.Println("url: " + url)
+
+		client := resty.New().SetCloseConnection(true)
+
+		resp, err := client.R().
+			SetHeader("Content-Type", "application/json").
+			SetBody(tempReq).
+			//SetResult(&SpiderSpecInfo{}). // or SetResult(AuthSuccess{}).
+			//SetError(&AuthError{}).       // or SetError(AuthError{}).
+			Delete(url)
+
+		if err != nil {
+			common.CBLog.Error(err)
+			err := fmt.Errorf("an error occurred while requesting to CB-Spider")
+			return err
+		}
+
+		fmt.Println("HTTP Status code: " + strconv.Itoa(resp.StatusCode()))
+		switch {
+		case forceFlag == "true":
+			url += "?force=true"
+			fmt.Println("forceFlag == true; url: " + url)
+
+			_, err := client.R().
+				SetHeader("Content-Type", "application/json").
+				SetBody(tempReq).
+				//SetResult(&SpiderSpecInfo{}). // or SetResult(AuthSuccess{}).
+				//SetError(&AuthError{}).       // or SetError(AuthError{}).
+				Delete(url)
+
+			if err != nil {
+				common.CBLog.Error(err)
+				err := fmt.Errorf("an error occurred while requesting to CB-Spider")
+				return err
+			}
+
+		case resp.StatusCode() >= 400 || resp.StatusCode() < 200:
+			err := fmt.Errorf(string(resp.Body()))
+			common.CBLog.Error(err)
+			return err
+		default:
+
+		}
+
+	} else {
+
+		// Set CCM gRPC API
+		ccm := api.NewCloudResourceHandler()
+		err := ccm.SetConfigPath(os.Getenv("CBTUMBLEBUG_ROOT") + "/conf/grpc_conf.yaml")
+		if err != nil {
+			common.CBLog.Error("ccm failed to set config : ", err)
+			return err
+		}
+		err = ccm.Open()
+		if err != nil {
+			common.CBLog.Error("ccm api open failed : ", err)
+			return err
+		}
+		defer ccm.Close()
+
+		switch resourceType {
+		case common.StrSubnet:
+			temp := TbVNetInfo{}
+			err := json.Unmarshal([]byte(parentKeyValue.Value), &temp)
+			if err != nil {
+				common.CBLog.Error(err)
+				return err
+			}
+
+			_, err = ccm.RemoveSubnetByParam(temp.ConnectionName, temp.Name, resourceId, forceFlag)
+			if err != nil {
+				common.CBLog.Error(err)
+				return err
+			}
+		default:
+			err := fmt.Errorf("invalid resourceType")
+			return err
+		}
+
+	}
+
+	err = common.CBStore.Delete(childResourceKey)
+	if err != nil {
+		common.CBLog.Error(err)
+		return err
+	}
+
+	// Delete the child element in parent resources' array
+	switch resourceType {
+	case common.StrSubnet:
+		oldVNet := TbVNetInfo{}
+		err = json.Unmarshal([]byte(parentKeyValue.Value), &oldVNet)
 		if err != nil {
 			common.CBLog.Error(err)
 			return err
 		}
-		return nil
 
+		newVNet := TbVNetInfo{}
+		newVNet = oldVNet
+
+		var subnetIndex int
+		subnetIndex = -1
+		for i, v := range newVNet.SubnetInfoList {
+			if v.Name == resourceId {
+				subnetIndex = i
+				break
+			}
+		}
+
+		if subnetIndex != -1 {
+			DelEleInSlice(&newVNet.SubnetInfoList, subnetIndex)
+		} else {
+			err := fmt.Errorf("Failed to find and delete subnet %s in vNet %s.", resourceId, parentResourceId)
+			common.CBLog.Error(err)
+		}
+
+		Val, _ := json.Marshal(newVNet)
+		err = common.CBStore.Put(parentResourceKey, string(Val))
+		if err != nil {
+			common.CBLog.Error(err)
+			return err
+		}
+		// default:
+	}
+
+	return nil
+
+}
+
+// DelEleInSlice delete an element from slice by index
+//  - arr: the reference of slice
+//  - index: the index of element will be deleted
+func DelEleInSlice(arr interface{}, index int) {
+	vField := reflect.ValueOf(arr)
+	value := vField.Elem()
+	if value.Kind() == reflect.Slice || value.Kind() == reflect.Array {
+		result := reflect.AppendSlice(value.Slice(0, index), value.Slice(index+1, value.Len()))
+		value.Set(result)
 	}
 }
 
+// SpiderNameIdSystemId is struct for mapping NameID and System ID from CB-Spider response
 type SpiderNameIdSystemId struct {
 	NameId   string
 	SystemId string
 }
 
+// SpiderAllListWrapper is struct for wrapping SpiderAllList struct from CB-Spider response.
 type SpiderAllListWrapper struct {
 	AllList SpiderAllList
 }
 
+// SpiderAllList is struct for OnlyCSPList, OnlySpiderList MappedList from CB-Spider response.
 type SpiderAllList struct {
 	MappedList     []SpiderNameIdSystemId
 	OnlySpiderList []SpiderNameIdSystemId
 	OnlyCSPList    []SpiderNameIdSystemId
 }
 
-// Response struct for InspectResources
+// TbInspectResourcesResponse is struct for response of InspectResources request
 type TbInspectResourcesResponse struct {
 	// ResourcesOnCsp       interface{} `json:"resourcesOnCsp"`
 	// ResourcesOnSpider    interface{} `json:"resourcesOnSpider"`
@@ -485,13 +774,14 @@ type resourceOnTumblebug struct {
 }
 
 // InspectResources returns the state list of TB MCIR objects of given connConfig and resourceType
-func InspectResources(connConfig string, resourceType string) (interface{}, error) {
+func InspectResources(connConfig string, resourceType string) (TbInspectResourcesResponse, error) {
 
 	nsList, err := common.ListNsId()
 	if err != nil {
+		nullObj := TbInspectResourcesResponse{}
 		common.CBLog.Error(err)
 		err = fmt.Errorf("an error occurred while getting namespaces' list: " + err.Error())
-		return nil, err
+		return nullObj, err
 	}
 	// var TbResourceList []string
 	var TbResourceList []resourceOnTumblebug
@@ -506,9 +796,10 @@ func InspectResources(connConfig string, resourceType string) (interface{}, erro
 
 		resourceListInNs, err := ListResource(ns, resourceType)
 		if err != nil {
+			nullObj := TbInspectResourcesResponse{}
 			common.CBLog.Error(err)
 			err := fmt.Errorf("an error occurred while getting resource list")
-			return nil, err
+			return nullObj, err
 		}
 		if resourceListInNs == nil {
 			continue
@@ -563,7 +854,7 @@ func InspectResources(connConfig string, resourceType string) (interface{}, erro
 		}
 	}
 
-	client := resty.New()
+	client := resty.New().SetCloseConnection(true)
 	client.SetAllowGetMethodPayload(true)
 
 	// Create Req body
@@ -576,11 +867,11 @@ func InspectResources(connConfig string, resourceType string) (interface{}, erro
 	var spiderRequestURL string
 	switch resourceType {
 	case common.StrVNet:
-		spiderRequestURL = common.SPIDER_REST_URL + "/allvpc"
+		spiderRequestURL = common.SpiderRestUrl + "/allvpc"
 	case common.StrSecurityGroup:
-		spiderRequestURL = common.SPIDER_REST_URL + "/allsecuritygroup"
+		spiderRequestURL = common.SpiderRestUrl + "/allsecuritygroup"
 	case common.StrSSHKey:
-		spiderRequestURL = common.SPIDER_REST_URL + "/allkeypair"
+		spiderRequestURL = common.SpiderRestUrl + "/allkeypair"
 	}
 
 	resp, err := client.R().
@@ -591,17 +882,19 @@ func InspectResources(connConfig string, resourceType string) (interface{}, erro
 		Get(spiderRequestURL)
 
 	if err != nil {
+		nullObj := TbInspectResourcesResponse{}
 		common.CBLog.Error(err)
 		err := fmt.Errorf("an error occurred while requesting to CB-Spider")
-		return nil, err
+		return nullObj, err
 	}
 
 	fmt.Println("HTTP Status code: " + strconv.Itoa(resp.StatusCode()))
 	switch {
 	case resp.StatusCode() >= 400 || resp.StatusCode() < 200:
+		nullObj := TbInspectResourcesResponse{}
 		err := fmt.Errorf(string(resp.Body()))
 		common.CBLog.Error(err)
-		return nil, err
+		return nullObj, err
 	default:
 	}
 
@@ -654,6 +947,29 @@ func InspectResources(connConfig string, resourceType string) (interface{}, erro
 	return result, nil
 }
 
+/*
+// RegisterExistingResources
+func RegisterExistingResources(nsId string, connConfig string) (interface{}, error) {
+	fmt.Println("RegisterExistingResources called;") // for debug
+
+	vpcInspectionResult, err := InspectResources(connConfig, common.StrVNet)
+	if err != nil {
+		common.CBLog.Error(err)
+		err := fmt.Errorf("in RegisterExistingResources(); an error occurred while calling InspectResources()")
+		return nil, err
+	}
+
+	vNetsInCspOnly := vpcInspectionResult.ResourcesOnCsp
+	vNetsInSpiderOnly :=
+	for _, v := range vpcInspectionResult.ResourcesOnTumblebug {
+		vNetId := v.Id
+		fmt.Println("vNetId: " + vNetId) // for debug
+	}
+
+	return nil, nil
+}
+*/
+
 // ListResourceId returns the list of TB MCIR object IDs of given resourceType
 func ListResourceId(nsId string, resourceType string) ([]string, error) {
 
@@ -682,7 +998,20 @@ func ListResourceId(nsId string, resourceType string) ([]string, error) {
 	key := "/ns/" + nsId + "/resources/"
 	fmt.Println(key)
 
-	keyValue, _ := common.CBStore.GetList(key, true)
+	keyValue, err := common.CBStore.GetList(key, true)
+
+	if err != nil {
+		common.CBLog.Error(err)
+		return nil, err
+	}
+
+	/* if keyValue == nil, then for-loop below will not be executed, and the empty array will be returned in `resourceList` placeholder.
+	if keyValue == nil {
+		err = fmt.Errorf("ListResourceId(); %s is empty.", key)
+		common.CBLog.Error(err)
+		return nil, err
+	}
+	*/
 
 	var resourceList []string
 	for _, v := range keyValue {
@@ -1014,18 +1343,18 @@ func UpdateAssociatedObjectList(nsId string, resourceType string, resourceId str
 			var anyJson map[string]interface{}
 			json.Unmarshal([]byte(keyValue.Value), &anyJson)
 			if anyJson["associatedObjectList"] == nil {
-				array_to_be := []string{objectKey}
+				arrayToBe := []string{objectKey}
 				// fmt.Println("array_to_be: ", array_to_be) // for debug
 
-				anyJson["associatedObjectList"] = array_to_be
+				anyJson["associatedObjectList"] = arrayToBe
 			} else { // anyJson["associatedObjectList"] != nil
-				array_as_is := anyJson["associatedObjectList"].([]interface{})
+				arrayAsIs := anyJson["associatedObjectList"].([]interface{})
 				// fmt.Println("array_as_is: ", array_as_is) // for debug
 
-				array_to_be := append(array_as_is, objectKey)
+				arrayToBe := append(arrayAsIs, objectKey)
 				// fmt.Println("array_to_be: ", array_to_be) // for debug
 
-				anyJson["associatedObjectList"] = array_to_be
+				anyJson["associatedObjectList"] = arrayToBe
 			}
 			updatedJson, _ := json.Marshal(anyJson)
 			// fmt.Println(string(updatedJson)) // for debug
@@ -1063,13 +1392,6 @@ func UpdateAssociatedObjectList(nsId string, resourceType string, resourceId str
 			common.CBLog.Error(err)
 			return nil, err
 		}
-		/*
-			keyValue, _ := common.CBStore.Get(key)
-			//fmt.Println("<" + keyValue.Key + "> \n" + keyValue.Value)
-			fmt.Println("===========================")
-			to_be = int8(gjson.Get(keyValue.Value, "inUseCount").Uint())
-			return to_be, nil
-		*/
 
 		result, _ := GetAssociatedObjectList(nsId, resourceType, resourceId)
 		return result, nil
@@ -1094,6 +1416,10 @@ func GetResource(nsId string, resourceType string, resourceId string) (interface
 		return nil, err
 	}
 	check, err := CheckResource(nsId, resourceType, resourceId)
+	if err != nil {
+		common.CBLog.Error(err)
+		return nil, err
+	}
 
 	if !check {
 		errString := "The " + resourceType + " " + resourceId + " does not exist."
@@ -1103,10 +1429,6 @@ func GetResource(nsId string, resourceType string, resourceId string) (interface
 		return nil, err
 	}
 
-	if err != nil {
-		common.CBLog.Error(err)
-		return nil, err
-	}
 	fmt.Println("[Get resource] " + resourceType + ", " + resourceId)
 
 	key := common.GenResourceKey(nsId, resourceType, resourceId)
@@ -1215,7 +1537,75 @@ func CheckResource(nsId string, resourceType string, resourceId string) (bool, e
 	key := common.GenResourceKey(nsId, resourceType, resourceId)
 	//fmt.Println(key)
 
-	keyValue, _ := common.CBStore.Get(key)
+	keyValue, err := common.CBStore.Get(key)
+	if err != nil {
+		common.CBLog.Error(err)
+		return false, err
+	}
+	if keyValue != nil {
+		return true, nil
+	}
+	return false, nil
+
+}
+
+// CheckChildResource returns the existence of the TB MCIR resource in bool form.
+func CheckChildResource(nsId string, resourceType string, parentResourceId string, resourceId string) (bool, error) {
+
+	// Check parameters' emptiness
+	if nsId == "" {
+		err := fmt.Errorf("CheckResource failed; nsId given is null.")
+		return false, err
+	} else if resourceType == "" {
+		err := fmt.Errorf("CheckResource failed; resourceType given is null.")
+		return false, err
+	} else if parentResourceId == "" {
+		err := fmt.Errorf("CheckResource failed; parentResourceId given is null.")
+		return false, err
+	} else if resourceId == "" {
+		err := fmt.Errorf("CheckResource failed; resourceId given is null.")
+		return false, err
+	}
+
+	var parentResourceType string
+	// Check resourceType's validity
+	if resourceType == common.StrSubnet {
+		parentResourceType = common.StrVNet
+		// continue
+	} else {
+		err := fmt.Errorf("invalid resource type")
+		return false, err
+	}
+
+	err := common.CheckString(nsId)
+	if err != nil {
+		common.CBLog.Error(err)
+		return false, err
+	}
+
+	err = common.CheckString(parentResourceId)
+	if err != nil {
+		common.CBLog.Error(err)
+		return false, err
+	}
+
+	err = common.CheckString(resourceId)
+	if err != nil {
+		common.CBLog.Error(err)
+		return false, err
+	}
+
+	fmt.Printf("[Check child resource] %s, %s, %s", resourceType, parentResourceId, resourceId)
+
+	key := common.GenResourceKey(nsId, parentResourceType, parentResourceId)
+	key += "/" + resourceType + "/" + resourceId
+	//fmt.Println(key)
+
+	keyValue, err := common.CBStore.Get(key)
+	if err != nil {
+		common.CBLog.Error(err)
+		return false, err
+	}
 	if keyValue != nil {
 		return true, nil
 	}
@@ -1273,4 +1663,404 @@ func GetNameFromStruct(u interface{}) string {
 	}
 }
 
-//func createResource(nsId string, resourceType string, u interface{}) (interface{}, int, []byte, error) {
+// LoadCommonResource is to register common resources from asset files (../assets/*.csv)
+func LoadCommonResource() (common.IdList, error) {
+
+	regiesteredIds := common.IdList{}
+	regiesteredStatus := ""
+
+	// WaitGroups for goroutine
+	var waitSpecImg sync.WaitGroup
+	var wait sync.WaitGroup
+
+	// Check 'common' namespace. Create one if not.
+	commonNsId := "common"
+	_, err := common.GetNs(commonNsId)
+	if err != nil {
+		nsReq := common.NsReq{}
+		nsReq.Name = commonNsId
+		nsReq.Description = "Namespace for common resources"
+		_, nsErr := common.CreateNs(&nsReq)
+		if nsErr != nil {
+			common.CBLog.Error(nsErr)
+			return regiesteredIds, nsErr
+		}
+	}
+
+	// Read common specs and register spec objects
+	file, fileErr := os.Open("../assets/cloudspec.csv")
+	defer file.Close()
+	if fileErr != nil {
+		common.CBLog.Error(fileErr)
+		return regiesteredIds, fileErr
+	}
+
+	rdr := csv.NewReader(bufio.NewReader(file))
+	rows, _ := rdr.ReadAll()
+
+	waitSpecImg.Add(1)
+	go func(rows [][]string) {
+		defer waitSpecImg.Done()
+		for i, row := range rows[1:] {
+			wait.Add(1)
+			fmt.Printf("[%d] i, row := range rows[1:] %s\n", i, row)
+			// goroutine
+			go func(i int, row []string) {
+				defer wait.Done()
+				// RandomSleep for safe parallel executions
+				common.RandomSleep(20)
+				specReqTmp := TbSpecReq{}
+				// [0]connectionName, [1]cspSpecName, [2]CostPerHour, [3]evaluationScore01, ..., [12]evaluationScore10
+				specReqTmp.ConnectionName = row[0]
+				specReqTmp.CspSpecName = row[1]
+				// Give a name for spec object by combining ConnectionName and CspSpecName
+				// To avoid naming-rule violation, modify the string
+				specReqTmp.Name = specReqTmp.ConnectionName + "-" + specReqTmp.CspSpecName
+				specReqTmp.Name = ToNamingRuleCompatible(specReqTmp.Name)
+
+				specReqTmp.Description = "Common Spec Resource"
+
+				fmt.Printf("[%d] Register Common Spec\n", i)
+				common.PrintJsonPretty(specReqTmp)
+
+				// Register Spec object
+				_, err1 := RegisterSpecWithCspSpecName(commonNsId, &specReqTmp)
+				if err1 != nil {
+					common.CBLog.Error(err1)
+					// If already exist, error will occur
+					// Even if error, do not return here to update information
+					// return err
+				}
+				specObjId := specReqTmp.Name
+
+				// Update registered Spec object with Cost info
+				costPerHour, err2 := strconv.ParseFloat(strings.ReplaceAll(row[2], " ", ""), 32)
+				if err2 != nil {
+					common.CBLog.Error(err2)
+					// If already exist, error will occur. Even if error, do not return here to update information
+					// return err
+				}
+
+				evaluationScore01, err2 := strconv.ParseFloat(strings.ReplaceAll(row[3], " ", ""), 32)
+				if err2 != nil {
+					common.CBLog.Error(err2)
+					// If already exist, error will occur. Even if error, do not return here to update information
+					// return err
+				}
+
+				specUpdateRequest :=
+					TbSpecInfo{CostPerHour: float32(costPerHour),
+						EvaluationScore01: float32(evaluationScore01),
+					}
+
+				updatedSpecInfo, err3 := UpdateSpec(commonNsId, specObjId, specUpdateRequest)
+				if err3 != nil {
+					common.CBLog.Error(err3)
+					// If already exist, error will occur
+					// Even if error, do not return here to update information
+					// return err
+				}
+				fmt.Printf("[%d] Registered Common Spec\n", i)
+				common.PrintJsonPretty(updatedSpecInfo)
+
+				regiesteredStatus = ""
+				if updatedSpecInfo.Id != "" {
+					if err3 != nil {
+						regiesteredStatus = "  [Failed] " + err3.Error()
+					}
+				} else {
+					if err1 != nil {
+						regiesteredStatus = "  [Failed] " + err1.Error()
+					} else if err2 != nil {
+						regiesteredStatus = "  [Failed] " + err2.Error()
+					} else if err3 != nil {
+						regiesteredStatus = "  [Failed] " + err3.Error()
+					}
+				}
+				regiesteredIds.IdList = append(regiesteredIds.IdList, common.StrSpec+": "+specObjId+regiesteredStatus)
+			}(i, row)
+		}
+		wait.Wait()
+	}(rows)
+
+	// Read common specs and register spec objects
+	file, fileErr = os.Open("../assets/cloudimage.csv")
+	defer file.Close()
+	if fileErr != nil {
+		common.CBLog.Error(fileErr)
+		return regiesteredIds, fileErr
+	}
+
+	rdr = csv.NewReader(bufio.NewReader(file))
+	rows, _ = rdr.ReadAll()
+
+	waitSpecImg.Add(1)
+	go func(rows [][]string) {
+		defer waitSpecImg.Done()
+		for i, row := range rows[1:] {
+			wait.Add(1)
+			fmt.Printf("[%d] i, row := range rows[1:] %s\n", i, row)
+			// goroutine
+			go func(i int, row []string) {
+				defer wait.Done()
+				// RandomSleep for safe parallel executions
+				common.RandomSleep(20)
+				imageReqTmp := TbImageReq{}
+				// row0: ProviderName
+				// row1: connectionName
+				// row2: cspImageId
+				// row3: OsType
+				imageReqTmp.ConnectionName = row[1]
+				imageReqTmp.CspImageId = row[2]
+				osType := strings.ReplaceAll(row[3], " ", "")
+				// Give a name for spec object by combining ConnectionName and OsType
+				// To avoid naming-rule violation, modify the string
+				imageReqTmp.Name = imageReqTmp.ConnectionName + "-" + osType
+				imageReqTmp.Name = ToNamingRuleCompatible(imageReqTmp.Name)
+				imageReqTmp.Description = "Common Image Resource"
+
+				fmt.Printf("[%d] Register Common Image\n", i)
+				common.PrintJsonPretty(imageReqTmp)
+
+				// Register Spec object
+				_, err1 := RegisterImageWithId(commonNsId, &imageReqTmp)
+				if err1 != nil {
+					common.CBLog.Error(err1)
+					// If already exist, error will occur
+					// Even if error, do not return here to update information
+					//return err
+				}
+
+				// Update registered image object with OsType info
+				imageObjId := imageReqTmp.Name
+
+				imageUpdateRequest := TbImageInfo{GuestOS: osType}
+
+				updatedImageInfo, err2 := UpdateImage(commonNsId, imageObjId, imageUpdateRequest)
+				if err2 != nil {
+					common.CBLog.Error(err2)
+					//return err
+				}
+				fmt.Printf("[%d] Registered Common Image\n", i)
+				common.PrintJsonPretty(updatedImageInfo)
+				regiesteredStatus = ""
+				if updatedImageInfo.Id != "" {
+					if err2 != nil {
+						regiesteredStatus = "  [Failed] " + err2.Error()
+					}
+				} else {
+					if err1 != nil {
+						regiesteredStatus = "  [Failed] " + err1.Error()
+					} else if err2 != nil {
+						regiesteredStatus = "  [Failed] " + err2.Error()
+					}
+				}
+				//regiesteredStatus = strings.Replace(regiesteredStatus, "\\", "", -1)
+				regiesteredIds.IdList = append(regiesteredIds.IdList, common.StrImage+": "+imageObjId+regiesteredStatus)
+			}(i, row)
+		}
+		wait.Wait()
+	}(rows)
+
+	waitSpecImg.Wait()
+	sort.Strings(regiesteredIds.IdList)
+
+	return regiesteredIds, nil
+}
+
+// LoadDefaultResource is to register default resource from asset files (../assets/*.csv)
+func LoadDefaultResource(nsId string, resType string, connectionName string) error {
+
+	// Check 'nsId' namespace.
+	_, err := common.GetNs(nsId)
+	if err != nil {
+		common.CBLog.Error(err)
+		return err
+	}
+
+	var resList []string
+	if resType == "all" {
+		resList = append(resList, "vnet")
+		resList = append(resList, "sshkey")
+		resList = append(resList, "sg")
+	} else {
+		resList = append(resList, strings.ToLower(resType))
+	}
+
+	// Read default resources from file and create objects
+	// HEADER: ProviderName, CONN_CONFIG, RegionName, NativeRegionName, RegionLocation, DriverLibFileName, DriverName
+	file, fileErr := os.Open("../assets/cloudconnection.csv")
+	defer file.Close()
+	if fileErr != nil {
+		common.CBLog.Error(fileErr)
+		return fileErr
+	}
+
+	rdr := csv.NewReader(bufio.NewReader(file))
+	rows, err := rdr.ReadAll()
+	if err != nil {
+		common.CBLog.Error(err)
+		return err
+	}
+
+	for i, row := range rows[1:] {
+		if connectionName != "" {
+			// find only given connectionName (if not skip)
+			if connectionName != row[1] {
+				continue
+			}
+			fmt.Println("Found a line for the connectionName from file: " + row[1])
+		}
+
+		connectionName := row[1]
+		//resourceName := connectionName
+		// Default resource name has this pattern (nsId + "-systemdefault-" + connectionName)
+		resourceName := nsId + common.StrDefaultResourceName + connectionName
+		description := "Generated Default Resource"
+
+		for _, resType := range resList {
+			if resType == "vnet" {
+				fmt.Println("vnet")
+
+				reqTmp := TbVNetReq{}
+				reqTmp.ConnectionName = connectionName
+				reqTmp.Name = resourceName
+				reqTmp.Description = description
+
+				// set isolated private address space for each cloud region (192.168.xxx.0/24)
+				reqTmp.CidrBlock = "192.168." + strconv.Itoa(i+1) + ".0/24"
+
+				// subnet := SpiderSubnetReqInfo{Name: reqTmp.Name, IPv4_CIDR: reqTmp.CidrBlock}
+				subnet := TbSubnetReq{Name: reqTmp.Name, IPv4_CIDR: reqTmp.CidrBlock}
+				reqTmp.SubnetInfoList = append(reqTmp.SubnetInfoList, subnet)
+
+				common.PrintJsonPretty(reqTmp)
+
+				resultInfo, err := CreateVNet(nsId, &reqTmp, "")
+				if err != nil {
+					common.CBLog.Error(err)
+					// If already exist, error will occur
+					// Even if error, do not return here to update information
+					// return err
+				}
+				fmt.Printf("[%d] Registered Default vNet\n", i)
+				common.PrintJsonPretty(resultInfo)
+			} else if resType == "sg" || resType == "securitygroup" {
+				fmt.Println("sg")
+
+				reqTmp := TbSecurityGroupReq{}
+
+				reqTmp.ConnectionName = connectionName
+				reqTmp.Name = resourceName
+				reqTmp.Description = description
+
+				reqTmp.VNetId = resourceName
+
+				// open all firewall for default securityGroup
+				rule := SpiderSecurityRuleInfo{FromPort: "1", ToPort: "65535", IPProtocol: "tcp", Direction: "inbound", CIDR: "0.0.0.0/0"}
+				var ruleList []SpiderSecurityRuleInfo
+				ruleList = append(ruleList, rule)
+				rule = SpiderSecurityRuleInfo{FromPort: "1", ToPort: "65535", IPProtocol: "udp", Direction: "inbound", CIDR: "0.0.0.0/0"}
+				ruleList = append(ruleList, rule)
+				rule = SpiderSecurityRuleInfo{FromPort: "-1", ToPort: "-1", IPProtocol: "icmp", Direction: "inbound", CIDR: "0.0.0.0/0"}
+				ruleList = append(ruleList, rule)
+				common.PrintJsonPretty(ruleList)
+				reqTmp.FirewallRules = &ruleList
+
+				common.PrintJsonPretty(reqTmp)
+
+				resultInfo, err := CreateSecurityGroup(nsId, &reqTmp)
+				if err != nil {
+					common.CBLog.Error(err)
+					// If already exist, error will occur
+					// Even if error, do not return here to update information
+					// return err
+				}
+				fmt.Printf("[%d] Registered Default SecurityGroup\n", i)
+				common.PrintJsonPretty(resultInfo)
+
+			} else if resType == "sshkey" {
+				fmt.Println("sshkey")
+
+				reqTmp := TbSshKeyReq{}
+
+				reqTmp.ConnectionName = connectionName
+				reqTmp.Name = resourceName
+				reqTmp.Description = description
+
+				common.PrintJsonPretty(reqTmp)
+
+				resultInfo, err := CreateSshKey(nsId, &reqTmp)
+				if err != nil {
+					common.CBLog.Error(err)
+					// If already exist, error will occur
+					// Even if error, do not return here to update information
+					// return err
+				}
+				fmt.Printf("[%d] Registered Default SSHKey\n", i)
+				common.PrintJsonPretty(resultInfo)
+			} else {
+				return errors.New("Not valid option (provide sg, sshkey, vnet, or all)")
+			}
+		}
+
+		if connectionName != "" {
+			// After finish handling line for the connectionName, break
+			if connectionName == row[1] {
+				fmt.Println("Handled for the connectionName from file: " + row[1])
+				break
+			}
+		}
+	}
+	return nil
+}
+
+// DelAllDefaultResources deletes all Default securityGroup, sshKey, vNet objects
+func DelAllDefaultResources(nsId string) (common.IdList, error) {
+
+	output := common.IdList{}
+	err := common.CheckString(nsId)
+	if err != nil {
+		common.CBLog.Error(err)
+		return output, err
+	}
+
+	matchedSubstring := nsId + common.StrDefaultResourceName
+
+	list, err := DelAllResources(nsId, common.StrSecurityGroup, matchedSubstring, "false")
+	if err != nil {
+		common.CBLog.Error(err)
+		//return err
+		output.IdList = append(output.IdList, err.Error())
+	}
+	output.IdList = append(output.IdList, list.IdList...)
+
+	list, err = DelAllResources(nsId, common.StrSSHKey, matchedSubstring, "false")
+	if err != nil {
+		common.CBLog.Error(err)
+		//return err
+		output.IdList = append(output.IdList, err.Error())
+	}
+	output.IdList = append(output.IdList, list.IdList...)
+
+	list, err = DelAllResources(nsId, common.StrVNet, matchedSubstring, "false")
+	if err != nil {
+		common.CBLog.Error(err)
+		//return err
+		output.IdList = append(output.IdList, err.Error())
+	}
+	output.IdList = append(output.IdList, list.IdList...)
+
+	return output, nil
+}
+
+// ToNamingRuleCompatible func is a tool to replace string for name to make the name follow naming convention
+func ToNamingRuleCompatible(rawName string) string {
+	rawName = strings.ReplaceAll(rawName, " ", "-")
+	rawName = strings.ReplaceAll(rawName, ".", "-")
+	rawName = strings.ReplaceAll(rawName, "_", "-")
+	rawName = strings.ReplaceAll(rawName, ":", "-")
+	rawName = strings.ReplaceAll(rawName, "/", "-")
+	rawName = strings.ToLower(rawName)
+	return rawName
+}

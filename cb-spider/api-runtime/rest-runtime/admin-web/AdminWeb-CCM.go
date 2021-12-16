@@ -68,7 +68,7 @@ func makeVPCTRList_html(bgcolor string, height string, fontSize string, infoList
                 `, fontSize)
 
 	strAddSubnet := fmt.Sprintf(`
-                <textarea style="font-size:12px;text-align:center;" name="subnet_text_box" id="subnet_text_box" cols=40>{ "Name": "subnet-xx", "IPv4_CIDR": "192.168.xx.xx/24"}</textarea>
+                <textarea style="font-size:12px;text-align:center;" name="subnet_text_box_$$ADDVPC$$" id="subnet_text_box_$$ADDVPC$$" cols=40>{ "Name": "subnet-xx", "IPv4_CIDR": "192.168.xx.xx/24"}</textarea>
                 <a href="javascript:$$ADDSUBNET$$;">
                         <font size=%s><b>+</b></font>
                 </a>
@@ -98,7 +98,8 @@ func makeVPCTRList_html(bgcolor string, height string, fontSize string, infoList
 
 			strSubnetList += "<br>"
 		}
-		strSubnetList += strings.ReplaceAll(strAddSubnet, "$$ADDSUBNET$$", "postSubnet('"+vpcName+"')")
+		vpcAddSubnet := strings.ReplaceAll(strAddSubnet, "$$ADDVPC$$", vpcName)
+		strSubnetList += strings.ReplaceAll(vpcAddSubnet, "$$ADDSUBNET$$", "postSubnet('"+vpcName+"')")
 		str = strings.ReplaceAll(str, "$$SUBNETINFO$$", strSubnetList)
 
 		// for KeyValueList
@@ -151,7 +152,7 @@ func makePostVPCFunc_js() string {
 			location.reload();
                 }
         `
-	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.HostIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
+	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
 	return strFunc
 }
 
@@ -165,7 +166,7 @@ func makePostSubnetFunc_js() string {
                 function postSubnet(vpcName) {
                         var connConfig = parent.frames["top_frame"].document.getElementById("connConfig").innerHTML;
 
-                        var textbox = document.getElementById('subnet_text_box');
+                        var textbox = document.getElementById('subnet_text_box_' + vpcName);
                         sendJson = '{ "ConnectionName" : "' + connConfig + '", "ReqInfo" :  $$SUBNETINFO$$ }'
 
                         sendJson = sendJson.replace("$$SUBNETINFO$$", textbox.value);
@@ -178,7 +179,7 @@ func makePostSubnetFunc_js() string {
                         location.reload();
                 }
         `
-	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.HostIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
+	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
 	return strFunc
 }
 
@@ -202,7 +203,7 @@ func makeDeleteVPCFunc_js() string {
 			location.reload();
                 }
         `
-	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.HostIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
+	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
 	return strFunc
 }
 
@@ -223,7 +224,7 @@ func makeDeleteSubnetFunc_js() string {
                         location.reload();
                 }
         `
-	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.HostIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
+	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
 	return strFunc
 }
 
@@ -446,7 +447,7 @@ func makePostSecurityGroupFunc_js() string {
             location.reload();
                 }
         `
-	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.HostIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
+	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
 	return strFunc
 }
 
@@ -470,7 +471,7 @@ func makeDeleteSecurityGroupFunc_js() string {
             location.reload();
                 }
         `
-	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.HostIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
+	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
 	return strFunc
 }
 
@@ -689,7 +690,7 @@ func makePostKeyPairFunc_js() string {
             location.reload();
                 }
         `
-	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.HostIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
+	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
 	return strFunc
 }
 
@@ -714,7 +715,7 @@ func makeDeleteKeyPairFunc_js() string {
             location.reload();
                 }
         `
-	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.HostIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
+	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
 	return strFunc
 }
 
@@ -850,7 +851,9 @@ func makeVMTRList_html(connConfig string, bgcolor string, height string, fontSiz
                             <font size=%s>$$NUM$$</font>
                     </td>
                     <td>
-                            <font size=%s>$$VMNAME$$</font>
+														<font size=%s>$$VMNAME$$</font>
+														<br>
+														<font size=%s>$$VMCONTROL$$</font>
                     </td>
                     <td>
                             <font size=%s>$$VMSTATUS$$</font>
@@ -910,6 +913,14 @@ func makeVMTRList_html(connConfig string, bgcolor string, height string, fontSiz
 		str = strings.ReplaceAll(str, "$$VMNAME$$", one.IId.NameId)
 		status := vmStatus(connConfig, one.IId.NameId)
 		str = strings.ReplaceAll(str, "$$VMSTATUS$$", status)
+
+		if cres.VMStatus(status) == cres.Running {
+			str = strings.ReplaceAll(str, "$$VMCONTROL$$", `<span id="vmcontrol-`+one.IId.NameId+`">[<a href="javascript:vmControl('`+one.IId.NameId+`','suspend')">Suspend</a> / <a href="javascript:vmControl('`+one.IId.NameId+`','reboot')">Reboot</a>]</span>`)
+		} else if cres.VMStatus(status) == cres.Suspended {
+			str = strings.ReplaceAll(str, "$$VMCONTROL$$", `<span id="vmcontrol-`+one.IId.NameId+`">[<a href="javascript:vmControl('`+one.IId.NameId+`','resume')">Resume</a>]</span>`)
+		} else {
+			str = strings.ReplaceAll(str, "$$VMCONTROL$$", `[<span style="color:brown">vm control disabed</span>] <br> you can control when Running / Suspended. <br> try refresh page...`)
+		}
 		str = strings.ReplaceAll(str, "$$LASTSTARTTIME$$", one.StartTime.Format("2006.01.02 15:04:05 Mon"))
 
 		// for Image & Spec
@@ -976,6 +987,30 @@ func makeVMTRList_html(connConfig string, bgcolor string, height string, fontSiz
 }
 
 // make the string of javascript function
+func makeVMControlFunc_js() string {
+	//curl -sX GET http://localhost:1024/spider/controlvm/vm-01?action=suspend -H 'Content-Type: application/json' -d '{ "ConnectionName": "'${CONN_CONFIG}'"}'
+
+	strFunc := `
+                function vmControl(vmName, action) {
+                        var connConfig = parent.frames["top_frame"].document.getElementById("connConfig").innerHTML;
+
+												document.getElementById("vmcontrol-" + vmName).innerHTML = '<span style="color:red">Waiting...</span>';
+												setTimeout(function(){
+													var xhr = new XMLHttpRequest();
+													xhr.open("PUT", "$$SPIDER_SERVER$$/spider/controlvm/" + vmName + "?action=" + action, false);
+													xhr.setRequestHeader('Content-Type', 'application/json');
+													sendJson = '{ "ConnectionName": "' + connConfig + '"}'
+													xhr.send(sendJson);
+	
+													location.reload();
+												}, 10);
+                }
+        `
+	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
+	return strFunc
+}
+
+// make the string of javascript function
 func makePostVMFunc_js() string {
 
 	// curl -sX POST http://localhost:1024/spider/vm -H 'Content-Type: application/json'
@@ -1033,7 +1068,7 @@ func makePostVMFunc_js() string {
             location.reload();
                 }
         `
-	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.HostIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
+	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
 	return strFunc
 }
 
@@ -1057,7 +1092,7 @@ func makeDeleteVMFunc_js() string {
             location.reload();
                 }
         `
-	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.HostIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
+	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
 	return strFunc
 }
 
@@ -1095,6 +1130,7 @@ func VM(c echo.Context) error {
 	htmlStr += makeCheckBoxToggleFunc_js()
 	htmlStr += makePostVMFunc_js()
 	htmlStr += makeDeleteVMFunc_js()
+	htmlStr += makeVMControlFunc_js()
 
 	htmlStr += `
                     </script>
@@ -1180,8 +1216,8 @@ func VM(c echo.Context) error {
 		sgName = `["sg-01"]`
 		vmUser = "root"
 	case "OPENSTACK":
-		imageName = "Ubuntu16.04_2"
-		specName = "nano.1"
+		imageName = "ubuntu18.04"
+		specName = "DS-Demo"
 		subnetName = "subnet-01"
 		sgName = `["sg-01"]`
 		vmUser = "ubuntu"

@@ -48,6 +48,7 @@ $(document).ready(function(){
                         getCloudConnectionConfig();// getConfig() 이름 변경함.
                         getNameSpace();
                  }else{
+                     //commonAlert("ID or PASSWORKD MISMATCH!!Check yourself!")
                      commonAlert("ID or PASSWORKD MISMATCH!!Check yourself!")
                     //  location.reload(true); 
                  }
@@ -76,7 +77,8 @@ $(document).ready(function(){
                 }
                 console.log(error.config);
                 console.log("login error : ",error);
-                commonAlert("ID or PASSWORKD MISMATCH!!Check yourself!!")
+                commonAlert(error.message)
+                // alert(error.message)
                 //  location.reload(true);
              })
          }catch(e){
@@ -324,7 +326,7 @@ function createNameSpace(){
                 var namespaceList = result.data.nsList;
                 //getUserNamespace(namespaceList)
                 
-                commonAlert("Success Create NameSpace")
+                //commonAlert("Success Create NameSpace")
 
                 getNameSpace();// 생성 후 namespace목록 조회
                 $("#btnToggleNamespace").click()
@@ -332,7 +334,7 @@ function createNameSpace(){
                 // $("#nsDesc").val('')
                 clearNameSpaceCreateForm();
             }else{
-                alert("Fail Create NameSpace")
+                commonAlert("Fail Create NameSpace")
             }
         }).catch(function (error) {
             if (error.response) {
@@ -365,7 +367,7 @@ function selectNS(ns){
 function clickOK(){
     var select_ns =   $("#sel_ns").val();
     console.log("slect ns is : ",select_ns);
-    setNS(select_ns);   
+    setNS(select_ns);
 }
 
 function setNS(nsid){
@@ -380,8 +382,15 @@ function setNS(nsid){
         }).then(result=>{
             var data = result.data
             console.log(data);
+
+            var mcisList = data.McisList;
+            if( mcisList){
+                location.href = "/operation/dashboards/dashboardnamespace/mngform"
+            }else{
+                location.href = "/main"
+            }
             //location.href = "/Dashboard/NS"
-            location.href = "/main"
+            //location.href = "/main"
         }).catch(function (error) {
             if (error.response) {
                 console.log(error.response)              

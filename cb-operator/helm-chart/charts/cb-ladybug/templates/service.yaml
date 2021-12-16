@@ -13,16 +13,16 @@ spec:
     - port: {{ .Values.service.restPort }}
       protocol: TCP
       name: rest
-      targetPort: 8080
+      targetPort: 1592
 {{- if (and (eq .Values.service.type "NodePort") (not (empty .Values.service.restNodePort))) }}
       nodePort: {{ .Values.service.restNodePort }}
 {{- end }}
-#    - port: {{ .Values.service.grpcPort }}
-#      protocol: TCP
-#      name: grpc
-#      targetPort: 50252
-#{{- if (and (eq .Values.service.type "NodePort") (not (empty .Values.service.grpcNodePort))) }}
-#      nodePort: {{ .Values.service.grpcNodePort }}
-#{{- end }}
+    - port: {{ .Values.service.grpcPort }}
+      protocol: TCP
+      name: grpc
+      targetPort: 50256
+{{- if (and (eq .Values.service.type "NodePort") (not (empty .Values.service.grpcNodePort))) }}
+      nodePort: {{ .Values.service.grpcNodePort }}
+{{- end }}
   selector:
     {{- include "cb-ladybug.selectorLabels" . | nindent 4 }}

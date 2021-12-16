@@ -257,7 +257,7 @@ func (r *MCIRRequest) SearchImage() (string, error) {
 	return gc.ConvertToOutput(r.OutType, &resp)
 }
 
-// ListLookupImage - LookupImages
+// ListLookupImage is to LookupImages
 func (r *MCIRRequest) ListLookupImage() (string, error) {
 	// Check input data
 	if r.InData == "" {
@@ -284,7 +284,7 @@ func (r *MCIRRequest) ListLookupImage() (string, error) {
 	return gc.ConvertToOutput(r.OutType, &resp)
 }
 
-// GetLookupImage - LookupImage
+// GetLookupImage is to LookupImage
 func (r *MCIRRequest) GetLookupImage() (string, error) {
 	// Check input data
 	if r.InData == "" {
@@ -303,6 +303,33 @@ func (r *MCIRRequest) GetLookupImage() (string, error) {
 	defer cancel()
 
 	resp, err := r.Client.GetLookupImage(ctx, &item)
+	if err != nil {
+		return "", err
+	}
+
+	// Marshal (Response -> json/yaml)
+	return gc.ConvertToOutput(r.OutType, &resp.Item)
+}
+
+// UpdateImage
+func (r *MCIRRequest) UpdateImage() (string, error) {
+	// Check input data
+	if r.InData == "" {
+		return "", errors.New("input data required")
+	}
+
+	// Unmarshal (json/yaml -> Request Input)
+	var item pb.TbUpdateImageRequest
+	err := gc.ConvertToMessage(r.InType, r.InData, &item)
+	if err != nil {
+		return "", err
+	}
+
+	// Request to server
+	ctx, cancel := context.WithTimeout(context.Background(), r.Timeout)
+	defer cancel()
+
+	resp, err := r.Client.UpdateImage(ctx, &item)
 	if err != nil {
 		return "", err
 	}

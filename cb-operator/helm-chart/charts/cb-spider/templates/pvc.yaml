@@ -20,6 +20,8 @@ spec:
 {{- if .Values.persistence.storageClass }}
 {{- if (eq "-" .Values.persistence.storageClass) }}
   storageClassName: ""
+{{- else if (eq "manual" .Values.persistence.storageClass) }}
+  storageClassName: "manual"
 {{- else }}
   storageClassName: "{{ .Values.persistence.storageClass }}"
 {{- end }}

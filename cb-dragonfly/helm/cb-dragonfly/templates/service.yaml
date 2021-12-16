@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cb-dragonfly.fullname" . }}
+  labels:
+    {{- include "cb-dragonfly.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+{{- if (and (eq .Values.service.type "ClusterIP") (not (empty .Values.service.clusterIP))) }}
+  clusterIP: {{ .Values.service.clusterIP }}
+{{- end }}  
+  ports:
+    - port: {{ .Values.service.restPort }}
+      protocol: TCP
+      name: rest
+      targetPort: 9090
+{{- if (and (eq .Values.service.type "NodePort") (not (empty .Values.service.restNodePort))) }}
+      nodePort: {{ .Values.service.restNodePort }}
+{{- end }}
+    - port: {{ .Values.service.grpcPort }}
+      protocol: TCP
+      name: grpc
+      targetPort: 9999
+{{- if (and (eq .Values.service.type "NodePort") (not (empty .Values.service.grpcNodePort))) }}
+      nodePort: {{ .Values.service.grpcNodePort }}
+{{- end }}
+      #- port: {{ .Values.service.monitorPort }}
+      #protocol: UDP
+      #name: monitor
+      #targetPort: 8094
+      #{{- if (and (eq .Values.service.type "NodePort") (not (empty .Values.service.monitorNodePort))) }}
+      #      nodePort: {{ .Values.service.monitorNodePort }}
+      #{{- end }}
+  selector:
+    {{- include "cb-dragonfly.selectorLabels" . | nindent 4 }}

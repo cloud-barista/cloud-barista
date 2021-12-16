@@ -7,9 +7,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/mitchellh/mapstructure"
 
-	"github.com/cloud-barista/cb-dragonfly/pkg/core/alert/event"
-	"github.com/cloud-barista/cb-dragonfly/pkg/core/alert/task"
-	"github.com/cloud-barista/cb-dragonfly/pkg/core/alert/types"
+	"github.com/cloud-barista/cb-dragonfly/pkg/api/core/alert/event"
+	"github.com/cloud-barista/cb-dragonfly/pkg/api/core/alert/task"
+	"github.com/cloud-barista/cb-dragonfly/pkg/api/core/alert/types"
 )
 
 func CreateEventLog(c echo.Context) error {
@@ -31,6 +31,17 @@ func CreateEventLog(c echo.Context) error {
 	return c.JSON(http.StatusOK, nil)
 }
 
+// ListEventLog 알람 로그 정보 조회
+// @Summary List monitoring alert event
+// @Description 알람 로그 정보 목록 조회
+// @Tags [Log] Alarm Event Log
+// @Accept  json
+// @Produce  json
+// @Param task_id path string true "태스크 아이디"
+// @Success 200 {object} types.AlertEventLog
+// @Failure 404 {object} rest.SimpleMsg
+// @Failure 500 {object} rest.SimpleMsg
+// @Router /alert/task/{task_id}/events [get]
 func ListEventLog(c echo.Context) error {
 	taskName := c.Param("task_id")
 	logLevel := c.QueryParam("level")

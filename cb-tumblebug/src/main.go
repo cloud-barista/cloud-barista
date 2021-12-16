@@ -1,6 +1,21 @@
+/*
+Copyright 2019 The Cloud-Barista Authors.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+// Package main is the starting point of CB-Tumblebug
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"strconv"
@@ -11,10 +26,14 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/cloud-barista/cb-tumblebug/src/core/common"
+	"github.com/cloud-barista/cb-tumblebug/src/core/mcir"
 	"github.com/cloud-barista/cb-tumblebug/src/core/mcis"
 
-	grpcserver "github.com/cloud-barista/cb-tumblebug/src/api/grpc/server"
-	restapiserver "github.com/cloud-barista/cb-tumblebug/src/api/rest/server"
+	grpcServer "github.com/cloud-barista/cb-tumblebug/src/api/grpc/server"
+	restServer "github.com/cloud-barista/cb-tumblebug/src/api/rest/server"
+
+	"xorm.io/xorm"
+	"xorm.io/xorm/names"
 )
 
 // Main Body
@@ -35,23 +54,43 @@ import (
 
 // @securityDefinitions.basic BasicAuth
 func main() {
-
 	fmt.Println("")
 
-	common.SPIDER_REST_URL = common.NVL(os.Getenv("SPIDER_REST_URL"), "http://localhost:1024/spider")
-	common.DRAGONFLY_REST_URL = common.NVL(os.Getenv("DRAGONFLY_REST_URL"), "http://localhost:9090/dragonfly")
-	common.DB_URL = common.NVL(os.Getenv("DB_URL"), "localhost:3306")
-	common.DB_DATABASE = common.NVL(os.Getenv("DB_DATABASE"), "cb_tumblebug")
-	common.DB_USER = common.NVL(os.Getenv("DB_USER"), "cb_tumblebug")
-	common.DB_PASSWORD = common.NVL(os.Getenv("DB_PASSWORD"), "cb_tumblebug")
-	common.AUTOCONTROL_DURATION_MS = common.NVL(os.Getenv("AUTOCONTROL_DURATION_MS"), "10000")
+	// giving a default value of "1323"
+	port := flag.String("port", "1323", "port number for the restapiserver to listen to")
+	flag.Parse()
+
+	// validate arguments from flag
+	validationFlag := true
+	// validation: port
+	// set validationFlag to false if your number is not in [1-65535] range
+	if portInt, err := strconv.Atoi(*port); err == nil {
+		if portInt < 1 || portInt > 65535 {
+			validationFlag = false
+		}
+	} else {
+		validationFlag = false
+	}
+	if !validationFlag {
+		fmt.Printf("%s is not a valid port number.\n", *port)
+		fmt.Printf("Please retry with a valid port number (ex: -port=[1-65535]).\n")
+		os.Exit(1)
+	}
+
+	common.SpiderRestUrl = common.NVL(os.Getenv("SPIDER_REST_URL"), "http://localhost:1024/spider")
+	common.DragonflyRestUrl = common.NVL(os.Getenv("DRAGONFLY_REST_URL"), "http://localhost:9090/dragonfly")
+	common.DBUrl = common.NVL(os.Getenv("DB_URL"), "localhost:3306")
+	common.DBDatabase = common.NVL(os.Getenv("DB_DATABASE"), "cb_tumblebug")
+	common.DBUser = common.NVL(os.Getenv("DB_USER"), "cb_tumblebug")
+	common.DBPassword = common.NVL(os.Getenv("DB_PASSWORD"), "cb_tumblebug")
+	common.AutocontrolDurationMs = common.NVL(os.Getenv("AUTOCONTROL_DURATION_MS"), "10000")
 
 	// load the latest configuration from DB (if exist)
 	fmt.Println("")
 	fmt.Println("[Update system environment]")
-	common.UpdateGlobalVariable(common.StrDRAGONFLY_REST_URL)
-	common.UpdateGlobalVariable(common.StrSPIDER_REST_URL)
-	common.UpdateGlobalVariable(common.StrAUTOCONTROL_DURATION_MS)
+	common.UpdateGlobalVariable(common.StrDragonflyRestUrl)
+	common.UpdateGlobalVariable(common.StrSpiderRestUrl)
+	common.UpdateGlobalVariable(common.StrAutocontrolDurationMs)
 
 	// load config
 	//masterConfigInfos = confighandler.GetMasterConfigInfos()
@@ -59,12 +98,22 @@ func main() {
 	//Setup database (meta_db/dat/cbtumblebug.s3db)
 	fmt.Println("")
 	fmt.Println("[Setup SQL Database]")
-	err := common.OpenSQL("../meta_db/dat/cbtumblebug.s3db")
+
+	err := os.MkdirAll("../meta_db/dat/", os.ModePerm)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	//err = common.OpenSQL("../meta_db/dat/cbtumblebug.s3db") // commented out to move to use XORM
+	common.ORM, err = xorm.NewEngine("sqlite3", "../meta_db/dat/cbtumblebug.s3db")
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
 		fmt.Println("Database access info set successfully")
 	}
+	//common.ORM.SetMapper(names.SameMapper{})
+	common.ORM.SetTableMapper(names.SameMapper{})
+	common.ORM.SetColumnMapper(names.SameMapper{})
 
 	/* // Required if using MySQL // Not required if using SQLite
 	err = common.SelectDatabase(common.DB_DATABASE)
@@ -75,14 +124,18 @@ func main() {
 	}
 	*/
 
-	err = common.CreateSpecTable()
+	// "CREATE Table IF NOT EXISTS spec(...)"
+	//err = common.CreateSpecTable() // commented out to move to use XORM
+	err = common.ORM.Sync2(new(mcir.TbSpecInfo))
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
 		fmt.Println("Table spec set successfully..")
 	}
 
-	err = common.CreateImageTable()
+	// "CREATE Table IF NOT EXISTS image(...)"
+	//err = common.CreateImageTable() // commented out to move to use XORM
+	err = common.ORM.Sync2(new(mcir.TbImageInfo))
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
@@ -95,7 +148,7 @@ func main() {
 	fmt.Println("")
 	fmt.Println("[Initiate Multi-Cloud Orchestration]")
 
-	autoControlDuration, _ := strconv.Atoi(common.AUTOCONTROL_DURATION_MS) //ms
+	autoControlDuration, _ := strconv.Atoi(common.AutocontrolDurationMs) //ms
 	ticker := time.NewTicker(time.Millisecond * time.Duration(autoControlDuration))
 	go func() {
 		for t := range ticker.C {
@@ -113,13 +166,13 @@ func main() {
 
 	// Start REST Server
 	go func() {
-		restapiserver.ApiServer()
+		restServer.RunServer(*port)
 		wg.Done()
 	}()
 
 	// Start gRPC Server
 	go func() {
-		grpcserver.RunServer()
+		grpcServer.RunServer()
 		//fmt.Println("gRPC server started on " + grpcserver.Port)
 		wg.Done()
 	}()

@@ -1,0 +1,5 @@
+#### gRPC Config for cb-dragonfly ####
+
+grpcServer:
+  ip: 0.0.0.0
+  port: 9999

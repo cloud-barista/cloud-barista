@@ -4,13 +4,30 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"time"
 )
 
 func main() {
-	conn, _ := net.Dial("tcp", "52.197.30.208:1323")
+	var LadyBugURL = os.Getenv("LADYBUG_URL")
+	// var TumbleBugURL = os.Getenv("TUMBLE_URL")
+	//LadyBugURL = "52.197.30.208:8000"
+	LadyBugURL = "52.197.30.209:8000"
+	// var TumbleBugURL = os.Getenv("TUMBLE_URL")
+	fmt.Println(LadyBugURL)
+	// fmt.Println(TumbleBugURL)
 
-	err := conn.(*net.TCPConn).SetKeepAlive(true)
+	// conn, _ := net.Dial("tcp", "52.197.30.208:1323")
+	//conn, _ := net.Dial("tcp", LadyBugURL+"/healthy")
+	conn, connErr := net.Dial("tcp", LadyBugURL)
+	if connErr != nil {
+		fmt.Println(connErr)
+		return
+	}
+
+	// conn, _ := net.Dial("tcp", TumbleBugURL)
+	//
+	err := conn.(*net.TCPConn).SetKeepAlive(true) // conn 이 nil 이면 panic으로 빠짐.
 	if err != nil {
 		fmt.Println(err)
 		return
