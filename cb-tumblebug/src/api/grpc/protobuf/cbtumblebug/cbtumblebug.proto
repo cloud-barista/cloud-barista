@@ -102,18 +102,19 @@ service MCIR {
 	rpc ListImageId (ResourceAllQryRequest) returns (ListIdResponse) {}
 	rpc GetImage (ResourceQryRequest) returns (TbImageInfoResponse) {}
 	rpc DeleteImage (ResourceQryRequest) returns (MessageResponse) {}
-	rpc DeleteAllImage (ResourceAllQryRequest) returns (MessageResponse) {}
+	rpc DeleteAllImage (ResourceAllQryRequest) returns (IdListResponse) {}
 	rpc GetLookupImage (LookupImageQryRequest) returns (SpiderImageInfoResponse) {}
 	rpc ListLookupImage (LookupImageListQryRequest) returns (ListSpiderImageInfoResponse) {}
 	rpc FetchImage (FetchImageQryRequest) returns (MessageResponse) {}
 	rpc SearchImage (SearchImageQryRequest) returns (ListTbImageInfoResponse) {}
+	rpc UpdateImage (TbUpdateImageRequest) returns (TbImageInfoResponse) {}
 
 	rpc CreateSshKey (TbSshKeyCreateRequest) returns (TbSshKeyInfoResponse) {}
 	rpc ListSshKey (ResourceAllQryRequest) returns (ListTbSshKeyInfoResponse) {}
 	rpc ListSshKeyId (ResourceAllQryRequest) returns (ListIdResponse) {}
 	rpc GetSshKey (ResourceQryRequest) returns (TbSshKeyInfoResponse) {}
 	rpc DeleteSshKey (ResourceQryRequest) returns (MessageResponse) {}
-	rpc DeleteAllSshKey (ResourceAllQryRequest) returns (MessageResponse) {}
+	rpc DeleteAllSshKey (ResourceAllQryRequest) returns (IdListResponse) {}
 
 	rpc CreateSpecWithInfo (TbSpecInfoRequest) returns (TbSpecInfoResponse) {}
 	rpc CreateSpecWithSpecName (TbSpecCreateRequest) returns (TbSpecInfoResponse) {}
@@ -121,32 +122,45 @@ service MCIR {
 	rpc ListSpecId (ResourceAllQryRequest) returns (ListIdResponse) {}
 	rpc GetSpec (ResourceQryRequest) returns (TbSpecInfoResponse) {}
 	rpc DeleteSpec (ResourceQryRequest) returns (MessageResponse) {}
-	rpc DeleteAllSpec (ResourceAllQryRequest) returns (MessageResponse) {}
+	rpc DeleteAllSpec (ResourceAllQryRequest) returns (IdListResponse) {}
 	rpc GetLookupSpec (LookupSpecQryRequest) returns (SpiderSpecInfoResponse) {}
 	rpc ListLookupSpec (LookupSpecListQryRequest) returns (ListSpiderSpecInfoResponse) {}
 	rpc FetchSpec (FetchSpecQryRequest) returns (MessageResponse) {}
 	rpc FilterSpec (TbSpecInfoRequest) returns (ListTbSpecInfoResponse) {}
 	rpc FilterSpecsByRange (FilterSpecsByRangeRequest) returns (ListTbSpecInfoResponse) {}
 	rpc SortSpecs (SortSpecsRequest) returns (ListTbSpecInfoResponse) {}
-	rpc UpdateSpec (TbSpecInfoRequest) returns (TbSpecInfoResponse) {}
+	rpc UpdateSpec (TbUpdateSpecRequest) returns (TbSpecInfoResponse) {}
 
 	rpc CreateSecurityGroup (TbSecurityGroupCreateRequest) returns (TbSecurityGroupInfoResponse) {}
 	rpc ListSecurityGroup (ResourceAllQryRequest) returns (ListTbSecurityGroupInfoResponse) {}
 	rpc ListSecurityGroupId (ResourceAllQryRequest) returns (ListIdResponse) {}
 	rpc GetSecurityGroup (ResourceQryRequest) returns (TbSecurityGroupInfoResponse) {}
 	rpc DeleteSecurityGroup (ResourceQryRequest) returns (MessageResponse) {}
-	rpc DeleteAllSecurityGroup (ResourceAllQryRequest) returns (MessageResponse) {}
+	rpc DeleteAllSecurityGroup (ResourceAllQryRequest) returns (IdListResponse) {}
 
 	rpc CreateVNet (TbVNetCreateRequest) returns (TbVNetInfoResponse) {}
 	rpc ListVNet (ResourceAllQryRequest) returns (ListTbVNetInfoResponse) {}
 	rpc ListVNetId (ResourceAllQryRequest) returns (ListIdResponse) {}
 	rpc GetVNet (ResourceQryRequest) returns (TbVNetInfoResponse) {}
 	rpc DeleteVNet (ResourceQryRequest) returns (MessageResponse) {}
-	rpc DeleteAllVNet (ResourceAllQryRequest) returns (MessageResponse) {}
+	rpc DeleteAllVNet (ResourceAllQryRequest) returns (IdListResponse) {}
+
+	rpc LoadCommonResource (Empty) returns (IdListResponse) {}
+	rpc LoadDefaultResource (TbLoadDefaultResourceRequest) returns (MessageResponse) {}
 }
 
 message ListIdResponse {
 	repeated string id_list = 1 [json_name="idList", (gogoproto.jsontag) = "idList", (gogoproto.moretags) = "yaml:\"idList\""];
+}
+
+message IdListResponse {
+	repeated string output = 1 [json_name="output", (gogoproto.jsontag) = "output", (gogoproto.moretags) = "yaml:\"output\""];
+}
+
+message TbLoadDefaultResourceRequest {
+	string ns_id = 1 [json_name="nsId", (gogoproto.jsontag) = "nsId", (gogoproto.moretags) = "yaml:\"nsId\""];
+	string resource_type = 2 [json_name="resourceType", (gogoproto.jsontag) = "resourceType", (gogoproto.moretags) = "yaml:\"resourceType\""];
+	string connection_name = 3 [json_name="connectionName", (gogoproto.jsontag) = "connectionName", (gogoproto.moretags) = "yaml:\"connectionName\""];
 }
 
 //////////////////////////////////
@@ -185,18 +199,19 @@ message ListTbImageInfoResponse {
 }
 
 message TbImageInfo {
-	string id = 1 [json_name="id", (gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
-	string name = 2 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
-	string connection_name = 3 [json_name="connectionName", (gogoproto.jsontag) = "connectionName", (gogoproto.moretags) = "yaml:\"connectionName\""];
-	string csp_image_id = 4 [json_name="cspImageId", (gogoproto.jsontag) = "cspImageId", (gogoproto.moretags) = "yaml:\"cspImageId\""];
-	string csp_image_name = 5 [json_name="cspImageName", (gogoproto.jsontag) = "cspImageName", (gogoproto.moretags) = "yaml:\"cspImageName\""];
-	string description = 6 [json_name="description", (gogoproto.jsontag) = "description", (gogoproto.moretags) = "yaml:\"description\""];
-	string creation_date = 7 [json_name="creationDate", (gogoproto.jsontag) = "creationDate", (gogoproto.moretags) = "yaml:\"creationDate\""];
-	string guest_os = 8 [json_name="guestOS", (gogoproto.jsontag) = "guestOS", (gogoproto.moretags) = "yaml:\"guestOS\""];
-	string status = 9 [json_name="status", (gogoproto.jsontag) = "status", (gogoproto.moretags) = "yaml:\"status\""];
-	repeated KeyValue key_value_list = 10 [json_name="keyValueList", (gogoproto.jsontag) = "keyValueList", (gogoproto.moretags) = "yaml:\"keyValueList\""];
-	repeated string associated_object_list = 11 [json_name="associatedObjectList", (gogoproto.jsontag) = "associatedObjectList", (gogoproto.moretags) = "yaml:\"associatedObjectList\""];
-	bool is_auto_generated = 12 [json_name="isAutoGenerated", (gogoproto.jsontag) = "isAutoGenerated", (gogoproto.moretags) = "yaml:\"isAutoGenerated\""];
+	string namespace = 1 [json_name="namespace", (gogoproto.jsontag) = "namespace", (gogoproto.moretags) = "yaml:\"namespace\""];
+	string id = 2 [json_name="id", (gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
+	string name = 3 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
+	string connection_name = 4 [json_name="connectionName", (gogoproto.jsontag) = "connectionName", (gogoproto.moretags) = "yaml:\"connectionName\""];
+	string csp_image_id = 5 [json_name="cspImageId", (gogoproto.jsontag) = "cspImageId", (gogoproto.moretags) = "yaml:\"cspImageId\""];
+	string csp_image_name = 6 [json_name="cspImageName", (gogoproto.jsontag) = "cspImageName", (gogoproto.moretags) = "yaml:\"cspImageName\""];
+	string description = 7 [json_name="description", (gogoproto.jsontag) = "description,omitempty", (gogoproto.moretags) = "yaml:\"description\""];
+	string creation_date = 8 [json_name="creationDate", (gogoproto.jsontag) = "creationDate,omitempty", (gogoproto.moretags) = "yaml:\"creationDate\""];
+	string guest_os = 9 [json_name="guestOS", (gogoproto.jsontag) = "guestOS,omitempty", (gogoproto.moretags) = "yaml:\"guestOS\""];
+	string status = 10 [json_name="status", (gogoproto.jsontag) = "status,omitempty", (gogoproto.moretags) = "yaml:\"status\""];
+	repeated KeyValue key_value_list = 11 [json_name="keyValueList", (gogoproto.jsontag) = "keyValueList,omitempty", (gogoproto.moretags) = "yaml:\"keyValueList\""];
+	repeated string associated_object_list = 12 [json_name="associatedObjectList", (gogoproto.jsontag) = "associatedObjectList", (gogoproto.moretags) = "yaml:\"associatedObjectList\""];
+	bool is_auto_generated = 13 [json_name="isAutoGenerated", (gogoproto.jsontag) = "isAutoGenerated", (gogoproto.moretags) = "yaml:\"isAutoGenerated\""];
 }
 
 message TbImageCreateRequest {
@@ -245,6 +260,12 @@ message LookupImageQryRequest {
 	string csp_image_id = 2 [json_name="cspImageId", (gogoproto.jsontag) = "cspImageId", (gogoproto.moretags) = "yaml:\"cspImageId\""];
 }
 
+message TbUpdateImageRequest {
+	string ns_id = 1 [json_name="nsId", (gogoproto.jsontag) = "nsId", (gogoproto.moretags) = "yaml:\"nsId\""];
+	string image_id = 2 [json_name="imageId", (gogoproto.jsontag) = "imageId", (gogoproto.moretags) = "yaml:\"imageId\""];
+	TbImageInfo item = 3 [json_name="image", (gogoproto.jsontag) = "image", (gogoproto.moretags) = "yaml:\"image\""];
+}
+
 //////////////////////////////////
 // SSH Key-related messages
 //////////////////////////////////
@@ -270,7 +291,7 @@ message TbSshKeyInfo {
 	string private_key = 10 [json_name="privateKey", (gogoproto.jsontag) = "privateKey", (gogoproto.moretags) = "yaml:\"privateKey\""];
 	repeated KeyValue key_value_list = 11 [json_name="keyValueList", (gogoproto.jsontag) = "keyValueList", (gogoproto.moretags) = "yaml:\"keyValueList\""];
 	repeated string associated_object_list = 12 [json_name="associatedObjectList", (gogoproto.jsontag) = "associatedObjectList", (gogoproto.moretags) = "yaml:\"associatedObjectList\""];
-	bool is_auto_generated = 13 [json_name="isAutoGenerated", (gogoproto.jsontag) = "isAutoGenerated", (gogoproto.moretags) = "yaml:\"isAutoGenerated\""];	
+	bool is_auto_generated = 13 [json_name="isAutoGenerated", (gogoproto.jsontag) = "isAutoGenerated", (gogoproto.moretags) = "yaml:\"isAutoGenerated\""];
 }
 
 message TbSshKeyCreateRequest {
@@ -278,7 +299,7 @@ message TbSshKeyCreateRequest {
 	TbSshKeyReq item = 2 [json_name="sshKey", (gogoproto.jsontag) = "sshKey", (gogoproto.moretags) = "yaml:\"sshKey\""];
 }
 
-message TbSshKeyReq {	
+message TbSshKeyReq {
 	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
 	string connection_name = 2 [json_name="connectionName", (gogoproto.jsontag) = "connectionName", (gogoproto.moretags) = "yaml:\"connectionName\""];
 	string description = 3 [json_name="description", (gogoproto.jsontag) = "description", (gogoproto.moretags) = "yaml:\"description\""];
@@ -287,6 +308,13 @@ message TbSshKeyReq {
 //////////////////////////////////
 // Spec-related messages
 //////////////////////////////////
+
+
+message TbUpdateSpecRequest {
+	string ns_id = 1 [json_name="nsId", (gogoproto.jsontag) = "nsId", (gogoproto.moretags) = "yaml:\"nsId\""];
+	string spec_id = 2 [json_name="specId", (gogoproto.jsontag) = "specId", (gogoproto.moretags) = "yaml:\"specId\""];
+	TbSpecInfo item = 3 [json_name="spec", (gogoproto.jsontag) = "spec", (gogoproto.moretags) = "yaml:\"spec\""];
+}
 
 message TbSpecInfoRequest {
 	string ns_id = 1 [json_name="nsId", (gogoproto.jsontag) = "nsId", (gogoproto.moretags) = "yaml:\"nsId\""];
@@ -301,15 +329,16 @@ message ListTbSpecInfoResponse {
 	repeated TbSpecInfo items = 1 [json_name="spec", (gogoproto.jsontag) = "spec", (gogoproto.moretags) = "yaml:\"spec\""];
 }
 
-message TbSpecInfo {	
-	string id = 1 [json_name="id", (gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
-	string name = 2 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
-	string connection_name = 3 [json_name="connectionName", (gogoproto.jsontag) = "connectionName", (gogoproto.moretags) = "yaml:\"connectionName\""];
-	string csp_spec_name = 4 [json_name="cspSpecName", (gogoproto.jsontag) = "cspSpecName", (gogoproto.moretags) = "yaml:\"cspSpecName\""];
-	string os_type = 5 [json_name="os_type", (gogoproto.jsontag) = "os_type", (gogoproto.moretags) = "yaml:\"os_type\""];
-	uint32 num_vcpu = 6 [json_name="num_vCPU", (gogoproto.jsontag) = "num_vCPU", (gogoproto.moretags) = "yaml:\"num_vCPU\""];
-	uint32 num_core = 7 [json_name="num_core", (gogoproto.jsontag) = "num_core", (gogoproto.moretags) = "yaml:\"num_core\""];
-	uint32 mem_gib = 8 [json_name="mem_GiB", (gogoproto.jsontag) = "mem_GiB", (gogoproto.moretags) = "yaml:\"mem_GiB\""];
+message TbSpecInfo {
+	string namespace = 1 [json_name="namespace", (gogoproto.jsontag) = "namespace", (gogoproto.moretags) = "yaml:\"namespace\""];
+	string id = 2 [json_name="id", (gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
+	string name = 3 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
+	string connection_name = 4 [json_name="connectionName", (gogoproto.jsontag) = "connectionName", (gogoproto.moretags) = "yaml:\"connectionName\""];
+	string csp_spec_name = 5 [json_name="cspSpecName", (gogoproto.jsontag) = "cspSpecName", (gogoproto.moretags) = "yaml:\"cspSpecName\""];
+	string os_type = 6 [json_name="os_type", (gogoproto.jsontag) = "os_type", (gogoproto.moretags) = "yaml:\"os_type\""];
+	uint32 num_vcpu = 7 [json_name="num_vCPU", (gogoproto.jsontag) = "num_vCPU", (gogoproto.moretags) = "yaml:\"num_vCPU\""];
+	uint32 num_core = 8 [json_name="num_core", (gogoproto.jsontag) = "num_core", (gogoproto.moretags) = "yaml:\"num_core\""];
+	float mem_gib = 9 [json_name="mem_GiB", (gogoproto.jsontag) = "mem_GiB", (gogoproto.moretags) = "yaml:\"mem_GiB\""];
 	uint32 storage_gib = 10 [json_name="storage_GiB", (gogoproto.jsontag) = "storage_GiB", (gogoproto.moretags) = "yaml:\"storage_GiB\""];
 	string description = 11 [json_name="description", (gogoproto.jsontag) = "description", (gogoproto.moretags) = "yaml:\"description\""];
 	float cost_per_hour = 12 [json_name="cost_per_hour", (gogoproto.jsontag) = "cost_per_hour", (gogoproto.moretags) = "yaml:\"cost_per_hour\""];
@@ -320,7 +349,7 @@ message TbSpecInfo {
 	uint32 ebs_bw_mbps = 17 [json_name="ebs_bw_Mbps", (gogoproto.jsontag) = "ebs_bw_Mbps", (gogoproto.moretags) = "yaml:\"ebs_bw_Mbps\""];
 	string gpu_model = 18 [json_name="gpu_model", (gogoproto.jsontag) = "gpu_model", (gogoproto.moretags) = "yaml:\"gpu_model\""];
 	uint32 num_gpu = 19 [json_name="num_gpu", (gogoproto.jsontag) = "num_gpu", (gogoproto.moretags) = "yaml:\"num_gpu\""];
-	uint32 gpumem_gib = 20 [json_name="gpumem_GiB", (gogoproto.jsontag) = "gpumem_GiB", (gogoproto.moretags) = "yaml:\"gpumem_GiB\""];
+	float gpumem_gib = 20 [json_name="gpumem_GiB", (gogoproto.jsontag) = "gpumem_GiB", (gogoproto.moretags) = "yaml:\"gpumem_GiB\""];
 	string gpu_p2p = 21 [json_name="gpu_p2p", (gogoproto.jsontag) = "gpu_p2p", (gogoproto.moretags) = "yaml:\"gpu_p2p\""];
 	uint32 order_in_filtered_result = 22 [json_name="orderInFilteredResult", (gogoproto.jsontag) = "orderInFilteredResult", (gogoproto.moretags) = "yaml:\"orderInFilteredResult\""];
 	string evaluation_status = 23 [json_name="evaluationStatus", (gogoproto.jsontag) = "evaluationStatus", (gogoproto.moretags) = "yaml:\"evaluationStatus\""];
@@ -343,7 +372,7 @@ message TbSpecCreateRequest {
 	TbSpecReq item = 2 [json_name="spec", (gogoproto.jsontag) = "spec", (gogoproto.moretags) = "yaml:\"spec\""];
 }
 
-message TbSpecReq {	
+message TbSpecReq {
 	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
 	string connection_name = 2 [json_name="connectionName", (gogoproto.jsontag) = "connectionName", (gogoproto.moretags) = "yaml:\"connectionName\""];
 	string csp_spec_name = 3 [json_name="cspSpecName", (gogoproto.jsontag) = "cspSpecName", (gogoproto.moretags) = "yaml:\"cspSpecName\""];
@@ -373,12 +402,12 @@ message SpiderSpecInfo {
 	repeated KeyValue key_value_list = 6 [json_name="KeyValueList", (gogoproto.jsontag) = "KeyValueList", (gogoproto.moretags) = "yaml:\"KeyValueList\""];
 }
 
-message SpiderVCpuInfo {	
+message SpiderVCpuInfo {
 	string count = 1 [json_name="Count", (gogoproto.jsontag) = "Count", (gogoproto.moretags) = "yaml:\"Count\""];
 	string clock = 2 [json_name="Clock", (gogoproto.jsontag) = "Clock", (gogoproto.moretags) = "yaml:\"Clock\""];
 }
 
-message SpiderGpuInfo {	
+message SpiderGpuInfo {
 	string count = 1 [json_name="Count", (gogoproto.jsontag) = "Count", (gogoproto.moretags) = "yaml:\"Count\""];
 	string mfr = 2 [json_name="Mfr", (gogoproto.jsontag) = "Mfr", (gogoproto.moretags) = "yaml:\"Mfr\""];
 	string model = 3 [json_name="Model", (gogoproto.jsontag) = "Model", (gogoproto.moretags) = "yaml:\"Model\""];
@@ -463,7 +492,7 @@ message ListTbSecurityGroupInfoResponse {
 	repeated TbSecurityGroupInfo items = 1 [json_name="securityGroup", (gogoproto.jsontag) = "securityGroup", (gogoproto.moretags) = "yaml:\"securityGroup\""];
 }
 
-message TbSecurityGroupInfo {	
+message TbSecurityGroupInfo {
 	string id = 1 [json_name="id", (gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
 	string name = 2 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
 	string connection_name = 3 [json_name="connectionName", (gogoproto.jsontag) = "connectionName", (gogoproto.moretags) = "yaml:\"connectionName\""];
@@ -477,12 +506,12 @@ message TbSecurityGroupInfo {
 	bool is_auto_generated = 11 [json_name="isAutoGenerated", (gogoproto.jsontag) = "isAutoGenerated", (gogoproto.moretags) = "yaml:\"isAutoGenerated\""];
 }
 
-message SpiderSecurityRuleInfo {	
-	string from_port = 1 [json_name="fromPort", (gogoproto.jsontag) = "fromPort", (gogoproto.moretags) = "yaml:\"fromPort\""];
-	string to_port = 2 [json_name="toPort", (gogoproto.jsontag) = "toPort", (gogoproto.moretags) = "yaml:\"toPort\""];
-	string ip_protocol = 3 [json_name="ipProtocol", (gogoproto.jsontag) = "ipProtocol", (gogoproto.moretags) = "yaml:\"ipProtocol\""];
-	string direction = 4 [json_name="direction", (gogoproto.jsontag) = "direction", (gogoproto.moretags) = "yaml:\"direction\""];
-	string cidr = 5 [json_name="cidr", (gogoproto.jsontag) = "cidr", (gogoproto.moretags) = "yaml:\"cidr\""];
+message SpiderSecurityRuleInfo {
+	string from_port = 1 [json_name="FromPort", (gogoproto.jsontag) = "FromPort", (gogoproto.moretags) = "yaml:\"FromPort\""];
+	string to_port = 2 [json_name="ToPort", (gogoproto.jsontag) = "ToPort", (gogoproto.moretags) = "yaml:\"ToPort\""];
+	string ip_protocol = 3 [json_name="IPProtocol", (gogoproto.jsontag) = "IPProtocol", (gogoproto.moretags) = "yaml:\"IPProtocol\""];
+	string direction = 4 [json_name="Direction", (gogoproto.jsontag) = "Direction", (gogoproto.moretags) = "yaml:\"Direction\""];
+	string cidr = 5 [json_name="CIDR", (gogoproto.jsontag) = "CIDR", (gogoproto.moretags) = "yaml:\"CIDR\""];
 }
 
 message TbSecurityGroupCreateRequest {
@@ -490,7 +519,7 @@ message TbSecurityGroupCreateRequest {
 	TbSecurityGroupReq item = 2 [json_name="securityGroup", (gogoproto.jsontag) = "securityGroup", (gogoproto.moretags) = "yaml:\"securityGroup\""];
 }
 
-message TbSecurityGroupReq {	
+message TbSecurityGroupReq {
 	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
 	string connection_name = 2 [json_name="connectionName", (gogoproto.jsontag) = "connectionName", (gogoproto.moretags) = "yaml:\"connectionName\""];
 	string vnet_id = 3 [json_name="vNetId", (gogoproto.jsontag) = "vNetId", (gogoproto.moretags) = "yaml:\"vNetId\""];
@@ -525,7 +554,7 @@ message TbVNetInfo {
 	bool is_auto_generated = 12 [json_name="isAutoGenerated", (gogoproto.jsontag) = "isAutoGenerated", (gogoproto.moretags) = "yaml:\"isAutoGenerated\""];
 }
 
-message SpiderSubnetInfo {	
+message SpiderSubnetInfo {
 	IID iid = 1 [json_name="IId", (gogoproto.jsontag) = "IId", (gogoproto.moretags) = "yaml:\"IId\""];
 	string ipv4_cidr = 2 [json_name="IPv4_CIDR", (gogoproto.jsontag) = "IPv4_CIDR", (gogoproto.moretags) = "yaml:\"IPv4_CIDR\""];
 	repeated KeyValue key_value_list = 3 [json_name="KeyValueList", (gogoproto.jsontag) = "KeyValueList", (gogoproto.moretags) = "yaml:\"KeyValueList\""];
@@ -536,7 +565,7 @@ message TbVNetCreateRequest {
 	TbVNetReq item = 2 [json_name="vNet", (gogoproto.jsontag) = "vNet", (gogoproto.moretags) = "yaml:\"vNet\""];
 }
 
-message TbVNetReq {	
+message TbVNetReq {
 	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
 	string connection_name = 2 [json_name="connectionName", (gogoproto.jsontag) = "connectionName", (gogoproto.moretags) = "yaml:\"connectionName\""];
 	string cidr_block = 3 [json_name="cidrBlock", (gogoproto.jsontag) = "cidrBlock", (gogoproto.moretags) = "yaml:\"cidrBlock\""];
@@ -544,7 +573,7 @@ message TbVNetReq {
 	string description = 5 [json_name="description", (gogoproto.jsontag) = "description", (gogoproto.moretags) = "yaml:\"description\""];
 }
 
-message SpiderSubnetReqInfo {		
+message SpiderSubnetReqInfo {
 	string name = 1 [json_name="Name", (gogoproto.jsontag) = "Name", (gogoproto.moretags) = "yaml:\"Name\""];
 	string ipv4_cidr = 2 [json_name="IPv4_CIDR", (gogoproto.jsontag) = "IPv4_CIDR", (gogoproto.moretags) = "yaml:\"IPv4_CIDR\""];
 	repeated KeyValue key_value_list = 3 [json_name="KeyValueList", (gogoproto.jsontag) = "KeyValueList", (gogoproto.moretags) = "yaml:\"KeyValueList\""];
@@ -579,16 +608,16 @@ service MCIS {
 
 	rpc CmdMcis (McisCmdCreateRequest) returns (ListCmdMcisResponse) {}
 	rpc CmdMcisVm (McisCmdVmCreateRequest) returns (StringResponse) {}
-	rpc InstallAgentToMcis (McisCmdCreateRequest) returns (ListAgentInstallResponse) {}
+	rpc InstallBenchmarkAgentToMcis (McisCmdCreateRequest) returns (ListAgentInstallResponse) {}
 	rpc GetBenchmark (BmQryRequest) returns (ListBenchmarkInfoResponse) {}
 	rpc GetAllBenchmark (BmQryAllRequest) returns (ListBenchmarkInfoResponse) {}
 
 	rpc InstallMonitorAgentToMcis(McisCmdCreateRequest) returns (ListAgentInstallResponse) {}
 	rpc GetMonitorData(MonitorQryRequest) returns (MonitorResultSimpleResponse) {}
-	
+
 	rpc CheckMcis (TbMcisQryRequest) returns (ExistsResponse) {}
 	rpc CheckVm (TbVmQryRequest) returns (ExistsResponse) {}
-	
+
 	rpc CreateMcisPolicy (McisPolicyCreateRequest) returns (McisPolicyInfoResponse) {}
 	rpc ListMcisPolicy (McisPolicyAllQryRequest) returns (ListMcisPolicyInfoResponse) {}
 	rpc GetMcisPolicy (McisPolicyQryRequest) returns (McisPolicyInfoResponse) {}
@@ -608,17 +637,19 @@ message ListTbMcisInfoResponse {
 	repeated TbMcisInfo items = 1 [json_name="mcis", (gogoproto.jsontag) = "mcis", (gogoproto.moretags) = "yaml:\"mcis\""];
 }
 
-message TbMcisInfo {	
+message TbMcisInfo {
 	string id = 1 [json_name="id", (gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
 	string name = 2 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
-	string status = 7 [json_name="status", (gogoproto.jsontag) = "status", (gogoproto.moretags) = "yaml:\"status\""];
-	string target_status = 8 [json_name="targetStatus", (gogoproto.jsontag) = "targetStatus", (gogoproto.moretags) = "yaml:\"targetStatus\""];
-	string target_action = 9 [json_name="targetAction", (gogoproto.jsontag) = "targetAction", (gogoproto.moretags) = "yaml:\"targetAction\""];	
-	string install_mon_agent = 10 [json_name="installMonAgent", (gogoproto.jsontag) = "installMonAgent", (gogoproto.moretags) = "yaml:\"installMonAgent\""];
-	string label = 6 [json_name="label", (gogoproto.jsontag) = "label", (gogoproto.moretags) = "yaml:\"label\""];
-	string placement_algo = 4 [json_name="placementAlgo", (gogoproto.jsontag) = "placementAlgo", (gogoproto.moretags) = "yaml:\"placementAlgo\""];
-	string description = 5 [json_name="description", (gogoproto.jsontag) = "description", (gogoproto.moretags) = "yaml:\"description\""];	
-	repeated TbVmInfo vm = 3 [json_name="vm", (gogoproto.jsontag) = "vm", (gogoproto.moretags) = "yaml:\"vm\""];
+	string status = 3 [json_name="status", (gogoproto.jsontag) = "status", (gogoproto.moretags) = "yaml:\"status\""];
+	StatusCountInfo status_count = 4 [json_name="statusCount", (gogoproto.jsontag) = "statusCount", (gogoproto.moretags) = "yaml:\"statusCount\""];
+	string target_status = 5 [json_name="targetStatus", (gogoproto.jsontag) = "targetStatus", (gogoproto.moretags) = "yaml:\"targetStatus\""];
+	string target_action = 6 [json_name="targetAction", (gogoproto.jsontag) = "targetAction", (gogoproto.moretags) = "yaml:\"targetAction\""];
+	string install_mon_agent = 7 [json_name="installMonAgent", (gogoproto.jsontag) = "installMonAgent", (gogoproto.moretags) = "yaml:\"installMonAgent\""];
+	string label = 8 [json_name="label", (gogoproto.jsontag) = "label", (gogoproto.moretags) = "yaml:\"label\""];
+	string system_label = 9 [json_name="systemLabel", (gogoproto.jsontag) = "systemLabel", (gogoproto.moretags) = "yaml:\"systemLabel\""];
+	string placement_algo = 10 [json_name="placementAlgo", (gogoproto.jsontag) = "placementAlgo", (gogoproto.moretags) = "yaml:\"placementAlgo\""];
+	string description = 11 [json_name="description", (gogoproto.jsontag) = "description", (gogoproto.moretags) = "yaml:\"description\""];
+	repeated TbVmInfo vm = 12 [json_name="vm", (gogoproto.jsontag) = "vm", (gogoproto.moretags) = "yaml:\"vm\""];
 }
 
 message TbVmInfo {
@@ -628,7 +659,7 @@ message TbVmInfo {
 	GeoLocation location = 4 [json_name="location", (gogoproto.jsontag) = "location", (gogoproto.moretags) = "yaml:\"location\""];
 	string status = 5 [json_name="status", (gogoproto.jsontag) = "status", (gogoproto.moretags) = "yaml:\"status\""];
 	string target_status = 6 [json_name="targetStatus", (gogoproto.jsontag) = "targetStatus", (gogoproto.moretags) = "yaml:\"targetStatus\""];
-	string target_action = 7 [json_name="targetAction", (gogoproto.jsontag) = "targetAction", (gogoproto.moretags) = "yaml:\"targetAction\""];		
+	string target_action = 7 [json_name="targetAction", (gogoproto.jsontag) = "targetAction", (gogoproto.moretags) = "yaml:\"targetAction\""];
 	string mon_agent_status = 8 [json_name="monAgentStatus", (gogoproto.jsontag) = "monAgentStatus", (gogoproto.moretags) = "yaml:\"monAgentStatus\""];
 	string system_message = 9 [json_name="systemMessage", (gogoproto.jsontag) = "systemMessage", (gogoproto.moretags) = "yaml:\"systemMessage\""];
 	string created_time = 10 [json_name="createdTime", (gogoproto.jsontag) = "createdTime", (gogoproto.moretags) = "yaml:\"createdTime\""];
@@ -654,7 +685,7 @@ message TbVmInfo {
 	SpiderVMInfo csp_view_vm_detail = 30 [json_name="cspViewVmDetail", (gogoproto.jsontag) = "cspViewVmDetail", (gogoproto.moretags) = "yaml:\"cspViewVmDetail\""];
 }
 
-message GeoLocation {	
+message GeoLocation {
 	string latitude = 1 [json_name="latitude", (gogoproto.jsontag) = "latitude", (gogoproto.moretags) = "yaml:\"latitude\""];
 	string longitude = 2 [json_name="longitude", (gogoproto.jsontag) = "longitude", (gogoproto.moretags) = "yaml:\"longitude\""];
 	string brief_addr = 3 [json_name="briefAddr", (gogoproto.jsontag) = "briefAddr", (gogoproto.moretags) = "yaml:\"briefAddr\""];
@@ -662,19 +693,19 @@ message GeoLocation {
 	string native_region = 5 [json_name="nativeRegion", (gogoproto.jsontag) = "nativeRegion", (gogoproto.moretags) = "yaml:\"nativeRegion\""];
 }
 
-message RegionInfo {		
+message RegionInfo {
 	string region = 1 [json_name="Region", (gogoproto.jsontag) = "Region", (gogoproto.moretags) = "yaml:\"Region\""];
 	string zone = 2 [json_name="Zone", (gogoproto.jsontag) = "Zone", (gogoproto.moretags) = "yaml:\"Zone\""];
 }
 
-message SpiderVMInfo {	
+message SpiderVMInfo {
 	// Fields for request
 	string name = 1 [json_name="Name", (gogoproto.jsontag) = "Name", (gogoproto.moretags) = "yaml:\"Name\""];
-	string image_name = 2 [json_name="ImageName", (gogoproto.jsontag) = "ImageName", (gogoproto.moretags) = "yaml:\"ImageName\""];	
-	string vpc_name = 3 [json_name="VPCName", (gogoproto.jsontag) = "VPCName", (gogoproto.moretags) = "yaml:\"VPCName\""];		
-	string subnet_name = 4 [json_name="SubnetName", (gogoproto.jsontag) = "SubnetName", (gogoproto.moretags) = "yaml:\"SubnetName\""];		
-	repeated string security_group_names = 5 [json_name="SecurityGroupNames", (gogoproto.jsontag) = "SecurityGroupNames", (gogoproto.moretags) = "yaml:\"SecurityGroupNames\""];		
-	string key_pair_name = 6 [json_name="KeyPairName", (gogoproto.jsontag) = "KeyPairName", (gogoproto.moretags) = "yaml:\"KeyPairName\""];	
+	string image_name = 2 [json_name="ImageName", (gogoproto.jsontag) = "ImageName", (gogoproto.moretags) = "yaml:\"ImageName\""];
+	string vpc_name = 3 [json_name="VPCName", (gogoproto.jsontag) = "VPCName", (gogoproto.moretags) = "yaml:\"VPCName\""];
+	string subnet_name = 4 [json_name="SubnetName", (gogoproto.jsontag) = "SubnetName", (gogoproto.moretags) = "yaml:\"SubnetName\""];
+	repeated string security_group_names = 5 [json_name="SecurityGroupNames", (gogoproto.jsontag) = "SecurityGroupNames", (gogoproto.moretags) = "yaml:\"SecurityGroupNames\""];
+	string key_pair_name = 6 [json_name="KeyPairName", (gogoproto.jsontag) = "KeyPairName", (gogoproto.moretags) = "yaml:\"KeyPairName\""];
 
 	// Fields for both request and response
 	string vm_spec_name = 7 [json_name="VMSpecName", (gogoproto.jsontag) = "VMSpecName", (gogoproto.moretags) = "yaml:\"VMSpecName\""];
@@ -706,16 +737,26 @@ message TbMcisCreateRequest {
 	TbMcisReq item = 2 [json_name="mcis", (gogoproto.jsontag) = "mcis", (gogoproto.moretags) = "yaml:\"mcis\""];
 }
 
-message TbMcisReq {	
+message TbMcisReq {
 	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
 	string install_mon_agent = 2 [json_name="installMonAgent", (gogoproto.jsontag) = "installMonAgent", (gogoproto.moretags) = "yaml:\"installMonAgent\""];
-	string label = 3 [json_name="label", (gogoproto.jsontag) = "label", (gogoproto.moretags) = "yaml:\"label\""];	
-	string placement_algo = 4 [json_name="placementAlgo", (gogoproto.jsontag) = "placementAlgo", (gogoproto.moretags) = "yaml:\"placementAlgo\""];
-	string description = 5 [json_name="description", (gogoproto.jsontag) = "description", (gogoproto.moretags) = "yaml:\"description\""];	
-	repeated TbVmReq vm = 6 [json_name="vm", (gogoproto.jsontag) = "vm", (gogoproto.moretags) = "yaml:\"vm\""];
+	string label = 3 [json_name="label", (gogoproto.jsontag) = "label", (gogoproto.moretags) = "yaml:\"label\""];
+	string system_label = 4 [json_name="systemLabel", (gogoproto.jsontag) = "systemLabel", (gogoproto.moretags) = "yaml:\"systemLabel\""];
+	string placement_algo = 5 [json_name="placementAlgo", (gogoproto.jsontag) = "placementAlgo", (gogoproto.moretags) = "yaml:\"placementAlgo\""];
+	string description = 6 [json_name="description", (gogoproto.jsontag) = "description", (gogoproto.moretags) = "yaml:\"description\""];
+	repeated TbVmReq vm = 7 [json_name="vm", (gogoproto.jsontag) = "vm", (gogoproto.moretags) = "yaml:\"vm\""];
 }
 
-message TbVmReq {		
+message TbMcisDynamicReq {
+	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
+	string install_mon_agent = 2 [json_name="installMonAgent", (gogoproto.jsontag) = "installMonAgent", (gogoproto.moretags) = "yaml:\"installMonAgent\""];
+	string label = 3 [json_name="label", (gogoproto.jsontag) = "label", (gogoproto.moretags) = "yaml:\"label\""];
+	string system_label = 4 [json_name="systemLabel", (gogoproto.jsontag) = "systemLabel", (gogoproto.moretags) = "yaml:\"systemLabel\""];
+	string description = 6 [json_name="description", (gogoproto.jsontag) = "description", (gogoproto.moretags) = "yaml:\"description\""];
+	repeated TbVmReq vm = 7 [json_name="vm", (gogoproto.jsontag) = "vm", (gogoproto.moretags) = "yaml:\"vm\""];
+}
+
+message TbVmReq {
 	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
 	string vm_group_size = 2 [json_name="vmGroupSize", (gogoproto.jsontag) = "vmGroupSize", (gogoproto.moretags) = "yaml:\"vmGroupSize\""];
 	string label = 3 [json_name="label", (gogoproto.jsontag) = "label", (gogoproto.moretags) = "yaml:\"label\""];
@@ -731,6 +772,15 @@ message TbVmReq {
 	string vm_user_password = 13 [json_name="vmUserPassword", (gogoproto.jsontag) = "vmUserPassword", (gogoproto.moretags) = "yaml:\"vmUserPassword\""];
 }
 
+message TbVmDynamicReq {
+	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
+	uint32 vm_group_size = 2 [json_name="vmGroupSize", (gogoproto.jsontag) = "vmGroupSize", (gogoproto.moretags) = "yaml:\"vmGroupSize\""];
+	string label = 3 [json_name="label", (gogoproto.jsontag) = "label", (gogoproto.moretags) = "yaml:\"label\""];
+	string description = 4 [json_name="description", (gogoproto.jsontag) = "description", (gogoproto.moretags) = "yaml:\"description\""];
+	string common_spec = 5 [json_name="commonSpec", (gogoproto.jsontag) = "commonSpec", (gogoproto.moretags) = "yaml:\"commonSpec\""];
+	string common_image = 6 [json_name="commonImage", (gogoproto.jsontag) = "commonImage", (gogoproto.moretags) = "yaml:\"commonImage\""];
+}
+
 message ListTbMcisStatusInfoResponse {
 	repeated McisStatusInfo items = 1 [json_name="mcis", (gogoproto.jsontag) = "mcis", (gogoproto.moretags) = "yaml:\"mcis\""];
 }
@@ -739,28 +789,45 @@ message TbMcisStatusInfoResponse {
 	McisStatusInfo item = 1 [json_name="status", (gogoproto.jsontag) = "status", (gogoproto.moretags) = "yaml:\"status\""];
 }
 
-message McisStatusInfo {	
+message StatusCountInfo {
+	uint32 count_total = 1 [json_name="countTotal", (gogoproto.jsontag) = "countTotal", (gogoproto.moretags) = "yaml:\"countTotal\""];
+	uint32 count_creating = 2 [json_name="countCreating", (gogoproto.jsontag) = "countCreating", (gogoproto.moretags) = "yaml:\"countCreating\""];
+	uint32 count_running = 3 [json_name="countRunning", (gogoproto.jsontag) = "countRunning", (gogoproto.moretags) = "yaml:\"countRunning\""];
+	uint32 count_failed = 4 [json_name="countFailed", (gogoproto.jsontag) = "countFailed", (gogoproto.moretags) = "yaml:\"countFailed\""];
+	uint32 count_suspended = 5 [json_name="countSuspended", (gogoproto.jsontag) = "countSuspended", (gogoproto.moretags) = "yaml:\"countSuspended\""];
+	uint32 count_rebooting = 6 [json_name="countRebooting", (gogoproto.jsontag) = "countRebooting", (gogoproto.moretags) = "yaml:\"countRebooting\""];
+	uint32 count_terminated = 7 [json_name="countTerminated", (gogoproto.jsontag) = "countTerminated", (gogoproto.moretags) = "yaml:\"countTerminated\""];
+	uint32 count_suspending = 8 [json_name="countSuspending", (gogoproto.jsontag) = "countSuspending", (gogoproto.moretags) = "yaml:\"countSuspending\""];
+	uint32 count_resuming = 9 [json_name="countResuming", (gogoproto.jsontag) = "countResuming", (gogoproto.moretags) = "yaml:\"countResuming\""];
+	uint32 count_terminating = 10 [json_name="countTerminating", (gogoproto.jsontag) = "countTerminating", (gogoproto.moretags) = "yaml:\"countTerminating\""];
+	uint32 count_undefined = 11 [json_name="countUndefined", (gogoproto.jsontag) = "countUndefined", (gogoproto.moretags) = "yaml:\"countUndefined\""];
+}
+
+message McisStatusInfo {
 	string id = 1 [json_name="id", (gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
 	string name = 2 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
 	string status = 3 [json_name="status", (gogoproto.jsontag) = "status", (gogoproto.moretags) = "yaml:\"status\""];
-	string target_status = 4 [json_name="targetStatus", (gogoproto.jsontag) = "targetStatus", (gogoproto.moretags) = "yaml:\"targetStatus\""];
-	string target_action = 5 [json_name="targetAction", (gogoproto.jsontag) = "targetAction", (gogoproto.moretags) = "yaml:\"targetAction\""];	
-	string install_mon_agent = 6 [json_name="installMonAgent", (gogoproto.jsontag) = "installMonAgent", (gogoproto.moretags) = "yaml:\"installMonAgent\""];	
-	string master_vm_id = 7 [json_name="masterVmId", (gogoproto.jsontag) = "masterVmId", (gogoproto.moretags) = "yaml:\"masterVmId\""];	
-	string master_ip = 8 [json_name="masterIp", (gogoproto.jsontag) = "masterIp", (gogoproto.moretags) = "yaml:\"masterIp\""];	
-	string master_ssh_port = 9 [json_name="masterSSHPort", (gogoproto.jsontag) = "masterSSHPort", (gogoproto.moretags) = "yaml:\"masterSSHPort\""];	
-	repeated TbVmStatusInfo vm = 10 [json_name="vm", (gogoproto.jsontag) = "vm", (gogoproto.moretags) = "yaml:\"vm\""];
+	StatusCountInfo status_count = 4 [json_name="statusCount", (gogoproto.jsontag) = "statusCount", (gogoproto.moretags) = "yaml:\"statusCount\""];
+	string target_status = 5 [json_name="targetStatus", (gogoproto.jsontag) = "targetStatus", (gogoproto.moretags) = "yaml:\"targetStatus\""];
+	string target_action = 6 [json_name="targetAction", (gogoproto.jsontag) = "targetAction", (gogoproto.moretags) = "yaml:\"targetAction\""];
+	string install_mon_agent = 7 [json_name="installMonAgent", (gogoproto.jsontag) = "installMonAgent", (gogoproto.moretags) = "yaml:\"installMonAgent\""];
+	string master_vm_id = 8 [json_name="masterVmId", (gogoproto.jsontag) = "masterVmId", (gogoproto.moretags) = "yaml:\"masterVmId\""];
+	string master_ip = 9 [json_name="masterIp", (gogoproto.jsontag) = "masterIp", (gogoproto.moretags) = "yaml:\"masterIp\""];
+	string master_ssh_port = 10 [json_name="masterSSHPort", (gogoproto.jsontag) = "masterSSHPort", (gogoproto.moretags) = "yaml:\"masterSSHPort\""];
+	string label = 11 [json_name="label", (gogoproto.jsontag) = "label", (gogoproto.moretags) = "yaml:\"label\""];
+	string system_label = 12 [json_name="systemLabel", (gogoproto.jsontag) = "systemLabel", (gogoproto.moretags) = "yaml:\"systemLabel\""];
+	repeated TbVmStatusInfo vm = 13 [json_name="vm", (gogoproto.jsontag) = "vm", (gogoproto.moretags) = "yaml:\"vm\""];
 }
 
-message TbVmStatusInfo {	
+message TbVmStatusInfo {
 	string id = 1 [json_name="id", (gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
 	string name = 2 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
 	string csp_vm_id = 3 [json_name="cspVmId", (gogoproto.jsontag) = "cspVmId", (gogoproto.moretags) = "yaml:\"cspVmId\""];
 	string status = 4 [json_name="status", (gogoproto.jsontag) = "status", (gogoproto.moretags) = "yaml:\"status\""];
 	string target_status = 5 [json_name="targetStatus", (gogoproto.jsontag) = "targetStatus", (gogoproto.moretags) = "yaml:\"targetStatus\""];
-	string target_action = 6 [json_name="targetAction", (gogoproto.jsontag) = "targetAction", (gogoproto.moretags) = "yaml:\"targetAction\""];	
+	string target_action = 6 [json_name="targetAction", (gogoproto.jsontag) = "targetAction", (gogoproto.moretags) = "yaml:\"targetAction\""];
 	string native_status = 7 [json_name="nativeStatus", (gogoproto.jsontag) = "nativeStatus", (gogoproto.moretags) = "yaml:\"nativeStatus\""];
-	string mon_agent_status = 8 [json_name="monAgentStatus", (gogoproto.jsontag) = "monAgentStatus", (gogoproto.moretags) = "yaml:\"monAgentStatus\""];	
+	string mon_agent_status = 8 [json_name="monAgentStatus", (gogoproto.jsontag) = "monAgentStatus", (gogoproto.moretags) = "yaml:\"monAgentStatus\""];
 	string system_message = 9 [json_name="systemMessage", (gogoproto.jsontag) = "systemMessage", (gogoproto.moretags) = "yaml:\"systemMessage\""];
 	string created_time = 10 [json_name="createdTime", (gogoproto.jsontag) = "createdTime", (gogoproto.moretags) = "yaml:\"createdTime\""];
 	string public_ip = 11 [json_name="publicIp", (gogoproto.jsontag) = "publicIp", (gogoproto.moretags) = "yaml:\"publicIp\""];
@@ -782,6 +849,7 @@ message TbMcisActionRequest {
 message TbMcisQryRequest {
 	string ns_id = 1 [json_name="nsId", (gogoproto.jsontag) = "nsId", (gogoproto.moretags) = "yaml:\"nsId\""];
 	string mcis_id = 2 [json_name="mcisId", (gogoproto.jsontag) = "mcisId", (gogoproto.moretags) = "yaml:\"mcisId\""];
+	string option = 3 [json_name="option", (gogoproto.jsontag) = "option", (gogoproto.moretags) = "yaml:\"option\""];
 }
 
 //////////////////////////////////
@@ -835,14 +903,14 @@ message McisRecommendInfo {
 	repeated KeyValue placement_param = 3 [json_name="placementParam", (gogoproto.jsontag) = "placementParam", (gogoproto.moretags) = "yaml:\"placementParam\""];
 }
 
-message TbVmRecommendInfo {	
+message TbVmRecommendInfo {
 	TbVmRecommendReq vm_req = 1 [json_name="vmReq", (gogoproto.jsontag) = "vmReq", (gogoproto.moretags) = "yaml:\"vmReq\""];
 	repeated TbVmPriority vm_priority = 2 [json_name="vmPriority", (gogoproto.jsontag) = "vmPriority", (gogoproto.moretags) = "yaml:\"vmPriority\""];
 	string placement_algo = 3 [json_name="placementAlgo", (gogoproto.jsontag) = "placementAlgo", (gogoproto.moretags) = "yaml:\"placementAlgo\""];
 	repeated KeyValue placement_param = 4 [json_name="placementParam", (gogoproto.jsontag) = "placementParam", (gogoproto.moretags) = "yaml:\"placementParam\""];
 }
 
-message TbVmPriority {		
+message TbVmPriority {
 	string priority = 1 [json_name="priority", (gogoproto.jsontag) = "priority", (gogoproto.moretags) = "yaml:\"priority\""];
 	TbSpecInfo vm_spec = 2 [json_name="vmSpec", (gogoproto.jsontag) = "vmSpec", (gogoproto.moretags) = "yaml:\"vmSpec\""];
 }
@@ -852,14 +920,14 @@ message McisRecommendCreateRequest {
 	McisRecommendReq item = 2 [json_name="recommend", (gogoproto.jsontag) = "recommend", (gogoproto.moretags) = "yaml:\"recommend\""];
 }
 
-message McisRecommendReq {	
+message McisRecommendReq {
 	repeated TbVmRecommendReq vm_req = 1 [json_name="vmReq", (gogoproto.jsontag) = "vmReq", (gogoproto.moretags) = "yaml:\"vmReq\""];
 	string placement_algo = 2 [json_name="placementAlgo", (gogoproto.jsontag) = "placementAlgo", (gogoproto.moretags) = "yaml:\"placementAlgo\""];
 	repeated KeyValue placement_param = 3 [json_name="placementParam", (gogoproto.jsontag) = "placementParam", (gogoproto.moretags) = "yaml:\"placementParam\""];
 	string max_result_num = 4 [json_name="maxResultNum", (gogoproto.jsontag) = "maxResultNum", (gogoproto.moretags) = "yaml:\"maxResultNum\""];
 }
 
-message TbVmRecommendReq {	
+message TbVmRecommendReq {
 	string request_name = 1 [json_name="requestName", (gogoproto.jsontag) = "requestName", (gogoproto.moretags) = "yaml:\"requestName\""];
 	string max_result_num = 2 [json_name="maxResultNum", (gogoproto.jsontag) = "maxResultNum", (gogoproto.moretags) = "yaml:\"maxResultNum\""];
 
@@ -924,7 +992,7 @@ message ListCmdMcisResponse {
 	repeated CmdMcisResult items = 1 [json_name="result_array", (gogoproto.jsontag) = "result_array", (gogoproto.moretags) = "yaml:\"result_array\""];
 }
 
-message CmdMcisResult {	
+message CmdMcisResult {
 	string mcis_id = 1 [json_name="mcisId", (gogoproto.jsontag) = "mcisId", (gogoproto.moretags) = "yaml:\"mcisId\""];
 	string vm_id = 2 [json_name="vmId", (gogoproto.jsontag) = "vmId", (gogoproto.moretags) = "yaml:\"vmId\""];
 	string vm_ip = 3 [json_name="vmIp", (gogoproto.jsontag) = "vmIp", (gogoproto.moretags) = "yaml:\"vmIp\""];
@@ -940,17 +1008,13 @@ message McisCmdCreateRequest {
 message McisCmdVmCreateRequest {
 	string ns_id = 1 [json_name="nsId", (gogoproto.jsontag) = "nsId", (gogoproto.moretags) = "yaml:\"nsId\""];
 	string mcis_id = 2 [json_name="mcisId", (gogoproto.jsontag) = "mcisId", (gogoproto.moretags) = "yaml:\"mcisId\""];
-	string vm_id = 3 [json_name="vmId", (gogoproto.jsontag) = "vmId", (gogoproto.moretags) = "yaml:\"vmId\""]; 	
+	string vm_id = 3 [json_name="vmId", (gogoproto.jsontag) = "vmId", (gogoproto.moretags) = "yaml:\"vmId\""]; 
 	McisCmdReq item = 4 [json_name="cmd", (gogoproto.jsontag) = "cmd", (gogoproto.moretags) = "yaml:\"cmd\""];
 }
 
-message McisCmdReq {		
-	string mcis_id = 1 [json_name="mcisId", (gogoproto.jsontag) = "mcisId", (gogoproto.moretags) = "yaml:\"mcisId\""];
-	string vm_id = 2 [json_name="vmId", (gogoproto.jsontag) = "vmId", (gogoproto.moretags) = "yaml:\"vmId\""];
-	string ip = 3 [json_name="ip", (gogoproto.jsontag) = "ip", (gogoproto.moretags) = "yaml:\"ip\""];
-	string user_name = 4 [json_name="userName", (gogoproto.jsontag) = "userName", (gogoproto.moretags) = "yaml:\"userName\""];
-	string ssh_key = 5 [json_name="sshKey", (gogoproto.jsontag) = "sshKey", (gogoproto.moretags) = "yaml:\"sshKey\""];
-	string command = 6 [json_name="command", (gogoproto.jsontag) = "command", (gogoproto.moretags) = "yaml:\"command\""];
+message McisCmdReq {
+	string user_name = 1 [json_name="userName", (gogoproto.jsontag) = "userName", (gogoproto.moretags) = "yaml:\"userName\""];
+	string command = 2 [json_name="command", (gogoproto.jsontag) = "command", (gogoproto.moretags) = "yaml:\"command\""];
 }
 
 //////////////////////////////////
@@ -969,13 +1033,13 @@ message MonitorResultSimpleResponse {
 	MonResultSimpleInfo item = 1 [json_name="monitor", (gogoproto.jsontag) = "monitor", (gogoproto.moretags) = "yaml:\"monitor\""];
 }
 
-message MonResultSimpleInfo {	
+message MonResultSimpleInfo {
 	string ns_id = 1 [json_name="nsId", (gogoproto.jsontag) = "nsId", (gogoproto.moretags) = "yaml:\"nsId\""];
 	string mcis_id = 2 [json_name="mcisId", (gogoproto.jsontag) = "mcisId", (gogoproto.moretags) = "yaml:\"mcisId\""];
 	repeated MonResultSimple mcis_monitoring = 3 [json_name="mcisMonitoring", (gogoproto.jsontag) = "mcisMonitoring", (gogoproto.moretags) = "yaml:\"mcisMonitoring\""];
 }
 
-message MonResultSimple {	
+message MonResultSimple {
 	string metric = 1 [json_name="metric", (gogoproto.jsontag) = "metric", (gogoproto.moretags) = "yaml:\"metric\""];
 	string vm_id = 2 [json_name="vmId", (gogoproto.jsontag) = "vmId", (gogoproto.moretags) = "yaml:\"vmId\""];
 	string value = 3 [json_name="value", (gogoproto.jsontag) = "value", (gogoproto.moretags) = "yaml:\"value\""];
@@ -996,13 +1060,13 @@ message ListBenchmarkInfoResponse {
 	repeated BenchmarkInfo items = 1 [json_name="resultarray", (gogoproto.jsontag) = "resultarray", (gogoproto.moretags) = "yaml:\"resultarray\""];
 }
 
-message BenchmarkInfo {	
+message BenchmarkInfo {
 	string result = 1 [json_name="result", (gogoproto.jsontag) = "result", (gogoproto.moretags) = "yaml:\"result\""];
-	string unit = 2 [json_name="unit", (gogoproto.jsontag) = "unit", (gogoproto.moretags) = "yaml:\"unit\""];  	
-	string desc = 3 [json_name="desc", (gogoproto.jsontag) = "desc", (gogoproto.moretags) = "yaml:\"desc\""];  	
-	string elapsed = 4 [json_name="elapsed", (gogoproto.jsontag) = "elapsed", (gogoproto.moretags) = "yaml:\"elapsed\""];  		
-	string spec_id = 5 [json_name="specid", (gogoproto.jsontag) = "specid", (gogoproto.moretags) = "yaml:\"specid\""];  			
-	repeated BenchmarkInfo result_array = 6 [json_name="resultarray", (gogoproto.jsontag) = "resultarray", (gogoproto.moretags) = "yaml:\"resultarray\""];  	
+	string unit = 2 [json_name="unit", (gogoproto.jsontag) = "unit", (gogoproto.moretags) = "yaml:\"unit\""];  
+	string desc = 3 [json_name="desc", (gogoproto.jsontag) = "desc", (gogoproto.moretags) = "yaml:\"desc\""];  
+	string elapsed = 4 [json_name="elapsed", (gogoproto.jsontag) = "elapsed", (gogoproto.moretags) = "yaml:\"elapsed\""];  
+	string spec_id = 5 [json_name="specid", (gogoproto.jsontag) = "specid", (gogoproto.moretags) = "yaml:\"specid\""];  
+	repeated BenchmarkInfo result_array = 6 [json_name="resultarray", (gogoproto.jsontag) = "resultarray", (gogoproto.moretags) = "yaml:\"resultarray\""];  
 }
 
 message BmQryAllRequest {
@@ -1018,7 +1082,7 @@ message BmQryRequest {
 	BmReq item = 4 [json_name="bm", (gogoproto.jsontag) = "bm", (gogoproto.moretags) = "yaml:\"bm\""];
 }
 
-message BmReq {	
+message BmReq {
 	string host = 1 [json_name="host", (gogoproto.jsontag) = "host", (gogoproto.moretags) = "yaml:\"host\""];
 }
 
@@ -1087,13 +1151,13 @@ service Utility {
   rpc GetConnConfig (ConnConfigQryRequest) returns (ConnConfigResponse) {}
   rpc ListRegion (Empty) returns (ListRegionResponse) {}
 	rpc GetRegion (RegionQryRequest) returns (RegionResponse) {}
-	
+
 	rpc CreateConfig (ConfigCreateRequest) returns (ConfigInfoResponse) {}
 	rpc ListConfig (Empty) returns (ListConfigInfoResponse) {}
 	rpc GetConfig (ConfigQryRequest) returns (ConfigInfoResponse) {}
 	rpc InitConfig (ConfigQryRequest) returns (MessageResponse) {}
 	rpc InitAllConfig (Empty) returns (MessageResponse) {}
-	
+
 	rpc InspectMcirResources (InspectQryRequest) returns (InspectMcirInfoResponse) {}
 	rpc InspectVmResources (InspectQryRequest) returns (InspectVmInfoResponse) {}
 
@@ -1115,7 +1179,7 @@ message ListConnConfigResponse {
 	repeated ConnConfig items = 1 [json_name="connectionconfig", (gogoproto.jsontag) = "connectionconfig", (gogoproto.moretags) = "yaml:\"connectionconfig\""];
 }
 
-message ConnConfig {	
+message ConnConfig {
 	string config_name = 1 [json_name="ConfigName", (gogoproto.jsontag) = "ConfigName", (gogoproto.moretags) = "yaml:\"ConfigName\""];
 	string provider_name = 2 [json_name="ProviderName", (gogoproto.jsontag) = "ProviderName", (gogoproto.moretags) = "yaml:\"ProviderName\""];
 	string driver_name = 3 [json_name="DriverName", (gogoproto.jsontag) = "DriverName", (gogoproto.moretags) = "yaml:\"DriverName\""];
@@ -1139,7 +1203,7 @@ message ListRegionResponse {
 	repeated Region items = 1 [json_name="region", (gogoproto.jsontag) = "region", (gogoproto.moretags) = "yaml:\"region\""];
 }
 
-message Region {	
+message Region {
 	string region_name = 1 [json_name="RegionName", (gogoproto.jsontag) = "RegionName", (gogoproto.moretags) = "yaml:\"RegionName\""];
 	string provider_name = 2 [json_name="ProviderName", (gogoproto.jsontag) = "ProviderName", (gogoproto.moretags) = "yaml:\"ProviderName\""];
 	repeated KeyValue key_value_info_list = 3 [json_name="KeyValueInfoList", (gogoproto.jsontag) = "KeyValueInfoList", (gogoproto.moretags) = "yaml:\"KeyValueInfoList\""];
@@ -1193,18 +1257,18 @@ message ListInspectMcirInfoResponse {
 	repeated InspectMcirInfo items = 1 [json_name="resource", (gogoproto.jsontag) = "resource", (gogoproto.moretags) = "yaml:\"resource\""];
 }
 
-message InspectMcirInfo {	
+message InspectMcirInfo {
 	repeated McirResourceOnCspOrSpider resources_on_csp = 1 [json_name="resourcesOnCsp", (gogoproto.jsontag) = "resourcesOnCsp", (gogoproto.moretags) = "yaml:\"resourcesOnCsp\""];
 	repeated McirResourceOnCspOrSpider resources_on_spider = 2 [json_name="resourcesOnSpider", (gogoproto.jsontag) = "resourcesOnSpider", (gogoproto.moretags) = "yaml:\"resourcesOnSpider\""];
 	repeated McirResourceOnTumblebug resources_on_tumblebug = 3 [json_name="resourcesOnTumblebug", (gogoproto.jsontag) = "resourcesOnTumblebug", (gogoproto.moretags) = "yaml:\"resourcesOnTumblebug\""];
 }
 
-message McirResourceOnCspOrSpider {	
+message McirResourceOnCspOrSpider {
 	string id = 1 [json_name="id", (gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
 	string csp_native_id = 2 [json_name="cspNativeId", (gogoproto.jsontag) = "cspNativeId", (gogoproto.moretags) = "yaml:\"cspNativeId\""];
 }
 
-message McirResourceOnTumblebug {	
+message McirResourceOnTumblebug {
 	string id = 1 [json_name="id", (gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
 	string csp_native_id = 2 [json_name="cspNativeId", (gogoproto.jsontag) = "cspNativeId", (gogoproto.moretags) = "yaml:\"cspNativeId\""];
 	string ns_id = 3 [json_name="nsId", (gogoproto.jsontag) = "nsId", (gogoproto.moretags) = "yaml:\"nsId\""];
@@ -1220,18 +1284,18 @@ message ListInspectVmInfoResponse {
 	repeated InspectVmInfo items = 1 [json_name="resource", (gogoproto.jsontag) = "resource", (gogoproto.moretags) = "yaml:\"resource\""];
 }
 
-message InspectVmInfo {	
+message InspectVmInfo {
 	repeated VmResourceOnCspOrSpider resources_on_csp = 1 [json_name="resourcesOnCsp", (gogoproto.jsontag) = "resourcesOnCsp", (gogoproto.moretags) = "yaml:\"resourcesOnCsp\""];
 	repeated VmResourceOnCspOrSpider resources_on_spider = 2 [json_name="resourcesOnSpider", (gogoproto.jsontag) = "resourcesOnSpider", (gogoproto.moretags) = "yaml:\"resourcesOnSpider\""];
 	repeated VmResourceOnTumblebug resources_on_tumblebug = 3 [json_name="resourcesOnTumblebug", (gogoproto.jsontag) = "resourcesOnTumblebug", (gogoproto.moretags) = "yaml:\"resourcesOnTumblebug\""];
 }
 
-message VmResourceOnCspOrSpider {	
+message VmResourceOnCspOrSpider {
 	string id = 1 [json_name="id", (gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
 	string csp_native_id = 2 [json_name="cspNativeId", (gogoproto.jsontag) = "cspNativeId", (gogoproto.moretags) = "yaml:\"cspNativeId\""];
 }
 
-message VmResourceOnTumblebug {	
+message VmResourceOnTumblebug {
 	string id = 1 [json_name="id", (gogoproto.jsontag) = "id", (gogoproto.moretags) = "yaml:\"id\""];
 	string csp_native_id = 2 [json_name="cspNativeId", (gogoproto.jsontag) = "cspNativeId", (gogoproto.moretags) = "yaml:\"cspNativeId\""];
 	string ns_id = 3 [json_name="nsId", (gogoproto.jsontag) = "nsId", (gogoproto.moretags) = "yaml:\"nsId\""];

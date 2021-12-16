@@ -32,7 +32,8 @@
 
     <div class="titlebox">
         <div class="tit"><img src="/assets/img/common/icon_cont.png" alt="" />Resources / <strong>SSH key</strong></div>
-        <div class="location">Home <span>></span> Setting <span>></span> Resources <span>></span> <strong>SSH key</strong></div>
+        <div class="location">Home <span>></span> Setting <span>></span> Resources <span>></span> <strong>SSH
+                key</strong></div>
     </div>
 
 
@@ -50,9 +51,14 @@
                             <div class="infobox">
                                 <div class="box">
                                     <ul>
-                                        <li><a href="javascript:void(0);" onclick="commonPromptOpen('RsFltSshName', 'sshkeyList')">Name</a></li>
-                                        <li><a href="javascript:void(0);" onclick="commonPromptOpen('RsFltSshConnName', 'sshkeyList')">Connection Name</a></li>
-                                        <li><a href="javascript:void(0);" onclick="commonPromptOpen('RsFltSshKeyName', 'sshkeyList')">SSH Key Name</a></li>
+                                        <li><a href="javascript:void(0);"
+                                                onclick="commonPromptOpen('RsFltSshName', 'sshkeyList')">Name</a></li>
+                                        <li><a href="javascript:void(0);"
+                                                onclick="commonPromptOpen('RsFltSshConnName', 'sshkeyList')">Connection
+                                                Name</a></li>
+                                        <li><a href="javascript:void(0);"
+                                                onclick="commonPromptOpen('RsFltSshKeyName', 'sshkeyList')">SSH Key
+                                                Name</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -62,9 +68,12 @@
                             <div class="infobox">
                                 <div class="box">
                                     <ul>
-                                        <li><a href="javascript:void(0);" onclick="tableSort('sshkeyList', 'Name')">Name</a></li>
-                                        <li><a href="javascript:void(0);" onclick="tableSort('sshkeyList', 'Name')">Connection Name</a></li>
-                                        <li><a href="javascript:void(0);" onclick="tableSort('sshkeyList', 'Name')">SSH Key Name</a></li>
+                                        <li><a href="javascript:void(0);"
+                                                onclick="tableSort('sshkeyList', 'Name')">Name</a></li>
+                                        <li><a href="javascript:void(0);"
+                                                onclick="tableSort('sshkeyList', 'Name')">Connection Name</a></li>
+                                        <li><a href="javascript:void(0);" onclick="tableSort('sshkeyList', 'Name')">SSH
+                                                Key Name</a></li>
                                         <!--
                                         <li><a href="javascript:void(0);" onclick='getSSHList("name")'>Name</a></li>
                                         <li><a href="javascript:void(0);" onclick='getSSHList("connectionName")'>Connection Name</a></li>
@@ -79,8 +88,10 @@
                             <div class="infobox">
                                 <div class="box">
                                     <ul>
-                                        <li><a href="javascript:void(0);" data-toggle="modal" data-target="#RegistBox" onClick="commonConfirmOpen('AddNewSshKey')">Add</a></li>
-                                        <li><a href="javascript:void(0);" data-toggle="modal" data-target="#UnRegist" onClick="commonConfirmOpen('DeleteSshKey')">Delete</a></li>
+                                        <li><a href="javascript:void(0);" data-toggle="modal" data-target="#RegistBox"
+                                                onClick="displaySshKeyInfo('REG')">Add</a></li>
+                                        <li><a href="javascript:void(0);" data-toggle="modal" data-target="#UnRegist"
+                                                onClick="commonConfirmOpen('DeleteSshKey')">Delete</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -139,7 +150,8 @@
                         </colgroup> -->
                         <thead>
                             <tr>
-                                <th class="column-50px"><input type="checkbox" name="" value="" id="th_chall" title="" /><label for="th_chall"></label></td>
+                                <th class="column-50px"><input type="checkbox" name="" value="" id="th_chall"
+                                        title="" /><label for="th_chall"></label></td>
                                 <th>Name</th>
                                 <th>Connection Name</th>
                                 <th>SSH KEY Name</th>
@@ -147,7 +159,7 @@
                             </tr>
                         </thead>
                         <tbody id="sList">
-                            {{ $length := len .SshKeyList }} 
+                            {{ $length := len .SshKeyList }}
                             {{ if eq $length 0 }}
                             <tr>
                                 <td class="overlay hidden" data-th="" colspan="5">No Data</td>
@@ -155,10 +167,12 @@
                             {{ end }}
 
                             {{range $index, $item := .SshKeyList}}
-                            <tr onclick="showSshKeyInfo('{{$item.CspSshKeyName}}');">
+                            <tr onclick="showSshKeyInfo('{{$item.ID}}');">
                                 <td class="overlay hidden column-50px" data-th="">
-                                    <input type="hidden" id="ssh_info_{{$index}}" value="{{$item.Name}}|{{$item.ConnectionName}}|{{$item.CspSshKeyName}}"/>
-                                    <input type="checkbox" name="chk" value="{{$item.Name}}" id="raw_{{$index}}" title="" />
+                                    <input type="hidden" id="ssh_info_{{$index}}"
+                                        value="{{$item.Name}}|{{$item.ConnectionName}}|{{$item.CspSshKeyName}}" />
+                                    <input type="checkbox" name="chk" value="{{$item.Name}}" id="raw_{{$index}}"
+                                        title="" />
                                     <label for="td_ch1"></label> <span class="ov off"></span>
                                 </td>
                                 <td class="btn_mtd ovm" data-th="Name">{{$item.ID}}
@@ -166,7 +180,7 @@
                                     <span class="ov"></span> -->
                                 </td>
                                 <td class="overlay hidden" data-th="connectionName">{{$item.ConnectionName}}</td>
-                                <td class="overlay hidden" data-th="cspSshKeyName">{{$item.CspSshKeyName}}</td> 
+                                <td class="overlay hidden" data-th="cspSshKeyName">{{$item.CspSshKeyName}}</td>
                                 <!-- <td class="overlay hidden column-60px" data-th=""><a href="javascript:void(0);">
                                     <img src="/assets/img/contents/icon_link.png" class="icon" alt=""/></a>
                                 </td> -->
@@ -184,7 +198,7 @@
                         </tbody>
                     </table>
                 </div>
-                                <!--
+                <!--
 								<div class="pageing">
 									<a href="#" class="btn_prev"><span>이전</span></a>
 									<a href="#" class="active">1</a>
@@ -219,13 +233,15 @@
                                 <li class="reg_1">
                                     <label>SSH Key Name</label>
                                     <span class="sbox">
-                                        <input type="text" id="dtlCspSshKeyName" name="" value="" placeholder="" class="gray" title="" readonly />
+                                        <input type="text" id="dtlCspSshKeyName" name="" value="" placeholder=""
+                                            class="gray" title="" readonly />
                                         <!--<a href="javascript:void(0);"><img src="/assets/img/contents/icon_copy.png" class="icon" alt="" /></a>-->
                                     </span>
                                 </li>
                                 <li class="reg_1">
                                     <label>Description</label>
-                                    <textarea id="dtlDescription" cols="" rows="" placeholder="" class="gray" title="" readonly></textarea>
+                                    <textarea id="dtlDescription" cols="" rows="" placeholder="" class="gray" title=""
+                                        readonly></textarea>
                                 </li>
                             </ul>
                         </div>
@@ -233,15 +249,18 @@
                             <ul>
                                 <li class="reg_3">
                                     <label>Connection Name</label>
-                                    <input type="text" id="dtlConnectionName" name="" value="" placeholder="" class="gray" title="" readonly />
+                                    <input type="text" id="dtlConnectionName" name="" value="" placeholder=""
+                                        class="gray" title="" readonly />
                                 </li>
                                 <li class="reg_3">
                                     <label>publicKey</label>
-                                    <input type="text" id="dtlPublicKey" name="" value="" placeholder="" class="gray" title="" readonly />
+                                    <input type="text" id="dtlPublicKey" name="" value="" placeholder="" class="gray"
+                                        title="" readonly />
                                 </li>
                                 <li class="reg_3">
                                     <label>privateKey</label>
-                                    <textarea id="dtlPrivateKey" cols="" rows="" placeholder="" class="gray" title="" readonly></textarea>
+                                    <textarea id="dtlPrivateKey" cols="" rows="" placeholder="" class="gray" title=""
+                                        readonly></textarea>
                                     <!-- <input type="text" id="dtlPrivateKey" name="" value="" placeholder="" class="gray" title="" readonly /> -->
                                 </li>
                             </ul>
@@ -253,8 +272,10 @@
                             <ul>
                                 <li class="reg_1">
                                     <label>username</label>
-                                    <input type="text" id="dtlUsername" name="" value="" placeholder="" class="gray" title="" readonly />
-                                    <input type="hidden" id="dtlUserID" name="" value="" placeholder="" class="gray" title="" readonly />
+                                    <input type="text" id="dtlUsername" name="" value="" placeholder="" class="gray"
+                                        title="" readonly />
+                                    <input type="hidden" id="dtlUserID" name="" value="" placeholder="" class="gray"
+                                        title="" readonly />
                                 </li>
                             </ul>
                         </div>
@@ -263,7 +284,8 @@
                                 <li class="reg_3">
                                     <label>fingerprint</label>
                                     <!-- <input type="text" name="" value="" placeholder="fingerprint" class="gray" title="" readonly /> -->
-                                    <textarea id="dtlFingerprint" cols="" rows="" placeholder="" class="gray" title="" readonly></textarea>
+                                    <textarea id="dtlFingerprint" cols="" rows="" placeholder="" class="gray" title=""
+                                        readonly></textarea>
                                 </li>
                             </ul>
                         </div>
@@ -293,7 +315,8 @@
                             <ul>
                                 <li class="reg_1">
                                     <label><span class="ch">*</span>SSH Key Name</label>
-                                    <input type="text" name="reg_cspSshKeyName" id="regCspSshKeyName" value="" placeholder="Input Name" class="pline" title="" />
+                                    <input type="text" name="reg_cspSshKeyName" id="regCspSshKeyName" value=""
+                                        placeholder="Input Name" class="pline" title="" />
                                 </li>
                             </ul>
                         </div>
@@ -302,20 +325,22 @@
                                 <li class="reg_3">
                                     <label>Cloud Provider</label>
                                     <!-- <input type="text" name="" value="" placeholder="AWS, AZURE, GCP, ALIBABA / Region" class="pline" title="" /> -->
-                                    <select class="selectbox white pline w3" name="ProviderName" id="regProvider" onchange="getConnectionListForSelectbox(this.value, 'regConnectionName')">
+                                    <select class="selectbox white pline w3" name="ProviderName" id="regProvider"
+                                        onchange="getConnectionListForSelectbox(this.value, 'regConnectionName')">
                                         <option value="" selected>Select Cloud Provider</option>
-                                        {{ range $item := .CloudOSList}}	
+                                        {{ range $item := .CloudOSList}}
                                         <option value="{{ $item }}">{{ $item }}</option>
                                         {{ end }}
-                                        <option value="MOCK">MOCK</option>	<!-- 임시로 MOCK 추가-->
-                                    </select>    
+                                        <option value="MOCK">MOCK</option> <!-- 임시로 MOCK 추가-->
+                                    </select>
                                 </li>
-                                
+
                                 <li class="reg_3">
                                     <label><span class="ch">*</span>Connection Name</label>
                                     <!-- <input type="text" name="" value="" placeholder="Select / Input fingerprint" class="pline ip_w1" title="" /> -->
                                     <!-- <textarea cols="" rows="" placeholder="Description" class="pline ip_w1" title="" readonly></textarea> -->
-                                    <select class="selectbox white pline w3" name="reg_connectionName" id="regConnectionName" >
+                                    <select class="selectbox white pline w3" name="reg_connectionName"
+                                        id="regConnectionName">
                                         <option value="" selected>Select Connection Name</option>
                                     </select>
                                 </li>
@@ -325,8 +350,10 @@
 
                     <div class="btnbox">
                         <div class="btn_center">
-                            <button name="" value="" class="btn_co btn_cr_b w135 btn_cancel" onclick="displaySshKeyInfo('CLOSE')">Cancel</button>
-                            <button name="" value="" class="btn_co btn_cr_g w135 btn_ok" onclick="createSSHKey()">Ok</button>
+                            <button name="" value="" class="btn_co btn_cr_b w135 btn_cancel"
+                                onclick="displaySshKeyInfo('CLOSE')">Cancel</button>
+                            <button name="" value="" class="btn_co btn_cr_g w135 btn_ok"
+                                onclick="createSSHKey()">Ok</button>
                         </div>
                     </div>
 

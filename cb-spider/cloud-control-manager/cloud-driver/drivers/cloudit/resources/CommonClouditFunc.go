@@ -25,7 +25,7 @@ import (
 
 const (
 	CBVMUser      = "cb-user"
-	CBKeyPairPath = "/cloud-driver-libs/.ssh-cloudit/"
+	CBKeyPairPath = "/meta_db/.ssh-cloudit/"
 )
 
 var once sync.Once
@@ -41,7 +41,6 @@ func InitLog() {
 }
 
 func LoggingError(hiscallInfo call.CLOUDLOGSCHEMA, err error) {
-	cblogger.Error(err.Error())
 	hiscallInfo.ErrorMSG = err.Error()
 	calllogger.Info(call.String(hiscallInfo))
 }

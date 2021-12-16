@@ -31,3 +31,22 @@ func (m Metric) ToAgentMetricKey() string {
 		return "none"
 	}
 }
+
+func GetMetricType(input string) Metric {
+	switch input {
+	case Cpu.ToString():
+		return Cpu
+	case CpuFrequency.ToString():
+		return CpuFrequency
+	case Memory.ToString(), Memory.ToAgentMetricKey():
+		return Memory
+	case Network.ToString(), Network.ToAgentMetricKey():
+		return Network
+	case Disk.ToString():
+		return Disk
+	case DiskIO.ToString():
+		return DiskIO
+	default:
+		return None
+	}
+}

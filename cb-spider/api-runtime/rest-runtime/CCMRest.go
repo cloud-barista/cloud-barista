@@ -10,9 +10,7 @@
 package restruntime
 
 import (
-	"fmt"
 
-	cm "github.com/cloud-barista/cb-spider/api-runtime/common-runtime"
 	cmrt "github.com/cloud-barista/cb-spider/api-runtime/common-runtime"
 	cres "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces/resources"
 
@@ -23,22 +21,21 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"strconv"
-	"strings"
 )
 
 // define string of resource types
 const (
 	rsImage string = "image"
 	rsVPC   string = "vpc"
-	// rsSubnet = cm.SUBNET:{VPC NameID} => cook in code
+	rsSubnet string = "subnet"	
 	rsSG  string = "sg"
 	rsKey string = "keypair"
 	rsVM  string = "vm"
 )
 
 //================ Image Handler
-func createImage(c echo.Context) error {
-	cblog.Info("call createImage()")
+func CreateImage(c echo.Context) error {
+	cblog.Info("call CreateImage()")
 
 	var req struct {
 		ConnectionName string
@@ -64,8 +61,8 @@ func createImage(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
-func listImage(c echo.Context) error {
-	cblog.Info("call listImage()")
+func ListImage(c echo.Context) error {
+	cblog.Info("call ListImage()")
 
 	var req struct {
 		ConnectionName string
@@ -89,8 +86,8 @@ func listImage(c echo.Context) error {
 	return c.JSON(http.StatusOK, &jsonResult)
 }
 
-func getImage(c echo.Context) error {
-	cblog.Info("call getImage()")
+func GetImage(c echo.Context) error {
+	cblog.Info("call GetImage()")
 
 	var req struct {
 		ConnectionName string
@@ -116,8 +113,8 @@ func getImage(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
-func deleteImage(c echo.Context) error {
-	cblog.Info("call deleteImage()")
+func DeleteImage(c echo.Context) error {
+	cblog.Info("call DeleteImage()")
 
 	var req struct {
 		ConnectionName string
@@ -141,8 +138,8 @@ func deleteImage(c echo.Context) error {
 }
 
 //================ VMSpec Handler
-func listVMSpec(c echo.Context) error {
-	cblog.Info("call listVMSpec()")
+func ListVMSpec(c echo.Context) error {
+	cblog.Info("call ListVMSpec()")
 
 	var req struct {
 		ConnectionName string
@@ -165,8 +162,8 @@ func listVMSpec(c echo.Context) error {
 	return c.JSON(http.StatusOK, &jsonResult)
 }
 
-func getVMSpec(c echo.Context) error {
-	cblog.Info("call getVMSpec()")
+func GetVMSpec(c echo.Context) error {
+	cblog.Info("call GetVMSpec()")
 
 	var req struct {
 		ConnectionName string
@@ -185,8 +182,8 @@ func getVMSpec(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
-func listOrgVMSpec(c echo.Context) error {
-	cblog.Info("call listOrgVMSpec()")
+func ListOrgVMSpec(c echo.Context) error {
+	cblog.Info("call ListOrgVMSpec()")
 
 	var req struct {
 		ConnectionName string
@@ -205,8 +202,8 @@ func listOrgVMSpec(c echo.Context) error {
 	return c.String(http.StatusOK, result)
 }
 
-func getOrgVMSpec(c echo.Context) error {
-	cblog.Info("call getOrgVMSpec()")
+func GetOrgVMSpec(c echo.Context) error {
+	cblog.Info("call GetOrgVMSpec()")
 
 	var req struct {
 		ConnectionName string
@@ -225,16 +222,72 @@ func getOrgVMSpec(c echo.Context) error {
 	return c.String(http.StatusOK, result)
 }
 
-type vpcCreateReq struct {
+type vpcRegisterReq struct {
 	ConnectionName string
 	ReqInfo        struct {
 		Name           string
-		IPv4_CIDR      string
-		SubnetInfoList []struct {
-			Name      string
-			IPv4_CIDR string
-		}
+		CSPId          string
 	}
+}
+
+func RegisterVPC(c echo.Context) error {
+        cblog.Info("call RegisterVPC()")
+
+        req := vpcRegisterReq{}
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // create UserIID
+	userIId := cres.IID{req.ReqInfo.Name, req.ReqInfo.CSPId}
+
+        // Call common-runtime API
+        result, err := cmrt.RegisterVPC(req.ConnectionName, userIId)
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        return c.JSON(http.StatusOK, result)
+}
+
+// (1) get args from REST Call
+// (2) call common-runtime API
+// (3) return REST Json Format
+func UnregisterVPC(c echo.Context) error {
+        cblog.Info("call UnregisterVPC()")
+
+        var req struct {
+                ConnectionName string
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // Call common-runtime API
+        result, err := cmrt.UnregisterResource(req.ConnectionName, rsVPC, c.Param("Name"))
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        resultInfo := BooleanInfo{
+                Result: strconv.FormatBool(result),
+        }
+
+        return c.JSON(http.StatusOK, &resultInfo)
+}
+
+type vpcCreateReq struct {
+        ConnectionName string
+        ReqInfo        struct {
+                Name           string
+                IPv4_CIDR      string
+                SubnetInfoList []struct {
+                        Name      string
+                        IPv4_CIDR string
+                }
+        }
 }
 
 // createVPC godoc
@@ -248,22 +301,13 @@ type vpcCreateReq struct {
 // @Failure 404 {object} SimpleMsg
 // @Failure 500 {object} SimpleMsg
 // @Router /vpc [post]
-func createVPC(c echo.Context) error {
-	cblog.Info("call createVPC()")
+func CreateVPC(c echo.Context) error {
+	cblog.Info("call CreateVPC()")
 
 	req := vpcCreateReq{}
 
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	// check the input Name to include the SUBNET: Prefix
-	if strings.HasPrefix(req.ReqInfo.Name, cm.SUBNET_PREFIX) {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf(cm.SUBNET_PREFIX+" cannot be used for VPC name prefix!!"))
-	}
-	// check the input Name to include the SecurityGroup Delimiter
-	if strings.HasPrefix(req.ReqInfo.Name, cm.SG_DELIMITER) {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf(cm.SG_DELIMITER+" cannot be used in VPC name!!"))
 	}
 
 	// Rest RegInfo => Driver ReqInfo
@@ -289,8 +333,8 @@ func createVPC(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
-func listVPC(c echo.Context) error {
-	cblog.Info("call listVPC()")
+func ListVPC(c echo.Context) error {
+	cblog.Info("call ListVPC()")
 
 	var req struct {
 		ConnectionName string
@@ -318,8 +362,8 @@ func listVPC(c echo.Context) error {
 // (1) get args from REST Call
 // (2) get all VPC List by common-runtime API
 // (3) return REST Json Format
-func listAllVPC(c echo.Context) error {
-	cblog.Info("call listAllVPC()")
+func ListAllVPC(c echo.Context) error {
+	cblog.Info("call ListAllVPC()")
 
 	var req struct {
 		ConnectionName string
@@ -338,8 +382,8 @@ func listAllVPC(c echo.Context) error {
 	return c.JSON(http.StatusOK, &allResourceList)
 }
 
-func getVPC(c echo.Context) error {
-	cblog.Info("call getVPC()")
+func GetVPC(c echo.Context) error {
+	cblog.Info("call GetVPC()")
 
 	var req struct {
 		ConnectionName string
@@ -361,8 +405,8 @@ func getVPC(c echo.Context) error {
 // (1) get args from REST Call
 // (2) call common-runtime API
 // (3) return REST Json Format
-func deleteVPC(c echo.Context) error {
-	cblog.Info("call deleteVPC()")
+func DeleteVPC(c echo.Context) error {
+	cblog.Info("call DeleteVPC()")
 
 	var req struct {
 		ConnectionName string
@@ -388,8 +432,8 @@ func deleteVPC(c echo.Context) error {
 // (1) get args from REST Call
 // (2) call common-runtime API
 // (3) return REST Json Format
-func deleteCSPVPC(c echo.Context) error {
-	cblog.Info("call deleteCSPVPC()")
+func DeleteCSPVPC(c echo.Context) error {
+	cblog.Info("call DeleteCSPVPC()")
 
 	var req struct {
 		ConnectionName string
@@ -415,8 +459,8 @@ func deleteCSPVPC(c echo.Context) error {
 // (1) get subnet info from REST Call
 // (2) call common-runtime API
 // (3) return REST Json Format
-func addSubnet(c echo.Context) error {
-	cblog.Info("call addSubnet()")
+func AddSubnet(c echo.Context) error {
+	cblog.Info("call AddSubnet()")
 
 	var req struct {
 		ConnectionName string
@@ -434,7 +478,7 @@ func addSubnet(c echo.Context) error {
 	reqSubnetInfo := cres.SubnetInfo{IId: cres.IID{req.ReqInfo.Name, ""}, IPv4_CIDR: req.ReqInfo.IPv4_CIDR}
 
 	// Call common-runtime API
-	result, err := cmrt.AddSubnet(req.ConnectionName, cm.SUBNET_PREFIX+c.Param("VPCName"), c.Param("VPCName"), reqSubnetInfo)
+	result, err := cmrt.AddSubnet(req.ConnectionName, rsSubnet, c.Param("VPCName"), reqSubnetInfo)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -445,8 +489,8 @@ func addSubnet(c echo.Context) error {
 // (1) get args from REST Call
 // (2) call common-runtime API
 // (3) return REST Json Format
-func removeSubnet(c echo.Context) error {
-	cblog.Info("call removeSubnet()")
+func RemoveSubnet(c echo.Context) error {
+	cblog.Info("call RemoveSubnet()")
 
 	var req struct {
 		ConnectionName string
@@ -457,7 +501,7 @@ func removeSubnet(c echo.Context) error {
 	}
 
 	// Call common-runtime API
-	result, _, err := cmrt.DeleteResource(req.ConnectionName, cm.SUBNET_PREFIX+c.Param("VPCName"), c.Param("SubnetName"), c.QueryParam("force"))
+	result, err := cmrt.RemoveSubnet(req.ConnectionName, c.Param("VPCName"), c.Param("SubnetName"), c.QueryParam("force"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -472,8 +516,8 @@ func removeSubnet(c echo.Context) error {
 // (1) get args from REST Call
 // (2) call common-runtime API
 // (3) return REST Json Format
-func removeCSPSubnet(c echo.Context) error {
-	cblog.Info("call deleteCSPVPC()")
+func RemoveCSPSubnet(c echo.Context) error {
+	cblog.Info("call DeleteCSPVPC()")
 
 	var req struct {
 		ConnectionName string
@@ -484,7 +528,7 @@ func removeCSPSubnet(c echo.Context) error {
 	}
 
 	// Call common-runtime API
-	result, _, err := cmrt.DeleteCSPResource(req.ConnectionName, cm.SUBNET_PREFIX+c.Param("VPCName"), c.Param("Id"))
+	result, err := cmrt.RemoveCSPSubnet(req.ConnectionName, c.Param("VPCName"), c.Param("Id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -494,6 +538,64 @@ func removeCSPSubnet(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, &resultInfo)
+}
+
+
+type securityGroupRegisterReq struct {
+        ConnectionName string
+        ReqInfo        struct {
+                VPCName           string
+                Name           string
+                CSPId          string
+        }
+}
+
+func RegisterSecurity(c echo.Context) error {
+        cblog.Info("call RegisterSecurity()")
+
+        req := securityGroupRegisterReq{}
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // create UserIID
+        userIId := cres.IID{req.ReqInfo.Name, req.ReqInfo.CSPId}
+
+        // Call common-runtime API
+        result, err := cmrt.RegisterSecurity(req.ConnectionName, req.ReqInfo.VPCName, userIId)
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        return c.JSON(http.StatusOK, result)
+}
+
+// (1) get args from REST Call
+// (2) call common-runtime API
+// (3) return REST Json Format
+func UnregisterSecurity(c echo.Context) error {
+        cblog.Info("call UnregisterSecurity()")
+
+        var req struct {
+                ConnectionName string
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // Call common-runtime API
+        result, err := cmrt.UnregisterResource(req.ConnectionName, rsSG, c.Param("Name"))
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        resultInfo := BooleanInfo{
+                Result: strconv.FormatBool(result),
+        }
+
+        return c.JSON(http.StatusOK, &resultInfo)
 }
 
 type securityGroupCreateReq struct {
@@ -517,8 +619,8 @@ type securityGroupCreateReq struct {
 // @Failure 404 {object} SimpleMsg
 // @Failure 500 {object} SimpleMsg
 // @Router /securitygroup [post] */
-func createSecurity(c echo.Context) error {
-	cblog.Info("call createSecurity()")
+func CreateSecurity(c echo.Context) error {
+	cblog.Info("call CreateSecurity()")
 
 	req := securityGroupCreateReq{}
 
@@ -526,17 +628,10 @@ func createSecurity(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	// check the input Name to include the SecurityGroup Delimiter
-	if strings.Contains(req.ReqInfo.Name, cm.SG_DELIMITER) {
-		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Errorf(cm.SG_DELIMITER+" cannot be used in Security Group name!!"))
-	}
-
 	// Rest RegInfo => Driver ReqInfo
 	reqInfo := cres.SecurityReqInfo{
-		// SG NameID format => {VPC NameID} + cm.SG_DELIMITER + {SG NameID}
-		// transform: SG NameID => {VPC NameID} + cm.SG_DELIMITER + {SG NameID}
 		//IId:           cres.IID{req.ReqInfo.VPCName + cm.SG_DELIMITER + req.ReqInfo.Name, ""},
-		IId:           cres.IID{req.ReqInfo.VPCName + cm.SG_DELIMITER + req.ReqInfo.Name, req.ReqInfo.Name}, // for NCP: fixed NameID => SystemID, Driver: (1)search systemID with fixed NameID (2)replace fixed NameID into SysemID
+		IId:           cres.IID{req.ReqInfo.Name, req.ReqInfo.Name}, // for NCP: fixed NameID => SystemID, Driver: (1)search systemID with fixed NameID (2)replace fixed NameID into SysemID
 		VpcIID:        cres.IID{req.ReqInfo.VPCName, ""},
 		Direction:     req.ReqInfo.Direction,
 		SecurityRules: req.ReqInfo.SecurityRules,
@@ -551,8 +646,8 @@ func createSecurity(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
-func listSecurity(c echo.Context) error {
-	cblog.Info("call listSecurity()")
+func ListSecurity(c echo.Context) error {
+	cblog.Info("call ListSecurity()")
 
 	var req struct {
 		ConnectionName string
@@ -579,8 +674,8 @@ func listSecurity(c echo.Context) error {
 // (1) get args from REST Call
 // (2) get all SG List by common-runtime API
 // (3) return REST Json Format
-func listAllSecurity(c echo.Context) error {
-	cblog.Info("call listAllSecurity()")
+func ListAllSecurity(c echo.Context) error {
+	cblog.Info("call ListAllSecurity()")
 
 	var req struct {
 		ConnectionName string
@@ -599,8 +694,8 @@ func listAllSecurity(c echo.Context) error {
 	return c.JSON(http.StatusOK, &allResourceList)
 }
 
-func getSecurity(c echo.Context) error {
-	cblog.Info("call getSecurity()")
+func GetSecurity(c echo.Context) error {
+	cblog.Info("call GetSecurity()")
 
 	var req struct {
 		ConnectionName string
@@ -622,8 +717,8 @@ func getSecurity(c echo.Context) error {
 // (1) get args from REST Call
 // (2) call common-runtime API
 // (3) return REST Json Format
-func deleteSecurity(c echo.Context) error {
-	cblog.Info("call deleteSecurity()")
+func DeleteSecurity(c echo.Context) error {
+	cblog.Info("call DeleteSecurity()")
 
 	var req struct {
 		ConnectionName string
@@ -649,8 +744,8 @@ func deleteSecurity(c echo.Context) error {
 // (1) get args from REST Call
 // (2) call common-runtime API
 // (3) return REST Json Format
-func deleteCSPSecurity(c echo.Context) error {
-	cblog.Info("call deleteCSPSecurity()")
+func DeleteCSPSecurity(c echo.Context) error {
+	cblog.Info("call DeleteCSPSecurity()")
 
 	var req struct {
 		ConnectionName string
@@ -672,6 +767,63 @@ func deleteCSPSecurity(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, &resultInfo)
 }
+
+type keyRegisterReq struct {
+        ConnectionName string
+        ReqInfo        struct {
+                Name           string
+                CSPId          string
+        }
+}
+
+func RegisterKey(c echo.Context) error {
+        cblog.Info("call RegisterKey()")
+
+        req := keyRegisterReq{}
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // create UserIID
+        userIId := cres.IID{req.ReqInfo.Name, req.ReqInfo.CSPId}
+
+        // Call common-runtime API
+        result, err := cmrt.RegisterKey(req.ConnectionName, userIId)
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        return c.JSON(http.StatusOK, result)
+}
+
+// (1) get args from REST Call
+// (2) call common-runtime API
+// (3) return REST Json Format
+func UnregisterKey(c echo.Context) error {
+        cblog.Info("call UnregisterKey()")
+
+        var req struct {
+                ConnectionName string
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // Call common-runtime API
+        result, err := cmrt.UnregisterResource(req.ConnectionName, rsKey, c.Param("Name"))
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        resultInfo := BooleanInfo{
+                Result: strconv.FormatBool(result),
+        }
+
+        return c.JSON(http.StatusOK, &resultInfo)
+}
+
 
 // type keyPairCreateReq struct {
 // 	ConnectionName string
@@ -698,8 +850,8 @@ type JSONResult struct {
 // @Failure 404 {object} SimpleMsg
 // @Failure 500 {object} SimpleMsg
 // @Router /keypair [post]
-func createKey(c echo.Context) error {
-	cblog.Info("call createKey()")
+func CreateKey(c echo.Context) error {
+	cblog.Info("call CreateKey()")
 
 	var req struct {
 		ConnectionName string
@@ -726,8 +878,8 @@ func createKey(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
-func listKey(c echo.Context) error {
-	cblog.Info("call listKey()")
+func ListKey(c echo.Context) error {
+	cblog.Info("call ListKey()")
 
 	var req struct {
 		ConnectionName string
@@ -754,8 +906,8 @@ func listKey(c echo.Context) error {
 // (1) get args from REST Call
 // (2) get all KeyPair List by common-runtime API
 // (3) return REST Json Format
-func listAllKey(c echo.Context) error {
-	cblog.Info("call listAllKey()")
+func ListAllKey(c echo.Context) error {
+	cblog.Info("call ListAllKey()")
 
 	var req struct {
 		ConnectionName string
@@ -774,8 +926,8 @@ func listAllKey(c echo.Context) error {
 	return c.JSON(http.StatusOK, &allResourceList)
 }
 
-func getKey(c echo.Context) error {
-	cblog.Info("call getKey()")
+func GetKey(c echo.Context) error {
+	cblog.Info("call GetKey()")
 
 	var req struct {
 		ConnectionName string
@@ -797,8 +949,8 @@ func getKey(c echo.Context) error {
 // (1) get args from REST Call
 // (2) call common-runtime API
 // (3) return REST Json Format
-func deleteKey(c echo.Context) error {
-	cblog.Info("call deleteKey()")
+func DeleteKey(c echo.Context) error {
+	cblog.Info("call DeleteKey()")
 
 	var req struct {
 		ConnectionName string
@@ -824,8 +976,8 @@ func deleteKey(c echo.Context) error {
 // (1) get args from REST Call
 // (2) call common-runtime API
 // (3) return REST Json Format
-func deleteCSPKey(c echo.Context) error {
-	cblog.Info("call deleteCSPKey()")
+func DeleteCSPKey(c echo.Context) error {
+	cblog.Info("call DeleteCSPKey()")
 
 	var req struct {
 		ConnectionName string
@@ -1109,11 +1261,69 @@ func deletePublicIP(c echo.Context) error {
 ****************************/
 
 //================ VM Handler
+
+type vmRegisterReq struct {
+        ConnectionName string
+        ReqInfo        struct {
+                Name           string
+                CSPId          string
+        }
+}
+
+func RegisterVM(c echo.Context) error {
+        cblog.Info("call RegisterVM()")
+
+        req := vmRegisterReq{}
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // create UserIID
+        userIId := cres.IID{req.ReqInfo.Name, req.ReqInfo.CSPId}
+
+        // Call common-runtime API
+        result, err := cmrt.RegisterVM(req.ConnectionName, userIId)
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        return c.JSON(http.StatusOK, result)
+}
+
+// (1) get args from REST Call
+// (2) call common-runtime API
+// (3) return REST Json Format
+func UnregisterVM(c echo.Context) error {
+        cblog.Info("call UnregisterVM()")
+
+        var req struct {
+                ConnectionName string
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // Call common-runtime API
+        result, err := cmrt.UnregisterResource(req.ConnectionName, rsVM, c.Param("Name"))
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        resultInfo := BooleanInfo{
+                Result: strconv.FormatBool(result),
+        }
+
+        return c.JSON(http.StatusOK, &resultInfo)
+}
+
+
 // (1) check exist(NameID)
 // (2) create Resource
 // (3) insert IID
-func startVM(c echo.Context) error {
-	cblog.Info("call startVM()")
+func StartVM(c echo.Context) error {
+	cblog.Info("call StartVM()")
 
 	var req struct {
 		ConnectionName string
@@ -1125,6 +1335,9 @@ func startVM(c echo.Context) error {
 			SecurityGroupNames []string
 			VMSpecName         string
 			KeyPairName        string
+
+			RootDiskType       string
+			RootDiskSize       string
 
 			VMUserId     string
 			VMUserPasswd string
@@ -1141,9 +1354,11 @@ func startVM(c echo.Context) error {
 	for _, sgName := range req.ReqInfo.SecurityGroupNames {
 		// SG NameID format => {VPC NameID} + cm.SG_DELIMITER + {SG NameID}
 		// transform: SG NameID => {VPC NameID}-{SG NameID}
-		sgIID := cres.IID{req.ReqInfo.VPCName + cm.SG_DELIMITER + sgName, ""}
+		//sgIID := cres.IID{req.ReqInfo.VPCName + cm.SG_DELIMITER + sgName, ""}
+		sgIID := cres.IID{sgName, ""}
 		sgIIDList = append(sgIIDList, sgIID)
 	}
+
 	// (2) create VMReqInfo with SecurityGroup IID List
 	reqInfo := cres.VMReqInfo{
 		IId:               cres.IID{req.ReqInfo.Name, ""},
@@ -1154,6 +1369,9 @@ func startVM(c echo.Context) error {
 
 		VMSpecName: req.ReqInfo.VMSpecName,
 		KeyPairIID: cres.IID{req.ReqInfo.KeyPairName, ""},
+
+		RootDiskType: req.ReqInfo.RootDiskType,
+		RootDiskSize: req.ReqInfo.RootDiskSize,
 
 		VMUserId:     req.ReqInfo.VMUserId,
 		VMUserPasswd: req.ReqInfo.VMUserPasswd,
@@ -1168,8 +1386,8 @@ func startVM(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
-func listVM(c echo.Context) error {
-	cblog.Info("call listVM()")
+func ListVM(c echo.Context) error {
+	cblog.Info("call ListVM()")
 
 	var req struct {
 		ConnectionName string
@@ -1197,8 +1415,8 @@ func listVM(c echo.Context) error {
 // (1) get args from REST Call
 // (2) get all VM List by common-runtime API
 // (3) return REST Json Format
-func listAllVM(c echo.Context) error {
-	cblog.Info("call listAllVM()")
+func ListAllVM(c echo.Context) error {
+	cblog.Info("call ListAllVM()")
 
 	var req struct {
 		ConnectionName string
@@ -1217,8 +1435,8 @@ func listAllVM(c echo.Context) error {
 	return c.JSON(http.StatusOK, &allResourceList)
 }
 
-func getVM(c echo.Context) error {
-	cblog.Info("call getVM()")
+func GetVM(c echo.Context) error {
+	cblog.Info("call GetVM()")
 
 	var req struct {
 		ConnectionName string
@@ -1240,8 +1458,8 @@ func getVM(c echo.Context) error {
 // (1) get args from REST Call
 // (2) call common-runtime API
 // (3) return REST Json Format
-func terminateVM(c echo.Context) error {
-	cblog.Info("call terminateVM()")
+func TerminateVM(c echo.Context) error {
+	cblog.Info("call TerminateVM()")
 
 	var req struct {
 		ConnectionName string
@@ -1267,8 +1485,8 @@ func terminateVM(c echo.Context) error {
 // (1) get args from REST Call
 // (2) call common-runtime API
 // (3) return REST Json Format
-func terminateCSPVM(c echo.Context) error {
-	cblog.Info("call terminateCSPVM()")
+func TerminateCSPVM(c echo.Context) error {
+	cblog.Info("call TerminateCSPVM()")
 
 	var req struct {
 		ConnectionName string
@@ -1291,8 +1509,8 @@ func terminateCSPVM(c echo.Context) error {
 	return c.JSON(http.StatusOK, &resultInfo)
 }
 
-func listVMStatus(c echo.Context) error {
-	cblog.Info("call listVMStatus()")
+func ListVMStatus(c echo.Context) error {
+	cblog.Info("call ListVMStatus()")
 
 	var req struct {
 		ConnectionName string
@@ -1316,8 +1534,8 @@ func listVMStatus(c echo.Context) error {
 	return c.JSON(http.StatusOK, &jsonResult)
 }
 
-func getVMStatus(c echo.Context) error {
-	cblog.Info("call getVMStatus()")
+func GetVMStatus(c echo.Context) error {
+	cblog.Info("call GetVMStatus()")
 
 	var req struct {
 		ConnectionName string
@@ -1340,8 +1558,8 @@ func getVMStatus(c echo.Context) error {
 	return c.JSON(http.StatusOK, &resultInfo)
 }
 
-func controlVM(c echo.Context) error {
-	cblog.Info("call controlVM()")
+func ControlVM(c echo.Context) error {
+	cblog.Info("call ControlVM()")
 
 	var req struct {
 		ConnectionName string

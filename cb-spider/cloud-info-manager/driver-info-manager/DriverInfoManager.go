@@ -10,7 +10,7 @@ package driverinfomanager
 
 import (
 	"fmt"
-
+	"strings"
 	"github.com/cloud-barista/cb-store/config"
 	"github.com/sirupsen/logrus"
 )
@@ -53,6 +53,12 @@ func RegisterCloudDriver(driverName string, providerName string, driverLibFileNa
 	if err != nil {
 		return nil, err
 	}
+
+	// trim user inputs
+        driverName = strings.TrimSpace(driverName)
+        providerName = strings.ToUpper(strings.TrimSpace(providerName))
+        driverLibFileName = strings.TrimSpace(driverLibFileName)
+
 
 	cblog.Debug("insert metainfo into store")
 

@@ -18,7 +18,7 @@ The Operation Tool for Cloud-Barista System Runtime
 
 ```
 [NOTE]
-cb-operator is currently under development. (the latest version is 0.3 espresso)
+cb-operator is currently under development.
 So, we do not recommend using the current release in production.
 Please note that the functionalities of cb-operator are not stable and secure yet.
 If you have any difficulties in using cb-operator, please let us know.

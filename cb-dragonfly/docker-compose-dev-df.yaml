@@ -6,8 +6,8 @@ services:
     image: influxdb:1.8-alpine
     container_name: cb-dragonfly-influxdb
     ports:
-      - 28083:8083
       - 28086:8086
+      - 28088:8088
     environment:
       - PRE_CREATE_DB=cbmon
       - INFLUXDB_DB=cbmon
@@ -65,8 +65,14 @@ services:
       KAFKA_PORT: 9092
       KAFKA_ZOOKEEPER_CONNECT: cb-dragonfly-zookeeper:2181
       KAFKA_DELETE_TOPIC_ENABLE: "true"
-      KAFKA_LOG_RETENTION_MS: 10000
-      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 5000
+      KAFKA_LOG_RETENTION_HOURS: 1
+      # 1 hours (delete logs)
+      KAFKA_LOG_RETENTION_BYTES: 524288000
+      # 500 MB
+      KAFKA_LOG_SEGMENT_BYTES: 262144000
+      # 250 MB
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 600000
+      # 10 min (check interval)
       KAFKA_MESSAGE_TIMESTAMP_TYPE: LogAppendTime
       KAFKA_LOG_MESSAGE_TIMESTAMP_TYPE: LogAppendTime
     volumes:

@@ -5,7 +5,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/cloud-barista/cb-webtool/src/model/tumblebug"
+	// "github.com/cloud-barista/cb-webtool/src/model/tumblebug"
+	// tbcommon "github.com/cloud-barista/cb-webtool/src/model/tumblebug/common"
+	// tbmcir "github.com/cloud-barista/cb-webtool/src/model/tumblebug/mcir"
+	tbmcis "github.com/cloud-barista/cb-webtool/src/model/tumblebug/mcis"
+
 	service "github.com/cloud-barista/cb-webtool/src/service"
 	"github.com/labstack/echo"
 
@@ -31,19 +35,21 @@ func McisPolicyMngForm(c echo.Context) error {
 	// 최신 namespacelist 가져오기
 	nsList, _ := service.GetNameSpaceList()
 	store.Set("namespace", nsList)
+	store.Save()
 	log.Println(" nsList  ", nsList)
 
 	// 해당 Namespace의 모든 MCIS 조회
-	mcisList, _ := service.GetMcisPolicyList(defaultNameSpaceID)
-	log.Println(" mcisList  ", mcisList)
+	mcisPolicyList, _ := service.GetMcisPolicyList(defaultNameSpaceID)
+	log.Println(" mcisList  ", mcisPolicyList)
 
 	return echotemplate.Render(c, http.StatusOK,
-		"operation/monitorings/McisPolishMng", // 파일명
+		//"operation/monitorings/McisPolishMng", // 파일명
+		"operation/monitorings/mcismonitoring/McisMonitoringMng", // 파일명
 		map[string]interface{}{
 			"LoginInfo":          loginInfo,
 			"DefaultNameSpaceID": defaultNameSpaceID,
 			"NameSpaceList":      nsList,
-			"McisList":           mcisList,
+			"McisPolicyList":     mcisPolicyList,
 		})
 
 }
@@ -60,12 +66,12 @@ func GetMcisPolicyInfoList(c echo.Context) error {
 	mcisID := c.Param("mcisID")
 	log.Println("mcisID= " + mcisID)
 
-	resultMcisInfo, _ := service.GetMcisPolicyList(defaultNameSpaceID)
+	resultMcisPolicyInfo, _ := service.GetMcisPolicyList(defaultNameSpaceID)
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message":  "success",
-		"status":   200,
-		"McisInfo": resultMcisInfo,
+		"message":        "success",
+		"status":         200,
+		"McisPolicyInfo": resultMcisPolicyInfo,
 	})
 }
 
@@ -82,14 +88,13 @@ func GetMcisPolicyInfoData(c echo.Context) error {
 
 	mcisID := c.Param("mcisID")
 	log.Println("mcisID= " + mcisID)
-	//monitoringGroup.GET("/mcis/:mcisID/metric/:metric", controller.GetVmMonitoringInfoData)
 
-	resultMcisInfo, _ := service.GetMcisPolicyInfoData(defaultNameSpaceID, mcisID)
+	resultMcisPolicyInfo, _ := service.GetMcisPolicyInfoData(defaultNameSpaceID, mcisID)
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message":  "success",
-		"status":   200,
-		"McisInfo": resultMcisInfo,
+		"message":        "success",
+		"status":         200,
+		"McisPolicyInfo": resultMcisPolicyInfo,
 	})
 }
 
@@ -100,7 +105,7 @@ func McisPolicyRegProc(c echo.Context) error {
 		return c.Redirect(http.StatusTemporaryRedirect, "/login")
 	}
 
-	mcisPolicyInfo := &tumblebug.McisPolicyInfo{}
+	mcisPolicyInfo := &tbmcis.McisPolicyInfo{}
 	if err := c.Bind(mcisPolicyInfo); err != nil {
 		// if err := c.Bind(mCISInfoList); err != nil {
 		log.Println(err)
@@ -115,13 +120,13 @@ func McisPolicyRegProc(c echo.Context) error {
 	mcisID := c.Param("mcisID")
 
 	// TODO : defaultNameSpaceID 가 없으면 설정화면으로 보낼 것
-	resultMcisPolishInfo, respStatus := service.RegMcisPolicy(defaultNameSpaceID, mcisID, mcisPolicyInfo)
-	log.Println("RegMcis service returned")
+	resultMcisPolicyInfo, respStatus := service.RegMcisPolicy(defaultNameSpaceID, mcisID, mcisPolicyInfo)
+	log.Println("RegMcisPolicy service returned")
 	if respStatus.StatusCode != 200 && respStatus.StatusCode != 201 {
 		return c.JSON(respStatus.StatusCode, map[string]interface{}{
 			"error":          respStatus.Message,
 			"status":         respStatus.StatusCode,
-			"McisPolishInfo": resultMcisPolishInfo,
+			"McisPolicyInfo": resultMcisPolicyInfo,
 		})
 	}
 

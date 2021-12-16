@@ -31,7 +31,7 @@ type CLOUD_OS string
 type RES_TYPE string
 
 const (
-	//=========== CloudOS (ref: cb-spider/conf/cloudos.yaml)
+	//=========== CloudOS (ref: cb-spider/cloud-driver-libs/cloudos.yaml)
 	AWS       CLOUD_OS = "AWS"
 	GCP       CLOUD_OS = "GCP"
 	AZURE     CLOUD_OS = "AZURE"
@@ -43,6 +43,8 @@ const (
 	NCP       CLOUD_OS = "NCP"
 	MOCK      CLOUD_OS = "MOCK"
 	TENCENT   CLOUD_OS = "TENCENT"
+	IBM       CLOUD_OS = "IBM"
+	KTCLOUD   CLOUD_OS = "KTCLOUD"
 
 	//=========== ResourceType
 	VMIMAGE       RES_TYPE = "VMIMAGE"
@@ -184,7 +186,7 @@ func getFormatter(loggerName string) *calllogformatter.Formatter {
 
 //=========================
 type CLOUDLOGSCHEMA struct {
-	CloudOS      CLOUD_OS // ex) AWS | AZURE | ALIBABA | GCP | OPENSTACK | CLOUDTWIN | CLOUDIT | DOCKER | NCP | MOCK
+	CloudOS      CLOUD_OS // ex) AWS | AZURE | ALIBABA | GCP | OPENSTACK | CLOUDTWIN | CLOUDIT | DOCKER | NCP | MOCK | IBM
 	RegionZone   string   // ex) us-east1/us-east1-c
 	ResourceType RES_TYPE // ex) VMIMAGE | VMSPEC | VPCSUBNET | SECURITYGROUP | VMKEYPAIR | VM
 	ResourceName string   // ex) vpc-01

@@ -1,19 +1,38 @@
+/*
+Copyright 2019 The Cloud-Barista Authors.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+// Package common is to handle REST API for common funcitonalities
 package common
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
 
-	"github.com/beego/beego/v2/core/validation"
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 
 	"github.com/cloud-barista/cb-tumblebug/src/core/common"
 	"github.com/cloud-barista/cb-tumblebug/src/core/mcir"
 	"github.com/cloud-barista/cb-tumblebug/src/core/mcis"
 )
+
+var validate *validator.Validate
+
+func init() {
+	validate = validator.New()
+}
 
 type TbConnectionName struct {
 	ConnectionName string `json:"connectionName"`
@@ -40,15 +59,11 @@ func Send(c echo.Context, httpCode int, json interface{}) error {
 }
 
 func Validate(c echo.Context, params []string) error {
-	valid := validation.Validation{}
-
+	var err error
 	for _, name := range params {
-		valid.Required(c.Param(name), name)
-	}
-
-	if valid.HasErrors() {
-		for _, err := range valid.Errors {
-			return errors.New(fmt.Sprintf("[%s]%s", err.Key, err.Error()))
+		err = validate.Var(c.Param(name), "required")
+		if err != nil {
+			return err
 		}
 	}
 	return nil
@@ -105,7 +120,7 @@ func RestGetSwagger(c echo.Context) error {
 // RestGetConnConfig godoc
 // @Summary Get registered ConnConfig info
 // @Description Get registered ConnConfig info
-// @Tags [Admin] Cloud environment management
+// @Tags [Admin] Multi-Cloud environment configuration
 // @Accept  json
 // @Produce  json
 // @Param connConfigName path string true "Name of connection config (cloud config)"
@@ -131,7 +146,7 @@ func RestGetConnConfig(c echo.Context) error {
 // RestGetConnConfigList godoc
 // @Summary List all registered ConnConfig
 // @Description List all registered ConnConfig
-// @Tags [Admin] Cloud environment management
+// @Tags [Admin] Multi-Cloud environment configuration
 // @Accept  json
 // @Produce  json
 // @Success 200 {object} common.ConnConfigList
@@ -155,7 +170,7 @@ func RestGetConnConfigList(c echo.Context) error {
 // RestGetRegion godoc
 // @Summary Get registered region info
 // @Description Get registered region info
-// @Tags [Admin] Cloud environment management
+// @Tags [Admin] Multi-Cloud environment configuration
 // @Accept  json
 // @Produce  json
 // @Param regionName path string true "Name of region to retrieve"
@@ -182,7 +197,7 @@ func RestGetRegion(c echo.Context) error {
 // RestGetRegionList godoc
 // @Summary List all registered regions
 // @Description List all registered regions
-// @Tags [Admin] Cloud environment management
+// @Tags [Admin] Multi-Cloud environment configuration
 // @Accept  json
 // @Produce  json
 // @Success 200 {object} common.RegionList
@@ -322,7 +337,7 @@ type RestInspectResourcesRequest struct {
 // RestInspectResources godoc
 // @Summary Inspect Resources (vNet, securityGroup, sshKey, vm) registered in CB-Tumblebug, CB-Spider, CSP
 // @Description Inspect Resources (vNet, securityGroup, sshKey, vm) registered in CB-Tumblebug, CB-Spider, CSP
-// @Tags [Admin] Cloud environment management
+// @Tags [Admin] System management
 // @Accept  json
 // @Produce  json
 // @Param connectionName body RestInspectResourcesRequest true "Specify connectionName and resource type"

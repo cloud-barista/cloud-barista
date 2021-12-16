@@ -1,7 +1,7 @@
 
 compose-build:
 	@echo "Starting Docker Image Build..."
-	DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker build . -t cloudbaristaorg/cb-dragonfly:espresso-v0.1-kafka
+	DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker build . -t cloudbaristaorg/cb-dragonfly:dev
 
 compose-up:
 	@echo "Starting Docker Compose..."

@@ -6,6 +6,11 @@ echo "##   2. SecurityGroup: Create -> List -> Get"
 echo "##   3. KeyPair: Create -> List -> Get"
 echo "##   4. VM: StartVM -> List -> Get -> ListStatus -> GetStatus -> Suspend -> Resume -> Reboot"
 echo "## ---------------------------------"
+echo "##   a. VPC: Register -> Unregister"
+echo "##   b. SecurityGroup: Register -> Unregister"
+echo "##   c. KeyPair: Register -> Unregister"
+echo "##   d. VM: Register -> Unregister"
+echo "## ---------------------------------"
 echo "##   4. VM: Terminate(Delete)"
 echo "##   3. KeyPair: Delete"
 echo "##   2. SecurityGroup: Delete"
@@ -118,21 +123,112 @@ $CBSPIDER_ROOT/interface/spctl vm liststatus --config $CBSPIDER_ROOT/interface/g
 
 $CBSPIDER_ROOT/interface/spctl vm getstatus --config $CBSPIDER_ROOT/interface/grpc_conf.yaml --cname "${CONN_CONFIG}" -n vm-01
 
-$CBSPIDER_ROOT/interface/spctl vm control --config $CBSPIDER_ROOT/interface/grpc_conf.yaml --cname "${CONN_CONFIG}" -n vm-01 -a suspend
+$CBSPIDER_ROOT/interface/spctl vm suspend --config $CBSPIDER_ROOT/interface/grpc_conf.yaml --cname "${CONN_CONFIG}" -n vm-01
 
 echo "============== sleep 1 after suspend VM"
 sleep 1
 
-$CBSPIDER_ROOT/interface/spctl vm control --config $CBSPIDER_ROOT/interface/grpc_conf.yaml --cname "${CONN_CONFIG}" -n vm-01 -a resume
+$CBSPIDER_ROOT/interface/spctl vm resume --config $CBSPIDER_ROOT/interface/grpc_conf.yaml --cname "${CONN_CONFIG}" -n vm-01
 echo "============== sleep 1 after resume VM"
 sleep 1
 
-$CBSPIDER_ROOT/interface/spctl vm control --config $CBSPIDER_ROOT/interface/grpc_conf.yaml --cname "${CONN_CONFIG}" -n vm-01 -a reboot
+$CBSPIDER_ROOT/interface/spctl vm reboot --config $CBSPIDER_ROOT/interface/grpc_conf.yaml --cname "${CONN_CONFIG}" -n vm-01
 
 echo "============== sleep 1 after reboot VM"
 sleep 1
 echo "#-----------------------------"
 
+
+echo "####################################################################"
+echo "####################################################################"
+echo "####################################################################"
+
+echo "####################################################################"
+echo "## a. VPC: Register -> Unregister"
+echo "####################################################################"
+
+
+VPCINFO=$($CBSPIDER_ROOT/interface/spctl vpc get --config $CBSPIDER_ROOT/interface/grpc_conf.yaml -o json --cname "${CONN_CONFIG}" -n vpc-01)
+VPCSystemId=$(jq '.IId.SystemId' <<<"$VPCINFO")
+echo "$VPCSystemId" | jq ''
+
+$CBSPIDER_ROOT/interface/spctl vpc register --config $CBSPIDER_ROOT/interface/grpc_conf.yaml -i json -d \
+    '{ 
+      "ConnectionName":"'${CONN_CONFIG}'",
+      "ReqInfo": { 
+        "Name": "vpc-register-01", 
+        "CSPId": '${VPCSystemId}'
+      } 
+    }' 
+
+$CBSPIDER_ROOT/interface/spctl vpc unregister --config $CBSPIDER_ROOT/interface/grpc_conf.yaml --cname "${CONN_CONFIG}" -n vpc-register-01
+
+echo "#-----------------------------"
+
+echo "####################################################################"
+echo "## b. SecurityGroup: Register -> Unregister"
+echo "####################################################################"
+
+
+SECURITYINFO=$($CBSPIDER_ROOT/interface/spctl security get --config $CBSPIDER_ROOT/interface/grpc_conf.yaml -o json --cname "${CONN_CONFIG}" -n sg-01)
+SecuritySystemId=$(jq '.IId.SystemId' <<<"$SECURITYINFO")
+echo "$SecuritySystemId" | jq ''
+
+$CBSPIDER_ROOT/interface/spctl security register --config $CBSPIDER_ROOT/interface/grpc_conf.yaml -i json -d \
+    '{ 
+      "ConnectionName":"'${CONN_CONFIG}'",
+      "ReqInfo": { 
+        "VPCName": "vpc-01", 
+        "Name": "sg-register-01", 
+        "CSPId": '${SecuritySystemId}'
+      } 
+    }' 
+
+$CBSPIDER_ROOT/interface/spctl security unregister --config $CBSPIDER_ROOT/interface/grpc_conf.yaml --cname "${CONN_CONFIG}" -n sg-register-01
+
+echo "#-----------------------------"
+
+echo "####################################################################"
+echo "## c. KeyPair: Register -> Unregister"
+echo "####################################################################"
+
+KEYPAIRINFO=$($CBSPIDER_ROOT/interface/spctl keypair get --config $CBSPIDER_ROOT/interface/grpc_conf.yaml -o json --cname "${CONN_CONFIG}" -n keypair-01)
+KeyPairSystemId=$(jq '.IId.SystemId' <<<"$KEYPAIRINFO")
+echo "$KeyPairSystemId" | jq ''
+
+$CBSPIDER_ROOT/interface/spctl keypair register --config $CBSPIDER_ROOT/interface/grpc_conf.yaml -i json -d \
+    '{ 
+      "ConnectionName":"'${CONN_CONFIG}'",
+      "ReqInfo": { 
+        "Name": "keypair-register-01", 
+        "CSPId": '${KeyPairSystemId}'
+      } 
+    }' 
+
+$CBSPIDER_ROOT/interface/spctl keypair unregister --config $CBSPIDER_ROOT/interface/grpc_conf.yaml --cname "${CONN_CONFIG}" -n keypair-register-01
+
+echo "#-----------------------------"
+
+echo "####################################################################"
+echo "## d. VM: Register -> Unregister"
+echo "####################################################################"
+
+VMINFO=$($CBSPIDER_ROOT/interface/spctl vm get --config $CBSPIDER_ROOT/interface/grpc_conf.yaml -o json --cname "${CONN_CONFIG}" -n vm-01)
+VMSystemId=$(jq '.IId.SystemId' <<<"$VMINFO")
+echo "$VMSystemId" | jq ''
+
+$CBSPIDER_ROOT/interface/spctl vm register --config $CBSPIDER_ROOT/interface/grpc_conf.yaml -i json -d \
+    '{ 
+      "ConnectionName":"'${CONN_CONFIG}'",
+      "ReqInfo": { 
+        "Name": "vm-register-01", 
+        "CSPId": '${VMSystemId}'
+      } 
+    }' 
+
+$CBSPIDER_ROOT/interface/spctl vm unregister --config $CBSPIDER_ROOT/interface/grpc_conf.yaml --cname "${CONN_CONFIG}" -n vm-register-01
+
+echo "#-----------------------------"
 
 echo "####################################################################"
 echo "####################################################################"

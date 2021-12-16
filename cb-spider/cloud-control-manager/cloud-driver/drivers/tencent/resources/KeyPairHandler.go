@@ -1,16 +1,7 @@
 package resources
 
 import (
-	"bytes"
-	"crypto/md5"
-	"crypto/rsa"
 	"errors"
-	"fmt"
-	"io"
-	"io/ioutil"
-	"log"
-	"os"
-	"strings"
 
 	call "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/call-log"
 	idrv "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces"
@@ -19,7 +10,6 @@ import (
 	_ "github.com/davecgh/go-spew/spew"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
-	"golang.org/x/crypto/ssh"
 )
 
 type TencentKeyPairHandler struct {
@@ -63,7 +53,8 @@ func (keyPairHandler *TencentKeyPairHandler) ListKey() ([]*irs.KeyPairInfo, erro
 	for _, pair := range response.Response.KeyPairSet {
 		keyPairInfo, errKeyPair := ExtractKeyPairDescribeInfo(pair)
 		if errKeyPair != nil {
-			cblogger.Infof("[%s] KeyPair는 Local에서 관리하는 대상이 아니기 때문에 Skip합니다.", *pair.KeyName)
+			// 2021-10-27 이슈#480에 의해 Local Key 로직 제거
+			//cblogger.Infof("[%s] KeyPair는 Local에서 관리하는 대상이 아니기 때문에 Skip합니다.", *pair.KeyName)
 			cblogger.Info(errKeyPair.Error())
 			//return nil, errKeyPair
 		} else {
@@ -74,6 +65,7 @@ func (keyPairHandler *TencentKeyPairHandler) ListKey() ([]*irs.KeyPairInfo, erro
 	return keyPairList, nil
 }
 
+// 2021-10-27 이슈#480에 의해 Local Key 로직 제거
 //KeyPair 정보를 추출함
 func ExtractKeyPairDescribeInfo(keyPair *cvm.KeyPair) (irs.KeyPairInfo, error) {
 	spew.Dump(keyPair)
@@ -89,6 +81,7 @@ func ExtractKeyPairDescribeInfo(keyPair *cvm.KeyPair) (irs.KeyPairInfo, error) {
 	// }
 	//조회 용도
 
+	/* 2021-10-27 이슈#480에 의해 Local Key 로직 제거
 	// Local Keyfile 처리
 	keyPairPath := os.Getenv("CBSPIDER_ROOT") + CBKeyPairPath
 	hashString := strings.ReplaceAll(*keyPair.KeyId, ":", "") // 필요한 경우 리전 정보 추가하면 될 듯. 나중에 키 이름과 리전으로 암복호화를 진행하면 될 것같음.
@@ -115,7 +108,7 @@ func ExtractKeyPairDescribeInfo(keyPair *cvm.KeyPair) (irs.KeyPairInfo, error) {
 
 	keyPairInfo.PublicKey = string(publicKeyBytes)
 	keyPairInfo.PrivateKey = string(privateKeyBytes)
-
+	*/
 	keyValueList := []irs.KeyValue{
 		{Key: "KeyId", Value: *keyPair.KeyId},
 		//{Key: "KeyMaterial", Value: *keyPair.KeyMaterial},
@@ -126,10 +119,24 @@ func ExtractKeyPairDescribeInfo(keyPair *cvm.KeyPair) (irs.KeyPairInfo, error) {
 	return keyPairInfo, nil
 }
 
+// 2021-10-27 이슈#480에 의해 Local Key 로직 제거
 //KeyPair 생성시 이름은 알파벳, 숫자 또는 밑줄 "_"만 지원
 func (keyPairHandler *TencentKeyPairHandler) CreateKey(keyPairReqInfo irs.KeyPairReqInfo) (irs.KeyPairInfo, error) {
 	cblogger.Info(keyPairReqInfo)
 
+	//=================================================
+	// 동일 이름 생성 방지 추가(cb-spider 요청 필수 기능)
+	//=================================================
+	isExist, errExist := keyPairHandler.isExist(keyPairReqInfo.IId.NameId)
+	if errExist != nil {
+		cblogger.Error(errExist)
+		return irs.KeyPairInfo{}, errExist
+	}
+	if isExist {
+		return irs.KeyPairInfo{}, errors.New("A keyPair with the name " + keyPairReqInfo.IId.NameId + " already exists.")
+	}
+
+	/* 2021-10-27 이슈#480에 의해 Local Key 로직 제거
 	keyPairPath := os.Getenv("CBSPIDER_ROOT") + CBKeyPairPath
 	cblogger.Infof("Getenv[CBSPIDER_ROOT] : [%s]", os.Getenv("CBSPIDER_ROOT"))
 	cblogger.Infof("CBKeyPairPath : [%s]", CBKeyPairPath)
@@ -139,6 +146,7 @@ func (keyPairHandler *TencentKeyPairHandler) CreateKey(keyPairReqInfo irs.KeyPai
 		cblogger.Error(err)
 		return irs.KeyPairInfo{}, err
 	}
+	*/
 
 	// logger for HisCall
 	callogger := call.GetLogger("HISCALL")
@@ -185,6 +193,7 @@ func (keyPairHandler *TencentKeyPairHandler) CreateKey(keyPairReqInfo irs.KeyPai
 
 	//spew.Dump(keyPairInfo)
 
+	/* 2021-10-27 이슈#480에 의해 Local Key 로직 제거
 	//=============================
 	// 키 페어를 로컬 파일에 기록 함.
 	//=============================
@@ -196,24 +205,52 @@ func (keyPairHandler *TencentKeyPairHandler) CreateKey(keyPairReqInfo irs.KeyPai
 	cblogger.Infof("savePublicFileTo : [%s]", savePublicFileTo)
 
 	// 파일에 private Key를 쓴다
-	err = writeKeyToFile([]byte(keyPairInfo.PrivateKey), savePrivateFileTo)
+	err = keypair.SaveKey([]byte(keyPairInfo.PrivateKey), savePrivateFileTo)
 	if err != nil {
 		return irs.KeyPairInfo{}, err
 	}
 
 	// 파일에 public Key를 쓴다
-	err = writeKeyToFile([]byte(keyPairInfo.PublicKey), savePublicFileTo)
+	err = keypair.SaveKey([]byte(keyPairInfo.PublicKey), savePublicFileTo)
 	if err != nil {
 		return irs.KeyPairInfo{}, err
 	}
-
+	*/
 	return keyPairInfo, nil
 }
 
+// cb-spider 정책상 이름 기반으로 중복 생성을 막아야 함.
+func (keyPairHandler *TencentKeyPairHandler) isExist(chkName string) (bool, error) {
+	cblogger.Debugf("chkName : %s", chkName)
+
+	request := cvm.NewDescribeKeyPairsRequest()
+	request.Filters = []*cvm.Filter{
+		&cvm.Filter{
+			Name:   common.StringPtr("key-name"),
+			Values: common.StringPtrs([]string{chkName}),
+		},
+	}
+
+	response, err := keyPairHandler.Client.DescribeKeyPairs(request)
+	if err != nil {
+		cblogger.Error(err)
+		return false, err
+	}
+
+	if *response.Response.TotalCount < 1 {
+		return false, nil
+	}
+
+	cblogger.Infof("SSH Key 정보 찾음 - KeyId:[%s] / KeyName:[%s]", *response.Response.KeyPairSet[0].KeyId, *response.Response.KeyPairSet[0].KeyName)
+	return true, nil
+}
+
+// 2021-10-27 이슈#480에 의해 Local Key 로직 제거
 func (keyPairHandler *TencentKeyPairHandler) GetKey(keyIID irs.IID) (irs.KeyPairInfo, error) {
 	//keyPairID := keyName
 	cblogger.Infof("keyName : [%s]", keyIID.SystemId)
 
+	/* 2021-10-27 이슈#480에 의해 Local Key 로직 제거
 	keyPairPath := os.Getenv("CBSPIDER_ROOT") + CBKeyPairPath
 	cblogger.Infof("Getenv[CBSPIDER_ROOT] : [%s]", os.Getenv("CBSPIDER_ROOT"))
 	cblogger.Infof("CBKeyPairPath : [%s]", CBKeyPairPath)
@@ -223,6 +260,7 @@ func (keyPairHandler *TencentKeyPairHandler) GetKey(keyIID irs.IID) (irs.KeyPair
 		cblogger.Error(err)
 		return irs.KeyPairInfo{}, err
 	}
+	*/
 
 	// logger for HisCall
 	callogger := call.GetLogger("HISCALL")
@@ -268,6 +306,7 @@ func (keyPairHandler *TencentKeyPairHandler) GetKey(keyIID irs.IID) (irs.KeyPair
 	}
 }
 
+/* 2021-10-27 이슈#480에 의해 Local Key 로직 제거
 //Tencent의 경우 FingerPrint같은 고유 값을 조회할 수 없기 때문에 KeyId를 로컬 파일의 고유 키 값으로 이용함.
 func (keyPairHandler *TencentKeyPairHandler) GetLocalKeyId(keyIID irs.IID) (string, error) {
 	//삭제할 Local Keyfile을 찾기 위해 조회
@@ -285,14 +324,18 @@ func (keyPairHandler *TencentKeyPairHandler) GetLocalKeyId(keyIID irs.IID) (stri
 		return "", errors.New("InvalidKeyPair.NotFound: The KeyPair " + keyIID.SystemId + " does not exist")
 	}
 }
+*/
 
+// 2021-10-27 이슈#480에 의해 Local Key 로직 제거
 func (keyPairHandler *TencentKeyPairHandler) DeleteKey(keyIID irs.IID) (bool, error) {
 	cblogger.Infof("삭제 요청된 키페어 : [%s]", keyIID.SystemId)
 
+	/* 2021-10-27 이슈#480에 의해 Local Key 로직 제거
 	keyPairId, errGet := keyPairHandler.GetLocalKeyId(keyIID)
 	if errGet != nil {
 		return false, errGet
 	}
+	*/
 
 	// logger for HisCall
 	callogger := call.GetLogger("HISCALL")
@@ -324,6 +367,7 @@ func (keyPairHandler *TencentKeyPairHandler) DeleteKey(keyIID irs.IID) (bool, er
 	cblogger.Debug(response.ToJsonString())
 	callogger.Info(call.String(callLogInfo))
 
+	/* 2021-10-27 이슈#480에 의해 Local Key 로직 제거
 	//====================
 	// Local Keyfile 처리
 	//====================
@@ -345,10 +389,12 @@ func (keyPairHandler *TencentKeyPairHandler) DeleteKey(keyIID irs.IID) (bool, er
 	if err != nil {
 		return false, err
 	}
+	*/
 
 	return true, nil
 }
 
+/* 2021-10-27 이슈#480에 의해 Local Key 로직 제거
 //=================================
 // 공개 키 변환 및 키 정보 로컬 보관 로직 추가
 //=================================
@@ -356,7 +402,7 @@ func (keyPairHandler *TencentKeyPairHandler) CheckKeyPairFolder(keyPairPath stri
 	//키페어 생성 시 폴더가 존재하지 않으면 생성 함.
 	_, errChkDir := os.Stat(keyPairPath)
 	if os.IsNotExist(errChkDir) {
-		cblogger.Errorf("[%s] Path가 존재하지 않아서 생성합니다.", keyPairPath)
+		cblogger.Infof("[%s] Path가 존재하지 않아서 생성합니다.", keyPairPath)
 
 		//errDir := os.MkdirAll(keyPairPath, 0755)
 		errDir := os.MkdirAll(keyPairPath, 0700)
@@ -368,35 +414,6 @@ func (keyPairHandler *TencentKeyPairHandler) CheckKeyPairFolder(keyPairPath stri
 			return errDir
 		}
 	}
-	return nil
-}
-
-// ParseKey reads the given RSA private key and create a public one for it.
-func makePublicKeyFromPrivateKey(pem string) (string, error) {
-	key, err := ssh.ParseRawPrivateKey([]byte(pem))
-	if err != nil {
-		return "", err
-	}
-	rsaKey, ok := key.(*rsa.PrivateKey)
-	if !ok {
-		return "", fmt.Errorf("%q is not a RSA key", pem)
-	}
-	pub, err := ssh.NewPublicKey(&rsaKey.PublicKey)
-	if err != nil {
-		return "", err
-	}
-
-	return string(bytes.TrimRight(ssh.MarshalAuthorizedKey(pub), "\n")), nil
-}
-
-// 파일에 Key를 쓴다
-func writeKeyToFile(keyBytes []byte, saveFileTo string) error {
-	err := ioutil.WriteFile(saveFileTo, keyBytes, 0600)
-	if err != nil {
-		return err
-	}
-
-	log.Printf("Key 저장위치: %s", saveFileTo)
 	return nil
 }
 
@@ -415,3 +432,4 @@ func CreateHashString(credentialInfo idrv.CredentialInfo, Region idrv.RegionInfo
 	}
 	return fmt.Sprintf("%x", hasher.Sum(nil)), nil
 }
+*/

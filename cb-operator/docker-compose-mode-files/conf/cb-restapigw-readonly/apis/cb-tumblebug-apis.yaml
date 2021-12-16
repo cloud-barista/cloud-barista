@@ -1,0 +1,559 @@
+definitions:
+  # swaggerActive: returns URL of Swagger doc YAML file
+  - name: 'Tumblebug GET /swaggerActive'
+    active: true
+    endpoint: /tumblebug/swaggerActive
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/swaggerActive
+        middleware:
+          mw-http:
+            return_error_details: GET_SwaggerDocURL
+
+  # Health
+  - name: 'Tumblebug GET /health'
+    active: true
+    endpoint: /tumblebug/health
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/health
+        middleware:
+          mw-http:
+            return_error_details: GET_health
+
+  # Check Namespace
+  - name: 'Tumblebug GET /checkNs/:nsId'
+    active: true
+    endpoint: /tumblebug/checkNs/:nsId
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/checkNs/{{.NsId}}
+        middleware:
+          mw-http:
+            return_error_details: GET_checkNs
+
+  # Spider Cloud Connection Config
+  - name: 'Tumblebug GET /connConfig'
+    active: true
+    endpoint: /tumblebug/connConfig
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/connConfig
+        middleware:
+          mw-http:
+            return_error_details: GET_connConfigs
+
+  - name: 'Tumblebug GET /connConfig/:ConfigName'
+    active: true
+    endpoint: /tumblebug/connConfig/:ConfigName
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/connConfig/{{.ConfigName}}
+        middleware:
+          mw-http:
+            return_error_details: GET_connConfig
+
+  # Spider Cloud Region
+  - name: 'Tumblebug GET /region'
+    active: true
+    endpoint: /tumblebug/region
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/region
+        middleware:
+          mw-http:
+            return_error_details: GET_regions
+
+  - name: 'Tumblebug GET /region/:RegionName'
+    active: true
+    endpoint: /tumblebug/region/:RegionName
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/region/{{.RegionName}}
+        middleware:
+          mw-http:
+            return_error_details: GET_region
+
+  # Lookup Spec from Spider
+  - name: 'Tumblebug GET /lookupSpecs'
+    active: true
+    endpoint: /tumblebug/lookupSpecs
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/lookupSpecs
+        middleware:
+          mw-http:
+            return_error_details: GET_lookupSpecs
+
+  - name: 'Tumblebug GET /lookupSpec'
+    active: true
+    endpoint: /tumblebug/lookupSpec
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/lookupSpec
+        middleware:
+          mw-http:
+            return_error_details: GET_lookupSpec
+
+  # Lookup Image from Spider
+  - name: 'Tumblebug GET /lookupImages'
+    active: true
+    endpoint: /tumblebug/lookupImages
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/lookupImages
+        middleware:
+          mw-http:
+            return_error_details: GET_lookupImages
+
+  - name: 'Tumblebug GET /lookupImage'
+    active: true
+    endpoint: /tumblebug/lookupImage
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/lookupImage
+        middleware:
+          mw-http:
+            return_error_details: GET_lookupImage
+
+  # Inspect Tumblebug resources (MCIR / VM)
+  - name: 'Tumblebug POST /inspectResources'
+    active: true
+    endpoint: /tumblebug/inspectResources
+    method: POST
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/inspectResources
+        middleware:
+          mw-http:
+            return_error_details: POST_inspectResources
+
+  # Get Tumblebug Config
+  - name: 'Tumblebug GET /config'
+    active: true
+    endpoint: /tumblebug/config
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/config
+        middleware:
+          mw-http:
+            return_error_details: GET_configs
+
+  - name: 'Tumblebug GET /config/:ConfigId'
+    active: true
+    endpoint: /tumblebug/config/:ConfigId
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/config/{{.ConfigId}}
+        middleware:
+          mw-http:
+            return_error_details: GET_config
+
+  # Get Tumblebug Object
+  - name: 'Tumblebug GET /object'
+    active: true
+    endpoint: /tumblebug/object
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/object
+        middleware:
+          mw-http:
+            return_error_details: GET_object
+
+  - name: 'Tumblebug GET /objects'
+    active: true
+    endpoint: /tumblebug/objects
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/objects
+        middleware:
+          mw-http:
+            return_error_details: GET_objects
+
+  # Get Tumblebug Namespace
+  - name: 'Tumblebug GET /ns'
+    active: true
+    endpoint: /tumblebug/ns
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns
+        middleware:
+          mw-http:
+            return_error_details: GET_namespaces
+
+  - name: 'Tumblebug GET /ns/:nsId'
+    active: true
+    endpoint: /tumblebug/ns/:nsId
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}
+        middleware:
+          mw-http:
+            return_error_details: GET_namespace
+
+  # Get Tumblebug MCIS
+  - name: 'Tumblebug GET /mcis'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/mcis
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/mcis
+        middleware:
+          mw-http:
+            return_error_details: GET_MCISs
+
+  - name: 'Tumblebug GET /mcis/:mcisId'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/mcis/:mcisId
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/mcis/{{.McisId}}
+        middleware:
+          mw-http:
+            return_error_details: GET_MCIS
+
+  # Get Tumblebug MCIS VM
+  - name: 'Tumblebug GET /mcis/:mcisId/vm/:vmId'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/mcis/:mcisId/vm/:vmId
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/mcis/{{.McisId}}/vm/{{.VmId}}
+        middleware:
+          mw-http:
+            return_error_details: GET_VM
+
+  # MCIS recommend
+  - name: 'Tumblebug POST /mcis/recommend'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/mcis/recommend
+    method: POST
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/mcis/recommend
+        middleware:
+          mw-http:
+            return_error_details: POST_MCIS_recommend
+
+  # Get MCIS policy
+  - name: 'Tumblebug GET /policy/mcis'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/policy/mcis
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/policy/mcis
+        middleware:
+          mw-http:
+            return_error_details: GET_MCIS_policies
+
+  - name: 'Tumblebug GET /policy/mcis/:mcisId'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/policy/mcis/:mcisId
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/policy/mcis/{{.McisId}}
+        middleware:
+          mw-http:
+            return_error_details: GET_MCIS_policy
+
+  # Get Monitoring data
+  - name: 'Tumblebug GET /monitoring/mcis/:mcisId/metric/:metric'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/monitoring/mcis/:mcisId/metric/:metric
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/monitoring/mcis/{{.McisId}}/metric/{{.Metric}}
+        middleware:
+          mw-http:
+            return_error_details: GET_monitoring_data
+
+  # Get Image
+  - name: 'Tumblebug GET /resources/image'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/resources/image
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/resources/image
+        middleware:
+          mw-http:
+            return_error_details: GET_images
+
+  - name: 'Tumblebug GET /resources/image/:resourceId'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/resources/image/:resourceId
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/resources/image/{{.ResourceId}}
+        middleware:
+          mw-http:
+            return_error_details: GET_image
+
+  # Get SSH Key
+  - name: 'Tumblebug GET /resources/sshKey'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/resources/sshKey
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/resources/sshKey
+        middleware:
+          mw-http:
+            return_error_details: GET_sshKeys
+
+  - name: 'Tumblebug GET /resources/sshKey/:resourceId'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/resources/sshKey/:resourceId
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/resources/sshKey/{{.ResourceId}}
+        middleware:
+          mw-http:
+            return_error_details: GET_sshKey
+
+  # Get Spec
+  - name: 'Tumblebug GET /resources/spec'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/resources/spec
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/resources/spec
+        middleware:
+          mw-http:
+            return_error_details: GET_specs
+
+  - name: 'Tumblebug GET /resources/spec/:resourceId'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/resources/spec/:resourceId
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/resources/spec/{{.ResourceId}}
+        middleware:
+          mw-http:
+            return_error_details: GET_spec
+
+  # Filter Specs
+  - name: 'Tumblebug POST /resources/filterSpecs'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/resources/filterSpecs
+    method: POST
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/resources/filterSpecs
+        middleware:
+          mw-http:
+            return_error_details: POST_filterSpecs
+
+  - name: 'Tumblebug POST /resources/filterSpecsByRange'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/resources/filterSpecsByRange
+    method: POST
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/resources/filterSpecsByRange
+        middleware:
+          mw-http:
+            return_error_details: POST_filterSpecsByRange
+
+  # Search Images
+  - name: 'Tumblebug POST /resources/searchImage'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/resources/searchImage
+    method: POST
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/resources/searchImage
+        middleware:
+          mw-http:
+            return_error_details: POST_searchImage
+
+  # Get Security Group
+  - name: 'Tumblebug GET /resources/securityGroup'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/resources/securityGroup
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/resources/securityGroup
+        middleware:
+          mw-http:
+            return_error_details: GET_securityGroups
+
+  - name: 'Tumblebug GET /resources/securityGroup/:resourceId'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/resources/securityGroup/:resourceId
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/resources/securityGroup/{{.ResourceId}}
+        middleware:
+          mw-http:
+            return_error_details: GET_securityGroup
+
+  # Get vNet
+  - name: 'Tumblebug GET /resources/vNet'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/resources/vNet
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/resources/vNet
+        middleware:
+          mw-http:
+            return_error_details: GET_vNets
+
+  - name: 'Tumblebug GET /resources/vNet/:resourceId'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/resources/vNet/:resourceId
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/resources/vNet/{{.ResourceId}}
+        middleware:
+          mw-http:
+            return_error_details: GET_vNet
+
+  # Check Resource (MCIR)
+  - name: 'Tumblebug GET /ns/:nsId/checkResource/:resourceType/:resourceId'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/checkResource/:resourceType/:resourceId
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/checkResource/{{.ResourceType}}/{{.ResourceId}
+        middleware:
+          mw-http:
+            return_error_details: GET_checkResource
+
+  # Check MCIS
+  - name: 'Tumblebug GET /ns/:nsId/checkMcis/:mcisId'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/checkMcis/:mcisId
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/checkMcis/{{.McisId}
+        middleware:
+          mw-http:
+            return_error_details: GET_checkMCIS
+
+
+  - name: 'Tumblebug GET /ns/:nsId/mcis/:mcisId/checkVm/:vmId'
+    active: true
+    endpoint: /tumblebug/ns/:nsId/mcis/:mcisId/checkVm/:vmId
+    method: GET
+    backend:
+      - hosts:
+        - host: http://cb-tumblebug:1323
+          weight: 0
+        url_pattern: /tumblebug/ns/{{.NsId}}/mcis/{{.McisId}}/checkVm/{{.VmId}}
+        middleware:
+          mw-http:
+            return_error_details: GET_checkVM

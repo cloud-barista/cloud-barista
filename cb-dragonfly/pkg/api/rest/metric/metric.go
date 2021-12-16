@@ -8,10 +8,26 @@ import (
 
 	"github.com/cloud-barista/cb-dragonfly/pkg/api/rest"
 
-	"github.com/cloud-barista/cb-dragonfly/pkg/core/metric"
+	"github.com/cloud-barista/cb-dragonfly/pkg/api/core/metric"
 )
 
-// 멀티 클라우드 인프라 서비스 개별 VM 모니터링 정보 조회
+// GetVMMonInfo 멀티 클라우드 인프라 서비스 개별 VM 모니터링 정보 조회
+// @Summary Get vm monitoring info
+// @Description 멀티 클라우드 인프라 VM 모니터링 정보 조회
+// @Tags [Monitoring] Monitoring management
+// @Accept  json
+// @Produce  json
+// @Param ns_id path string true "네임스페이스 아이디"
+// @Param mcis_id path string true "MCIS 아이디"
+// @Param vm_id path string true "VM 아이디"
+// @Param metric_name path string true "메트릭 정보"
+// @Param periodType query string false "모니터링 단위" Enums(m, h, d)
+// @Param statisticsCriteria query string false "모니터링 통계 기준" Enums(min, max, avg, last)
+// @Param duration query string false "모니터링 조회 범위" Enums(5m, 5h, 5d)
+// @Success 200 {object} rest.VMMonInfoType
+// @Failure 404 {object} rest.SimpleMsg
+// @Failure 500 {object} rest.SimpleMsg
+// @Router /ns/{ns_id}/mcis/{mcis_id}/vm/{vm_id}/metric/{metric_name}/info [get]
 func GetVMMonInfo(c echo.Context) error {
 	// Path 파라미터 가져오기
 	nsId := c.Param("ns_id")

@@ -1,3 +1,17 @@
+/*
+Copyright 2019 The Cloud-Barista Authors.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+// Package mcir is to handle REST API for mcir
 package mcir
 
 import (
@@ -12,11 +26,11 @@ import (
 // RestPostSpec godoc
 // @Summary Register spec
 // @Description Register spec
-// @Tags [MCIR] Spec management
+// @Tags [Infra resource] MCIR Spec management
 // @Accept  json
 // @Produce  json
 // @Param registeringMethod query string true "registerWithInfo or else"
-// @Param nsId path string true "Namespace ID"
+// @Param nsId path string true "Namespace ID" default(ns01)
 // @Param specInfo body mcir.TbSpecInfo false "Details for an spec object"
 // @Param specName body mcir.TbSpecReq false "name, connectionName and cspSpecName"
 // @Success 200 {object} mcir.TbSpecInfo
@@ -70,11 +84,11 @@ func RestPostSpec(c echo.Context) error {
 // RestPutSpec godoc
 // @Summary Update spec
 // @Description Update spec
-// @Tags [MCIR] Spec management
+// @Tags [Infra resource] MCIR Spec management
 // @Accept  json
 // @Produce  json
 // @Param specInfo body mcir.TbSpecInfo true "Details for an spec object"
-// @Param nsId path string true "Namespace ID"
+// @Param nsId path string true "Namespace ID" default(ns01)
 // @Param specId path string true "Spec ID"
 // @Success 200 {object} mcir.TbSpecInfo
 // @Failure 404 {object} common.SimpleMsg
@@ -82,7 +96,7 @@ func RestPostSpec(c echo.Context) error {
 // @Router /ns/{nsId}/resources/spec/{specId} [put]
 func RestPutSpec(c echo.Context) error {
 	nsId := c.Param("nsId")
-	specId := c.Param("specId")
+	specId := c.Param("resourceId")
 	fmt.Printf("RestPutSpec called; nsId: %s, specId: %s \n", nsId, specId) // for debug
 
 	u := &mcir.TbSpecInfo{}
@@ -90,17 +104,7 @@ func RestPutSpec(c echo.Context) error {
 		return err
 	}
 
-	/*
-		if specId != u.Id {
-			err := fmt.Errorf("URL param " + specId + " and JSON param " + u.Id + " does not match.")
-			common.CBLog.Error(err)
-			mapA := map[string]string{
-				"message": err.Error()}
-			return c.JSON(http.StatusBadRequest, &mapA)
-		}
-	*/
-
-	updatedSpec, err := mcir.UpdateSpec(nsId, *u)
+	updatedSpec, err := mcir.UpdateSpec(nsId, specId, *u)
 	if err != nil {
 		common.CBLog.Error(err)
 		mapA := map[string]string{
@@ -119,14 +123,14 @@ type RestLookupSpecRequest struct {
 // RestLookupSpec godoc
 // @Summary Lookup spec
 // @Description Lookup spec
-// @Tags [Admin] Cloud environment management
+// @Tags [Infra resource] MCIR Common
 // @Accept  json
 // @Produce  json
 // @Param lookupSpecReq body RestLookupSpecRequest true "Specify connectionName & cspSpecName"
 // @Success 200 {object} mcir.SpiderSpecInfo
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
-// @Router /lookupSpec [get]
+// @Router /lookupSpec [post]
 func RestLookupSpec(c echo.Context) error {
 	u := &RestLookupSpecRequest{}
 	if err := c.Bind(u); err != nil {
@@ -147,14 +151,14 @@ func RestLookupSpec(c echo.Context) error {
 // RestLookupSpecList godoc
 // @Summary Lookup spec list
 // @Description Lookup spec list
-// @Tags [Admin] Cloud environment management
+// @Tags [Infra resource] MCIR Common
 // @Accept  json
 // @Produce  json
 // @Param lookupSpecsReq body common.TbConnectionName true "Specify connectionName"
 // @Success 200 {object} mcir.SpiderSpecList
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
-// @Router /lookupSpecs [get]
+// @Router /lookupSpecs [post]
 func RestLookupSpecList(c echo.Context) error {
 
 	//type JsonTemplate struct {
@@ -180,10 +184,10 @@ func RestLookupSpecList(c echo.Context) error {
 // RestFetchSpecs godoc
 // @Summary Fetch specs
 // @Description Fetch specs
-// @Tags [MCIR] Spec management
+// @Tags [Infra resource] MCIR Spec management
 // @Accept  json
 // @Produce  json
-// @Param nsId path string true "Namespace ID"
+// @Param nsId path string true "Namespace ID" default(ns01)
 // @Success 200 {object} common.SimpleMsg
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
@@ -232,10 +236,10 @@ type RestFilterSpecsResponse struct {
 // RestFilterSpecs godoc
 // @Summary Filter specs
 // @Description Filter specs
-// @Tags [MCIR] Spec management
+// @Tags [Infra resource] MCIR Spec management
 // @Accept  json
 // @Produce  json
-// @Param nsId path string true "Namespace ID"
+// @Param nsId path string true "Namespace ID" default(ns01)
 // @Param specFilter body mcir.TbSpecInfo false "Filter for filtering specs"
 // @Success 200 {object} RestFilterSpecsResponse
 // @Failure 404 {object} common.SimpleMsg
@@ -266,10 +270,10 @@ func RestFilterSpecs(c echo.Context) error {
 // RestFilterSpecsByRange godoc
 // @Summary Filter specs by range
 // @Description Filter specs by range
-// @Tags [MCIR] Spec management
+// @Tags [Infra resource] MCIR Spec management
 // @Accept  json
 // @Produce  json
-// @Param nsId path string true "Namespace ID"
+// @Param nsId path string true "Namespace ID" default(ns01)
 // @Param specRangeFilter body mcir.FilterSpecsByRangeRequest false "Filter for range-filtering specs"
 // @Success 200 {object} RestFilterSpecsResponse
 // @Failure 404 {object} common.SimpleMsg
@@ -314,7 +318,7 @@ func RestTestSortSpecs(c echo.Context) error {
 		return c.JSONBlob(http.StatusNotFound, []byte(err.Error()))
 	}
 
-	content, err = mcir.SortSpecs(content, "mem_GiB", "descending")
+	content, err = mcir.SortSpecs(content, "memGiB", "descending")
 	if err != nil {
 		common.CBLog.Error(err)
 		return c.JSONBlob(http.StatusNotFound, []byte(err.Error()))
@@ -328,10 +332,10 @@ func RestTestSortSpecs(c echo.Context) error {
 // RestGetSpec godoc
 // @Summary Get spec
 // @Description Get spec
-// @Tags [MCIR] Spec management
+// @Tags [Infra resource] MCIR Spec management
 // @Accept  json
 // @Produce  json
-// @Param nsId path string true "Namespace ID"
+// @Param nsId path string true "Namespace ID" default(ns01)
 // @Param specId path string true "Spec ID"
 // @Success 200 {object} mcir.TbSpecInfo
 // @Failure 404 {object} common.SimpleMsg
@@ -350,10 +354,10 @@ type RestGetAllSpecResponse struct {
 // RestGetAllSpec godoc
 // @Summary List all specs or specs' ID
 // @Description List all specs or specs' ID
-// @Tags [MCIR] Spec management
+// @Tags [Infra resource] MCIR Spec management
 // @Accept  json
 // @Produce  json
-// @Param nsId path string true "Namespace ID"
+// @Param nsId path string true "Namespace ID" default(ns01)
 // @Param option query string false "Option" Enums(id)
 // @Success 200 {object} JSONResult{[DEFAULT]=RestGetAllSpecResponse,[ID]=common.IdList} "Different return structures by the given option param"
 // @Failure 404 {object} common.SimpleMsg
@@ -367,10 +371,10 @@ func RestGetAllSpec(c echo.Context) error {
 // RestDelSpec godoc
 // @Summary Delete spec
 // @Description Delete spec
-// @Tags [MCIR] Spec management
+// @Tags [Infra resource] MCIR Spec management
 // @Accept  json
 // @Produce  json
-// @Param nsId path string true "Namespace ID"
+// @Param nsId path string true "Namespace ID" default(ns01)
 // @Param specId path string true "Spec ID"
 // @Success 200 {object} common.SimpleMsg
 // @Failure 404 {object} common.SimpleMsg
@@ -383,11 +387,12 @@ func RestDelSpec(c echo.Context) error {
 // RestDelAllSpec godoc
 // @Summary Delete all specs
 // @Description Delete all specs
-// @Tags [MCIR] Spec management
+// @Tags [Infra resource] MCIR Spec management
 // @Accept  json
 // @Produce  json
-// @Param nsId path string true "Namespace ID"
-// @Success 200 {object} common.SimpleMsg
+// @Param nsId path string true "Namespace ID" default(ns01)
+// @Param match query string false "Delete resources containing matched ID-substring only" default()
+// @Success 200 {object} common.IdList
 // @Failure 404 {object} common.SimpleMsg
 // @Router /ns/{nsId}/resources/spec [delete]
 func RestDelAllSpec(c echo.Context) error {

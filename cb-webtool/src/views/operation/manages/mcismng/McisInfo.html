@@ -1,10 +1,10 @@
 {{define "McisInfo"}}
 <!-- Info -->
-<div class="dashboard dashboard_cont server_status">
-	
+<div class="dashboard dashboard_cont server_status" id="mcis_info_box">
+
 	<div class="d_box box_m box_w100">
 		<div class="titbox">
-			<div class="tit initial"><strong>MCIS Info</strong> <span class="stxt" id="mcis_info_txt">[ mcis-t03 ]</span></div>
+			<div class="tit initial"><strong>MCIS Info</strong> <span class="stxt" id="mcis_info_txt">[ ]</span></div>
 			<div class="top_info">
 				<ul>
 					<!-- <li>
@@ -21,55 +21,66 @@
 							</div>
 						</div>
 					</li> -->
-					<li><a href="javascript:void(0);"><img src="/assets/img/common/icon_question.png" alt=""/></a></li>
+					<li>
+						<a href="javascript:void(0);"><img src="/assets/img/common/icon_question.png" alt="" /></a>
+						<a href="javascript:void(0);" onClick="refreshMcisStatusData()"><img
+								src="/assets/img/common/icon_refresh.png" alt="" /></a>
+					</li>
 				</ul>
 			</div>
 		</div>
 
 		<div class="ds_cont">
-			
+
 			<div class="iparea">
 				<div class="iconbox">
 					<span class="txt">서비스 상태<br /> 아이콘</span>
 					<input type="file" id="file" name="file" class="file_ip_hidden" title="" />
 					<input type="button" name="" value="" class="btn_file" title="" />
-					<div class="img" id="service_status_icon"><img src="/assets/img/contents/icon_running_db.png" alt=""></div>
+					<div class="img" id="mcis_info_status_icon"><img id="mcis_info_status_icon_img"
+							src="/assets/img/contents/icon_running_db.png" alt=""></div>
 				</div>
 				<div class="boxlist ipbox ip1">
 					<ul>
 						<li>
 							<label>Name</label>
-							<input type="text" name="" value="" placeholder="Name / ID" title="" readonly  id="mcis_info_name"/>
+							<input type="text" name="" value="" placeholder="-" title="" readonly id="mcis_info_name" />
+							<input type="hidden" id="mcis_info_id" />
 						</li>
 						<li>
 							<label>Description</label>
-							<input type="text" name="" value="" placeholder="description" title="" readonly id="mcis_info_description"/>
+							<input type="text" name="" value="" placeholder="-" title="" readonly
+								id="mcis_info_description" />
 						</li>
 					</ul>
 				</div>
-				
+
 				<div class="boxlist ipbox ip2">
 					<ul>
 						<li>
 							<label>targetStatus</label>
-							<input type="text" name="" value="" placeholder="None" title="" readonly id="mcis_info_targetStatus"/>
+							<input type="text" name="" value="" placeholder="-" title="" readonly
+								id="mcis_info_targetStatus" />
 						</li>
 						<li>
 							<label>targetAction</label>
-							<input type="text" name="" value="" placeholder="None" title="" readonly id="mcis_info_targetAction"/>
+							<input type="text" name="" value="" placeholder="-" title="" readonly
+								id="mcis_info_targetAction" />
 						</li>
 					</ul>
 				</div>
-				
+
 				<div class="boxlist ipbox ip3">
 					<ul>
 						<li>
-							<label>Cloud Connections</label>
-							<input type="text" name="" value="" placeholder="AWS, AZ, Ali, GCP" title="" id="mcis_info_cloud_connection" readonly />
+							<label>Provider</label>
+							<!-- <input type="text" name="" value="" placeholder="AWS, AZ, Ali, GCP" title=""
+								id="mcis_info_cloud_connection" readonly /> -->
+							<span id="mcis_info_cloud_connection"></span>
 						</li>
 						<li>
 							<label>Deployment <span>Algorithm</span></label>
-							<input type="text" name="" value="" placeholder="Name (ID)" title="" readonly />
+							<input type="text" name="" value="" placeholder="-" title="" readonly />
 						</li>
 					</ul>
 				</div>
@@ -83,13 +94,13 @@
 				// });
 			</script>
 		</div>
-		
+
 		<div class="ds_cont">
-			
+
 			<div class="area_cont">
 
 				<div class="box">
-					
+
 					<div class="titbox">
 						<div class="tit initial" id="mcis_server_info_status"></div>
 						<div class="top_info">
@@ -127,19 +138,44 @@
 												<li>
 													<strong>Life Cycle</strong>
 													<ul>
-														<li><a href="javascript:void(0);" data-toggle="modal" data-target="#VM_Life_Reboot" onClick="commonConfirmOpen('VmLifeCycleReboot')">Reboot</a></li>
-														<li><a href="javascript:void(0);" data-toggle="modal" data-target="#VM_Life_Suspend" onClick="commonConfirmOpen('VmLifeCycleSuspend')">Suspend</a></li>
-														<li><a href="javascript:void(0);" data-toggle="modal" data-target="#VM_Life_Resume" onClick="commonConfirmOpen('VmLifeCycleResume')">Resume</a></li>								
-														<li><a href="javascript:void(0);" data-toggle="modal" data-target="#VM_Life_Terminate" onClick="commonConfirmOpen('VmLifeCycleTerminate')">Terminate</a></li>
+														<li><a href="javascript:void(0);" data-toggle="modal"
+																data-target="#VM_Life_Reboot"
+																onClick="commonConfirmOpen('VmLifeCycleReboot')">Reboot</a>
+														</li>
+														<li><a href="javascript:void(0);" data-toggle="modal"
+																data-target="#VM_Life_Suspend"
+																onClick="commonConfirmOpen('VmLifeCycleSuspend')">Suspend</a>
+														</li>
+														<li><a href="javascript:void(0);" data-toggle="modal"
+																data-target="#VM_Life_Resume"
+																onClick="commonConfirmOpen('VmLifeCycleResume')">Resume</a>
+														</li>
+														<li><a href="javascript:void(0);" data-toggle="modal"
+																data-target="#VM_Life_Terminate"
+																onClick="commonConfirmOpen('VmLifeCycleTerminate')">Terminate</a>
+														</li>
 													</ul>
 												</li>
 												<li class="divider"></li>
 												<li>
 													<strong>Manage</strong>
 													<ul>
-														<li><a href="javascript:void(0);" data-toggle="modal" data-target="#VM_n_New" onClick="commonConfirmOpen('AddNewVmOfMcis')">Add/Extend</a></li>
-														<li><a href="javascript:void(0);" data-toggle="modal" data-target="#VM_ScriptExport" onClick="commonConfirmOpen('ExportVmScriptOfMcis')">Export</a></li>
-														<li><a href="javascript:void(0);" data-toggle="modal" data-target="#VM_n_New" onClick="commonPromptOpen('RemoteCommandVmOfMcis')">RemoteCommand</a></li>
+														<li><a href="javascript:void(0);" data-toggle="modal"
+																data-target="#VM_n_New"
+																onClick="addNewVirtualMachine()">Add/Extend</a>
+														</li>
+														<li><a href="javascript:void(0);" data-toggle="modal"
+																data-target="#VM_ScriptExport"
+																onClick="commonConfirmOpen('ExportVmScriptOfMcis')">Export</a>
+														</li>
+														<li><a href="javascript:void(0);" data-toggle="modal"
+																data-target="#VM_n_New"
+																onClick="commonConfirmOpen('ShowMonitoring')">ShowMonitoring</a>
+														</li>
+														<li><a href="javascript:void(0);" data-toggle="modal"
+																data-target="#VM_n_New"
+																onClick="commonPromptOpen('RemoteCommandVmOfMcis')">RemoteCommand</a>
+														</li>
 													</ul>
 												</li>
 											</ul>
@@ -154,34 +190,35 @@
 					<div class="modal fade layerpopup" id="Life_View" tabindex="-1" role="dialog" aria-hidden="true">
 						<div class="modal-dialog" role="document">
 							<div class="modal-content">
-								
+
 								<div class="modal-body">
 									<div class="txt">Would you like to view Server ?</div>
 									<div class="btnbox">
 										<button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
-										<button type="button" class="btn_ok" data-dismiss="modal" onclick="changePage('/operation/manages/mcismng/mngform')">OK</button>
+										<button type="button" class="btn_ok" data-dismiss="modal"
+											onclick="changePage('/operation/manages/mcismng/mngform')">OK</button>
 									</div>
-								</div>								
+								</div>
 							</div>
 						</div>
 					</div>
 					<!-- //popup View -->
-					
+
 					<div class="listbox scrollbar-inner">
 						<ul id="mcis_server_info_box">
-							
+
 						</ul>
 					</div>
-					
-					
+
+
 				</div>
-				
+
 			</div>
-			
+
 		</div>
-		
+
 	</div>
-	
+
 </div>
 <!-- //Info -->
 {{end}}

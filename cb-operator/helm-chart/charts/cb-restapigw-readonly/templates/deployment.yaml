@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cb-restapigw.fullname" . }}
+  labels:
+    {{- include "cb-restapigw.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "cb-restapigw.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "cb-restapigw.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "cb-restapigw.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: wait-for-etcd
+          image: darthcabs/tiny-tools:1
+          args:
+          - /bin/bash
+          - -c
+          - >
+            set -x;
+            while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' http://cloud-barista-etcd:2379/health)" != "200" ]]; do 
+              echo '.'
+              sleep 15;
+            done
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          #ports:
+          #  - name: http
+          #    containerPort: 80
+          #    protocol: TCP
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          - name: config-volume
+            mountPath: {{ .Values.restapigw.rootPath }}/conf
+      volumes:
+      - name: config-volume
+        configMap:
+          name: {{ include "cb-restapigw.fullname" . }}-config
+          items:
+          - key: cb-restapigw.yaml
+            path: cb-restapigw.yaml
+          - key: log_conf.yaml
+            path: log_conf.yaml
+          - key: store_conf.yaml
+            path: store_conf.yaml
+          - key: cb-dragonfly-apis.yaml
+            path: apis/cb-dragonfly-apis.yaml
+          - key: cb-mcks-apis.yaml
+            path: apis/cb-mcks-apis.yaml
+          # - key: cb-ladybug-apis.yaml
+          #   path: apis/cb-ladybug-apis.yaml
+          - key: cb-spider-apis.yaml
+            path: apis/cb-spider-apis.yaml
+          - key: cb-tumblebug-apis.yaml
+            path: apis/cb-tumblebug-apis.yaml          
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

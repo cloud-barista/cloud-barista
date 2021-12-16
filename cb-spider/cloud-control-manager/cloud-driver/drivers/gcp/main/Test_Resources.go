@@ -126,8 +126,8 @@ func handleSecurity() {
 	//config := readConfigFile()
 	//VmID := config.Aws.VmID
 
-	securityName := "cb-securitytest-all"
-	securityId := "cb-securitytest-all"
+	securityName := "cb-securitytest1"
+	securityId := "cb-securitytest1"
 	//securityId := "cb-secu-all"
 	//vpcId := "cb-vpc"
 	vpcId := "cb-vpc-load-test"
@@ -172,13 +172,13 @@ func handleSecurity() {
 					VpcIID: irs.IID{SystemId: vpcId},
 					SecurityRules: &[]irs.SecurityRuleInfo{ //보안 정책 설정
 						//CIDR 테스트
-						{
-							FromPort:   "30",
-							ToPort:     "",
-							IPProtocol: "tcp",
-							Direction:  "inbound",
-							CIDR:       "10.13.1.10/32",
-						},
+						//{
+						//	FromPort:   "30",
+						//	ToPort:     "",
+						//	IPProtocol: "tcp",
+						//	Direction:  "inbound",
+						//	CIDR:       "10.13.1.10/32",
+						//},
 						// {
 						// 	FromPort:   "40",
 						// 	ToPort:     "",
@@ -186,6 +186,16 @@ func handleSecurity() {
 						// 	Direction:  "outbound",
 						// 	CIDR:       "10.13.1.10/32,10.13.1.11/32",
 						// },
+
+						{
+							//20-22 Prot로 등록
+							FromPort:   "20",
+							ToPort:     "22",
+							IPProtocol: "tcp",
+							Direction:  "inbound",
+							CIDR:       "0.0.0.0/0",
+						},
+
 						/*
 							{
 								// All Port로 등록
@@ -728,10 +738,10 @@ func handleVMSpec() {
 	handler := ResourceHandler.(irs.VMSpecHandler)
 	//region := "asia-northeast1"
 
-	zone := "asia-northeast1-b"
+	//zone := "asia-northeast1-b"
 	machinename := ""
 
-	cblogger.Info("zone : ", zone)
+	//cblogger.Info("zone : ", zone)
 
 	for {
 		fmt.Println("")
@@ -754,7 +764,7 @@ func handleVMSpec() {
 			switch commandNum {
 			case 1:
 				fmt.Println("Start ListVMSpec() ...")
-				result, err := handler.ListVMSpec(zone)
+				result, err := handler.ListVMSpec()
 				if err != nil {
 					cblogger.Error("ListVMSpec 목록 조회 실패 : ", err)
 				} else {
@@ -770,7 +780,7 @@ func handleVMSpec() {
 
 			case 2:
 				fmt.Println("Start GetVMSpec() ...")
-				result, err := handler.GetVMSpec(zone, machinename)
+				result, err := handler.GetVMSpec(machinename)
 				if err != nil {
 					cblogger.Error(machinename, " GetVMSpec 정보 조회 실패 : ", err)
 				} else {
@@ -781,7 +791,7 @@ func handleVMSpec() {
 
 			case 3:
 				fmt.Println("Start ListOrgVMSpec() ...")
-				result, err := handler.ListOrgVMSpec(zone)
+				result, err := handler.ListOrgVMSpec()
 				if err != nil {
 					cblogger.Error("ListOrgVMSpec 목록 조회 실패 : ", err)
 				} else {
@@ -793,7 +803,7 @@ func handleVMSpec() {
 
 			case 4:
 				fmt.Println("Start GetOrgVMSpec() ...")
-				result, err := handler.GetOrgVMSpec(zone, machinename)
+				result, err := handler.GetOrgVMSpec(machinename)
 				if err != nil {
 					cblogger.Error(machinename, " GetOrgVMSpec 정보 조회 실패 : ", err)
 				} else {
@@ -868,12 +878,17 @@ func handleVM() {
 					},
 					//VpcIID:            irs.IID{SystemId: "cb-vpc"},
 					//SubnetIID:         irs.IID{SystemId: "cb-sub1"},
-					VpcIID: irs.IID{SystemId: "cb-vpc-load-test"},
-					SubnetIID: irs.IID{SystemId: "vpc-loadtest-sub1	"},
+					VpcIID:            irs.IID{SystemId: "cb-vpc-load-test"},
+					SubnetIID:         irs.IID{SystemId: "vpc-loadtest-sub1"},
 					SecurityGroupIIDs: []irs.IID{{SystemId: "cb-securitytest1"}},
 					VMSpecName:        "f1-micro",
 					KeyPairIID:        irs.IID{SystemId: "cb-keypairtest123123"},
 					VMUserId:          "cb-user",
+
+					//RootDiskType: "pd-ssd",      //pd-standard/pd-balanced/pd-ssd/pd-extreme
+					RootDiskType: "pd-balanced", //pd-standard/pd-balanced/pd-ssd/pd-extreme
+					//RootDiskSize: "12",     //최소 10GB 이상이어야 함.
+					RootDiskSize: "default", //10GB
 				}
 
 				vmInfo, err := vmHandler.StartVM(vmReqInfo)
@@ -991,8 +1006,8 @@ func main() {
 	//handleVMSpec()
 	//handleImage() //AMI
 	//handleKeyPair()
-	handleSecurity()
-	//handleVM()
+	//handleSecurity()
+	handleVM()
 	//cblogger.Info(filepath.Join("a/b", "\\cloud-driver-libs\\.ssh-gcp\\"))
 	//cblogger.Info(filepath.Join("\\cloud-driver-libs\\.ssh-gcp\\", "/b/c/d"))
 }

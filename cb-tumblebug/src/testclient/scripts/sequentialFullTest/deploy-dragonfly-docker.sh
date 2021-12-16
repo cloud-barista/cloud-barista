@@ -1,45 +1,26 @@
 #!/bin/bash
 
-#function deploy_nginx_to_mcis() {
 
+echo "####################################################################"
+echo "## Deploy CB-Dragonfly"
+echo "####################################################################"
 
-	echo "[Check jq package (if not, install)]"
-	if ! dpkg-query -W -f='${Status}' jq  | grep "ok installed"; then sudo apt install -y jq; fi
-	
+SECONDS=0
 
-	TestSetFile=${4:-../testSet.env}
-    if [ ! -f "$TestSetFile" ]; then
-        echo "$TestSetFile does not exist."
-        exit
-    fi
-	source $TestSetFile
-    source ../conf.env
-	
-	echo "####################################################################"
-	echo "## Command (SSH) to MCIS "
-	echo "####################################################################"
+source ../init.sh
 
-	CSP=${1}
-	REGION=${2:-1}
-	POSTFIX=${3:-developer}
+if [ "${INDEX}" == "0" ]; then
+	# MCISPREFIX=avengers
+	MCISID=${POSTFIX}
+fi
 
-	source ../common-functions.sh
-	getCloudIndex $CSP
-
-
-	MCISID=${CONN_CONFIG[$INDEX,$REGION]}-${POSTFIX}
-
-	if [ "${INDEX}" == "0" ]; then
-		# MCISPREFIX=avengers
-		MCISID=${MCISPREFIX}-${POSTFIX}
-	fi
 
 	curl -H "${AUTH}" -sX POST http://$TumblebugServer/tumblebug/ns/$NSID/cmd/mcis/$MCISID -H 'Content-Type: application/json' -d \
 		'{
-			"command": "wget https://raw.githubusercontent.com/cloud-barista/cb-tumblebug/main/assets/scripts/setcbdf.sh -O ~/setcbdf.sh; chmod +x ~/setcbdf.sh; ~/setcbdf.sh"
+			"command": "wget https://raw.githubusercontent.com/cloud-barista/cb-tumblebug/main/scripts/setcbdf.sh -O ~/setcbdf.sh; chmod +x ~/setcbdf.sh; ~/setcbdf.sh"
 		}' | jq '' #|| return 1
 
-	MCISINFO=`curl -H "${AUTH}" -sX GET http://$TumblebugServer/tumblebug/ns/$NSID/mcis/${MCISID}?action=status`
+	MCISINFO=`curl -H "${AUTH}" -sX GET http://$TumblebugServer/tumblebug/ns/$NSID/mcis/${MCISID}?option=status`
 	MASTERIP=$(jq -r '.status.masterIp' <<< "$MCISINFO")
 	MASTERVM=$(jq -r '.status.masterVmId' <<< "$MCISINFO")
 	
@@ -51,7 +32,7 @@
 	echo "[Waiting for initialization of CB-Dragonfly. (20s)]"
 	dozing 20
 
-	echo "Checking CB-Dragonfly Status. (upto 3s * 20 trials)" 
+	echo "Checking CB-Dragonfly Status. (upto 5s * 20 trials)" 
 
 	for (( try=1; try<=20; try++ ))
 	do
@@ -61,7 +42,7 @@
 			break
 		else 
 			printf "[$try : NOT Healthy.].."
-			dozing 3
+			dozing 5
 		fi
 	done
 
@@ -78,7 +59,7 @@
 	echo ""
 
 	echo "[Update Tumblebug Environment for Dragonfly with following command]"
-	PARAM="DRAGONFLY_REST_URL http://${MASTERIP}:9090/dragonfly"
+	PARAM="-x DRAGONFLY_REST_URL -y http://${MASTERIP}:9090/dragonfly"
 	echo $PARAM
 	../2.configureTumblebug/update-config.sh $PARAM
 

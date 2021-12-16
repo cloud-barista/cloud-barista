@@ -5,6 +5,7 @@ echo "[MCIS-Agent: Start to prepare a VM evaluation]"
 
 echo "[MCIS-Agent: Install sysbench]"
 sudo apt-get -y update
+sudo apt-get install -y --no-install-recommends apt-utils
 sudo apt-get -y install sysbench
 
 echo "[MCIS-Agent: Install Ping]"
@@ -23,6 +24,9 @@ echo "[MCIS-Agent: Generate dump tables for evaluation]"
 mysql -u root -ppsetri1234ak -e "CREATE DATABASE sysbench;"
 mysql -u root -ppsetri1234ak -e "CREATE USER 'sysbench'@'localhost' IDENTIFIED BY 'psetri1234ak';"
 mysql -u root -ppsetri1234ak -e "GRANT ALL PRIVILEGES ON *.* TO 'sysbench'@'localhost' IDENTIFIED  BY 'psetri1234ak';"
+
+echo "[MCIS-Agent: Install tcpdump]"
+sudo apt-get -y install tcpdump
 
 echo "[MCIS-Agent: Preparation is done]"
 

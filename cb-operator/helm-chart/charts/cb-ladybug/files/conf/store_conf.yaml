@@ -2,8 +2,8 @@
 
 # server type: NUTSDB | ETCD
 # NUTSDB: embedded Key-Value Store on Local Filesystem
-storetype: NUTSDB
-#storetype: ETCD
+#storetype: NUTSDB
+storetype: ETCD
 
 nutsdb:
   dbpath: "$CBSTORE_ROOT/meta_db/dat"
@@ -12,4 +12,4 @@ nutsdb:
 
 etcd:
   # etcd server, when ETCD typpe
-  etcdserverport: "cb-etcd:2379"
+  etcdserverport: "cloud-barista-etcd:2379"

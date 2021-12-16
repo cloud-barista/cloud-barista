@@ -1,153 +1,164 @@
 {{define "Manage_mcis_popup"}}
-	<!-- Monitoring popup -->
-	<div class="modal fade" id="monitoring_box" tabindex="-1" role="dialog" aria-hidden="true">
-		
-		<!-- <div class="modal-dialog"> -->
-		<div class="modal-dialog modal-dialog-centered" role="document">
-			<div class="modal-content">
-				
-				<div class="modal-body">
-					<div class="pop-body">
-						
-						<div class="titbox">
-							<div class="tit">Enable Monitoring Target</div>
-						</div>
-						<form id="manage_mcis_popup_form">
-							<div class="pop-cont">
-								<div class="pop_ip ip1">
-									<ul>
-										<li>
-											<label>MCIS</label>
-												<input type="text" name="mcis_id" value="" placeholder="input ID" title="" id="manage_mcis_popup_mcis_id" readonly/>
-									
-										</li>
-										<li>
-											<label>Server</label>
-												<input type="text" name="vm_id" value="" placeholder="input ID" title="" id="manage_mcis_popup_vm_id" readonly/>
-										</li>
-									</ul>
-								</div>
-								
-								<div class="pop_ip ip2">
-									<ul>
-										<li>
-											<label>Cloud Provider & NameSpace</label>
-												<input type="text" name="cspType" value="" placeholder="input ID" title="" id="manage_mcis_popup_csp" readonly/>
-												<input type="text" name="ns_id" value="" placeholder="input ID" title="" id="manage_mcis_popup_ns_id" readonly/>
-										</li>
-										<li>
-											<label>Public IP </label>
-												<input type="text" name="public_ip" value="" placeholder="input ID" title="" id="manage_mcis_popup_public_ip" readonly/>
-												
-										</li>
-									</ul>
-								</div>
-								
-								<div class="pop_ip ip1 ip3">
-									<ul>
-										<li class="p_line">
-											<label>USER NAME</label>
-											<input type="text" name="user_name" value="" placeholder="input ID" title="" id="manage_mcis_popup_user_name"/>
-										</li>
-									</ul>
-								</div>
-								
-								<div class="pop_ip ip2 ip4">
-									<ul>
-										<li class="p_line">
-											<label>Access SSH key</label>
-											<input type="text" name="" value="" placeholder="input SSH key" title="" id="manage_mcis_popup_sshkey_name" readonly/> 
-											<input type="file" id="file_key" name="" class="file_ip_hidden" title="" />
-											<!-- <span class="sbox"><span class="stxt"><a href="javascript:void(0);" class="btn_import_key">Import key</a></span></span> -->
-										</li>
-										<li class="p_line">
-											<label></label>
-											<textarea  cols="" rows="" name="ssh_key" placeholder="type SSH key value" title="" id="manage_mcis_popup_sshkey" readonly></textarea>
-										</li>
-									</ul>
-								</div>
-								
-							</div>
-						</form>
+<!-- Monitoring popup -->
+<div class="modal fade" id="monitoring_box" tabindex="-1" role="dialog" aria-hidden="true">
+
+	<!-- <div class="modal-dialog"> -->
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+
+			<div class="modal-body">
+				<div class="pop-body">
+
+					<div class="titbox">
+						<div class="tit">Enable Monitoring Target</div>
 					</div>
-					
-					<div class="btnbox">
-						<div class="btn_right">
-							<button name="" value="" class="btn_apply btn_co btn_cr_g" data-toggle="modal" data-target="#Detail_Apply"><span>Apply</span></button> 
-							<button name="" value="" class="btn_cancel btn_co btn_cr_b" data-dismiss="modal">cancel</button> 
+					<form id="manage_mcis_popup_form">
+						<div class="pop-cont">
+							<div class="pop_ip ip1">
+								<ul>
+									<li>
+										<label>MCIS</label>
+										<input type="text" name="mcis_id" value="" placeholder="input ID" title=""
+											id="manage_mcis_popup_mcis_id" readonly />
+
+									</li>
+									<li>
+										<label>Server</label>
+										<input type="text" name="vm_id" value="" placeholder="input ID" title=""
+											id="manage_mcis_popup_vm_id" readonly />
+									</li>
+								</ul>
+							</div>
+
+							<div class="pop_ip ip2">
+								<ul>
+									<li>
+										<label>Cloud Provider & NameSpace</label>
+										<input type="text" name="cspType" value="" placeholder="input ID" title=""
+											id="manage_mcis_popup_csp" readonly />
+										<input type="text" name="ns_id" value="" placeholder="input ID" title=""
+											id="manage_mcis_popup_ns_id" readonly />
+									</li>
+									<li>
+										<label>Public IP </label>
+										<input type="text" name="public_ip" value="" placeholder="input ID" title=""
+											id="manage_mcis_popup_public_ip" readonly />
+
+									</li>
+								</ul>
+							</div>
+
+							<div class="pop_ip ip1 ip3">
+								<ul>
+									<li class="p_line">
+										<label>USER NAME</label>
+										<input type="text" name="user_name" value="" placeholder="input ID" title=""
+											id="manage_mcis_popup_user_name" />
+									</li>
+								</ul>
+							</div>
+
+							<div class="pop_ip ip2 ip4">
+								<ul>
+									<li class="p_line">
+										<label>Access SSH key</label>
+										<input type="text" name="" value="" placeholder="input SSH key" title=""
+											id="manage_mcis_popup_sshkey_name" readonly />
+										<input type="file" id="file_key" name="" class="file_ip_hidden" title="" />
+										<!-- <span class="sbox"><span class="stxt"><a href="javascript:void(0);" class="btn_import_key">Import key</a></span></span> -->
+									</li>
+									<li class="p_line">
+										<label></label>
+										<textarea cols="" rows="" name="ssh_key" placeholder="type SSH key value"
+											title="" id="manage_mcis_popup_sshkey" readonly></textarea>
+									</li>
+								</ul>
+							</div>
+
 						</div>
+					</form>
+				</div>
+
+				<div class="btnbox">
+					<div class="btn_right">
+						<button name="" value="" class="btn_apply btn_co btn_cr_g" data-toggle="modal"
+							data-target="#Detail_Apply"><span>Apply</span></button>
+						<button name="" value="" class="btn_cancel btn_co btn_cr_b" data-dismiss="modal">cancel</button>
 					</div>
 				</div>
-				
 			</div>
-			
-		</div>
-		
-	</div>
-	<!-- //Monitoring popup -->
 
-		<!-- securityGroup popup -->
-		<div class="modal fade" id="register_box" tabindex="-1" role="dialog" aria-hidden="true">
-		
-			<!-- <div class="modal-dialog"> -->
-			<div class="modal-dialog modal-dialog-centered" role="document">
-				<div class="modal-content">
-					
-					<div class="modal-body">
-						<div class="pop-body">
-							
-							<div class="title_box">
-								<div class="title">Firewall RuleSet</div>
-							</div>
-							<form id="manage_mcis_popup_form">
-								<div class="pop-cont">
-								
-									<!-- <div class="toptxt topsel">
+		</div>
+
+	</div>
+
+</div>
+<!-- //Monitoring popup -->
+
+<!-- securityGroup popup -->
+<div class="modal fade" id="register_box" tabindex="-1" role="dialog" aria-hidden="true">
+
+	<!-- <div class="modal-dialog"> -->
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+
+			<div class="modal-body">
+				<div class="pop-body">
+
+					<div class="title_box">
+						<div class="title">Firewall RuleSet</div>
+					</div>
+					<form id="manage_mcis_popup_form">
+						<div class="pop-cont">
+
+							<!-- <div class="toptxt topsel">
 										<select class="selectbox white pline">
 											<option value="1">SSH</option>
 										</select>
 									</div> -->
-									
-									<!-- table scrollbar -->
-									<div class="dtbox scrollbar-inner" >
-										<div class="dataTable dt_overlay">
-											<table cellpadding="0" cellspacing="0" border="1" summary="">
-												<colgroup>
+
+							<!-- table scrollbar -->
+							<div class="dtbox scrollbar-inner">
+								<div class="dataTable dt_overlay">
+									<table cellpadding="0" cellspacing="0" border="1" summary="">
+										<!-- <colgroup>
 													<col width="25%">
 													<col width="25%">
 													<col width="25%">
-													<col width="25%">
-													<!-- <col width="100px"> -->
-												</colgroup>
-												<thead>
-													<tr>
-														<th>fromPort</th>
-														<th>toPort</th>
-														<th>toProtocol</th>
-														<th>direction</th>
-														<!-- <th></th> -->
-													</tr>
-												</thead>
-												<tbody id="manage_mcis_popup_sg">
-													<tr>
-														<td class="btn_mtd" data-th="fromPort">21 <span class="ov off"></span></td>
-														<td class="overlay hidden" data-th="toPort">33</td>
-														<td class="overlay hidden" data-th="toProtocol">TCP</td>
-														<td class="overlay hidden " data-th="direction">inbound</td>
-														<!-- <td class="overlay hidden" data-th="">
+													<col width="25%"> -->
+										<!-- <col width="100px"> -->
+										<!-- </colgroup> -->
+										<thead>
+											<tr>
+												<th>fromPort</th>
+												<th>toPort</th>
+												<th>toProtocol</th>
+												<th>direction</th>
+												<!-- <th></th> -->
+											</tr>
+										</thead>
+										<tbody id="manage_mcis_popup_sg">
+											<tr>
+												<td class="btn_mtd" data-th="fromPort">21 <span class="ov off"></span>
+												</td>
+												<td class="overlay hidden" data-th="toPort">33</td>
+												<td class="overlay hidden" data-th="toProtocol">TCP</td>
+												<td class="overlay hidden " data-th="direction">inbound</td>
+												<!-- <td class="overlay hidden" data-th="">
 															<button class="btn btn_del" name="delInput" value="">del</button>
 														</td> -->
-													</tr>
-													<tr>
-														<td class="btn_mtd" data-th="fromPort">0 <span class="ov off"></span></td>
-														<td class="overlay hidden" data-th="toPort">0</td>
-														<td class="overlay hidden" data-th="toProtocol">UDP</td>
-														<td class="overlay hidden " data-th="direction">outbound</td>
-														<!-- <td class="overlay hidden" data-th="">
+											</tr>
+											<tr>
+												<td class="btn_mtd" data-th="fromPort">0 <span class="ov off"></span>
+												</td>
+												<td class="overlay hidden" data-th="toPort">0</td>
+												<td class="overlay hidden" data-th="toProtocol">UDP</td>
+												<td class="overlay hidden " data-th="direction">outbound</td>
+												<!-- <td class="overlay hidden" data-th="">
 															<button class="btn btn_del" name="delInput" value="">del</button>
 														</td> -->
-													</tr>
-													<!-- <tr name="tr_Input">
+											</tr>
+											<!-- <tr name="tr_Input">
 														<td class="btn_mtd" data-th="fromPort"><input type="text" name="" value="22" placeholder="" class="pline" title="" /> <span class="ov off"></span></td>
 														<td class="overlay hidden" data-th="toPort"><input type="text" name="" value="22" placeholder="" class="pline" title="" /></td>
 														<td class="overlay hidden" data-th="toProtocol">
@@ -167,184 +178,184 @@
 															<button class="btn btn_del" name="delInput" value="">del</button>
 														</td>
 													</tr> -->
-												</tbody>
-											</table>
-										</div>
-									</div>
-									<!-- //table scrollbar -->
-				
-									<script>
-										//table row add
-										$(document).on("click","button[name=btn_add]",function(){
-											var addStaffText = 
-											'<tr class="ip" name="tr_Input">'+
-												'<td class="btn_mtd" data-th="fromPort"><input type="text" name="" value="" placeholder="" class="pline" title="" /> <span class="ov up" name="td_ov"]></span></td>'+
-												'<td class="overlay" data-th="toPort"><input type="text" name="" value="" placeholder="" class="pline" title="" /></td>'+
-												'<td class="overlay" data-th="toProtocol">'+
-														'<select class="selectbox white pline">'+
-															'<option value="1">TCP</option>'+
-															'<option value="2">UDP</option>'+
-														'</select>'+
-												'</td>'+
-												'<td class="overlay" data-th="description">'+
-														'<select class="selectbox white pline">'+
-															'<option value="1">in</option>'+
-															'<option value="2">out</option>'+
-														'</select>'+
-												'</td>'+
-												'<td class="overlay">'+
-													'<button class="btn btn_add" name="btn_add" value="">add</button>'+
-													'<button class="btn btn_del" name="delInput" value="">del</button>'+
-												'</td>'+
-											'</tr>';
-											var trHtml = $( "tr[name=tr_Input]:last" );
-											trHtml.after(addStaffText);
-											$('select').niceSelect();
-										});
-									  $('.dataTable .btn.btn_add').on("click", function() {
-											trHtml.after(addStaffText);
-									  });
-										$(document).on("click","button[name=delInput]",function(){
-											var trHtml = $(this).parent().parent();
-											trHtml.remove();
-										});
-										
-										$(document).on("click","span[name=td_ov]",function(){
-											var trHtml = $(this).parent().parent();
-											trHtml.find(".btn_mtd").toggleClass("over");
-											trHtml.find(".overlay").toggleClass("hidden");
-										});
-									</script>		
-									
-									
-									
-									<!-- <div class="b_txt"><span class="ch">*</span>  방화벽 RuleSet에 추가할 서버를 정의하고 하단의 <span class="txt">“추가 적용” 버튼</span>을 클릭하여 서버 풀에 추가합니다.</div> -->
+										</tbody>
+									</table>
 								</div>
-							</form>
+							</div>
+							<!-- //table scrollbar -->
+
+							<script>
+								//table row add
+								$(document).on("click", "button[name=btn_add]", function () {
+									var addStaffText =
+										'<tr class="ip" name="tr_Input">' +
+										'<td class="btn_mtd" data-th="fromPort"><input type="text" name="" value="" placeholder="" class="pline" title="" /> <span class="ov up" name="td_ov"]></span></td>' +
+										'<td class="overlay" data-th="toPort"><input type="text" name="" value="" placeholder="" class="pline" title="" /></td>' +
+										'<td class="overlay" data-th="toProtocol">' +
+										'<select class="selectbox white pline">' +
+										'<option value="1">TCP</option>' +
+										'<option value="2">UDP</option>' +
+										'</select>' +
+										'</td>' +
+										'<td class="overlay" data-th="description">' +
+										'<select class="selectbox white pline">' +
+										'<option value="1">in</option>' +
+										'<option value="2">out</option>' +
+										'</select>' +
+										'</td>' +
+										'<td class="overlay">' +
+										'<button class="btn btn_add" name="btn_add" value="">add</button>' +
+										'<button class="btn btn_del" name="delInput" value="">del</button>' +
+										'</td>' +
+										'</tr>';
+									var trHtml = $("tr[name=tr_Input]:last");
+									trHtml.after(addStaffText);
+									$('select').niceSelect();
+								});
+								$('.dataTable .btn.btn_add').on("click", function () {
+									trHtml.after(addStaffText);
+								});
+								$(document).on("click", "button[name=delInput]", function () {
+									var trHtml = $(this).parent().parent();
+									trHtml.remove();
+								});
+
+								$(document).on("click", "span[name=td_ov]", function () {
+									var trHtml = $(this).parent().parent();
+									trHtml.find(".btn_mtd").toggleClass("over");
+									trHtml.find(".overlay").toggleClass("hidden");
+								});
+							</script>
+
+
+
+							<!-- <div class="b_txt"><span class="ch">*</span>  방화벽 RuleSet에 추가할 서버를 정의하고 하단의 <span class="txt">“추가 적용” 버튼</span>을 클릭하여 서버 풀에 추가합니다.</div> -->
 						</div>
-						
-						<!-- <div class="btnbox">
+					</form>
+				</div>
+
+				<!-- <div class="btnbox">
 							<div class="btn_right">
 								<button name="" value="" class="btn_apply btn_co btn_cr_g" data-toggle="modal" data-target="#Detail_Apply"><span>Apply</span></button> 
 								<button name="" value="" class="btn_cancel btn_co btn_cr_b" data-dismiss="modal">cancel</button> 
 							</div>
 						</div> -->
-					</div>
-					
-				</div>
-				
 			</div>
-			
+
 		</div>
-		<!-- //securityGroup popup -->
-	
-	<script>
-		$(function () {
-			$('.pop_ip .btn_import_key').click(function (e) {
-				e.preventDefault();
-				$('#file_key').click();
-			});
+
+	</div>
+
+</div>
+<!-- //securityGroup popup -->
+
+<script>
+	$(function () {
+		$('.pop_ip .btn_import_key').click(function (e) {
+			e.preventDefault();
+			$('#file_key').click();
 		});
+	});
 
-	</script>
+</script>
 
-	<!-- popup Apply -->
-	<div class="modal fade layerpopup" id="Detail_Apply" tabindex="-1" role="dialog" aria-hidden="true">
-		<div class="modal-dialog" role="document">
-			<div class="modal-content">
-				
-				<div class="modal-body">
-					<div class="txt">Would you like to enable Monitoring ?</div>
-					<div class="btnbox">
-						<button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
-						<button type="button" class="btn_ok" onclick="install_agent();" data-dismiss="modal">OK</button>
-					</div>
+<!-- popup Apply -->
+<div class="modal fade layerpopup" id="Detail_Apply" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+
+			<div class="modal-body">
+				<div class="txt">Would you like to enable Monitoring ?</div>
+				<div class="btnbox">
+					<button type="button" class="btn_cancel" data-dismiss="modal">Cancel</button>
+					<button type="button" class="btn_ok" onclick="install_agent();" data-dismiss="modal">OK</button>
 				</div>
-				
 			</div>
+
 		</div>
 	</div>
-	<!-- //popup Apply -->
-	<script>
-		function install_agent(){
-			console.log("reg btn click : ","{{ .comURL.DragonFlyURL}}") 
-			var url = DragonFlyURL+"/agent/install";
-			console.log("Monitoring Service Activation URI : ", url)
+</div>
+<!-- //popup Apply -->
+<script>
+	function install_agent() {
+		console.log("reg btn click : ", "{{ .comURL.DragonFlyURL}}")
+		var url = DragonFlyURL + "/agent/install";
+		console.log("Monitoring Service Activation URI : ", url)
 
-			//폼의 필수 필드를 검증 함.
-			if (!chkFormValidate($("#manage_mcis_popup_form"))) return false;
-			
-			var obj = $("#manage_mcis_popup_form").serializeObject()
-			var formData = new FormData(document.getElementById("manage_mcis_popup_form"));
-			axios.post(url,formData,{
-				headers :{
-					'Content-type': 'multipart/form-data',
-					'Authorization': ApiInfo,
-					},
-			}).then(result=>{
-                console.log(result.data)
-                var data = result.data
-                //alert(result);
-                if(result.status == 200 || result.status == 201){
-                    alert("Monitoring Service Activation is complete.");
-                    $("#Detail_Apply").modal('hide');
-					
-                }else{
-                    alert("Monitoring Service Activation failed : " + result.status);
-                }
-            }).catch(function (error) {
-                console.log(error)
-                if (error.response) {
-                    // 서버가 2xx 외의 상태 코드를 리턴한 경우
-                //error.response.headers / error.response.status / error.response.data
-                    alert("Monitoring Service Activation failed\nMonitoring Service Activation Status : " + error.response.status);
-                }
-                else if (error.request) {
-                    // 응답을 못 받음
-                    alert("No response was received from the Monitoring Server.\n" + error.request);
-                }
-                else {
-                    alert("Error communicating with Monitoring Server.\n" + error.message);
-                }
-                console.log(error.config);
-            })
-            ;  
-        //}finally{
-            //AjaxLoadingShow(false);
-        //}
-    }
-		$(function() {
-		  return $(".modal").on("show.bs.modal", function() {
+		//폼의 필수 필드를 검증 함.
+		if (!chkFormValidate($("#manage_mcis_popup_form"))) return false;
+
+		var obj = $("#manage_mcis_popup_form").serializeObject()
+		var formData = new FormData(document.getElementById("manage_mcis_popup_form"));
+		axios.post(url, formData, {
+			headers: {
+				'Content-type': 'multipart/form-data',
+				'Authorization': ApiInfo,
+			},
+		}).then(result => {
+			console.log(result.data)
+			var data = result.data
+			//alert(result);
+			if (result.status == 200 || result.status == 201) {
+				alert("Monitoring Service Activation is complete.");
+				$("#Detail_Apply").modal('hide');
+
+			} else {
+				alert("Monitoring Service Activation failed : " + result.status);
+			}
+		}).catch(function (error) {
+			console.log(error)
+			if (error.response) {
+				// 서버가 2xx 외의 상태 코드를 리턴한 경우
+				//error.response.headers / error.response.status / error.response.data
+				alert("Monitoring Service Activation failed\nMonitoring Service Activation Status : " + error.response.status);
+			}
+			else if (error.request) {
+				// 응답을 못 받음
+				alert("No response was received from the Monitoring Server.\n" + error.request);
+			}
+			else {
+				alert("Error communicating with Monitoring Server.\n" + error.message);
+			}
+			console.log(error.config);
+		})
+			;
+		//}finally{
+		//AjaxLoadingShow(false);
+		//}
+	}
+	$(function () {
+		return $(".modal").on("show.bs.modal", function () {
 			var curModal;
 			curModal = this;
-			$(".modal").each(function() {
-			  if (this !== curModal) {
-				$(this).modal("hide");
-			  }
+			$(".modal").each(function () {
+				if (this !== curModal) {
+					$(this).modal("hide");
+				}
 			});
-		  });
-		});		
-		$(document).ready(function() {
-		  $(".switch").change(function() {
+		});
+	});
+	$(document).ready(function () {
+		$(".switch").change(function () {
 			if ($(".switch .ch").is(":checked")) {
 				$("#monitoring_box").modal();
 			} else {
 			}
-		  });
-		  /*
-			$("#monitoring_box .btnbox .btn_cancel").click(function () {
-			  $(".switch input[type=checkbox]").prop("checked", false);
-			});	
-			*/
-			$("#monitoring_box").on("hidden.bs.modal", function() {
-			  $(".switch input[type=checkbox]").attr("checked", false);
-			});	
-			$("#Detail_Apply").on("hidden.bs.modal", function() {
-			  $(".switch input[type=checkbox]").prop("checked", false);
-			});	
-			
-			
-
 		});
-	</script>
+		/*
+		  $("#monitoring_box .btnbox .btn_cancel").click(function () {
+			$(".switch input[type=checkbox]").prop("checked", false);
+		  });	
+		  */
+		$("#monitoring_box").on("hidden.bs.modal", function () {
+			$(".switch input[type=checkbox]").attr("checked", false);
+		});
+		$("#Detail_Apply").on("hidden.bs.modal", function () {
+			$(".switch input[type=checkbox]").prop("checked", false);
+		});
+
+
+
+	});
+</script>
 {{end}}

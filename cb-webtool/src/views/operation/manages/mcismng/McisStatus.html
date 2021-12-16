@@ -10,18 +10,18 @@
 							<div class="box_cont">
 								<div class="lbox">
 									
-									<strong id="total_mcis" title="Total count of MCIS">{{ .TotalMcisCount }}</strong>
+									<strong id="total_mcis" title="Total count of MCIS">0</strong>
 									<!-- <strong class="txt_3n">999</strong> -->
 								</div>
 								<div class="rbox">
 									
 									<div class="numbox" id="mcis_numbox">
-										<div class="num bgbox_b"><span title="Running State">{{ .TotalMcisStatusCountMap.RUNNING }}</span></div>
+										<div class="num bgbox_b"><span title="Running State" id="mcis_status_running">0</span></div>
 										<!-- <div class="num bgbox_b"><span class="txt_3n">999</span></div> -->
-										<div class="num bgbox_r"><span title="Stopped State">{{ .TotalMcisStatusCountMap.STOPPED }}</span></div>
-										<div class="num bgbox_g"><span title="Terminated State">{{ .TotalMcisStatusCountMap.TERMINATED }}</span></div>
+										<div class="num bgbox_r"><span title="Stopped State" id="mcis_status_stopped">0</span></div>
+										<div class="num bgbox_g"><span title="Terminated State" id="mcis_status_terminated">0</span></div>
 									</div>
-							
+									
 									<div class="txt">Status of Infra Service</div>
 								</div>
 							</div>
@@ -50,18 +50,18 @@
 							
 							<div class="box_cont">
 								<div class="lbox">									
-									<strong id="total_vm" title="Total count of VM">{{ .TotalVmCount }}</strong>
+									<strong id="total_vm" title="Total count of VM">0</strong>
 								</div>
 								<div class="rbox">
 									<div class="numbox" id="vm_numbox">
 										<div class="num bgbox_b boxrd" >											
-											<span title="Running State">{{ .TotalVmStatusCountMap.running }}</span>
+											<span title="Running State" id="vm_status_running">0</span>
 										</div>
 										<div class="num bgbox_r boxrd" >
-											<span title="Stopped State">{{ .TotalVmStatusCountMap.stopped }}</span>
+											<span title="Stopped State" id="vm_status_stopped">0</span>
 										</div>
 										<div class="num bgbox_g boxrd" >
-											<span title="Terminated State">{{ .TotalVmStatusCountMap.terminated }}</span>
+											<span title="Terminated State" id="vm_status_terminated">0</span>
 										</div>										
 									</div>
 									<div class="txt">Status of Server</div>
@@ -78,20 +78,14 @@
 							
 							<div class="box_cont">
 								<div class="lbox" id="cpConnectionTotal">
-									<strong title="Number of Providers" id="providerCount">{{ .TotalProviderCount }}</strong>
+									<strong title="Number of Providers" id="providerCount">0</strong>
 									<span>/</span>
-									<span title="Number connection" id="connectionCount">{{ .TotalConnectionConfigCount }}</span>
+									<span title="Number connection" id="connectionCount">0</span>
 								</div>
 								<div class="cbox">
 									<div class="tcbox">
 										<div class="sc_box scrollbar-inner">
-											<ul id="cpConnectionDetail">
-												{{ range $key, $value := .ConnectionConfigCountMap }}
-												<li class="bg_etc bg_{{$key}}">
-													<a href="#!"><span class="conn_cnt">{{ $value }}<div class="conn_tit">{{ $key }}</div></span></a>
-													<!-- <a href="#!"><span>{{ $key }} ( {{ $value }} )</span></a> -->
-												</li>
-												{{ end }}
+											<ul id="cpConnectionDetail">												
 											</ul>
 										</div>
 									</div>

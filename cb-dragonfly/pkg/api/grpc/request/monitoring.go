@@ -142,6 +142,22 @@ func (monReq *MonitoringRequest) GetMCISMonInfo(mcisMonQueryRequest pb.VMMCISMon
 	return monReq.convertResponseToString(resp)
 }
 
+// InstallAgent
+func (monReq *MonitoringRequest) InstallAgent(installAgentRequest pb.InstallAgentRequest) (string, error) {
+	// set timeout context
+	ctx, cancel := context.WithTimeout(context.Background(), monReq.Timeout)
+	defer cancel()
+
+	var resp interface{}
+	var err error
+
+	resp, err = monReq.Client.InstallAgent(ctx, &installAgentRequest)
+	if err != nil {
+		return "", err
+	}
+	return monReq.convertResponseToString(resp)
+}
+
 // convertResponseToString - convert response object to string
 func (monReq *MonitoringRequest) convertResponseToString(response interface{}) (string, error) {
 	result, err := common.ConvertToOutput(monReq.OutType, response)

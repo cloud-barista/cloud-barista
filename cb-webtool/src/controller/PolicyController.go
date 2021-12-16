@@ -3,6 +3,7 @@ package controller
 import (
 	// "encoding/json"
 	"fmt"
+	"github.com/cloud-barista/cb-webtool/src/util"
 	"log"
 	"net/http"
 
@@ -120,16 +121,17 @@ func MonitoringConfigPolicyPutProc(c echo.Context) error {
 		})
 	}
 	log.Println(monitoringConfigRegInfo)
-
+	taskKey := loginInfo.DefaultNameSpaceID + "||" + util.TASK_TYPE_MONITORING_POLICY
 	resultMonitoringConfigInfo, respStatus := service.PutMonigoringConfig(monitoringConfigRegInfo)
 	log.Println("MonitoringPolicyReg service returned")
 	if respStatus.StatusCode != 200 && respStatus.StatusCode != 201 {
+		service.StoreWebsocketMessage(util.TASK_TYPE_MONITORING_POLICY, taskKey, util.MONITORING_POLICY_STATUS_FAIL, util.TASK_STATUS_REQUEST, c)
 		return c.JSON(respStatus.StatusCode, map[string]interface{}{
 			"error":  respStatus.Message,
 			"status": respStatus.StatusCode,
 		})
 	}
-
+	service.StoreWebsocketMessage(util.TASK_TYPE_MONITORING_POLICY, taskKey, util.MONITORING_POLICY_STATUS_REG, util.TASK_STATUS_REQUEST, c)
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message":          "success",
 		"status":           respStatus.StatusCode,
@@ -285,22 +287,27 @@ func MonitoringAlertPolicyRegProc(c echo.Context) error {
 	monitoringAlertRegInfo := &dragonfly.VmMonitoringAlertInfo{}
 	if err := c.Bind(monitoringAlertRegInfo); err != nil {
 		log.Println(err)
+
 		return c.JSON(http.StatusBadRequest, map[string]interface{}{
 			"message": "fail",
 			"status":  "fail",
 		})
 	}
 	log.Println(monitoringAlertRegInfo)
+	defaultNameSpaceID := loginInfo.DefaultNameSpaceID
+	taskKey := defaultNameSpaceID + "||" + "threshold" + "||" + monitoringAlertRegInfo.AlertName
 
 	resultMonitoringAlertInfo, respStatus := service.RegMonitoringAlert(monitoringAlertRegInfo)
 	log.Println("MonitoringAlertPolicyReg service returned")
 	if respStatus.StatusCode != 200 && respStatus.StatusCode != 201 {
+		service.StoreWebsocketMessage(util.TASK_TYPE_MONITORING_POLICY, taskKey, util.MONITORING_POLICY_STATUS_REG, util.TASK_STATUS_FAIL, c) // session에 작업내용 저장
 		return c.JSON(respStatus.StatusCode, map[string]interface{}{
 			"error":  respStatus.Message,
 			"status": respStatus.StatusCode,
 		})
 	}
 
+	service.StoreWebsocketMessage(util.TASK_TYPE_MONITORING_POLICY, taskKey, util.MONITORING_POLICY_STATUS_REG, util.TASK_STATUS_REQUEST, c) // session에 작업내용 저장
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message":          "success",
 		"status":           respStatus.StatusCode,
@@ -377,7 +384,7 @@ func MonitoringAlertEventHandlerRegProc(c echo.Context) error {
 		return c.Redirect(http.StatusTemporaryRedirect, "/login")
 	}
 
-	// defaultNameSpaceID := loginInfo.DefaultNameSpaceID
+	defaultNameSpaceID := loginInfo.DefaultNameSpaceID
 	// _, respStatus := service.RegMonitoringPolicy(defaultNameSpaceID, mCISInfo)
 	// log.Println("MonitoringPolicyReg service returned")
 	// if respStatus.StatusCode != 200 && respStatus.StatusCode != 201 {
@@ -397,15 +404,17 @@ func MonitoringAlertEventHandlerRegProc(c echo.Context) error {
 	}
 	log.Println(monitoringAlertEventHandlerRegInfo)
 
+	taskKey := defaultNameSpaceID + "||" + "monitoring_threshold_eventHandler" + "||" + monitoringAlertEventHandlerRegInfo.Name
 	resultMonitoringAlertEventHandlerInfo, respStatus := service.RegMonitoringAlertEventHandler(monitoringAlertEventHandlerRegInfo)
 	log.Println("MonitoringAlertEventHandlerReg service returned")
 	if respStatus.StatusCode != 200 && respStatus.StatusCode != 201 {
+		service.StoreWebsocketMessage(util.TASK_TYPE_MONITORINGTHRESHOLD_EVENTHANDLER, taskKey, util.MONITORING_THRESHOLD_REG, util.TASK_STATUS_FAIL, c)
 		return c.JSON(respStatus.StatusCode, map[string]interface{}{
 			"error":  respStatus.Message,
 			"status": respStatus.StatusCode,
 		})
 	}
-
+	service.StoreWebsocketMessage(util.TASK_TYPE_MONITORINGTHRESHOLD_EVENTHANDLER, taskKey, util.MONITORING_THRESHOLD_REG, util.TASK_STATUS_REQUEST, c)
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message":                "success",
 		"status":                 respStatus.StatusCode,

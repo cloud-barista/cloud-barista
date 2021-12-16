@@ -1,0 +1,44 @@
+version: 1
+grpc:
+  mckssrv:
+    addr: :50254
+    #reflection: enable
+    #tls:
+    #  tls_cert: $APP_ROOT/certs/server.crt
+    #  tls_key: $APP_ROOT/certs/server.key
+    interceptors:
+      #auth_jwt:
+      #  jwt_key: your_secret_key
+      prometheus_metrics:
+        listen_port: 9095
+      opentracing:
+        jaeger:
+          endpoint: localhost:6834
+          service_name: mcks grpc server
+          sample_rate: 1
+  tumblebugcli:
+    server_addr: 127.0.0.1:50252
+    timeout: 90s
+    #tls:
+    #  tls_ca: $APP_ROOT/certs/ca.crt
+    interceptors:
+      #auth_jwt:
+      #  jwt_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRJUCI6IjEyNy4wLjAuMSIsImV4cGlyZSI6MTkwODMyNTY1OCwib3JnTmFtZSI6IkVUUkkiLCJ1c2VyTmFtZSI6IkhvbmdHaWxEb25nIn0.4lkjYduo8iwv4AcKH96MpTnk8d7HRhi_p1xlnvZts8A
+      opentracing:
+        jaeger:
+          endpoint: localhost:6832
+          service_name: tumblebug grpc client
+          sample_rate: 1
+  spidercli:
+    server_addr: 127.0.0.1:2048
+    timeout: 90s
+    #tls:
+    #  tls_ca: $APP_ROOT/certs/ca.crt
+    interceptors:
+      #auth_jwt:
+      #  jwt_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRJUCI6IjEyNy4wLjAuMSIsImV4cGlyZSI6MTkwODMyNTY1OCwib3JnTmFtZSI6IkVUUkkiLCJ1c2VyTmFtZSI6IkhvbmdHaWxEb25nIn0.4lkjYduo8iwv4AcKH96MpTnk8d7HRhi_p1xlnvZts8A
+      opentracing:
+        jaeger:
+          endpoint: localhost:6832
+          service_name: spider grpc client
+          sample_rate: 1        

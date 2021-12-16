@@ -27,7 +27,13 @@
 				<input type="hidden" id="vm_name" value=''/>
 				
 				<input type="hidden" id="selected_mcis_id" value='{{ .SelectedMcisID }}'/>
+				<input type="hidden" id="selected_mcis_index" value='0'/>
 				<input type="hidden" id="selected_vm_id"/>
+
+				<!-- export 시 사용할 filename, script -->
+				<input type="hidden" id="exportFileName"/>
+				<input type="hidden" id="exportScript"/>
+
 
 				<!-- contents -->
 				<div class="contbox">
@@ -70,4 +76,12 @@
 
 <script type="text/javascript" src="/assets/js/operation/manages/mcismng/mcismng.js"></script>
 <script type="text/javascript" src="/assets/js/util/mcislifecycle.js"></script>
+<script type="text/javascript">
+	let osmLayer;
+	$(document).ready(function () {
+		osmLayer = new ol.layer.Tile({
+			source: new ol.source.OSM(),
+		});
+	});
+</script>
 {{template "Footer" .}}

@@ -9,17 +9,14 @@ import (
 	"os"
 	_ "fmt"
 	"strings"
-	"sort"
+	_ "sort"
 )
-
 
 var cblog *logrus.Logger
 
 func init() {
         cblog = config.Cblogger
 }
-
-
 
 type CloudOSList struct {
 	Name []string `yaml:"cloudos"`
@@ -32,7 +29,7 @@ func readYaml() CloudOSList {
                 cblog.Error("$CBSPIDER_ROOT is not set!!")
                 os.Exit(1)
         }
-	data, err := ioutil.ReadFile(rootPath + "/conf/cloudos.yaml")
+	data, err := ioutil.ReadFile(rootPath + "/cloud-driver-libs/cloudos.yaml")
 	if err != nil {
 		cblog.Error(err)
 		panic(err)
@@ -58,13 +55,8 @@ func ListCloudOS() []string {
 		cloudosList.Name[n] = strings.ToUpper(cloudos)
 	}
 
-	sort.Strings(cloudosList.Name)
+	//sort.Strings(cloudosList.Name)
 	cblog.Info(cloudosList)
-
-/*	for _, cloudos := range cloudosList.Name{
-		fmt.Printf("\n%s", cloudos)
-	}
-*/
 
 	return cloudosList.Name
 }

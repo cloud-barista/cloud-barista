@@ -1,0 +1,139 @@
+{{ template "Top" .}}
+	
+		<div id="lnb">
+			
+			<div class="bg"></div>
+				
+			<div class="m_box">
+				
+                {{template "TopBox" .}}
+
+                {{template "LNBPopup" .}}
+        
+                
+			</div>
+			
+			<div class="bottom"></div>
+			<a href="javascript:;" id="m_close"></a>
+			
+		</div>
+			
+		{{template "Header" .}}	
+				<!-- contents -->
+				<div class="contbox">
+					
+					<div class="titlebox">
+						<div class="tit"><img src="/assets/img/common/icon_cont.png" alt=""/>WebSocket Test</strong></div>
+					</div>
+
+					<div class="dashboard dashboard_cont">
+            <input type="button" value="msg submit" onclick="myOnClick()">
+						<p id="output"></p>
+						
+					</div>
+                </div>
+
+<script>
+    var lastCallTime;// 호출하면 호출시간을 return하여 해당시간 이후Data만 가져오도록
+    var loc = window.location;
+    var uri = 'ws:';
+    var ws;
+    if (loc.protocol === 'https:') {
+      uri = 'wss:';
+    }
+    uri += '//' + loc.host;
+    //uri += loc.pathname + 'ws/hello';
+    //uri += loc.pathname + 'ws/hello';
+    // uri += '/ws/helloWS';// Websocket
+    uri += '/ws/helloGorilla';// Gorilla websocket
+    // uri += '/ws/oneshot';// Gorilla websocket
+    
+    ws = new WebSocket(uri)
+
+    // window.onload = function(){
+    //   if (loc.protocol === 'https:') {
+    //     uri = 'wss:';
+    //   }
+    //   uri += '//' + loc.host;
+    //   //uri += loc.pathname + 'ws/hello';
+    //   //uri += loc.pathname + 'ws/hello';
+    //   // uri += '/ws/helloWS';// Websocket
+    //   uri += '/ws/helloGorilla';// Gorilla websocket
+    //   // uri += '/ws/oneshot';// Gorilla websocket
+      
+    //   ws = new WebSocket(uri)
+
+    //   ws.onopen = function() {
+    //     console.log('Connected')
+    //   }
+    //   ws.onclose = function () {
+    //     console.log('Closed');
+    //   }
+
+    //   ws.onmessage = function(evt) {
+    //     var out = document.getElementById('output');
+    //     out.innerHTML += evt.data + '<br>';
+    //     console.log(evt);
+    //   }
+
+    //   ws.onerror = function (e) {
+    //     console.log('Error (see console)');
+    //     console.log(e);
+    //   }
+
+    //     // setInterval(function() {
+    //     //   ws.send('Hello, Server!');
+    //     // }, 1000);
+    // }
+
+    // ws.onopen = function() {
+    //   console.log('Connected')
+    // }
+    ws.onopen = (event) => {
+      console.log('Connected')
+      let sendData = {event: 'open'}
+      // 현재날짜 -2시간 이후의 data만 가져온다.
+      ws.send(JSON.stringify(sendData));
+      console.log(event);
+    }
+    ws.onmessage = (event) => {
+        console.log(event.data);
+        let recData = JSON.parse(event.data);
+        console.log("recData.event= " + recData.event)
+        console.log(recData)
+        switch (recData.event) {
+            case 'res':
+              var out = document.getElementById('output');
+              var jsonStr = JSON.stringify(recData);
+              lastCallTime = recData.callTime;
+              out.innerHTML += jsonStr + '<br> by res';
+              console.log(recData);
+              break;
+            default:
+            var out = document.getElementById('output');
+              out.innerHTML += recData;
+              console.log(recData);
+              break
+        }
+    }
+
+    ws.onclose = function () {
+      console.log('Closed');
+    }
+
+    window.addEventListener('beforeunload', function (e) {
+      //ws.send('close');
+      let sendData = {event: 'close'}
+      ws.send(JSON.stringify(sendData));
+      console.log("beforeunload")
+      console.log(sendData)
+    });
+
+    function myOnClick() {      
+        let sendData = {event: 'req', data: {comment: "1234", calltime: lastCallTime}};
+        // sequence 를 받아 최종 sequence 보다 큰 것들만 가져온다.
+        ws.send(JSON.stringify(sendData));        
+    }
+</script>
+{{template "Footer" .}}
+

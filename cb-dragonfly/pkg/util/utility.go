@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cloud-barista/cb-dragonfly/pkg/types"
+	appsv1 "k8s.io/api/apps/v1"
+	apiv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"math"
 	"net/url"
 	"reflect"
 	"sort"
@@ -69,36 +73,23 @@ func GetFields(val reflect.Value) []string {
 }
 
 func SplitOneStringToTopicsSlice(topicsStrings string) []string {
-	return strings.Split(topicsStrings, "&")[1:]
+	return strings.Split(topicsStrings, "^")[1:]
 }
 
 func MergeTopicsToOneString(topicsSlice []string) string {
 	var combinedTopicString string
 	for _, topic := range topicsSlice {
-		combinedTopicString = fmt.Sprintf("%s&%s", combinedTopicString, topic)
+		combinedTopicString = fmt.Sprintf("%s^%s", combinedTopicString, topic)
 	}
 	return combinedTopicString
 }
 
 func CalculateNumberOfCollector(topicCount int, maxHostCount int) int {
 	collectorCount := topicCount / maxHostCount
-	if topicCount%maxHostCount != 0 || topicCount == 0 {
+	if topicCount%maxHostCount != 0 {
 		collectorCount += 1
 	}
 	return collectorCount
-}
-
-func ReturnDiffTopicList(a, b []string) (diff []string) {
-	m := make(map[string]bool)
-	for _, item := range b {
-		m[item] = true
-	}
-	for _, item := range a {
-		if _, ok := m[item]; !ok {
-			diff = append(diff, item)
-		}
-	}
-	return
 }
 
 func GetAllTopicBySort(topicsSlice []string) []string {
@@ -108,7 +99,7 @@ func GetAllTopicBySort(topicsSlice []string) []string {
 	sort.Slice(topicsSlice, func(i, j int) bool {
 		return topicsSlice[i] < topicsSlice[j]
 	})
-	return topicsSlice[1:]
+	return topicsSlice
 }
 
 func MakeCollectorTopicMap(allTopics []string, maxHostCount int) (map[int][]string, []int) {
@@ -142,49 +133,139 @@ func MakeCollectorTopicMap(allTopics []string, maxHostCount int) (map[int][]stri
 	return collectorTopicMap, collectorTopicCnt
 }
 
-func MakeCollectorTopicMapBasedCSP(allTopics []string) map[int][]string {
-
-	if len(allTopics) == 0 {
-		return map[int][]string{}
+func GetCspCollectorIdx(topic string) (collectorIdx int) {
+	topicSplit := strings.Split(topic, "_")
+	cspType := strings.ToUpper(topicSplit[len(topicSplit)-1])
+	switch cspType {
+	case types.Alibaba:
+		collectorIdx = 0
+		break
+	case types.Aws:
+		collectorIdx = 1
+		break
+	case types.Azure:
+		collectorIdx = 2
+		break
+	case types.Cloudit:
+		collectorIdx = 3
+		break
+	case types.Cloudtwin:
+		collectorIdx = 4
+		break
+	case types.Docker:
+		collectorIdx = 5
+		break
+	case types.Gcp:
+		collectorIdx = 6
+		break
+	case types.Openstack:
+		collectorIdx = 7
+		break
 	}
+	return
+}
 
-	collectorTopicMap := map[int][]string{
-		0: []string{},
-		1: []string{},
-		2: []string{},
-		3: []string{},
-		4: []string{},
-		5: []string{},
-	}
-	for _, topic := range allTopics {
-		splitTopic := strings.Split(topic, "_")
-		cspType := splitTopic[len(splitTopic)-1]
-		switch cspType {
-		case types.ALIBABA:
-			collectorTopicMap[0] = append(collectorTopicMap[0], topic)
-			break
-		case types.AWS:
-			collectorTopicMap[1] = append(collectorTopicMap[1], topic)
-			break
-		case types.AZURE:
-			collectorTopicMap[2] = append(collectorTopicMap[2], topic)
-			break
-		case types.CLOUDIT:
-			collectorTopicMap[3] = append(collectorTopicMap[3], topic)
-			break
-		case types.CLOUDTWIN:
-			collectorTopicMap[4] = append(collectorTopicMap[4], topic)
-			break
-		case types.DOCKER:
-			collectorTopicMap[5] = append(collectorTopicMap[5], topic)
-			break
-		case types.GCP:
-			collectorTopicMap[6] = append(collectorTopicMap[6], topic)
-			break
-		case types.OPENSTACK:
-			collectorTopicMap[7] = append(collectorTopicMap[7], topic)
-			break
+func Unique(intSlice []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+	for _, entry := range intSlice {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
 		}
 	}
-	return collectorTopicMap
+	sort.Strings(list)
+	return list
 }
+
+func ReturnDiffTopicList(a, b []string) (diff []string) {
+	m := make(map[string]bool)
+	for _, item := range b {
+		m[item] = true
+	}
+	for _, item := range a {
+		if _, ok := m[item]; !ok {
+			diff = append(diff, item)
+		}
+	}
+	return
+}
+
+func Int32Ptr(i int32) *int32 { return &i }
+
+func Int64Ptr(i int64) *int64 { return &i }
+
+func DeploymentTemplate(collectorCreateOrder int, collectorUUID string, env []apiv1.EnvVar) *appsv1.Deployment {
+	return &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   fmt.Sprintf("%s%d-%s", types.DeploymentName, collectorCreateOrder, collectorUUID),
+			Labels: map[string]string{types.LabelKey: collectorUUID},
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: Int32Ptr(1),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					types.LabelKey: collectorUUID,
+				},
+			},
+			Template: apiv1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						types.LabelKey: collectorUUID,
+					},
+				},
+				Spec: apiv1.PodSpec{
+					Containers: []apiv1.Container{
+						{
+							Name:  fmt.Sprintf("%s%d-%s", types.DeploymentName, collectorCreateOrder, collectorUUID),
+							Image: types.CollectorImage,
+							Ports: []apiv1.ContainerPort{},
+							Env:   env,
+							VolumeMounts: []apiv1.VolumeMount{
+								{
+									Name:      "config-volume",
+									MountPath: "/go/src/github.com/cloud-barista/cb-dragonfly/conf",
+								},
+							},
+							SecurityContext: &apiv1.SecurityContext{
+								RunAsUser: Int64Ptr(0),
+							},
+						},
+					},
+					Volumes: []apiv1.Volume{
+						{
+							Name: "config-volume",
+							VolumeSource: apiv1.VolumeSource{
+								ConfigMap: &apiv1.ConfigMapVolumeSource{
+									LocalObjectReference: apiv1.LocalObjectReference{
+										Name: "cb-dragonfly-config",
+									},
+								},
+							},
+						},
+					},
+					ServiceAccountName: "cb-dragonfly",
+				},
+			},
+		},
+	}
+}
+
+func round(num float64) int {
+	return int(num + math.Copysign(0.5, num))
+}
+
+func ToFixed(num float64, precision int) float64 {
+	output := math.Pow(10, float64(precision))
+	return float64(round(num*output)) / output
+}
+
+//func SliceContainsItem(slice []string, item string) bool {
+//	set := make(map[string]struct{}, len(slice))
+//	for _, s := range slice {
+//		set[s] = struct{}{}
+//	}
+//
+//	_, ok := set[item]
+//	return ok
+//}

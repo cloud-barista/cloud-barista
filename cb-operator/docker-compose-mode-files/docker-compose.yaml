@@ -6,8 +6,8 @@ services:
     image: influxdb:1.8.4
     container_name: cb-restapigw-influxdb
     ports:
-      - "0.0.0.0:8083:8083"
       - "0.0.0.0:8086:8086"
+      - "0.0.0.0:8088:8088"
     env_file:
       - './conf/env.influxdb'
     volumes:
@@ -54,7 +54,7 @@ services:
   #     - ./data/lwan:/lwan/wwwroot
   #   ports:
   #     - "8200:8080"
-      
+
   # HMAC Server
   # hmac_site:
   #   build:
@@ -75,7 +75,7 @@ services:
 
   # CB-Spider
   cb-spider:
-    image: cloudbaristaorg/cb-spider:0.4.0
+    image: cloudbaristaorg/cb-spider:0.5.0
     container_name: cb-spider
     ports:
       - "0.0.0.0:1024:1024"
@@ -88,14 +88,16 @@ services:
     depends_on:
       - cb-restapigw
     environment:
-      - LOCALHOST=OFF
       - PLUGIN_SW=OFF
       - MEERKAT=OFF
+      # if you leave these values empty, REST Auth will be disabled.
+      - API_USERNAME=
+      - API_PASSWORD=
 
 
   # CB-Tumblebug
   cb-tumblebug:
-    image: cloudbaristaorg/cb-tumblebug:0.4.0
+    image: cloudbaristaorg/cb-tumblebug:0.5.0
     container_name: cb-tumblebug
     ports:
       - "0.0.0.0:1323:1323"
@@ -163,34 +165,45 @@ services:
       - 0.0.0.0:2015:2015
     volumes:
       - ./data/cb-tumblebug/meta_db:/db
+    depends_on:
+      - cb-tumblebug
 
-  # CB-Ladybug
-  cb-ladybug:
-    image: cloudbaristaorg/cb-ladybug:0.4.0
-    container_name: cb-ladybug
+  cb-tumblebug-mapui:
+    image: cloudbaristaorg/cb-mapui:0.5.0
+    container_name: cb-tumblebug-mapui
     ports:
-      - "0.0.0.0:8080:8080"
+      - 0.0.0.0:1324:1324
+    depends_on:
+      - cb-tumblebug
+
+  # CB-MCKS
+  cb-mcks:
+    image: cloudbaristaorg/cb-mcks:0.5.0
+    container_name: cb-mcks
+    ports:
+      - "0.0.0.0:1470:1470"
+      - "0.0.0.0:50254:50254"
     depends_on:
       - cb-restapigw
       - cb-spider
       - cb-tumblebug
     volumes:
-      - ./conf/cb-ladybug/:/app/conf/
-      - ./data/cb-ladybug/meta_db/:/app/meta_db/
-      - ./data/cb-ladybug/log/:/app/log/
+      - ./conf/cb-mcks/:/app/conf/
+      - ./data/cb-mcks/meta_db/:/app/meta_db/
+      - ./data/cb-mcks/log/:/app/log/
     environment:
 #     - CBLOG_ROOT=/app
 #     - CBSTORE_ROOT=/app
 #     - APP_ROOT=/app
       - SPIDER_URL=http://cb-spider:1024/spider
       - TUMBLEBUG_URL=http://cb-tumblebug:1323/tumblebug
-      - BASE_PATH=/ladybug
+      - BASE_PATH=/mcks
       - API_USERNAME=default
       - API_PASSWORD=default
 
- # CB-Dragonfly
+# CB-Dragonfly
   cb-dragonfly:
-    image: cloudbaristaorg/cb-dragonfly:0.4.0
+    image: cloudbaristaorg/cb-dragonfly:0.5.0
     container_name: cb-dragonfly
     volumes:
       - ./conf/cb-dragonfly/:/go/src/github.com/cloud-barista/cb-dragonfly/conf/
@@ -223,8 +236,8 @@ services:
     image: influxdb:1.8-alpine
     container_name: cb-dragonfly-influxdb
     ports:
-      - 0.0.0.0:28083:8083
       - 0.0.0.0:28086:8086
+      - 0.0.0.0:28088:8088
     environment:
       - PRE_CREATE_DB=cbmon
       - INFLUXDB_DB=cbmon
@@ -258,8 +271,10 @@ services:
       KAFKA_PORT: 9092
       KAFKA_ZOOKEEPER_CONNECT: cb-dragonfly-zookeeper:2181
       KAFKA_DELETE_TOPIC_ENABLE: "true"
-      KAFKA_LOG_RETENTION_MS: 10000
-      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 5000
+      KAFKA_LOG_RETENTION_HOURS: 1                    # 1 hours (delete logs)
+      KAFKA_LOG_RETENTION_BYTES: 524288000            # 500 MB
+      KAFKA_LOG_SEGMENT_BYTES: 262144000              # 250 MB
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 600000   # 10 min (check interval)
       KAFKA_MESSAGE_TIMESTAMP_TYPE: LogAppendTime
       KAFKA_LOG_MESSAGE_TIMESTAMP_TYPE: LogAppendTime
     volumes:
@@ -293,7 +308,7 @@ services:
 
   # CB-Webtool
   cb-webtool:
-    image: cloudbaristaorg/cb-webtool:0.4.0
+    image: cloudbaristaorg/cb-webtool:0.5.0
     container_name: cb-webtool
     ports:
       - "0.0.0.0:1234:1234"
@@ -302,19 +317,23 @@ services:
       - cb-spider
       - cb-tumblebug
     environment:
-     #- SPIDER_URL=http://cb-restapigw:8000/spider
-     #- TUMBLE_URL=http://cb-restapigw:8000/tumblebug
+      - CBWS_TARGET=
       - API_GW=http://cb-restapigw:8000
       - SPIDER_URL=http://cb-spider:1024/spider
       - TUMBLE_URL=http://cb-tumblebug:1323/tumblebug
       - DRAGONFLY_URL=http://cb-dragonfly:9090/dragonfly
-      - LADYBUG_URL=http://cb-ladybug:8080/ladybug
+      - LADYBUG_URL=http://cb-mcks:1470/mcks
+      - LoginUser=admin
       - LoginEmail=admin
       - LoginPassword=admin
+      - LoginAccessSecret=cloudbarista
+      - LoginRefreshSecret=webtool
+      - API_USERNAME=default
+      - API_PASSWORD=default
 
   # CB-RESTAPIGW SERVICE
   cb-restapigw:
-    image: cloudbaristaorg/cb-restapigw:0.4.0
+    image: cloudbaristaorg/cb-restapigw:0.5.0
     container_name: cb-restapigw
     volumes:
       - ./conf/cb-restapigw:/app/conf
@@ -335,6 +354,38 @@ services:
         #  default:
         #    external:
         #      name: cboperator_default
+
+  cb-restapigw-readonly:
+    image: cloudbaristaorg/cb-restapigw:0.5.0
+    container_name: cb-restapigw-readonly
+    volumes:
+      - ./conf/cb-restapigw-readonly:/app/conf
+#     - ./data/cb-restapigw/log:/app/log
+    ports:
+      - "0.0.0.0:7000:8000"
+      - "0.0.0.0:7001:8001"
+
+  cb-kong:
+    image: kong:latest
+    container_name: cb-kong
+    volumes:
+      - ./conf/cb-kong:/usr/local/kong/declarative
+    environment:
+      - KONG_DATABASE=off
+      - KONG_DECLARATIVE_CONFIG=/usr/local/kong/declarative/cb-apis.yaml
+      - KONG_PROXY_ACCESS_LOG=/dev/stdout
+      - KONG_ADMIN_ACCESS_LOG=/dev/stdout
+      - KONG_PROXY_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_ERROR_LOG=/dev/stderr
+      - KONG_PROXY_LISTEN=0.0.0.0:8000, 0.0.0.0:8443 ssl, 0.0.0.0:8500 http2, 0.0.0.0:8543 ssl http2
+      - KONG_ADMIN_LISTEN=0.0.0.0:8001, 0.0.0.0:8444 ssl
+    ports:
+      - "0.0.0.0:9000:8000" # REST
+      - "0.0.0.0:9443:8443" # REST SSL
+      - "0.0.0.0:9500:8500" # gRPC
+      - "0.0.0.0:9543:8543" # gRPC SSL
+      - "0.0.0.0:9001:8001" # Admin
+      - "0.0.0.0:9444:8444" # Admin SSL
 
 #networks:
 #  cb-dragonfly:

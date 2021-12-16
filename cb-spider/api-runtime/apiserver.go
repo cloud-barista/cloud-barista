@@ -9,21 +9,25 @@
 package main
 
 import (
+	_ "runtime"
 	"fmt"
-	"os"
 	"sync"
 	"time"
+	"os"
 
 	cr "github.com/cloud-barista/cb-spider/api-runtime/common-runtime"
 	grpcruntime "github.com/cloud-barista/cb-spider/api-runtime/grpc-runtime"
-	meerkatruntime "github.com/cloud-barista/cb-spider/api-runtime/meerkat-runtime"
 	restruntime "github.com/cloud-barista/cb-spider/api-runtime/rest-runtime"
+	mini "github.com/cloud-barista/cb-spider/spider-mini/mini"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/spf13/cobra"
 )
 
 func main() {
+	// use multi-Core
+        // runtime.GOMAXPROCS(runtime.NumCPU())
+
 	rootCmd := NewRootCmd()
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Printf("cb-spider terminated with error: %v\n", err)
@@ -51,15 +55,18 @@ func NewRootCmd() *cobra.Command {
 				wg.Done()
 			}()
 
-			if os.Getenv("MEERKAT") == "ON" {
-				time.Sleep(time.Millisecond * 10)
-				wg.Add(1)
+			if os.Getenv("EXPERIMENTAL_MINI_CLONE") == "ON" {
 
-				go func() {
-					meerkatruntime.RunServer()
-					wg.Done()
-				}()
-			}
+                                time.Sleep(time.Millisecond * 5)
+                                wg.Add(1)
+
+                                go func() {
+                                        mini.RunServer()
+                                        wg.Done()
+                                }()
+
+                        }
+
 
 			wg.Wait()
 
@@ -77,7 +84,7 @@ func NewInfoCmd() *cobra.Command {
 		Use: "info",
 		Run: func(cmd *cobra.Command, args []string) {
 			client := resty.New()
-			resp, err := client.R().Get("http://" + cr.HostIPorName + cr.ServicePort + "/spider/endpointinfo")
+			resp, err := client.R().Get("http://" + cr.ServiceIPorName + cr.ServicePort + "/spider/endpointinfo")
 			if err != nil {
 				fmt.Printf("%v\n", err)
 			} else {

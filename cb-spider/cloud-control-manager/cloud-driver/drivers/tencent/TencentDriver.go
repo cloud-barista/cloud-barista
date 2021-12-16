@@ -8,8 +8,6 @@
 //
 // by CB-Spider Team, 2019.06.
 
-//package main
-
 package tencent
 
 import (
@@ -76,6 +74,7 @@ func getVmClient(connectionInfo idrv.ConnectionInfo) (*cvm.Client, error) {
 
 	cpf := profile.NewClientProfile()
 	cpf.HttpProfile.Endpoint = "cvm.tencentcloudapi.com"
+	cpf.Language = "en-US" //메시지를 영어로 설정
 	client, err := cvm.NewClient(credential, connectionInfo.RegionInfo.Region, cpf)
 
 	if err != nil {
@@ -107,6 +106,7 @@ func getVpcClient(connectionInfo idrv.ConnectionInfo) (*vpc.Client, error) {
 
 	cpf := profile.NewClientProfile()
 	cpf.HttpProfile.Endpoint = "vpc.tencentcloudapi.com"
+	cpf.Language = "en-US" //메시지를 영어로 설정
 	client, err := vpc.NewClient(credential, connectionInfo.RegionInfo.Region, cpf)
 
 	if err != nil {
@@ -171,4 +171,3 @@ func (TencentDriver) ConnectCloud(connectionInfo idrv.ConnectionInfo) (icon.Clou
 	return iConn, nil // return type: (icon.CloudConnection, error)
 }
 */
-var CloudDriver TencentDriver

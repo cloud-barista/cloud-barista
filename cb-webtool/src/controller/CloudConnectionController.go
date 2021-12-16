@@ -10,7 +10,10 @@ import (
 	// dragonfly "github.com/cloud-barista/cb-webtool/src/model/dragonfly"
 	// ladybug "github.com/cloud-barista/cb-webtool/src/model/ladybug"
 	spider "github.com/cloud-barista/cb-webtool/src/model/spider"
-	tumblebug "github.com/cloud-barista/cb-webtool/src/model/tumblebug"
+	// tumblebug "github.com/cloud-barista/cb-webtool/src/model/tumblebug"
+	tbcommon "github.com/cloud-barista/cb-webtool/src/model/tumblebug/common"
+	// tbmcir "github.com/cloud-barista/cb-webtool/src/model/tumblebug/mcir"
+	// tbmcis "github.com/cloud-barista/cb-webtool/src/model/tumblebug/mcis"
 
 	service "github.com/cloud-barista/cb-webtool/src/service"
 
@@ -107,14 +110,15 @@ func CloudConnectionConfigMngForm(c echo.Context) error {
 	// nsList, _ := service.GetNameSpaceList()
 	nsList, _ := service.GetStoredNameSpaceList(c)
 	store.Set("namespace", nsList)
+	_ = store.Save()
 	log.Println(" nsList  ", nsList)
 
 	// status, filepath, return params
 	return echotemplate.Render(c, http.StatusOK,
 		"setting/connections/CloudConnectionConfigMng", // 파일명
 		map[string]interface{}{
-			"Message": cloudConnectionConfigErr.Message,
-			"Status":  cloudConnectionConfigErr.StatusCode,
+			"Message":                   cloudConnectionConfigErr.Message,
+			"Status":                    cloudConnectionConfigErr.StatusCode,
 			"LoginInfo":                 loginInfo,
 			"CloudOSList":               cloudOsList,
 			"NameSpaceList":             nsList,
@@ -354,6 +358,7 @@ func GetCredentialList(c echo.Context) error {
 		return c.Redirect(http.StatusTemporaryRedirect, "/login")
 	}
 
+	// Spider호출이므로 optionParam 사용X
 	credentialList, respStatus := service.GetCredentialList()
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message":    "success",
@@ -692,7 +697,7 @@ func ConnectionList(c echo.Context) error {
 	// namespace 가 없으면 1개를 기본으로 생성한다.
 	if len(nsList) == 0 {
 		// create default namespace
-		nameSpaceInfo := new(tumblebug.NameSpaceInfo)
+		nameSpaceInfo := new(tbcommon.TbNsInfo)
 		nameSpaceInfo.Name = "NS-01" // default namespace name
 		nameSpaceInfo.Description = "default name space name"
 		respBody, respStatus := service.RegNameSpace(nameSpaceInfo)

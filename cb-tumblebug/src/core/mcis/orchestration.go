@@ -1,3 +1,17 @@
+/*
+Copyright 2019 The Cloud-Barista Authors.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+// Package mcis is to manage multi-cloud infra service
 package mcis
 
 import (
@@ -13,18 +27,25 @@ import (
 const (
 	// AutoStatusReady is const for "Ready" status.
 	AutoStatusReady string = "Ready"
+
 	// AutoStatusChecking is const for "Checking" status.
 	AutoStatusChecking string = "Checking"
+
 	// AutoStatusDetected is const for "Detected" status.
 	AutoStatusDetected string = "Detected"
+
 	// AutoStatusOperating is const for "Operating" status.
 	AutoStatusOperating string = "Operating"
+
 	// AutoStatusStabilizing is const for "Stabilizing" status.
 	AutoStatusStabilizing string = "Stabilizing"
+
 	// AutoStatusTimeout is const for "Timeout" status.
 	AutoStatusTimeout string = "Timeout"
+
 	// AutoStatusError is const for "Failed" status.
 	AutoStatusError string = "Failed"
+
 	// AutoStatusSuspended is const for "Suspended" status.
 	AutoStatusSuspended string = "Suspended"
 )
@@ -33,6 +54,7 @@ const (
 const (
 	// AutoActionScaleOut is const for "ScaleOut" action.
 	AutoActionScaleOut string = "ScaleOut"
+
 	// AutoActionScaleIn is const for "ScaleIn" action.
 	AutoActionScaleIn string = "ScaleIn"
 )
@@ -97,7 +119,14 @@ func OrchestrationController() {
 
 			key := common.GenMcisPolicyKey(nsId, v, "")
 			//fmt.Println(key)
-			keyValue, _ := common.CBStore.Get(key)
+			keyValue, err := common.CBStore.Get(key)
+			if err != nil {
+				common.CBLog.Error(err)
+				err = fmt.Errorf("In OrchestrationController(); CBStore.Get() returned an error.")
+				common.CBLog.Error(err)
+				// return nil, err
+			}
+
 			if keyValue == nil {
 				//mapA := map[string]string{"message": "Cannot find " + key}
 				//return c.JSON(http.StatusOK, &mapA)
@@ -271,9 +300,9 @@ func OrchestrationController() {
 					switch {
 					case autoAction.ActionType == AutoActionScaleOut:
 
-						autoAction.Vm.Label = LabelAutoGen
+						autoAction.Vm.Label = labelAutoGen
 						// append UUID to given vm name to avoid duplicated vm ID.
-						autoAction.Vm.Name = autoAction.Vm.Name + "-" + common.GenUuid()
+						autoAction.Vm.Name = autoAction.Vm.Name + "-" + common.GenUid()
 						//vmReqTmp := autoAction.Vm
 
 						if autoAction.PlacementAlgo == "random" {
@@ -285,7 +314,7 @@ func OrchestrationController() {
 								UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
 							}
 							autoAction.Vm.Name = autoAction.Vm.Name + "-Random"
-							autoAction.Vm.Label = LabelAutoGen
+							autoAction.Vm.Label = labelAutoGen
 						}
 
 						common.PrintJsonPretty(autoAction.Vm)
@@ -303,7 +332,7 @@ func OrchestrationController() {
 						nullMcisCmdReq := McisCmdReq{}
 						if autoAction.PostCommand != nullMcisCmdReq {
 							fmt.Println("[Post Command to VM] " + autoAction.PostCommand.Command)
-							_, cmdErr := CorePostCmdMcisVm(nsId, mcisPolicyTmp.Id, autoAction.Vm.Name, &autoAction.PostCommand)
+							_, cmdErr := RemoteCommandToMcisVm(nsId, mcisPolicyTmp.Id, autoAction.Vm.Name, &autoAction.PostCommand)
 							if cmdErr != nil {
 								mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
 								UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
@@ -315,7 +344,7 @@ func OrchestrationController() {
 
 						// ScaleIn MCIS.
 						fmt.Println("[Removing VM]")
-						vmList, vmListErr := GetVmListByLabel(nsId, mcisPolicyTmp.Id, LabelAutoGen)
+						vmList, vmListErr := GetVmListByLabel(nsId, mcisPolicyTmp.Id, labelAutoGen)
 						if vmListErr != nil {
 							mcisPolicyTmp.Policy[policyIndex].Status = AutoStatusError
 							UpdateMcisPolicyInfo(nsId, mcisPolicyTmp)
@@ -378,12 +407,12 @@ func OrchestrationController() {
 func UpdateMcisPolicyInfo(nsId string, mcisPolicyInfoData McisPolicyInfo) {
 	key := common.GenMcisPolicyKey(nsId, mcisPolicyInfoData.Id, "")
 	val, _ := json.Marshal(mcisPolicyInfoData)
-	err := common.CBStore.Put(string(key), string(val))
+	err := common.CBStore.Put(key, string(val))
 	if err != nil && !strings.Contains(err.Error(), common.CbStoreKeyNotFoundErrorString) {
 		common.CBLog.Error(err)
 	}
 	//fmt.Println("===========================")
-	//vmkeyValue, _ := common.CBStore.Get(string(key))
+	//vmkeyValue, _ := common.CBStore.Get(key)
 	//fmt.Println("<" + vmkeyValue.Key + "> \n" + vmkeyValue.Value)
 	//fmt.Println("===========================")
 }
@@ -429,12 +458,19 @@ func CreateMcisPolicy(nsId string, mcisId string, u *McisPolicyInfo) (McisPolicy
 
 	//fmt.Println("Key: ", Key)
 	//fmt.Println("Val: ", Val)
-	err = common.CBStore.Put(string(Key), string(Val))
+	err = common.CBStore.Put(Key, string(Val))
 	if err != nil {
 		common.CBLog.Error(err)
 		return content, err
 	}
-	keyValue, _ := common.CBStore.Get(string(Key))
+	keyValue, err := common.CBStore.Get(Key)
+	if err != nil {
+		common.CBLog.Error(err)
+		err = fmt.Errorf("In CreateMcisPolicy(); CBStore.Get() returned an error.")
+		common.CBLog.Error(err)
+		// return nil, err
+	}
+
 	fmt.Println("<KEY>\n" + keyValue.Key + "\n<VAL>\n" + keyValue.Value)
 	fmt.Println("===========================")
 
@@ -490,7 +526,14 @@ func GetAllMcisPolicyObject(nsId string) ([]McisPolicyInfo, error) {
 	for _, v := range mcisList {
 
 		key := common.GenMcisPolicyKey(nsId, v, "")
-		keyValue, _ := common.CBStore.Get(key)
+		keyValue, err := common.CBStore.Get(key)
+		if err != nil {
+			common.CBLog.Error(err)
+			err = fmt.Errorf("In GetAllMcisPolicyObject(); CBStore.Get() returned an error.")
+			common.CBLog.Error(err)
+			// return nil, err
+		}
+
 		if keyValue == nil {
 			return nil, fmt.Errorf("Cannot find " + key)
 		}
@@ -512,7 +555,13 @@ func ListMcisPolicyId(nsId string) []string {
 	}
 	//fmt.Println("[Get MCIS Policy ID list]")
 	key := "/ns/" + nsId + "/policy/mcis"
-	keyValue, _ := common.CBStore.GetList(key, true)
+	keyValue, err := common.CBStore.GetList(key, true)
+	if err != nil {
+		common.CBLog.Error(err)
+		err = fmt.Errorf("In ListMcisPolicyId(); CBStore.Get() returned an error.")
+		common.CBLog.Error(err)
+		// return nil, err
+	}
 
 	var mcisList []string
 	for _, v := range keyValue {

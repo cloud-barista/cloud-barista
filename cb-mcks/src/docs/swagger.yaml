@@ -1,0 +1,505 @@
+basePath: /mcks
+definitions:
+  app.Status:
+    properties:
+      message:
+        example: Any message
+        type: string
+    type: object
+  model.Cluster:
+    properties:
+      clusterConfig:
+        type: string
+      cpLeader:
+        type: string
+      createdTime:
+        example: "2022-01-02T12:00:00Z"
+        type: string
+      description:
+        type: string
+      installMonAgent:
+        default: "yes"
+        example: "no"
+        type: string
+      kind:
+        type: string
+      label:
+        type: string
+      mcis:
+        type: string
+      name:
+        type: string
+      namespace:
+        type: string
+      networkCni:
+        enum:
+        - canal
+        - kilo
+        type: string
+      nodes:
+        items:
+          $ref: '#/definitions/model.Node'
+        type: array
+      status:
+        properties:
+          message:
+            type: string
+          phase:
+            enum:
+            - Pending
+            - Provisioning
+            - Provisioned
+            - Failed
+            type: string
+          reason:
+            type: string
+        type: object
+    type: object
+  model.ClusterList:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/model.Cluster'
+        type: array
+      kind:
+        type: string
+    type: object
+  model.ClusterReq:
+    properties:
+      config:
+        $ref: '#/definitions/model.Config'
+        type: object
+      controlPlane:
+        items:
+          $ref: '#/definitions/model.NodeConfig'
+        type: array
+      description:
+        type: string
+      installMonAgent:
+        default: "yes"
+        example: "no"
+        type: string
+      label:
+        type: string
+      name:
+        example: cluster-01
+        type: string
+      worker:
+        items:
+          $ref: '#/definitions/model.NodeConfig'
+        type: array
+    type: object
+  model.Config:
+    properties:
+      kubernetes:
+        $ref: '#/definitions/model.Kubernetes'
+        type: object
+    type: object
+  model.Kubernetes:
+    properties:
+      networkCni:
+        enum:
+        - canal
+        - kilo
+        example: canal
+        type: string
+      podCidr:
+        example: 10.244.0.0/16
+        type: string
+      serviceCidr:
+        example: 10.96.0.0/12
+        type: string
+      serviceDnsDomain:
+        example: cluster.local
+        type: string
+    type: object
+  model.Node:
+    properties:
+      createdTime:
+        example: "2022-01-02T12:00:00Z"
+        type: string
+      credential:
+        type: string
+      csp:
+        enum:
+        - aws
+        - gcp
+        - azure
+        - alibaba
+        - tencent
+        - openstack
+        type: string
+      cspLabel:
+        type: string
+      kind:
+        type: string
+      name:
+        type: string
+      publicIp:
+        type: string
+      regionLabel:
+        type: string
+      role:
+        enum:
+        - control-plane
+        - worker
+        type: string
+      spec:
+        type: string
+      zoneLabel:
+        type: string
+    type: object
+  model.NodeConfig:
+    properties:
+      connection:
+        example: config-aws-ap-northeast-2
+        type: string
+      count:
+        example: 3
+        type: integer
+      spec:
+        example: t2.medium
+        type: string
+    type: object
+  model.NodeList:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/model.Node'
+        type: array
+      kind:
+        type: string
+    type: object
+  model.NodeReq:
+    properties:
+      controlPlane:
+        items:
+          $ref: '#/definitions/model.NodeConfig'
+        type: array
+      worker:
+        items:
+          $ref: '#/definitions/model.NodeConfig'
+        type: array
+    type: object
+  model.Status:
+    properties:
+      code:
+        type: integer
+      kind:
+        type: string
+      message:
+        type: string
+    type: object
+host: localhost:1470
+info:
+  contact:
+    email: contact-to-cloud-barista@googlegroups.com
+    name: API Support
+    url: http://cloud-barista.github.io
+  description: CB-MCKS REST API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: CB-MCKS REST API
+  version: latest
+paths:
+  /healthy:
+    get:
+      consumes:
+      - application/json
+      description: for health check
+      operationId: Healthy
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+      summary: Health Check
+      tags:
+      - Default
+  /ns/{namespace}/clusters:
+    get:
+      consumes:
+      - application/json
+      description: List all Clusters
+      operationId: ListCluster
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: namespace
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ClusterList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/app.Status'
+      summary: List all Clusters
+      tags:
+      - Cluster
+    post:
+      consumes:
+      - application/json
+      description: Create Cluster
+      operationId: CreateCluster
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: Request Body to create cluster
+        in: body
+        name: ClusterReq
+        required: true
+        schema:
+          $ref: '#/definitions/model.ClusterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Cluster'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/app.Status'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/app.Status'
+      summary: Create Cluster
+      tags:
+      - Cluster
+  /ns/{namespace}/clusters/{cluster}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete Cluster
+      operationId: DeleteCluster
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: Cluster Name
+        in: path
+        name: cluster
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Status'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/app.Status'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/app.Status'
+      summary: Delete Cluster
+      tags:
+      - Cluster
+    get:
+      consumes:
+      - application/json
+      description: Get Cluster
+      operationId: GetCluster
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: Cluster Name
+        in: path
+        name: cluster
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Cluster'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/app.Status'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/app.Status'
+      summary: Get Cluster
+      tags:
+      - Cluster
+  /ns/{namespace}/clusters/{cluster}/nodes:
+    get:
+      consumes:
+      - application/json
+      description: List all Nodes in specified Cluster
+      operationId: ListNode
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: Cluster Name
+        in: path
+        name: cluster
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.NodeList'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/app.Status'
+      summary: List all Nodes in specified Cluster
+      tags:
+      - Node
+    post:
+      consumes:
+      - application/json
+      description: Add Node in specified Cluster
+      operationId: AddNode
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: Cluster Name
+        in: path
+        name: cluster
+        required: true
+        type: string
+      - description: Request Body to add node
+        in: body
+        name: nodeReq
+        required: true
+        schema:
+          $ref: '#/definitions/model.NodeReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Node'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/app.Status'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/app.Status'
+      summary: Add Node in specified Cluster
+      tags:
+      - Node
+  /ns/{namespace}/clusters/{cluster}/nodes/{node}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove Node in specified Cluster
+      operationId: RemoveNode
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: Cluster Name
+        in: path
+        name: cluster
+        required: true
+        type: string
+      - description: Node Name
+        in: path
+        name: node
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Status'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/app.Status'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/app.Status'
+      summary: Remove Node in specified Cluster
+      tags:
+      - Node
+    get:
+      consumes:
+      - application/json
+      description: Get Node in specified Cluster
+      operationId: GetNode
+      parameters:
+      - description: Namespace ID
+        in: path
+        name: namespace
+        required: true
+        type: string
+      - description: Cluster Name
+        in: path
+        name: cluster
+        required: true
+        type: string
+      - description: Node Name
+        in: path
+        name: node
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Node'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/app.Status'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/app.Status'
+      summary: Get Node in specified Cluster
+      tags:
+      - Node
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"

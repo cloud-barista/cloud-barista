@@ -1,0 +1,100 @@
+# sub-chart : influxdb conf.
+# influxdb:
+#   enabled: true
+#   fullnameOverride: "cb-restapigw-influxdb"
+#   authEnabled: false
+#   influxdb:
+#     extraEnvVars:
+#     - name: PRE_CREATE_DB
+#       value: "cbrestapigw"
+#     - name: INFLUXDB_DB
+#       value: "cbrestapigw"
+#     - name: INFLUXDB_DATA_ENGINE
+#       value: "tsm1"
+#   persistence:
+#     enabled: false
+
+# sub-chart : grafana conf.
+# grafana:
+#   enabled: false
+#   fullnameOverride: "cb-restapigw-grafana"
+#   testFramework:
+#     enabled: false
+#   plugins:
+#   - grafana-clock-panel
+#   - briangann-gauge-panel
+#   - natel-plotly-panel
+#   - grafana-simple-json-datasource
+
+# sub-chart : jaeger conf.
+# jaeger:
+#   enabled: true
+#   fullnameOverride: "cb-restapigw-jaeger"
+#   # collector:
+#   #   enabled: false
+#   # query:
+#   #   enabled: false
+
+restapigw:
+  rootPath: "/app"
+
+# chart conf. values
+replicaCount: 1
+
+image:
+  repository: cloudbaristaorg/cb-restapigw
+  pullPolicy: Always
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "cb-restapigw-readonly"
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name:
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  restPort: 7000
+  webAdminPort: 7001
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: cloud-barista.local
+      paths: []
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+

@@ -6,7 +6,11 @@ import (
 	"net/http"
 
 	"github.com/cloud-barista/cb-webtool/src/model/dragonfly"
-	"github.com/cloud-barista/cb-webtool/src/model/tumblebug"
+	// "github.com/cloud-barista/cb-webtool/src/model/tumblebug"
+	// tbcommon "github.com/cloud-barista/cb-webtool/src/model/tumblebug/common"
+	// tbmcir "github.com/cloud-barista/cb-webtool/src/model/tumblebug/mcir"
+	tbmcis "github.com/cloud-barista/cb-webtool/src/model/tumblebug/mcis"
+
 	service "github.com/cloud-barista/cb-webtool/src/service"
 	"github.com/cloud-barista/cb-webtool/src/util"
 	"github.com/labstack/echo"
@@ -31,11 +35,16 @@ func McisMonitoringMngForm(c echo.Context) error {
 	// 최신 namespacelist 가져오기
 	nsList, _ := service.GetNameSpaceList()
 	store.Set("namespace", nsList)
+	store.Save()
 	log.Println(" nsList  ", nsList)
 
 	// 해당 Namespace의 모든 MCIS 조회
-	mcisList, _ := service.GetMcisList(defaultNameSpaceID)
-	log.Println(" mcisList  ", mcisList)
+	// mcisList, _ := service.GetMcisList(defaultNameSpaceID)
+	//optionParam := c.QueryParam("option")
+	//mcisList, _ := service.GetMcisList(defaultNameSpaceID, optionParam)
+	//log.Println(" mcisList  ", mcisList)
+
+	initParam := c.QueryParam("mcisId")
 
 	return echotemplate.Render(c, http.StatusOK,
 		"operation/monitorings/mcismonitoring/McisMonitoringMng", // 파일명
@@ -43,7 +52,8 @@ func McisMonitoringMngForm(c echo.Context) error {
 			"LoginInfo":          loginInfo,
 			"DefaultNameSpaceID": defaultNameSpaceID,
 			"NameSpaceList":      nsList,
-			"McisList":           mcisList,
+			//"McisList":           mcisList,
+			"initMcisId": initParam,
 		})
 
 }
@@ -100,7 +110,7 @@ func RegBenchmarkAgentInVm(c echo.Context) error {
 		return c.Redirect(http.StatusTemporaryRedirect, "/login")
 	}
 
-	vmMonitoringAgentReg := &tumblebug.McisCmdReq{}
+	vmMonitoringAgentReg := &tbmcis.McisCmdReq{}
 	if err := c.Bind(vmMonitoringAgentReg); err != nil {
 		// if err := c.Bind(mCISInfoList); err != nil {
 		log.Println(err)
@@ -149,14 +159,13 @@ func GetVmMonitoringInfoData(c echo.Context) error {
 	mcisID := c.Param("mcisID")
 	metric := c.Param("metric")
 	log.Println("mcisID= " + mcisID)
-	//monitoringGroup.GET("/mcis/:mcisID/metric/:metric", controller.GetVmMonitoringInfoData)
 
 	resultMcisInfo, _ := service.GetVmMonitoringInfoData(defaultNameSpaceID, mcisID, metric)
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message":  "success",
-		"status":   200,
-		"McisInfo": resultMcisInfo,
+		"message":       "success",
+		"status":        200,
+		"MonResultInfo": resultMcisInfo,
 	})
 }
 
@@ -177,10 +186,13 @@ func McksMonitoringMngForm(c echo.Context) error {
 	// 최신 namespacelist 가져오기
 	nsList, _ := service.GetNameSpaceList()
 	store.Set("namespace", nsList)
+	store.Save()
 	log.Println(" nsList  ", nsList)
 
 	// 해당 Namespace의 모든 MCIS 조회
-	mcisList, _ := service.GetMcisList(defaultNameSpaceID)
+	// mcisList, _ := service.GetMcisList(defaultNameSpaceID)
+	optionParam := c.QueryParam("option")
+	mcisList, _ := service.GetMcisList(defaultNameSpaceID, optionParam)
 	log.Println(" mcisList  ", mcisList)
 
 	return echotemplate.Render(c, http.StatusOK,

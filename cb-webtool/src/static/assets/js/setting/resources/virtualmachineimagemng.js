@@ -1,4 +1,4 @@
-$(document).ready(function(){
+$(document).ready(function () {
     //action register open / table view close
     // $('#RegistBox .btn_ok.register').click(function(){
     //     $(".dashboard.register_cont").toggleClass("active");
@@ -13,7 +13,7 @@ $(document).ready(function(){
 });
 
 /* scroll */
-$(document).ready(function(){
+$(document).ready(function () {
     //checkbox all
     // $("#th_chall").click(function() {
     //     if ($("#th_chall").prop("checked")) {
@@ -22,7 +22,7 @@ $(document).ready(function(){
     //     $("input[name=chk]").prop("checked", false);
     //     }
     // })
-    
+
     // //table 스크롤바 제한
     // $(window).on("load resize",function(){
     //     var vpwidth = $(window).width();
@@ -35,12 +35,13 @@ $(document).ready(function(){
     // });
     setTableHeightForScroll('serverImageList', 300)
 
-    $('.btn_assist').on('click', function() {
-        lookupVmImageList()
+    $('.btn_assist').on('click', function () {
+        // lookupVmImageList()
+        showImageAssistPopup();
     });
 });
 
-$(document).ready(function() {
+$(document).ready(function () {
     //hidden input box
     // $('.btn_arr').click(function(){
     //     $(this).toggleClass("up");
@@ -54,7 +55,7 @@ $(document).ready(function() {
 $(document).ready(function () {
     // order_type = "name"
     // getVirtualMachineImageList(order_type);
-    
+
     // var apiInfo = "{{ .apiInfo}}";
     // getCloudOS(apiInfo,'provider');
 });
@@ -76,14 +77,14 @@ $(document).ready(function () {
 // }
 
 // 등록/상세 area 보이기 숨기기
-function displayVirtualMachineImageInfo(targetAction){
-    if( targetAction == "REG"){
+function displayVirtualMachineImageInfo(targetAction) {
+    if (targetAction == "REG") {
         $('#virtualMachineImageCreateBox').toggleClass("active");
         $('#virtualMachineImageInfoBox').removeClass("view");
         $('#virtualMachineImageListTable').removeClass("on");
         var offset = $("#virtualMachineImageCreateBox").offset();
         // var offset = $("#" + target+"").offset();
-    	$("#TopWrap").animate({scrollTop : offset.top}, 300);
+        $("#TopWrap").animate({ scrollTop: offset.top }, 300);
 
         // form 초기화
         $("#regImageName").val('')
@@ -93,12 +94,12 @@ function displayVirtualMachineImageInfo(targetAction){
         $("#regDescription").val('')
 
         $("#assistVmImage").css("display", "block");
-
-    }else if ( targetAction == "REG_SUCCESS"){
+        goFocus('virtualMachineImageCreateBox');
+    } else if (targetAction == "REG_SUCCESS") {
         $('#virtualMachineImageCreateBox').removeClass("active");
         $('#virtualMachineImageInfoBox').removeClass("view");
         $('#virtualMachineImageListTable').addClass("on");
-        
+
         // form 초기화
         $("#regImageName").val('')
         $("#regCspImgId").val('')
@@ -107,35 +108,35 @@ function displayVirtualMachineImageInfo(targetAction){
         $("#regProvider").val('')
         $("#regConnectionName").val('')
         $("#regDescription").val('')
-        
+
         var offset = $("#virtualMachineImageCreateBox").offset();
-        $("#TopWrap").animate({scrollTop : offset.top}, 0);
-        
+        $("#TopWrap").animate({ scrollTop: offset.top }, 0);
+
         getVirtualMachineImageList("name");
-    }else if ( targetAction == "DEL"){
+    } else if (targetAction == "DEL") {
         $('#virtualMachineImageCreateBox').removeClass("active");
         $('#virtualMachineImageInfoBox').addClass("view");
         $('#virtualMachineImageListTable').removeClass("on");
 
         var offset = $("#virtualMachineImageInfoBox").offset();
-    	$("#TopWrap").animate({scrollTop : offset.top}, 300);
+        $("#TopWrap").animate({ scrollTop: offset.top }, 300);
 
-    }else if ( targetAction == "DEL_SUCCESS"){
+    } else if (targetAction == "DEL_SUCCESS") {
         $('#virtualMachineImageCreateBox').removeClass("active");
         $('#virtualMachineImageInfoBox').removeClass("view");
         $('#virtualMachineImageListTable').addClass("on");
 
         var offset = $("#virtualMachineImageInfoBox").offset();
-        $("#TopWrap").animate({scrollTop : offset.top}, 0);
+        $("#TopWrap").animate({ scrollTop: offset.top }, 0);
 
         getVirtualMachineImageList("name");
-    }else if ( targetAction == "CLOSE"){
+    } else if (targetAction == "CLOSE") {
         $('#virtualMachineImageCreateBox').removeClass("active");
         $('#virtualMachineImageInfoBox').removeClass("view");
         $('#virtualMachineImageListTable').addClass("on");
 
         var offset = $("#virtualMachineImageInfoBox").offset();
-        $("#TopWrap").animate({scrollTop : offset.top}, 0);
+        $("#TopWrap").animate({ scrollTop: offset.top }, 0);
     }
 }
 
@@ -143,21 +144,21 @@ function deleteVirtualMachineImage() {
     var imageId = "";
     var count = 0;
 
-    $( "input[name='chk']:checked" ).each (function (){
+    $("input[name='chk']:checked").each(function () {
         count++;
-        imageId = imageId + $(this).val()+"," ;
+        imageId = imageId + $(this).val() + ",";
     });
-    imageId = imageId.substring(0,imageId.lastIndexOf( ","));
-    
+    imageId = imageId.substring(0, imageId.lastIndexOf(","));
+
     console.log("imageId : ", imageId);
     console.log("count : ", count);
 
-    if(imageId == ''){
+    if (imageId == '') {
         commonAlert("삭제할 대상을 선택하세요.");
         return false;
     }
 
-    if(count != 1){
+    if (count != 1) {
         commonAlert("삭제할 대상을 하나만 선택하세요.");
         return false;
     }
@@ -179,12 +180,12 @@ function deleteVirtualMachineImage() {
             commonAlert(data.message);
             displayVirtualMachineImageInfo("DEL_SUCCESS")
             // location.reload(true);
-        }else{
+        } else {
             commonAlert(data.error);
         }
-    // }).catch(function(error){
-    //     console.log("image delete error : ",error);        
-    // });
+        // }).catch(function(error){
+        //     console.log("image delete error : ",error);        
+        // });
     }).catch((error) => {
         console.warn(error);
         console.log(error.response)
@@ -192,7 +193,7 @@ function deleteVirtualMachineImage() {
         var statusCode = error.response.status;
         commonErrorAlert(statusCode, errorMessage);
     });
-}                                                  
+}
 
 function getVirtualMachineImageList(sort_type) {
     console.log("여기 : ", sort_type);
@@ -210,10 +211,10 @@ function getVirtualMachineImageList(sort_type) {
     //     }
     // }).then(result => {
     //     console.log("get Image List : ", result.data);
-        
+
     //     var data = result.data.VirtualMachineImageList;
     //     var html = ""
-        
+
     //     if (data.length) {
     //         if (sort_type) {
     //             console.log("check : ", sort_type);
@@ -241,10 +242,10 @@ function getVirtualMachineImageList(sort_type) {
     //                     + '</tr>'
     //             ))
     //         }
-        
+
     //         $("#imgList").empty()
     //         $("#imgList").append(html)
-            
+
     //         ModalDetail()
     //     }
     // }).catch(function(error){
@@ -252,11 +253,11 @@ function getVirtualMachineImageList(sort_type) {
     // });
 }
 
-function setVirtualMachineImageListAtServerImage(data, sortType){
+function setVirtualMachineImageListAtServerImage(data, sortType) {
     var html = "";
     console.log(data);// TODO : no Data 일 때 (ex. 모든 이미지 삭제 등) data.length에서 오류 남.
     console.log("here Set : ", sortType);
-    
+
     if (data == null) {
         html += '<tr><td class="overlay hidden" data-th="" colspan="5">No Data</td></tr>'
 
@@ -269,31 +270,31 @@ function setVirtualMachineImageListAtServerImage(data, sortType){
             if (sortType) {
                 console.log("check : ", sortType);
                 data.filter(list => list.name !== "").sort((a, b) => (a[sortType] < b[sortType] ? - 1 : a[sortType] > b[sortType] ? 1 : 0)).map((item, index) => (
-                    html += '<tr onclick="showVirtualMachinImageInfo(\'' + item.name + '\');">' 
-                        + '<td class="overlay hidden column-50px" data-th="">' 
-                        + '<input type="hidden" id="img_info_' + index + '" value="' + item.name + '|' + item.cspImageId + '"/>' 
-                        + '<input type="checkbox" name="chk" value="' + item.name + '" id="raw_'  + index + '" title="" /><label for="td_ch1"></label> <span class="ov off"></span></td>' 
-                        + '<td class="btn_mtd ovm" data-th="connectionName ">' + item.connectionName  + '<span class="ov"></span></td>'
-                        + '<td class="btn_mtd ovm" data-th="cspImageId ">' + item.cspImageId  + '<span class="ov"></span></td>'
-                        + '<td class="overlay hidden" data-th="name">' + item.name + '</td>' 
-                        + '<td class="overlay hidden" data-th="description">' + item.description + '</td>'  
-                        // + '<td class="overlay hidden column-60px" data-th=""><a href="javascript:void(0);"><img src="/assets/img/contents/icon_link.png" class="icon" alt=""/></a></td>' 
-                        + '</tr>'
+                    html += '<tr onclick="showVirtualMachinImageInfo(\'' + item.name + '\');">'
+                    + '<td class="overlay hidden column-50px" data-th="">'
+                    + '<input type="hidden" id="img_info_' + index + '" value="' + item.name + '|' + item.cspImageId + '"/>'
+                    + '<input type="checkbox" name="chk" value="' + item.name + '" id="raw_' + index + '" title="" /><label for="td_ch1"></label> <span class="ov off"></span></td>'
+                    + '<td class="btn_mtd ovm" data-th="connectionName ">' + item.connectionName + '<span class="ov"></span></td>'
+                    + '<td class="btn_mtd ovm" data-th="cspImageId ">' + item.cspImageId + '<span class="ov"></span></td>'
+                    + '<td class="overlay hidden" data-th="name">' + item.name + '</td>'
+                    + '<td class="overlay hidden" data-th="description">' + item.description + '</td>'
+                    // + '<td class="overlay hidden column-60px" data-th=""><a href="javascript:void(0);"><img src="/assets/img/contents/icon_link.png" class="icon" alt=""/></a></td>' 
+                    + '</tr>'
                 ))
             } else {
                 data.filter((list) => list.name !== "").map((item, index) => (
-                    html += '<tr onclick="showVirtualMachinImageInfo(\'' + item.name + '\');">' 
-                        + '<td class="overlay hidden column-50px" data-th="">' 
-                        + '<input type="hidden" id="img_info_' + index + '" value="' + item.name  + '"/>'
-                        + '<input type="checkbox" name="chk" value="' + item.name + '" id="raw_' + index + '" title="" /><label for="td_ch1"></label> <span class="ov off"></span></td>' 
-                        + '<td class="btn_mtd ovm" data-th="cspImageId">' + item.cspImageId + '<span class="ov"></span></td>' 
-                        + '<td class="overlay hidden" data-th="name">' + item.name + '</td>' 
-                        + '<td class="overlay hidden" data-th="description">' + item.description + '</td>' 
-                        // + '<td class="overlay hidden column-60px" data-th=""><a href="javascript:void(0);"><img src="/assets/img/contents/icon_link.png" class="icon" alt=""/></a></td>' 
-                        + '</tr>'
+                    html += '<tr onclick="showVirtualMachinImageInfo(\'' + item.name + '\');">'
+                    + '<td class="overlay hidden column-50px" data-th="">'
+                    + '<input type="hidden" id="img_info_' + index + '" value="' + item.name + '"/>'
+                    + '<input type="checkbox" name="chk" value="' + item.name + '" id="raw_' + index + '" title="" /><label for="td_ch1"></label> <span class="ov off"></span></td>'
+                    + '<td class="btn_mtd ovm" data-th="cspImageId">' + item.cspImageId + '<span class="ov"></span></td>'
+                    + '<td class="overlay hidden" data-th="name">' + item.name + '</td>'
+                    + '<td class="overlay hidden" data-th="description">' + item.description + '</td>'
+                    // + '<td class="overlay hidden column-60px" data-th=""><a href="javascript:void(0);"><img src="/assets/img/contents/icon_link.png" class="icon" alt=""/></a></td>' 
+                    + '</tr>'
                 ))
             }
-        
+
             $("#imgList").empty()
             $("#imgList").append(html)
             console.log("setVirtualMachineImageListAtServerImage completed");
@@ -355,7 +356,7 @@ function ModalDetail() {
 //                 html += '<option value="'+data[i].ConfigName+'" item="'+data[i].ProviderName+'">'+data[i].ConfigName+'</option>';
 //                 configName = data[i].ConfigName
 //                 confArr.push(data[i].ConfigName)
-                
+
 //             }
 //         }
 //         if(count == 0){
@@ -378,14 +379,14 @@ function createVirtualMachineImage() {
     var guestOS = $("#regGuestOS").val();
     var connectionName = $("#regConnectionName").val();
     var description = $("#regDescription").val();
-    
+
     var cspImgName = "";
-    if(!cspImgName) {
+    if (!cspImgName) {
         $("#regCspImgName").val();
     }
-    
+
     console.log("check obj : " + imgId + ", " + imgName + ", " + cspImgId + ", " + cspImgName + ", " + guestOS + ", " + connectionName + ", " + description);
-    
+
     if (!imgName) {
         commonAlert("Input New Image Name")
         $("#regImageName").focus()
@@ -395,7 +396,7 @@ function createVirtualMachineImage() {
     // var apiInfo = "{{ .apiInfo}}";
     // var url = CommonURL+"/ns/"+NAMESPACE+"/resources/image?action=registerWithInfo"
     var url = "/setting/resources" + "/machineimage/reg"
-    console.log("Image Reg URL : ",url)
+    console.log("Image Reg URL : ", url)
     var obj = {
         connectionName: connectionName,
         cspImageId: cspImgId,
@@ -406,7 +407,7 @@ function createVirtualMachineImage() {
         name: imgName
     }
     console.log("info image obj Data : ", obj);
-    
+
     if (imgName) {
         axios.post(url, obj, {
             headers: {
@@ -427,9 +428,9 @@ function createVirtualMachineImage() {
             } else {
                 commonAlert("Fail Create Image)")
             }
-        // }).catch(function(error){
-        //     console.log("image create error : ",error);        
-        // });
+            // }).catch(function(error){
+            //     console.log("image create error : ",error);        
+            // });
         }).catch((error) => {
             console.warn(error);
             console.log(error.response)
@@ -451,20 +452,20 @@ function showVirtualMachinImageInfo(target) {
     //var imageId = encodeURIComponent(target);
     $('.stxt').html(target);
     $("#assistVmImage").css("display", "none");
-    
+
     // var url = CommonURL+"/ns/"+NAMESPACE+"/resources/image/"+ imageId;
     // var url = "/setting/resources/machineimage/" + imageId
     var url = "/setting/resources/machineimage/" + target
-    console.log("image detail URL : ",url)
+    console.log("image detail URL : ", url)
 
-    return axios.get(url,{
-        headers:{
+    return axios.get(url, {
+        headers: {
             // 'Authorization': apiInfo
         }
-    
-    }).then(result=>{
+
+    }).then(result => {
         var data = result.data.VirtualMachineImageInfo;
-        console.log("Show Data : ",data);
+        console.log("Show Data : ", data);
         var dtlImageName = data.name;
         var dtlConnectionName = data.connectionName;
         var dtlImageId = data.id;
@@ -492,9 +493,9 @@ function showVirtualMachinImageInfo(target) {
 
         // getProvider(dtlConnectionName);
         getProviderNameByConnection(dtlConnectionName, 'dtlProvider')// provider는 connection 정보에서 가져옴
-    // }).catch(function(error){
-    //     console.log("image data error : ",error);        
-    // });
+        // }).catch(function(error){
+        //     console.log("image data error : ",error);        
+        // });
     }).catch((error) => {
         console.warn(error);
         console.log(error.response)
@@ -507,56 +508,76 @@ function showVirtualMachinImageInfo(target) {
 // function getProvider(target) {
 //     console.log("getProvidergetProvider : ",target);
 //     var url = SpiderURL+"/connectionconfig/" + target;
-        
+
 //     return axios.get(url,{
 //         headers:{
 //             'Authorization': apiInfo
 //         }
-    
+
 //     }).then(result=>{
 //         var data = result.data;
-        
+
 //         var Provider = data.ProviderName;
 
 //         $("#dtlProvider").val(Provider);
 //     })        
 // }
 
-// connection에 등록된 spec목록 조회(공통함수 호출)
-function lookupVmImageList(){
-    $("#assistVmImageList").empty()
-    // connection과 상관없이 조회 가능
+// Assist Popup
+function showImageAssistPopup() {
+    $("#imageLookupAssist").modal();
+
+    var regProviderName = $("#regProviderName").val();
+    if (regProviderName) {
+        $("#assistImageProviderName").val(regProviderName);
+        // $("#assistImageProviderName option[value=" + configName + "]").prop('selected', true).change();
+    }
     var connectionName = $("#regConnectionName").val();
-    if( !connectionName){
+    // assistConnectionName
+
+    if (!connectionName && connectionName != "") {
+        console.log("showImageAssistPopup conn " + connectionName)
+        $("#assistImageConnectionName option[value=" + connectionName + "]").prop('selected', true).change();
+        lookupVmImageList()
+    }
+}
+// connection에 등록된 spec목록 조회(공통함수 호출)
+function lookupVmImageList() {
+    $("#assistLookupVmImageList").empty()
+    // connection과 상관없이 조회 가능
+
+    //assistConnectionName
+    var assistConnectionName = $("#assistLookupImageConnectionName").val();
+    if (!assistConnectionName) {
         commonAlert("connection name required")
         return;
     }
 
-    $("#imageAssist").modal();
+
     $('.dtbox.scrollbar-inner').scrollbar();
 
-    getCommonLookupImageList("vmimagemng", connectionName);
+    getCommonLookupImageList("vmimagemng", assistConnectionName);
 }
 // 성공 callback
-function lookupVmImageListCallbackSuccess(caller, data){
-    var html="";
+function lookupVmImageListCallbackSuccess(caller, data) {
+    var html = "";
     if (data == null) {
         html += '<tr><td class="overlay hidden" data-th="" colspan="5">No Data</td></tr>'
 
-        $("#assistVmImageList").empty()
-        $("#assistVmImageList").append(html)
+        $("#assistLookupVmImageList").empty()
+        $("#assistLookupVmImageList").append(html)
     } else {
-        
-        $.each(data, function(index, item){
+
+        $.each(data, function (index, item) {
             console.log('index:' + index + ' / ' + 'item:' + item);
             console.log(item);
             keyValueMap = item.keyValueList;
             // console.log(keyValueMap);
             var mapValue = ""
             var mapName = "";
-            keyValueMap.map( (mapObj, mapIndex) => {
-                if( mapObj.Key == "Name"){
-                    mapName = mapObj.Value
+            keyValueMap.map((mapObj, mapIndex) => {
+                if (mapObj.key == "Name") {
+                    mapName = mapObj.value
                     return
                 }
                 // console.log("mapIndex = " + mapIndex);
@@ -570,52 +591,92 @@ function lookupVmImageListCallbackSuccess(caller, data){
             var iidNameID = "";
             var iidSystemID = "";
 
-            if( item.name == undefined || item.name == ""){
+            if (item.name == undefined || item.name == "") {
                 imageName = mapName;
-            }else{
+            } else {
                 imageName = item.name;
             }
-            if(iid){
-                iidNameID = (iid.NameId == undefined || item.NameId == "" ? "" :  iid.NameId);
-                iidSystemID = (iid.SystemId == undefined || item.SystemId == "" ? "" :  iid.SystemId);
+            if (iid) {
+                iidNameID = (iid.nameId == undefined || item.nameId == "" ? "" : iid.nameId);
+                iidSystemID = (iid.systemId == undefined || item.systemId == "" ? "" : iid.systemId);
             }
-//cspImageNameID, cspImageName, cspImageGuestOS
-            html += '<tr onclick="setCspVmImageInfo(\''+iidNameID+'\',\''+imageName+'\',\''+item.guestOS+'\');">'            
-                + '<td class="overlay hidden" data-th="name">' + imageName + '</td>' 
-                + '<td class="btn_mtd ovm" data-th="status ">' + item.status  + '<span class="ov"></span></td>'
-                + '<td class="btn_mtd ovm" data-th="guestOS ">' + item.guestOS  + '<span class="ov"></span></td>'
-                + '<td class="overlay hidden" data-th="vcpc">' + iidNameID + '</td>' 
-                + '<td class="overlay hidden" data-th="gpu">'  + iidSystemID + '</td>' 
+            //cspImageNameID, cspImageName, cspImageGuestOS
+            html += '<tr onclick="setCspVmImageInfo(\'' + iidNameID + '\',\'' + imageName + '\',\'' + item.guestOS + '\');">'
+                + '<td class="overlay hidden" data-th="name">' + imageName + '</td>'
+                + '<td class="btn_mtd ovm" data-th="status ">' + item.status + '<span class="ov"></span></td>'
+                + '<td class="btn_mtd ovm" data-th="guestOS ">' + item.guestOS + '<span class="ov"></span></td>'
+                + '<td class="overlay hidden" data-th="iidNameID">' + iidNameID + '</td>'
+                + '<td class="overlay hidden" data-th="iidSystemID">' + iidSystemID + '</td>'
                 + '</tr>'
         });
-        
-        
-        $("#assistVmImageList").empty()
-        $("#assistVmImageList").append(html)
+
+
+        $("#assistLookupVmImageList").empty()
+        $("#assistLookupVmImageList").append(html)
         $("#lookupVmImageCount").text(data.length);
     }
 }
 
 
 // 조회 실패
-function lookupVmImageListCallbackFail(error){
+function lookupVmImageListCallbackFail(error) {
     var errorMessage = error.response.data.error;
     var statusCode = error.response.status;
     commonErrorAlert(statusCode, errorMessage);
 }
 
 // popup에서 main의 txtbox로 set
-function setCspVmImageInfo(cspImageNameID, cspImageName, cspImageGuestOS){
+function setCspVmImageInfo(cspImageNameID, cspImageName, cspImageGuestOS) {
     $("#regCspImgId").val(cspImageNameID);
     $("#regCspImgName").val(cspImageName);
     $("#regGuestOS").val(cspImageGuestOS);
 
-    $("#imageAssist").modal("hide");
+    $("#imageLookupAssist").modal("hide");
 }
 
 // connection 정보가 바뀌면 image 정보도 초기화 시킨다.
-function clearCspImageInfo(){
+function clearCspImageInfo() {
     $("#regCspImgId").val();
     $("#regCspImgName").val();
     $("#regGuestOS").val();
+}
+
+// assistPopup의 connection 정보가 바뀌면 image정보도 초기화 시킨다.
+function clearAssistImageList(targetTableList) {
+    $("#" + targetTableList).empty()
+}
+// assistPopup의 connection 정보가 바뀌면 image정보도 초기화 시킨다.
+function clearAssistLookupImageList(targetTableList) {
+    $("#" + targetTableList).empty()
+}
+//입력한 keyword 화면에 표시
+function displaySearchImageKeyword() {
+    console.log($("#image_keyword").val());
+    if ($("#image_keyword").val().trim() !== "") {
+        $(".keyword_box").append("<div class='keyword'>" + $("#image_keyword").val().trim() + "<button class='btn_del_image' onclick='delSearchImageKeyword(event)'></button></div>");
+    }
+}
+
+function displaySearchImageKeywordwithEnter(e) {
+    console.log($("#image_keyword").val());
+    if ($("#image_keyword").val().trim() !== "" && e.keyCode === 13) {
+        $(".keyword_box").append("<div class='keyword'>" + $("#image_keyword").val().trim() + "<button class='btn_del_image' onclick='delSearchImageKeyword(event)'></button></div>");
+    }
+}
+function displaySearchLookupImageKeywordwithEnter(e) {
+    console.log($("#image_keyword").val());
+    if ($("#image_keyword").val().trim() !== "" && e.keyCode === 13) {
+        $(".keyword_box").append("<div class='keyword'>" + $("#image_keyword").val().trim() + "<button class='btn_del_image' onclick='delSearchImageKeyword(event)'></button></div>");
+    }
+}
+
+function delSearchImageKeyword(e) {
+    console.log("remove keyword");
+    $(e.target).parent().remove();
+}
+
+function delAllKeyword() {
+    $(".keyword").each(function (i, item) {
+        $(item).remove();
+    })
 }

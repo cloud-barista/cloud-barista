@@ -1,33 +1,30 @@
 dependencies:
 - name: cb-dragonfly
   repository: ""
-  version: 0.3.0
+  version: 0.4.0
 - name: cb-restapigw
   repository: ""
-  version: 0.3.0
+  version: 0.4.0
 - name: cb-spider
   repository: ""
-  version: 0.3.0
+  version: 0.4.0
 - name: cb-tumblebug
   repository: ""
-  version: 0.3.0
-- name: cb-ladybug
+  version: 0.4.0
+- name: cb-mcks
   repository: ""
-  version: 0.3.0
+  version: 0.4.0
 - name: cb-webtool
   repository: ""
-  version: 0.3.0
-- name: docker-registry
-  repository: https://charts.helm.sh/stable
-  version: ~1.9.3
-- name: weave-scope
-  repository: https://charts.helm.sh/stable
-  version: ~1.1.10
+  version: 0.4.0
 - name: grafana
   repository: https://grafana.github.io/helm-charts
-  version: 6.6.4
+  version: ~6.6.4
 - name: prometheus
   repository: https://prometheus-community.github.io/helm-charts/
   version: ~11.16.3
-digest: sha256:71e8fc5f6457e9e430c344280a682afb8d1ebd1eca995742772cc554eafaa7be
-generated: "2021-04-07T15:30:01.343267042+09:00"
+- name: etcd
+  repository: https://charts.bitnami.com/bitnami
+  version: ~6.2.9
+digest: sha256:f6c7a26115113325871ea2e9698412a1f399f8000cbd37c6b1557dec132b853e
+generated: "2021-09-24T16:23:48.555274301+09:00"

@@ -13,7 +13,9 @@ on:
       - 'LICENSE'
       - 'CODEOWNERS'
       - 'assets/**'
-      - 'test/**'
+      - 'scripts/**'
+      - 'src/testclient/scripts/**'
+      - 'docs/**'
 
 jobs:
   # The job key is "building"
@@ -27,7 +29,7 @@ jobs:
 
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.4.0
 
       - name: Build image
         env:

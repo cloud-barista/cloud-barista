@@ -1,136 +1,150 @@
 {{template "OperationTop" .}}
 <div id="lnb">
-			
+
 	<div class="bg"></div>
-		
+
 	<div class="m_box">
-		
+
 		{{template "TopBox" .}}
 
 		{{template "LNBPopup" .}}
-		
-        <!-- menu -->
+
+		<!-- menu -->
 		{{template "MenuLeft" .}}
-		<!-- //menu -->	
-		
+		<!-- //menu -->
+
 	</div>
-	
-	
+
+
 	<div class="bottom"></div>
 	<a href="javascript:;" id="m_close"></a>
-	
+
 </div>
 {{template "Header" .}}
 {{template "Modal" .}}
-				<script>
-			
-				</script>
-				<!-- contents -->
-				<div class="contbox">
-					
-					<div class="titlebox">
-						<div class="tit"><img src="/assets/img/common/icon_cont.png" alt=""/>Manage / <strong>MCKS</strong></div>
-						<div class="location">Home  <span>></span>  Operation  <span>></span>  Manage  <span>></span>  <strong>MCKS</strong></div>
+<script>
+
+</script>
+<!-- contents -->
+<div class="contbox">
+
+	<div class="titlebox">
+		<div class="tit"><img src="/assets/img/common/icon_cont.png" alt="" />Manage / <strong>MCKS</strong></div>
+		<div class="location">Home <span>></span> Operation <span>></span> Manage <span>></span> <strong>MCKS</strong>
+		</div>
+	</div>
+
+
+	<!-- list -->
+	<div class="dashboard dashboard_cont">
+
+		<div class="d_box box_m box_w100">
+			<div class="titbox line_none">
+				<div class="tit initial"><strong>Create MCKS</strong></div>
+
+				<div class="step_box">
+					<div class="on">STEP 1 <div class="bar"></div>
 					</div>
-						
-					
-					<!-- list -->
-					<div class="dashboard dashboard_cont">
-						
-						<div class="d_box box_m box_w100">
-							<div class="titbox line_none">
-								<div class="tit initial"><strong>Create MCKS</strong></div>
-								
-								<div class="step_box">
-									<div class="on">STEP 1 <div class="bar"></div></div>
-									<div>STEP 2 <div class="bar"></div></div>
-									<div>STEP 3 <div class="bar"></div></div>
-								</div>
+					<div>STEP 2 <div class="bar"></div>
+					</div>
+					<div>STEP 3 <div class="bar"></div>
+					</div>
+				</div>
 
-							</div>
-							
-							
-							<div class="ds_cont">
-								
-								<div class="area_cont">
+			</div>
 
-									<div class="box">
-																				
-										<div class="create_box">
-											
-											<div class="create_top">
-											
-												<div class="top_ipbox">
-													<div class="ipbox ipbox1">
-														<ul>
-															<li>
-																<label>MCKS Name</label>
-																<input type="text" name="mcksreg_name" value="" id="mcksreg_name" placeholder="small letter, number, hyphen only" class="pline ip_1" title="" />
-															</li>
-<!-- 															
+
+			<div class="ds_cont">
+
+				<div class="area_cont">
+
+					<div class="box">
+
+						<div class="create_box">
+
+							<div class="create_top">
+
+								<div class="top_ipbox">
+									<div class="ipbox first">
+										<ul>
+											<li>
+												<label>MCKS Name</label>
+												<input type="text" name="mcksreg_name" value="" id="mcksreg_name"
+													placeholder="small letter, number, hyphen only" class="pline ip_1"
+													title="" />
+											</li>
+											<!-- 															
 															<li>
 																<label>Description</label>
 																<textarea  cols="" rows="" id="mcis_desc" placeholder="type Description" name="mcis_desc" class="pline ta_1" title="" ></textarea>
 															</li>
 															 -->
-														</ul>
-													</div>
-													<!-- config -->
-													<div class="ipbox ipbox1">
-														<ul id="mcks_kubernated_list">															
-															<li>
-																<label>NetworkCni</label>
-																<select  class="selectbox white pline sel_1"  name="kubernatesNetworkCni"  id="kubernatesNetworkCni">
-																	<option value="kilo" selected>Kilo</option>
-																	<option value="canal">Canal</option>
-																</select>
-															</li>
-														
-															<li>
-																<label>PodCidr</label>
-																<input type="text" name="kubernatesPodCidr" value="" id="kubernatesPodCidr" placeholder="Input PodCidr" class="pline ip_1" title="" />
-															</li>
-															<li>
-																<label>ServiceCidr</label>
-																<input type="text" name="kubernatesServiceCidr" value="" id="kubernatesServiceCidr" placeholder="Input ServiceCidr" class="pline ip_1" title="" />
-															</li>
-															<li>
-																<label>ServiceDnsDomain</label>
-																<input type="text" name="kubernatesServiceDnsDomain" value="" id="kubernatesServiceDnsDomain" placeholder="Input ServiceDnsDomain" class="pline ip_1" title="" />
-															</li>
-														</ul>
-													</div>
-												</div>
-												<!-- //config -->
-
-												<!-- 여기부터는 CreateNode -->
-												{{template "NodeConfigure" .}}										
-
-												
-												<div class="btnbox">
-													<div class="btn_right">
-														<button type="button" name="" value="" class="btn_done btn_co btn_cr_g" onclick="deploy_btn();"><span>Deploy</span></button> 						
-													</div>
-												</div>
-						
-											</div>
-											
-										</div>
-										
-										
+										</ul>
 									</div>
-									
-								</div>
-								
-							</div>
-							
-						</div>
-						
-					</div>
-					<!-- //list -->
-					
-				</div>
-				<!-- //contents -->
+									<!-- config -->
+									<div class="ipbox second">
+										<ul id="mcks_kubernated_list">
+											<li>
+												<label>NetworkCni</label>
+												<select class="selectbox white pline sel_1" name="kubernatesNetworkCni"
+													id="kubernatesNetworkCni">
+													<option value="kilo" selected>Kilo</option>
+													<option value="canal">Canal</option>
+												</select>
+											</li>
 
-<script src="/assets/js/operation/manages/mcksmng/mckscreate.js"></script>                
+											<li>
+												<label>PodCidr</label>
+												<input type="text" name="kubernatesPodCidr" value=""
+													id="kubernatesPodCidr" placeholder="Input PodCidr"
+													class="pline ip_1" title="" />
+											</li>
+											<li>
+												<label>ServiceCidr</label>
+												<input type="text" name="kubernatesServiceCidr" value=""
+													id="kubernatesServiceCidr" placeholder="Input ServiceCidr"
+													class="pline ip_1" title="" />
+											</li>
+											<li>
+												<label>ServiceDnsDomain</label>
+												<input type="text" name="kubernatesServiceDnsDomain" value=""
+													id="kubernatesServiceDnsDomain" placeholder="Input ServiceDnsDomain"
+													class="pline ip_1" title="" />
+											</li>
+										</ul>
+									</div>
+								</div>
+								<!-- //config -->
+
+								<!-- 여기부터는 CreateNode -->
+								{{template "NodeConfigure" .}}
+
+
+								<div class="btnbox">
+									<div class="btn_right">
+										<button type="button" name="" value="" class="btn_done btn_co btn_cr_g"
+											onclick="commonConfirmOpen('DeployServer');"><span>Deploy</span></button>
+									</div>
+								</div>
+
+							</div>
+
+						</div>
+
+
+					</div>
+
+				</div>
+
+			</div>
+
+		</div>
+
+	</div>
+	<!-- //list -->
+
+</div>
+<!-- //contents -->
+
+<script src="/assets/js/operation/manages/mcksmng/mckscreate.js"></script>
 {{template "Footer" .}}

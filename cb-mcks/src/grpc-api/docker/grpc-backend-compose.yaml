@@ -1,0 +1,45 @@
+version: "3.3"
+services:
+
+  prometheus-lb:
+    image: prom/prometheus
+    container_name: cb_prometheus_lb
+    user: root
+    volumes:
+      - ./data/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml
+      - ./data/prometheus/data:/prometheus
+    ports:
+      - "9093:9090"      
+    networks:
+      - lb-net
+
+  grafana-grpc-lb:
+    image: grafana/grafana
+    container_name: cb_grpc_grafana_lb
+    user: "1000"
+    ports:
+      - "3103:3000"
+    depends_on:
+      - prometheus-lb
+    env_file:
+      - 'env.grafana'
+    links:
+      - prometheus-lb
+    volumes:
+      - ./data/grafana-grpc/data:/var/lib/grafana
+      - ./data/grafana-grpc/provisioning:/etc/grafana/provisioning
+    networks:
+      - lb-net      
+
+  jaeger-lb:
+    image: jaegertracing/all-in-one:latest
+    container_name: cb_jaeger_lb
+    ports:
+      - "6834:6831/udp"
+      - "14271:14268"      
+      - "16689:16686"
+    networks:
+      - lb-net      
+
+networks:
+  lb-net:

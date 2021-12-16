@@ -12,8 +12,8 @@ import (
 )
 
 func StartGRPCServer() {
-	grpcPort := config.GetInstance().GetGrpcConfig().Port
-	tcpConn, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", grpcPort))
+	grpcConfig := config.GetGrpcInstance()
+	tcpConn, err := net.Listen("tcp", fmt.Sprintf("%s:%d", grpcConfig.GrpcServer.Ip, grpcConfig.GrpcServer.Port))
 	if err != nil {
 		util.GetLogger().Error("failed to listen server address: ", err)
 		return

@@ -1,3 +1,17 @@
+/*
+Copyright 2019 The Cloud-Barista Authors.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+// Package mcir is to manage multi-cloud infra resource
 package mcir
 
 import (
@@ -8,22 +22,17 @@ import (
 
 	"github.com/cloud-barista/cb-spider/interface/api"
 	"github.com/cloud-barista/cb-tumblebug/src/core/common"
+	validator "github.com/go-playground/validator/v10"
 	"github.com/go-resty/resty/v2"
 )
 
-// 2020-04-03 https://github.com/cloud-barista/cb-spider/blob/master/cloud-control-manager/cloud-driver/interfaces/resources/KeyPairHandler.go
-
+// SpiderKeyPairReqInfoWrapper is a wrapper struct to create JSON body of 'Create keypair request'
 type SpiderKeyPairReqInfoWrapper struct { // Spider
 	ConnectionName string
 	ReqInfo        SpiderKeyPairInfo
 }
 
-/*
-type SpiderKeyPairReqInfo struct { // Spider
-	Name string
-}
-*/
-
+// SpiderKeyPairInfo is a struct to create JSON body of 'Create keypair request'
 type SpiderKeyPairInfo struct { // Spider
 	// Fields for request
 	Name string
@@ -37,12 +46,26 @@ type SpiderKeyPairInfo struct { // Spider
 	KeyValueList []common.KeyValue
 }
 
+// TbSshKeyReq is a struct to handle 'Create SSH key' request toward CB-Tumblebug.
 type TbSshKeyReq struct {
-	Name           string `json:"name"`
-	ConnectionName string `json:"connectionName"`
+	Name           string `json:"name" validate:"required"`
+	ConnectionName string `json:"connectionName" validate:"required"`
 	Description    string `json:"description"`
 }
 
+// TbSshKeyReqStructLevelValidation is a function to validate 'TbSshKeyReq' object.
+func TbSshKeyReqStructLevelValidation(sl validator.StructLevel) {
+
+	u := sl.Current().Interface().(TbSshKeyReq)
+
+	err := common.CheckString(u.Name)
+	if err != nil {
+		// ReportError(field interface{}, fieldName, structFieldName, tag, param string)
+		sl.ReportError(u.Name, "name", "Name", err.Error(), "")
+	}
+}
+
+// TbSshKeyInfo is a struct that represents TB SSH key object.
 type TbSshKeyInfo struct {
 	Id                   string            `json:"id"`
 	Name                 string            `json:"name"`
@@ -70,12 +93,39 @@ func CreateSshKey(nsId string, u *TbSshKeyReq) (TbSshKeyInfo, error) {
 		common.CBLog.Error(err)
 		return temp, err
 	}
-	err = common.CheckString(u.Name)
+
+	// returns InvalidValidationError for bad validation input, nil or ValidationErrors ( []FieldError )
+	err = validate.Struct(u)
 	if err != nil {
+
+		// this check is only needed when your code could produce
+		// an invalid value for validation such as interface with nil
+		// value most including myself do not usually have code like this.
+		if _, ok := err.(*validator.InvalidValidationError); ok {
+			fmt.Println(err)
+			temp := TbSshKeyInfo{}
+			return temp, err
+		}
+
+		// for _, err := range err.(validator.ValidationErrors) {
+
+		// 	fmt.Println(err.Namespace()) // can differ when a custom TagNameFunc is registered or
+		// 	fmt.Println(err.Field())     // by passing alt name to ReportError like below
+		// 	fmt.Println(err.StructNamespace())
+		// 	fmt.Println(err.StructField())
+		// 	fmt.Println(err.Tag())
+		// 	fmt.Println(err.ActualTag())
+		// 	fmt.Println(err.Kind())
+		// 	fmt.Println(err.Type())
+		// 	fmt.Println(err.Value())
+		// 	fmt.Println(err.Param())
+		// 	fmt.Println()
+		// }
+
 		temp := TbSshKeyInfo{}
-		common.CBLog.Error(err)
 		return temp, err
 	}
+
 	check, err := CheckResource(nsId, resourceType, u.Name)
 
 	if check {
@@ -93,15 +143,15 @@ func CreateSshKey(nsId string, u *TbSshKeyReq) (TbSshKeyInfo, error) {
 
 	tempReq := SpiderKeyPairReqInfoWrapper{}
 	tempReq.ConnectionName = u.ConnectionName
-	tempReq.ReqInfo.Name = u.Name
+	tempReq.ReqInfo.Name = nsId + "-" + u.Name
 
 	var tempSpiderKeyPairInfo *SpiderKeyPairInfo
 
 	if os.Getenv("SPIDER_CALL_METHOD") == "REST" {
 
-		url := common.SPIDER_REST_URL + "/keypair"
+		url := common.SpiderRestUrl + "/keypair"
 
-		client := resty.New()
+		client := resty.New().SetCloseConnection(true)
 
 		resp, err := client.R().
 			SetHeader("Content-Type", "application/json").
@@ -131,7 +181,7 @@ func CreateSshKey(nsId string, u *TbSshKeyReq) (TbSshKeyInfo, error) {
 
 	} else {
 
-		// CCM API 설정
+		// Set CCM gRPC API
 		ccm := api.NewCloudResourceHandler()
 		err := ccm.SetConfigPath(os.Getenv("CBTUMBLEBUG_ROOT") + "/conf/grpc_conf.yaml")
 		if err != nil {
@@ -164,7 +214,7 @@ func CreateSshKey(nsId string, u *TbSshKeyReq) (TbSshKeyInfo, error) {
 	}
 
 	content := TbSshKeyInfo{}
-	//content.Id = common.GenUuid()
+	//content.Id = common.GenUid()
 	content.Id = u.Name
 	content.Name = u.Name
 	content.ConnectionName = u.ConnectionName
@@ -181,12 +231,12 @@ func CreateSshKey(nsId string, u *TbSshKeyReq) (TbSshKeyInfo, error) {
 	fmt.Println("=========================== PUT CreateSshKey")
 	Key := common.GenResourceKey(nsId, resourceType, content.Id)
 	Val, _ := json.Marshal(content)
-	err = common.CBStore.Put(string(Key), string(Val))
+	err = common.CBStore.Put(Key, string(Val))
 	if err != nil {
 		common.CBLog.Error(err)
 		return content, err
 	}
-	//keyValue, _ := common.CBStore.Get(string(Key))
+	//keyValue, _ := common.CBStore.Get(Key)
 	//fmt.Println("<" + keyValue.Key + "> \n" + keyValue.Value)
 	fmt.Println("===========================")
 	return content, nil

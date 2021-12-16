@@ -1,5 +1,7 @@
+# v0.5.0 (Affogato, 2021.12.16.)
 
-# v0.4.0 (Cafe Mocha) (2021.06.30.)
+
+# v0.4.0 (Cafe Mocha, 2021.06.30.)
 
 ### Bug Fix
 

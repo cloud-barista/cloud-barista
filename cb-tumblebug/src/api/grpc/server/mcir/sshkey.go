@@ -16,7 +16,7 @@ import (
 
 // ===== [ Implementations ] =====
 
-// CreateSshKey - KeyPair 생성
+// CreateSshKey is to KeyPair 생성
 func (s *MCIRService) CreateSshKey(ctx context.Context, req *pb.TbSshKeyCreateRequest) (*pb.TbSshKeyInfoResponse, error) {
 	logger := logger.NewLogger()
 
@@ -45,7 +45,7 @@ func (s *MCIRService) CreateSshKey(ctx context.Context, req *pb.TbSshKeyCreateRe
 	return resp, nil
 }
 
-// ListSshKey - KeyPair 목록
+// ListSshKey is to KeyPair 목록
 func (s *MCIRService) ListSshKey(ctx context.Context, req *pb.ResourceAllQryRequest) (*pb.ListTbSshKeyInfoResponse, error) {
 	logger := logger.NewLogger()
 
@@ -67,7 +67,7 @@ func (s *MCIRService) ListSshKey(ctx context.Context, req *pb.ResourceAllQryRequ
 	return resp, nil
 }
 
-// ListSshKeyId
+// ListSshKeyId is to list SSH key IDs
 func (s *MCIRService) ListSshKeyId(ctx context.Context, req *pb.ResourceAllQryRequest) (*pb.ListIdResponse, error) {
 	logger := logger.NewLogger()
 
@@ -89,7 +89,7 @@ func (s *MCIRService) ListSshKeyId(ctx context.Context, req *pb.ResourceAllQryRe
 	return resp, nil
 }
 
-// GetSshKey - KeyPair 조회
+// GetSshKey is to KeyPair 조회
 func (s *MCIRService) GetSshKey(ctx context.Context, req *pb.ResourceQryRequest) (*pb.TbSshKeyInfoResponse, error) {
 	logger := logger.NewLogger()
 
@@ -111,7 +111,7 @@ func (s *MCIRService) GetSshKey(ctx context.Context, req *pb.ResourceQryRequest)
 	return resp, nil
 }
 
-// DeleteSshKey - KeyPair 삭제
+// DeleteSshKey is to KeyPair 삭제
 func (s *MCIRService) DeleteSshKey(ctx context.Context, req *pb.ResourceQryRequest) (*pb.MessageResponse, error) {
 	logger := logger.NewLogger()
 
@@ -126,18 +126,26 @@ func (s *MCIRService) DeleteSshKey(ctx context.Context, req *pb.ResourceQryReque
 	return resp, nil
 }
 
-// DeleteAllSshKey - KeyPair 전체 삭제
-func (s *MCIRService) DeleteAllSshKey(ctx context.Context, req *pb.ResourceAllQryRequest) (*pb.MessageResponse, error) {
+// DeleteAllSshKey is to KeyPair 전체 삭제
+func (s *MCIRService) DeleteAllSshKey(ctx context.Context, req *pb.ResourceAllQryRequest) (*pb.IdListResponse, error) {
 	logger := logger.NewLogger()
 
 	logger.Debug("calling MCIRService.DeleteAllSshKey()")
 
-	err := mcir.DelAllResources(req.NsId, req.ResourceType, req.Force)
+	content, err := mcir.DelAllResources(req.NsId, req.ResourceType, "", req.Force)
 	if err != nil {
 		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.DeleteAllSshKey()")
 	}
 
-	resp := &pb.MessageResponse{Message: "All " + req.ResourceType + "s has been deleted"}
+	// MCIR 객체에서 GRPC 메시지로 복사
+	var grpcObj pb.IdListResponse
+	err = gc.CopySrcToDest(&content, &grpcObj)
+	if err != nil {
+		return nil, gc.ConvGrpcStatusErr(err, "", "MCIRService.DeleteAllSshKey()")
+	}
+
+	// resp := &pb.MessageResponse{Message: "All " + req.ResourceType + "s has been deleted"}
+	resp := &grpcObj
 	return resp, nil
 }
 

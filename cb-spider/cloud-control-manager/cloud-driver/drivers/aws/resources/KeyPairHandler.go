@@ -1,16 +1,12 @@
 package resources
 
 import (
-	"bytes"
 	"crypto/md5"
-	"crypto/rsa"
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -20,7 +16,6 @@ import (
 	irs "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces/resources"
 	"github.com/davecgh/go-spew/spew"
 	_ "github.com/davecgh/go-spew/spew"
-	"golang.org/x/crypto/ssh"
 )
 
 type AwsKeyPairHandler struct {
@@ -85,7 +80,7 @@ func (keyPairHandler *AwsKeyPairHandler) ListKey() ([]*irs.KeyPairInfo, error) {
 		*/
 		keyPairInfo, errKeyPair := ExtractKeyPairDescribeInfo(pair)
 		if errKeyPair != nil {
-			cblogger.Infof("[%s] KeyPair는 Local에서 관리하는 대상이 아니기 때문에 Skip합니다.", *pair.KeyName)
+			//cblogger.Infof("[%s] KeyPair는 Local에서 관리하는 대상이 아니기 때문에 Skip합니다.", *pair.KeyName)
 			cblogger.Info(errKeyPair.Error())
 			//return nil, errKeyPair
 		} else {
@@ -98,8 +93,10 @@ func (keyPairHandler *AwsKeyPairHandler) ListKey() ([]*irs.KeyPairInfo, error) {
 	return keyPairList, nil
 }
 
+//2021-10-26 이슈#480에 의해 Local Key 로직 제거
 func (keyPairHandler *AwsKeyPairHandler) CreateKey(keyPairReqInfo irs.KeyPairReqInfo) (irs.KeyPairInfo, error) {
 	cblogger.Info(keyPairReqInfo)
+	/* 2021-10-26 이슈#480에 의해 Local Key 로직 제거
 	keyPairPath := os.Getenv("CBSPIDER_ROOT") + CBKeyPairPath
 	cblogger.Infof("Getenv[CBSPIDER_ROOT] : [%s]", os.Getenv("CBSPIDER_ROOT"))
 	cblogger.Infof("CBKeyPairPath : [%s]", CBKeyPairPath)
@@ -109,6 +106,7 @@ func (keyPairHandler *AwsKeyPairHandler) CreateKey(keyPairReqInfo irs.KeyPairReq
 		cblogger.Error(err)
 		return irs.KeyPairInfo{}, err
 	}
+	*/
 
 	// logger for HisCall
 	callogger := call.GetLogger("HISCALL")
@@ -144,12 +142,14 @@ func (keyPairHandler *AwsKeyPairHandler) CreateKey(keyPairReqInfo irs.KeyPairReq
 
 	cblogger.Infof("Created key pair %q %s\n%s\n", *result.KeyName, *result.KeyFingerprint, *result.KeyMaterial)
 
+	/* 2021-10-26 이슈#480에 의해 Local Key 로직 제거
 	cblogger.Info("공개키 생성")
-	publicKey, errPub := makePublicKeyFromPrivateKey(*result.KeyMaterial)
+	publicKey, errPub := keypair.MakePublicKeyFromPrivateKey(*result.KeyMaterial)
 	if errPub != nil {
 		cblogger.Error(errPub)
 		return irs.KeyPairInfo{}, err
 	}
+	*/
 
 	cblogger.Infof("Public Key")
 	//spew.Dump(publicKey)
@@ -158,7 +158,7 @@ func (keyPairHandler *AwsKeyPairHandler) CreateKey(keyPairReqInfo irs.KeyPairReq
 		IId:         irs.IID{keyPairReqInfo.IId.NameId, *result.KeyName},
 		Fingerprint: *result.KeyFingerprint,
 		PrivateKey:  *result.KeyMaterial, // AWS(PEM파일-RSA PRIVATE KEY)
-		PublicKey:   publicKey,
+		//PublicKey:   publicKey,
 		//KeyMaterial: *result.KeyMaterial,
 		KeyValueList: []irs.KeyValue{
 			{Key: "KeyMaterial", Value: *result.KeyMaterial},
@@ -178,6 +178,7 @@ func (keyPairHandler *AwsKeyPairHandler) CreateKey(keyPairReqInfo irs.KeyPairReq
 		savePrivateFileTo := keyPairPath + hashString + "--" + keyPairReqInfo.IId.NameId + ".pem"
 		savePublicFileTo := keyPairPath + hashString + "--" + keyPairReqInfo.IId.NameId + ".pub"
 	*/
+	/* 2021-10-26 이슈#480에 의해 Local Key 로직 제거
 	hashString := strings.ReplaceAll(keyPairInfo.Fingerprint, ":", "") // 필요한 경우 리전 정보 추가하면 될 듯. 나중에 키 이름과 리전으로 암복호화를 진행하면 될 것같음.
 	savePrivateFileTo := keyPairPath + hashString + ".pem"
 	savePublicFileTo := keyPairPath + hashString + ".pub"
@@ -186,23 +187,25 @@ func (keyPairHandler *AwsKeyPairHandler) CreateKey(keyPairReqInfo irs.KeyPairReq
 	cblogger.Infof("savePublicFileTo : [%s]", savePublicFileTo)
 
 	// 파일에 private Key를 쓴다
-	err = writeKeyToFile([]byte(keyPairInfo.PrivateKey), savePrivateFileTo)
+	err = keypair.SaveKey([]byte(keyPairInfo.PrivateKey), savePrivateFileTo)
 	if err != nil {
 		return irs.KeyPairInfo{}, err
 	}
 
 	// 파일에 public Key를 쓴다
-	err = writeKeyToFile([]byte(keyPairInfo.PublicKey), savePublicFileTo)
+	err = keypair.SaveKey([]byte(keyPairInfo.PublicKey), savePublicFileTo)
 	if err != nil {
 		return irs.KeyPairInfo{}, err
 	}
-
+	*/
 	return keyPairInfo, nil
 }
 
+// 2021-10-26 이슈#480에 의해 Local Key 로직 제거
 //혼선을 피하기 위해 keyPairID 대신 keyName으로 변경 함.
 func (keyPairHandler *AwsKeyPairHandler) GetKey(keyIID irs.IID) (irs.KeyPairInfo, error) {
 
+	/* 2021-10-26 이슈#480에 의해 Local Key 로직 제거
 	keyPairPath := os.Getenv("CBSPIDER_ROOT") + CBKeyPairPath
 	cblogger.Infof("Getenv[CBSPIDER_ROOT] : [%s]", os.Getenv("CBSPIDER_ROOT"))
 	cblogger.Infof("CBKeyPairPath : [%s]", CBKeyPairPath)
@@ -212,6 +215,7 @@ func (keyPairHandler *AwsKeyPairHandler) GetKey(keyIID irs.IID) (irs.KeyPairInfo
 		cblogger.Error(err)
 		return irs.KeyPairInfo{}, err
 	}
+	*/
 
 	//keyPairID := keyName
 	cblogger.Infof("keyName : [%s]", keyIID.SystemId)
@@ -285,6 +289,7 @@ func ExtractKeyPairDescribeInfo(keyPair *ec2.KeyPairInfo) (irs.KeyPairInfo, erro
 		Fingerprint: *keyPair.KeyFingerprint,
 	}
 
+	/* 2021-10-26 이슈#480에 의해 Local Key 로직 제거
 	// Local Keyfile 처리
 	keyPairPath := os.Getenv("CBSPIDER_ROOT") + CBKeyPairPath
 	hashString := strings.ReplaceAll(keyPairInfo.Fingerprint, ":", "") // 필요한 경우 리전 정보 추가하면 될 듯. 나중에 키 이름과 리전으로 암복호화를 진행하면 될 것같음.
@@ -310,6 +315,7 @@ func ExtractKeyPairDescribeInfo(keyPair *ec2.KeyPairInfo) (irs.KeyPairInfo, erro
 
 	keyPairInfo.PublicKey = string(publicKeyBytes)
 	keyPairInfo.PrivateKey = string(privateKeyBytes)
+	*/
 
 	keyValueList := []irs.KeyValue{
 		//{Key: "KeyMaterial", Value: *keyPair.KeyMaterial},
@@ -320,10 +326,12 @@ func ExtractKeyPairDescribeInfo(keyPair *ec2.KeyPairInfo) (irs.KeyPairInfo, erro
 	return keyPairInfo, nil
 }
 
+// 2021-10-26 이슈#480에 의해 Local Key 로직 제거
 func (keyPairHandler *AwsKeyPairHandler) DeleteKey(keyIID irs.IID) (bool, error) {
 	cblogger.Infof("삭제 요청된 키페어 : [%s]", keyIID.SystemId)
 
-	keyPairInfo, errGet := keyPairHandler.GetKey(keyIID)
+	//keyPairInfo, errGet := keyPairHandler.GetKey(keyIID)
+	_, errGet := keyPairHandler.GetKey(keyIID)
 	if errGet != nil {
 		return false, errGet
 	}
@@ -363,6 +371,7 @@ func (keyPairHandler *AwsKeyPairHandler) DeleteKey(keyIID irs.IID) (bool, error)
 	callogger.Info(call.String(callLogInfo))
 	cblogger.Infof("Successfully deleted %q AWS key pair\n", keyIID.SystemId)
 
+	/* 2021-10-26 이슈#480에 의해 Local Key 로직 제거
 	//====================
 	// Local Keyfile 처리
 	//====================
@@ -385,6 +394,7 @@ func (keyPairHandler *AwsKeyPairHandler) DeleteKey(keyIID irs.IID) (bool, error)
 		return false, err
 	}
 
+	*/
 	return true, nil
 }
 
@@ -407,35 +417,6 @@ func (keyPairHandler *AwsKeyPairHandler) CheckKeyPairFolder(keyPairPath string) 
 			return errDir
 		}
 	}
-	return nil
-}
-
-// ParseKey reads the given RSA private key and create a public one for it.
-func makePublicKeyFromPrivateKey(pem string) (string, error) {
-	key, err := ssh.ParseRawPrivateKey([]byte(pem))
-	if err != nil {
-		return "", err
-	}
-	rsaKey, ok := key.(*rsa.PrivateKey)
-	if !ok {
-		return "", fmt.Errorf("%q is not a RSA key", pem)
-	}
-	pub, err := ssh.NewPublicKey(&rsaKey.PublicKey)
-	if err != nil {
-		return "", err
-	}
-
-	return string(bytes.TrimRight(ssh.MarshalAuthorizedKey(pub), "\n")), nil
-}
-
-// 파일에 Key를 쓴다
-func writeKeyToFile(keyBytes []byte, saveFileTo string) error {
-	err := ioutil.WriteFile(saveFileTo, keyBytes, 0600)
-	if err != nil {
-		return err
-	}
-
-	log.Printf("Key 저장위치: %s", saveFileTo)
 	return nil
 }
 

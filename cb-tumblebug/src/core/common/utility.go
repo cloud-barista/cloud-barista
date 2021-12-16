@@ -1,50 +1,67 @@
+/*
+Copyright 2019 The Cloud-Barista Authors.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+// Package common is to include common methods for managing multi-cloud infra
 package common
 
 import (
+	"bufio"
+	"math/rand"
 	"os"
 	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
-
-	//"encoding/json"
+	"time"
 
 	"github.com/cloud-barista/cb-spider/interface/api"
 	cbstore_utils "github.com/cloud-barista/cb-store/utils"
-	uuid "github.com/google/uuid"
+	uid "github.com/rs/xid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gopkg.in/yaml.v2"
 
-	// CB-Store
-	//"github.com/cloud-barista/cb-grpc-project/pkg/logging"
-
-	//"github.com/cloud-barista/cb-tumblebug/src/core/mcir"
-
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 
-	//"net/http"
-	//"io/ioutil"
-	//"strconv"
 	"github.com/go-resty/resty/v2"
 )
 
 // MCIS utilities
 
-// JSON Simple message struct
+// SimpleMsg is struct for JSON Simple message
 type SimpleMsg struct {
 	Message string `json:"message" example:"Any message"`
 }
 
-func GenUuid() string {
-	return uuid.New().String()
+// GenUid is func to return a UUID string
+func GenUid() string {
+	return uid.New().String()
 }
 
+// RandomSleep is func to make a caller waits for during random time seconds
+func RandomSleep(t int) {
+	rand.Seed(time.Now().UnixNano())
+	n := rand.Intn(t * 1000)
+	time.Sleep(time.Duration(n) * time.Millisecond)
+}
+
+// CheckString is func to check string by the given rule `[a-z]([-a-z0-9]*[a-z0-9])?`
 func CheckString(name string) error {
 
 	if name == "" {
-		err := fmt.Errorf("The provided name is empty.")
+		err := fmt.Errorf("The provided string is empty")
 		return err
 	}
 
@@ -59,7 +76,7 @@ func CheckString(name string) error {
 	return nil
 }
 
-// To be deprecated
+// ToLower is func to change strings (_ to -, " " to -, to lower string ) (deprecated soon)
 func ToLower(name string) string {
 	out := strings.ReplaceAll(name, "_", "-")
 	out = strings.ReplaceAll(out, " ", "-")
@@ -67,6 +84,7 @@ func ToLower(name string) string {
 	return out
 }
 
+// GenMcisKey is func to generate a key used in keyValue store
 func GenMcisKey(nsId string, mcisId string, vmId string) string {
 
 	if vmId != "" {
@@ -81,13 +99,14 @@ func GenMcisKey(nsId string, mcisId string, vmId string) string {
 
 }
 
+// GenMcisVmGroupKey is func to generate a key from vmGroupId used in keyValue store
 func GenMcisVmGroupKey(nsId string, mcisId string, groupId string) string {
 
 	return "/ns/" + nsId + "/mcis/" + mcisId + "/vmgroup/" + groupId
 
 }
 
-// Generate Mcis policy key
+// GenMcisPolicyKey is func to generate Mcis policy key
 func GenMcisPolicyKey(nsId string, mcisId string, vmId string) string {
 	if vmId != "" {
 		return "/ns/" + nsId + "/policy/mcis/" + mcisId + "/vm/" + vmId
@@ -100,6 +119,7 @@ func GenMcisPolicyKey(nsId string, mcisId string, vmId string) string {
 	}
 }
 
+// LookupKeyValueList is func to lookup KeyValue list
 func LookupKeyValueList(kvl []KeyValue, key string) string {
 	for _, v := range kvl {
 		if v.Key == key {
@@ -109,6 +129,7 @@ func LookupKeyValueList(kvl []KeyValue, key string) string {
 	return ""
 }
 
+// PrintJsonPretty is func to print JSON pretty with indent
 func PrintJsonPretty(v interface{}) {
 	prettyJSON, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
@@ -118,6 +139,7 @@ func PrintJsonPretty(v interface{}) {
 	}
 }
 
+// GenResourceKey is func to generate a key from resource type and id
 func GenResourceKey(nsId string, resourceType string, resourceId string) string {
 
 	if resourceType == StrImage ||
@@ -134,6 +156,19 @@ func GenResourceKey(nsId string, resourceType string, resourceId string) string 
 	}
 }
 
+// GenChildResourceKey is func to generate a key from resource type and id
+func GenChildResourceKey(nsId string, resourceType string, parentResourceId string, resourceId string) string {
+
+	if resourceType == StrSubnet {
+		parentResourceType := StrVNet
+		// return "/ns/" + nsId + "/resources/" + resourceType + "/" + resourceId
+		return fmt.Sprintf("/ns/%s/resources/%s/%s/%s/%s", nsId, parentResourceType, parentResourceId, resourceType, resourceId)
+	} else {
+		return "/invalidKey"
+	}
+}
+
+// mcirIds is struct for containing id and name of each MCIR type
 type mcirIds struct { // Tumblebug
 	CspImageId           string
 	CspImageName         string
@@ -151,6 +186,7 @@ type mcirIds struct { // Tumblebug
 	ConnectionName string
 }
 
+// GetCspResourceId is func to retrieve CSP native resource ID
 func GetCspResourceId(nsId string, resourceType string, resourceId string) (string, error) {
 	key := GenResourceKey(nsId, resourceType, resourceId)
 	if key == "/invalidKey" {
@@ -175,7 +211,7 @@ func GetCspResourceId(nsId string, resourceType string, resourceId string) (stri
 	case StrSSHKey:
 		content := mcirIds{}
 		json.Unmarshal([]byte(keyValue.Value), &content)
-		return resourceId, nil
+		return content.CspSshKeyName, nil
 	case StrSpec:
 		content := mcirIds{}
 		json.Unmarshal([]byte(keyValue.Value), &content)
@@ -183,7 +219,7 @@ func GetCspResourceId(nsId string, resourceType string, resourceId string) (stri
 	case StrVNet:
 		content := mcirIds{}
 		json.Unmarshal([]byte(keyValue.Value), &content)
-		return resourceId, nil // contains CspSubnetId
+		return content.CspVNetName, nil // contains CspSubnetId
 	// case "subnet":
 	// 	content := subnetInfo{}
 	// 	json.Unmarshal([]byte(keyValue.Value), &content)
@@ -210,24 +246,110 @@ func GetCspResourceId(nsId string, resourceType string, resourceId string) (stri
 	default:
 		return "", fmt.Errorf("invalid resourceType")
 	}
-	//}
 }
 
+// ConnConfig is struct for containing a CB-Spider struct for connection config
 type ConnConfig struct { // Spider
 	ConfigName     string
 	ProviderName   string
 	DriverName     string
 	CredentialName string
 	RegionName     string
+	Location       GeoLocation
 }
 
+// GeoLocation is struct for geographical location
+type GeoLocation struct {
+	Latitude     string `json:"latitude"`
+	Longitude    string `json:"longitude"`
+	BriefAddr    string `json:"briefAddr"`
+	CloudType    string `json:"cloudType"`
+	NativeRegion string `json:"nativeRegion"`
+}
+
+// GetCloudLocation is to get location of clouds (need error handling)
+func GetCloudLocation(cloudType string, nativeRegion string) GeoLocation {
+
+	location := GeoLocation{}
+
+	if cloudType == "" || nativeRegion == "" {
+
+		// need error handling instead of assigning default value
+		location.CloudType = "ufc"
+		location.NativeRegion = "ufc"
+		location.BriefAddr = "South Korea (Seoul)"
+		location.Latitude = "37.4767"
+		location.Longitude = "126.8841"
+
+		return location
+	}
+
+	key := "/cloudtype/" + cloudType + "/region/" + nativeRegion
+
+	fmt.Printf("[GetCloudLocation] KEY: %+v\n", key)
+
+	keyValue, err := CBStore.Get(key)
+
+	if err != nil {
+		CBLog.Error(err)
+		return location
+	}
+
+	if keyValue == nil {
+		file, fileErr := os.Open("../assets/cloudlocation.csv")
+		defer file.Close()
+		if fileErr != nil {
+			CBLog.Error(fileErr)
+			return location
+		}
+
+		rdr := csv.NewReader(bufio.NewReader(file))
+		rows, _ := rdr.ReadAll()
+		for i, row := range rows {
+			keyLoc := "/cloudtype/" + rows[i][0] + "/region/" + rows[i][1]
+			location.CloudType = rows[i][0]
+			location.NativeRegion = rows[i][1]
+			location.BriefAddr = rows[i][2]
+			location.Latitude = rows[i][3]
+			location.Longitude = rows[i][4]
+			valLoc, _ := json.Marshal(location)
+			dbErr := CBStore.Put(keyLoc, string(valLoc))
+			if dbErr != nil {
+				CBLog.Error(dbErr)
+				return location
+			}
+			for j := range row {
+				fmt.Printf("%s ", rows[i][j])
+			}
+			fmt.Println()
+		}
+		keyValue, err = CBStore.Get(key)
+		if err != nil {
+			CBLog.Error(err)
+			return location
+		}
+	}
+
+	if keyValue != nil {
+		fmt.Printf("[GetCloudLocation] %+v %+v\n", keyValue.Key, keyValue.Value)
+		err = json.Unmarshal([]byte(keyValue.Value), &location)
+		if err != nil {
+			CBLog.Error(err)
+			return location
+		}
+	}
+
+	return location
+}
+
+// GetConnConfig is func to get connection config from CB-Spider
 func GetConnConfig(ConnConfigName string) (ConnConfig, error) {
 
 	if os.Getenv("SPIDER_CALL_METHOD") == "REST" {
 
-		url := SPIDER_REST_URL + "/connectionconfig/" + ConnConfigName
+		url := SpiderRestUrl + "/connectionconfig/" + ConnConfigName
 
-		client := resty.New()
+		client := resty.New().SetCloseConnection(true)
 
 		resp, err := client.R().
 			SetResult(&ConnConfig{}).
@@ -253,11 +375,23 @@ func GetConnConfig(ConnConfigName string) (ConnConfig, error) {
 		}
 
 		temp, _ := resp.Result().(*ConnConfig)
+
+		// Get geolocation
+		nativeRegion, err := GetNativeRegion(temp.ConfigName)
+		if err != nil {
+			CBLog.Error(err)
+			content := ConnConfig{}
+			return content, err
+		}
+
+		location := GetCloudLocation(strings.ToLower(temp.ProviderName), strings.ToLower(nativeRegion))
+		temp.Location = location
+
 		return *temp, nil
 
 	} else {
 
-		// CIM API 설정
+		// CIM API init
 		cim := api.NewCloudInfoManager()
 		err := cim.SetConfigPath(os.Getenv("CBTUMBLEBUG_ROOT") + "/conf/grpc_conf.yaml")
 		if err != nil {
@@ -287,69 +421,19 @@ func GetConnConfig(ConnConfigName string) (ConnConfig, error) {
 	}
 }
 
-type RegionInfo struct { // Spider
-	RegionName       string     // ex) "region01"
-	ProviderName     string     // ex) "GCP"
-	KeyValueInfoList []KeyValue // ex) { {region, us-east1},
-	//	 {zone, us-east1-c},
-}
-
-func GetRegionInfo(RegionName string) (RegionInfo, error) {
-
-	if os.Getenv("SPIDER_CALL_METHOD") == "REST" {
-
-		url := SPIDER_REST_URL + "/region/" + RegionName
-
-		client := resty.New()
-
-		resp, err := client.R().
-			SetResult(&RegionInfo{}).
-			//SetError(&SimpleMsg{}).
-			Get(url)
-
-		if err != nil {
-			CBLog.Error(err)
-			content := RegionInfo{}
-			err := fmt.Errorf("an error occurred while requesting to CB-Spider")
-			return content, err
-		}
-
-		fmt.Println(string(resp.Body())) // for debug
-
-		fmt.Println("HTTP Status code: " + strconv.Itoa(resp.StatusCode()))
-		switch {
-		case resp.StatusCode() >= 400 || resp.StatusCode() < 200:
-			err := fmt.Errorf(string(resp.Body()))
-			CBLog.Error(err)
-			content := RegionInfo{}
-			return content, err
-		}
-
-		temp, _ := resp.Result().(*RegionInfo)
-		return *temp, nil
-
-	} else {
-		// needs GRPC code
-
-		CBLog.Error(err)
-		content := RegionInfo{}
-		err := fmt.Errorf("an error occurred while requesting to CB-Spider: needs GRPC code")
-		return content, err
-
-	}
-}
-
+// ConnConfigList is struct for containing a CB-Spider struct for connection config list
 type ConnConfigList struct { // Spider
 	Connectionconfig []ConnConfig `json:"connectionconfig"`
 }
 
+// GetConnConfigList is func to list connection configs from CB-Spider
 func GetConnConfigList() (ConnConfigList, error) {
 
 	if os.Getenv("SPIDER_CALL_METHOD") == "REST" {
 
-		url := SPIDER_REST_URL + "/connectionconfig"
+		url := SpiderRestUrl + "/connectionconfig"
 
-		client := resty.New()
+		client := resty.New().SetCloseConnection(true)
 
 		resp, err := client.R().
 			SetResult(&ConnConfigList{}).
@@ -375,11 +459,25 @@ func GetConnConfigList() (ConnConfigList, error) {
 		}
 
 		temp, _ := resp.Result().(*ConnConfigList)
+
+		// Get geolocations
+		for i, connConfig := range temp.Connectionconfig {
+			nativeRegion, err := GetNativeRegion(connConfig.ConfigName)
+			if err != nil {
+				CBLog.Error(err)
+				content := ConnConfigList{}
+				return content, err
+			}
+
+			location := GetCloudLocation(strings.ToLower(connConfig.ProviderName), strings.ToLower(nativeRegion))
+			temp.Connectionconfig[i].Location = location
+		}
+
 		return *temp, nil
 
 	} else {
 
-		// CIM API 설정
+		// CIM API init
 		cim := api.NewCloudInfoManager()
 		err := cim.SetConfigPath(os.Getenv("CBTUMBLEBUG_ROOT") + "/conf/grpc_conf.yaml")
 		if err != nil {
@@ -410,19 +508,21 @@ func GetConnConfigList() (ConnConfigList, error) {
 	}
 }
 
-type Region struct { // Spider
-	RegionName       string
-	ProviderName     string
-	KeyValueInfoList []KeyValue
+// Region is struct for containing region struct of CB-Spider
+type Region struct {
+	RegionName       string     // ex) "region01"
+	ProviderName     string     // ex) "GCP"
+	KeyValueInfoList []KeyValue // ex) { {region, us-east1}, {zone, us-east1-c} }
 }
 
+// GetRegion is func to get region from CB-Spider
 func GetRegion(RegionName string) (Region, error) {
 
 	if os.Getenv("SPIDER_CALL_METHOD") == "REST" {
 
-		url := SPIDER_REST_URL + "/region/" + RegionName
+		url := SpiderRestUrl + "/region/" + RegionName
 
-		client := resty.New()
+		client := resty.New().SetCloseConnection(true)
 
 		resp, err := client.R().
 			SetResult(&Region{}).
@@ -452,7 +552,7 @@ func GetRegion(RegionName string) (Region, error) {
 
 	} else {
 
-		// CIM API 설정
+		// CIM API init
 		cim := api.NewCloudInfoManager()
 		err := cim.SetConfigPath(os.Getenv("CBTUMBLEBUG_ROOT") + "/conf/grpc_conf.yaml")
 		if err != nil {
@@ -483,19 +583,62 @@ func GetRegion(RegionName string) (Region, error) {
 	}
 }
 
+// GetRegion is func to get NativRegion from file
+func GetNativeRegion(connectionName string) (string, error) {
+	// Read default resources from file and create objects
+	// HEADER: ProviderName, CONN_CONFIG, RegionName, NativeRegionName, RegionLocation, DriverLibFileName, DriverName
+	file, fileErr := os.Open("../assets/cloudconnection.csv")
+	defer file.Close()
+	if fileErr != nil {
+		CBLog.Error(fileErr)
+		return "", fileErr
+	}
+
+	rdr := csv.NewReader(bufio.NewReader(file))
+	rows, err := rdr.ReadAll()
+	if err != nil {
+		CBLog.Error(err)
+		return "", err
+	}
+
+	nativeRegionName := ""
+
+	for _, row := range rows[1:] {
+		if connectionName != "" {
+			// find only given connectionName (if not skip)
+			if connectionName != row[1] {
+				continue
+			}
+			fmt.Println("Found a line for the connectionName from file: " + row[1])
+		}
+
+		if connectionName != "" {
+			// After finish handling line for the connectionName, break
+			if connectionName == row[1] {
+				nativeRegionName = row[3]
+				fmt.Println("Handled for the connectionName from file: " + row[1])
+				break
+			}
+		}
+
+	}
+	return nativeRegionName, nil
+
+}
+
 // RegionList is array struct for Region
 type RegionList struct {
 	Region []Region `json:"region"`
 }
 
-// GetRegionList retrieves region list
+// GetRegionList is func to retrieve region list
 func GetRegionList() (RegionList, error) {
 
 	if os.Getenv("SPIDER_CALL_METHOD") == "REST" {
 
-		url := SPIDER_REST_URL + "/region"
+		url := SpiderRestUrl + "/region"
 
-		client := resty.New()
+		client := resty.New().SetCloseConnection(true)
 
 		resp, err := client.R().
 			SetResult(&RegionList{}).
@@ -525,7 +668,7 @@ func GetRegionList() (RegionList, error) {
 
 	} else {
 
-		// CIM API 설정
+		// CIM API init
 		cim := api.NewCloudInfoManager()
 		err := cim.SetConfigPath(os.Getenv("CBTUMBLEBUG_ROOT") + "/conf/grpc_conf.yaml")
 		if err != nil {
@@ -556,7 +699,7 @@ func GetRegionList() (RegionList, error) {
 	}
 }
 
-// ConvertToMessage - 입력 데이터를 grpc 메시지로 변환
+// ConvertToMessage is func to change input data to gRPC message
 func ConvertToMessage(inType string, inData string, obj interface{}) error {
 	//logger := logging.NewLogger()
 
@@ -579,25 +722,25 @@ func ConvertToMessage(inType string, inData string, obj interface{}) error {
 	return nil
 }
 
-// ConvertToOutput - grpc 메시지를 출력포맷으로 변환
+// ConvertToOutput is func to convert gRPC message to print format
 func ConvertToOutput(outType string, obj interface{}) (string, error) {
 	//logger := logging.NewLogger()
 
 	if outType == "yaml" {
-		// 메시지 포맷에서 불필요한 필드(XXX_로 시작하는 필드)를 제거하기 위해 json 태그를 이용하여 마샬링
+		// marshal using JSON to remove fields with XXX prefix
 		j, err := json.Marshal(obj)
 		if err != nil {
 			return "", err
 		}
 
-		// 필드를 소팅하지 않고 지정된 순서대로 출력하기 위해 MapSlice 이용
+		// use MapSlice to avoid sorting fields
 		jsonObj := yaml.MapSlice{}
 		err2 := yaml.Unmarshal(j, &jsonObj)
 		if err2 != nil {
 			return "", err2
 		}
 
-		// yaml 마샬링
+		// yaml marshal
 		y, err3 := yaml.Marshal(jsonObj)
 		if err3 != nil {
 			return "", err3
@@ -620,7 +763,7 @@ func ConvertToOutput(outType string, obj interface{}) (string, error) {
 	return "", nil
 }
 
-// CopySrcToDest - 소스에서 타켓으로 데이터 복사
+// CopySrcToDest is func to copy data from source to target
 func CopySrcToDest(src interface{}, dest interface{}) error {
 	//logger := logging.NewLogger()
 
@@ -644,7 +787,7 @@ func CopySrcToDest(src interface{}, dest interface{}) error {
 	return nil
 }
 
-// ConvGrpcStatusErr - GRPC 상태 코드 에러로 변환
+// ConvGrpcStatusErr is func to convert error code into GRPC status code
 func ConvGrpcStatusErr(err error, tag string, method string) error {
 	//logger := logging.NewLogger()
 
@@ -662,7 +805,7 @@ func ConvGrpcStatusErr(err error, tag string, method string) error {
 	return nil
 }
 
-// NewGrpcStatusErr - GRPC 상태 코드 에러 생성
+// NewGrpcStatusErr is func to generate GRPC status error code
 func NewGrpcStatusErr(msg string, tag string, method string) error {
 	//logger := logging.NewLogger()
 
@@ -672,7 +815,7 @@ func NewGrpcStatusErr(msg string, tag string, method string) error {
 	return status.Errorf(codes.Internal, "%s error while calling %s method: %s ", tag, method, msg)
 }
 
-// NVL is null value logic
+// NVL is func for null value logic
 func NVL(str string, def string) string {
 	if len(str) == 0 {
 		return def
@@ -680,6 +823,7 @@ func NVL(str string, def string) string {
 	return str
 }
 
+// GetChildIdList is func to get child id list from given key
 func GetChildIdList(key string) []string {
 
 	keyValue, _ := CBStore.GetList(key, true)
@@ -698,7 +842,7 @@ func GetChildIdList(key string) []string {
 
 }
 
-// func GetObjectList returns IDs of each child objects that has the same key.
+// GetObjectList is func to return IDs of each child objects that has the same key
 func GetObjectList(key string) []string {
 
 	keyValue, _ := CBStore.GetList(key, true)
@@ -713,7 +857,7 @@ func GetObjectList(key string) []string {
 
 }
 
-// func GetObjectValue returns the object value.
+// GetObjectValue is func to return the object value
 func GetObjectValue(key string) (string, error) {
 
 	keyValue, err := CBStore.Get(key)
@@ -727,7 +871,7 @@ func GetObjectValue(key string) (string, error) {
 	return keyValue.Value, nil
 }
 
-// func DeleteObject delete the object.
+// DeleteObject is func to delete the object
 func DeleteObject(key string) error {
 
 	err := CBStore.Delete(key)
@@ -738,7 +882,7 @@ func DeleteObject(key string) error {
 	return nil
 }
 
-// func DeleteObjects delete objects.
+// DeleteObjects is func to delete objects
 func DeleteObjects(key string) error {
 	keyValue, _ := CBStore.GetList(key, true)
 	for _, v := range keyValue {

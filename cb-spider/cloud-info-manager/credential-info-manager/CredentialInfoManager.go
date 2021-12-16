@@ -10,9 +10,11 @@ package credentialinfomanager
 
 import (
 	"fmt"
-
+	"strings"
 	"github.com/cloud-barista/cb-store/config"
 	icbs "github.com/cloud-barista/cb-store/interfaces"
+	cim "github.com/cloud-barista/cb-spider/cloud-info-manager"
+
 	"github.com/sirupsen/logrus"
 
 	"crypto/aes"
@@ -33,9 +35,6 @@ type CredentialInfo struct {
 	CredentialName   string          // ex) "credential01"
 	ProviderName     string          // ex) "AWS"
 	KeyValueInfoList []icbs.KeyValue // ex) { {ClientId, XXX},
-	//	 {ClientSecret, XXX},
-	//	 {TenantId, XXX},
-	//	 {SubscriptionId, XXX} }
 }
 
 //====================================================================
@@ -55,6 +54,10 @@ func RegisterCredential(credentialName string, providerName string, keyValueInfo
 		return nil, err
 
 	}
+
+	// trim user inputs
+        credentialName = strings.TrimSpace(credentialName)
+	providerName = strings.ToUpper(strings.TrimSpace(providerName))
 
 	cblog.Debug("insert metainfo into store")
 
@@ -126,12 +129,12 @@ func GetCredentialDecrypt(credentialName string) (*CredentialInfo, error) {
 }
 
 // @todo env by powerkim, 2020.06.01.
-var key = []byte("cloud-barista-cb-spider-cloud-ba") // 32 bytes
+var spider_key = []byte("cloud-barista-cb-spider-cloud-ba") // 32 bytes
 
 func encryptKeyValueList(keyValueInfoList []icbs.KeyValue) error {
 
         for i, kv := range keyValueInfoList {
-                encb, err := encrypt(key, []byte(kv.Value))
+                encb, err := encrypt(spider_key, []byte(kv.Value))
                 kv.Value = string(encb)
                 if err != nil {
                         return err
@@ -144,7 +147,7 @@ func encryptKeyValueList(keyValueInfoList []icbs.KeyValue) error {
 func decryptKeyValueList(keyValueInfoList []icbs.KeyValue) error {
 
 	for i, kv := range keyValueInfoList {
-		decb, err := decrypt(key, []byte(kv.Value))
+		decb, err := decrypt(spider_key, []byte(kv.Value))
 		kv.Value = string(decb)
 		if err != nil {
 			return err
@@ -154,41 +157,50 @@ func decryptKeyValueList(keyValueInfoList []icbs.KeyValue) error {
 	return nil	
 }
 
-func encrypt(key, text []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
+// encription with spider key
+func encrypt(spider_key, contents []byte) ([]byte, error) {
+
+	base64Encoding := base64.StdEncoding.EncodeToString(contents)
+	encryptData := make([]byte, aes.BlockSize+len(base64Encoding))
+	initVector := encryptData[:aes.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, initVector); err != nil {
+		return nil, err
+	}
+
+	cipherBlock, err := aes.NewCipher(spider_key)
 	if err != nil {
 		return nil, err
 	}
-	b := base64.StdEncoding.EncodeToString(text)
-	ciphertext := make([]byte, aes.BlockSize+len(b))
-	iv := ciphertext[:aes.BlockSize]
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		return nil, err
-	}
-	cfb := cipher.NewCFBEncrypter(block, iv)
-	cfb.XORKeyStream(ciphertext[aes.BlockSize:], []byte(b))
-	return ciphertext, nil
+	cipherTextFB := cipher.NewCFBEncrypter(cipherBlock, initVector)
+	cipherTextFB.XORKeyStream(encryptData[aes.BlockSize:], []byte(base64Encoding))
+
+	return encryptData, nil
 }
 
-func decrypt(key, text []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, err
-	}
-	if len(text) < aes.BlockSize {
-		err := fmt.Errorf("decryption: " + "ciphertext too short")
+// decryption with spider key
+func decrypt(spider_key, contents []byte) ([]byte, error) {
+
+	if len(contents) < aes.BlockSize {
+		err := fmt.Errorf("decryption: " + "contents too short")
 		cblog.Error(err)
 		return nil, err
 	}
-	iv := text[:aes.BlockSize]
-	text = text[aes.BlockSize:]
-	cfb := cipher.NewCFBDecrypter(block, iv)
-	cfb.XORKeyStream(text, text)
-	data, err := base64.StdEncoding.DecodeString(string(text))
+
+	cipherBlock, err := aes.NewCipher(spider_key)
 	if err != nil {
 		return nil, err
 	}
-	return data, nil
+
+	initVector := contents[:aes.BlockSize]
+	contents = contents[aes.BlockSize:]
+	cipherTextFB := cipher.NewCFBDecrypter(cipherBlock, initVector)
+	cipherTextFB.XORKeyStream(contents, contents)
+	decryptData, err := base64.StdEncoding.DecodeString(string(contents))
+
+	if err != nil {
+		return nil, err
+	}
+	return decryptData, nil
 }
 
 func UnRegisterCredential(credentialName string) (bool, error) {
@@ -216,10 +228,23 @@ func checkParams(credentialName string, providerName string, keyValueInfoList []
 	if providerName == "" {
 		return fmt.Errorf("ProviderName is empty!")
 	}
-	for _, kv := range keyValueInfoList {
-		if kv.Key == "" { // Value can be empty.
-			return fmt.Errorf("Key is empty!")
-		}
-	}
+	if keyValueInfoList == nil {
+                return fmt.Errorf("KeyValue List is nil!")
+        }
+
+	// get Provider's Meta Info
+        cloudOSMetaInfo, err := cim.GetCloudOSMetaInfo(providerName)
+        if err != nil {
+                cblog.Error(err)
+                return err
+        }
+
+        // validate the KeyValueList of Credential Input
+        err = cim.ValidateKeyValueList(keyValueInfoList, cloudOSMetaInfo.Credential)
+        if err != nil {
+                cblog.Error(err)
+                return err
+        }
+
 	return nil
 }

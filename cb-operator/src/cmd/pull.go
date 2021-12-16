@@ -16,26 +16,14 @@ var pullCmd = &cobra.Command{
 		fmt.Println("\n[Pull images of Cloud-Barista System containers]")
 		fmt.Println()
 
+		common.FileStr = common.GenConfigPath(common.FileStr, common.ModeDockerCompose)
+
 		if common.FileStr == "" {
 			fmt.Println("file is required")
 		} else {
 			common.FileStr = common.GenConfigPath(common.FileStr, common.CBOperatorMode)
-			/*
-							var configuration mcisReq
 
-				    		viper.SetConfigFile(fileStr)
-							if err := viper.ReadInConfig(); err != nil {
-							fmt.Printf("Error reading config file, %s", err)
-							}
-							err := viper.Unmarshal(&configuration)
-							if err != nil {
-							fmt.Printf("Unable to decode into struct, %v", err)
-							}
-
-							common.PrintJsonPretty(configuration)
-			*/
-
-			cmdStr := "sudo COMPOSE_PROJECT_NAME=cloud-barista docker-compose -f " + common.FileStr + " pull"
+			cmdStr := fmt.Sprintf("COMPOSE_PROJECT_NAME=%s docker-compose -f %s pull", common.CBComposeProjectName, common.FileStr)
 			//fmt.Println(cmdStr)
 			common.SysCall(cmdStr)
 		}

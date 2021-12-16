@@ -1,0 +1,1636 @@
+{{define "VmAssistPopup"}}
+<!-- 
+	assist 버튼 클릭시 나타날 popup 
+
+-->
+
+
+<script src="/assets/js/bootstrap-slider.min.js"></script>
+<script>
+
+	// 추가 수량
+	$(".spec_select_box .s_slider_box").each(function () {
+		var $Slider_list = $(this);
+		var $Slider_div = $Slider_list.find('.slider_bar');
+		var $Numinput = $Slider_list.find('.components_input');
+		var $btn_plus = $Slider_list.find('.btn_s_plus');
+		var $btn_minus = $Slider_list.find('.btn_s_minus');
+		var Slider_bar = $Slider_div.slider({
+			//min: 0, max: 10, step: 1, value: 0
+		});
+
+		// Initialise slider
+		$Slider_div.on("slide", function (slideEvt) {
+			$Numinput.val(slideEvt.value);
+		});
+
+		$Slider_div.change(function () {
+			$Numinput.val($(this).val());
+		});
+
+		// Allow input text to change slider on Blur or Enter
+		var minSliderValue = $Slider_div.data("slider-min");
+		var maxSliderValue = $Slider_div.data("slider-max");
+
+		// Blur input
+		$Numinput.on("blur", function () {
+			var val = Math.abs(parseInt(this.value, 10) || minSliderValue);
+			this.value = val > maxSliderValue ? maxSliderValue : val;
+			$Slider_div.slider('setValue', val);
+		});
+
+		// Enter clicked
+		$Numinput.keyup(function (e) {
+			if (e.which == 13) // Enter key
+				$(this).blur();
+		});
+
+		// Use buttons to increase/decrease
+		// Increase
+		$btn_plus.click(function () {
+			var val = Slider_bar.slider('getValue');
+			var step = Slider_bar.slider('getAttribute').step;
+			$Numinput.val(val + step);
+			Slider_bar.slider('setValue', val + step)
+		});
+		// Decrease
+		$btn_minus.click(function () {
+			var val = Slider_bar.slider('getValue');
+			var step = Slider_bar.slider('getAttribute').step;
+			$Numinput.val(val - step);
+			Slider_bar.slider('setValue', val - step)
+		});
+
+		$('.spec_select_box .btn_clear').click(function () {
+			$Slider_div.slider('refresh');
+			$Numinput.val(0);
+		});
+	});
+</script>
+
+<input type="hidden" id="assistSelectedIndex" />
+<!-- Assist Popup에서 table의 항목을 클릭했을 때 index를 저장. apply 클릭 시 해당 index의 값을 main으로 set 하기 위한 용도 -->
+
+<!-- Network Interface popup -->
+<div class="modal fade popup_CreateTabBox" id="Network_Interface" tabindex="-1" role="dialog" aria-hidden="true">
+
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+
+			<div class="modal-body">
+				<div class="pop-body">
+
+					<div class="pop-cont">
+						<div class="ifbox">
+							<div class="title">Nic – eth0</div>
+
+							<div class="if_ipbox">
+								<div class="ipbox ipbox1">
+									<ul>
+										<li>
+											<label><span class="ch">*</span>Name</label>
+											<select class="selectbox white pline sel_1">
+												<option value="1">Input / select Name</option>
+											</select>
+										</li>
+										<li>
+											<label>Description</label>
+											<textarea cols="" rows="" placeholder="Input Description" class="pline ta_1"
+												title=""></textarea>
+										</li>
+									</ul>
+								</div>
+								<div class="ipbox ipbox2">
+									<ul>
+										<li>
+											<label>Private IP</label>
+											<select class="selectbox white pline sel_1">
+												<option value="1">Input / select Name</option>
+											</select>
+										</li>
+										<li>
+											<label>Public IP</label>
+											<select class="selectbox white pline sel_1">
+												<option value="1">Select Zone Name</option>
+											</select>
+										</li>
+									</ul>
+								</div>
+							</div>
+
+							<div class="if_ipbox if_ipbox_2">
+								<div class="ipbox ipbox1">
+									<ul>
+										<li>
+											<label>Security Group</label>
+											<select class="selectbox white pline sel_1">
+												<option value="">Input / select Name</option>
+												{{ range $securityGroupItem := .SecurityGroupList}}
+												<option value="{{ $securityGroupItem.ID }}">[{{
+													$securityGroupItem.ConnectionName }}] {{ $securityGroupItem.Name }}
+													{{ $securityGroupItem.VNetID }}</option>
+												{{ end }}
+											</select>
+										</li>
+									</ul>
+								</div>
+								<div class="ipbox ipbox2">
+									<ul>
+										<li>
+											<label></label>
+											<input type="text" name="" value="" placeholder="" class="gray ip_1"
+												title="" readonly />
+										</li>
+									</ul>
+								</div>
+							</div>
+
+
+							<button class="btn_del" name="" value="">del</button>
+						</div>
+
+						<div class="ifbox">
+							<div class="title">Nic – eth1</div>
+
+
+							<button class="btn_del" name="" value="">del</button>
+						</div>
+					</div>
+
+				</div>
+
+				<div class="btnbox">
+					<div class="btn_right">
+						<button name="" value="" class="btn_ok btn_co btn_cr_g w135">Ok</button>
+						<button name="" value="" class="btn_cancel btn_co btn_cr_b w135"
+							data-dismiss="modal">Cancel</button>
+					</div>
+				</div>
+
+			</div>
+
+		</div>
+	</div>
+
+</div>
+<!-- //Network Interface popup -->
+
+<!-- Security edit popup -->
+<div class="modal fade popup_editBox" id="security_edit" tabindex="-1" role="dialog" aria-hidden="true">
+
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+
+			<div class="modal-body">
+				<div class="pop-body">
+
+					<div class="title_box">
+						<div class="title">Firewall RuleSet</div>
+					</div>
+
+					<div class="pop-cont">
+
+						<div class="toptxt topsel">
+							<select class="selectbox">
+								<option value="1">Direction</option>
+								<option value="2">IN</option>
+								<option value="3">OUT</option>
+							</select>
+						</div>
+
+						<!-- table scrollbar -->
+						<div class="dtbox scrollbar-inner">
+							<div class="dataTable dt_overlay">
+								<table cellpadding="0" cellspacing="0" border="1" summary="">
+									<!-- <colgroup>
+										<col width="17%">
+										<col width="17%">
+										<col width="17%">
+										<col width="17%">
+										<col width="">
+										<col width="100px">
+									</colgroup> -->
+									<thead>
+										<tr>
+											<th>Type</th>
+											<th>fromPort</th>
+											<th>toPort</th>
+											<th>toProtoco</th>
+											<th>direction</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td class="btn_mtd" data-th="Type">
+												<select class="selectbox white pline">
+													<option value="1">TCP</option>
+													<option value="2">UDP</option>
+												</select>
+												<span class="ov off"></span>
+											</td>
+											<td class="overlay hidden" data-th="fromPort">21</td>
+											<td class="overlay hidden" data-th="toProtocol">33</td>
+											<td class="overlay hidden td_left" data-th="toProtoco">TCP</td>
+											<td class="overlay hidden td_left" data-th="direction">
+												<select class="selectbox white pline">
+													<option value="2">IN</option>
+													<option value="3">OUT</option>
+												</select>
+											</td>
+											<td class="overlay hidden" data-th="">
+												<button class="btn btn_del" name="delInput" value="">del</button>
+											</td>
+										</tr>
+										<tr name="tr_Input">
+											<td class="btn_mtd" data-th="Type">
+												<select class="selectbox white pline">
+													<option value="1">TCP</option>
+													<option value="2">UDP</option>
+												</select>
+												<span class="ov off"></span>
+											</td>
+											<td class="overlay hidden" data-th="fromPort">21</td>
+											<td class="overlay hidden" data-th="toProtocol">33</td>
+											<td class="overlay hidden td_left" data-th="toProtoco">TCP</td>
+											<td class="overlay hidden td_left" data-th="direction">
+												<select class="selectbox white pline">
+													<option value="2">IN</option>
+													<option value="3">OUT</option>
+												</select>
+											</td>
+											<td class="overlay hidden" data-th="">
+												<button class="btn btn_add" value="" name="btn_add">add</button>
+												<button class="btn btn_del" name="delInput" value="">del</button>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<!-- //table scrollbar -->
+
+						<script>
+							//table row add
+							$(document).on("click", "button[name=btn_add]", function () {
+								var addStaffText =
+									'<tr class="ip" name="tr_Input">' +
+									'<td class="btn_mtd" data-th="Type">' +
+									'<select class="selectbox white pline">' +
+									'<option value="1">TCP</option>' +
+									'<option value="2">SSH</option>' +
+									'</select>' +
+									'</td>' +
+									'<td class="overlay" data-th="fromPort"><input type="text" name="" value="" placeholder="" class="pline" title="" /></td>' +
+									'<td class="overlay" data-th="toPort"><input type="text" name="" value="" placeholder="" class="pline" title="" /></td>' +
+									'<td class="overlay" data-th="toProtoco">' +
+									'<select class="selectbox white pline">' +
+									'<option value="1">TCP</option>' +
+									'<option value="2">UDP</option>' +
+									'</select>' +
+									'</td>' +
+									'<td class="overlay" data-th="description">' +
+									'<select class="selectbox white pline">' +
+									'<option value="1">in</option>' +
+									'<option value="2">out</option>' +
+									'</select>' +
+									'</td>' +
+									'<td class="overlay">' +
+									'<button class="btn btn_add" name="btn_add" value="">add</button>' +
+									'<button class="btn btn_del" name="delInput" value="">del</button>' +
+									'</td>' +
+									'</tr>';
+								var trHtml = $("tr[name=tr_Input]:last");
+								trHtml.after(addStaffText);
+								$('select').niceSelect();
+							});
+							$('.dataTable .btn.btn_add').on("click", function () {
+								trHtml.after(addStaffText);
+							});
+							$(document).on("click", "button[name=delInput]", function () {
+								var trHtml = $(this).parent().parent();
+								trHtml.remove();
+							});
+
+							$(document).on("click", "span[name=td_ov]", function () {
+								var trHtml = $(this).parent().parent();
+								trHtml.find(".btn_mtd").toggleClass("over");
+								trHtml.find(".overlay").toggleClass("hidden");
+							});
+						</script>
+
+						<div class="b_txt"><span class="ch">*</span> 방화벽 RuleSet에 추가할 서버를 정의하고 하단의 <span class="txt">“추가
+								적용” 버튼</span>을 클릭하여 서버 풀에 추가합니다.</div>
+					</div>
+
+				</div>
+
+				<div class="btnbox">
+					<div class="btn_right">
+						<button name="" value="" class="btn_apply btn_co btn_cr_g"><span>Apply</span></button>
+						<button name="" value="" class="btn_cancel btn_co btn_cr_b" data-dismiss="modal">Cancel</button>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+
+</div>
+<!-- //Security edit popup -->
+
+<!-- //Import Export popup -->
+<div class="modal fade popup_CreateTabBox" id="VmImportExport" tabindex="-1" role="dialog" aria-hidden="true">
+
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="servers_box">
+				<div class="title">Import</div>
+				<div class="switch">
+					<label><span class="ch">*</span>Import File</label>
+					<button onclick="openTextFile()">Open</button>
+				</div>
+
+				<div class="list">
+					<textarea cols="120" rows="10" placeholder="Input Description" class="pline ta_1"
+						id="fileContent"></textarea>
+				</div>
+			</div>
+
+			<div class="servers_box">
+				<div class="title">Export</div>
+				<div class="switch">
+					<label><span class="ch">*</span>Expert File</label>
+					<button class="btn_del" name="" onclick="saveVmInfoToFile()">Expert</button>
+				</div>
+				<div class="list">
+					<table>
+						<!-- <colgroup>
+							<col width="15%">
+							<col width="">
+						</colgroup> -->
+						<tr>
+							<td>
+								<table cellpadding="0" cellspacing="0" border="1" summary="" id="popVmList">
+									<thead>
+										<tr>
+											<th>ServerName </th>
+										</tr>
+									</thead>
+									<tbody>
+										{{range $vmIndex, $vmItem := .VMList}}
+										<tr onclick="exportVmScript('{{ $vmIndex }}')">
+											<td class="btn_mtd" data-th="Cloud Provide">
+												{{$vmItem.Name}}<span class="ov off"></span>
+
+												<input type="hidden" id="p_connectionName_{{ $vmIndex }}"
+													value="{{ $vmItem.ConnectionName }}">
+												<input type="hidden" id="p_description_{{ $vmIndex }}"
+													value="{{ $vmItem.Description }}">
+												<input type="hidden" id="p_imageId_{{ $vmIndex }}"
+													value="{{ $vmItem.ImageID }}">
+												<input type="hidden" id="p_label_{{ $vmIndex }}"
+													value="{{ $vmItem.Label }}">
+												<input type="hidden" id="p_name_{{ $vmIndex }}"
+													value="{{ $vmItem.Name }}">
+												<input type="hidden" id="p_securityGroupIds_{{ $vmIndex }}"
+													value="{{ $vmItem.SecurityGroupIDs }}">
+												<input type="hidden" id="p_specId_{{ $vmIndex }}"
+													value="{{ $vmItem.SpecID }}">
+												<input type="hidden" id="p_sshKeyId_{{ $vmIndex }}"
+													value="{{ $vmItem.SshKeyID }}">
+												<input type="hidden" id="p_subnetId_{{ $vmIndex }}"
+													value="{{ $vmItem.SubnetID }}">
+												<input type="hidden" id="p_vNetId_{{ $vmIndex }}"
+													value="{{ $vmItem.VNetID }}">
+
+												<input type="hidden" id="p_vmGroupSize_{{ $vmIndex }}" value="0">
+												<!-- VM은 Group단위로 만들지 않음. 처음 생성시 동일한 VM을 만들기 위한 변수 임 -->
+												<input type="hidden" id="p_vmUserAccount_{{ $vmIndex }}" value="">
+												<input type="hidden" id="p_vmUserPassword_{{ $vmIndex }}" value="">
+											</td>
+
+										</tr>
+										{{ end }}
+									</tbody>
+								</table>
+							</td>
+							<td>
+								<textarea cols="90%" rows="10" placeholder="Input Description" class="pline ta_1"
+									id="vmExportScript"></textarea>
+								<input type=hidden id="exportFileName">
+							</td>
+						</tr>
+					</table>
+
+				</div>
+			</div>
+
+			<div class="btnbox">
+				<div class="btn_right">
+					<!-- Apply를 클릭하면 VM이 추가 됨. Deploy해야 실제 생성요청들어감.-->
+					<button name="" value="" class="btn_cancel btn_co btn_cr_b w135" data-dismiss="modal"
+						onclick="saveVmInfoToFile()">Apply</button>
+					<button name="" value="" class="btn_cancel btn_co btn_cr_b w135" data-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</div>
+
+<!-- //Import Export popup -->
+
+<!-- Spec Assist popup setValueToFormObj('es_specList', 'tab_vmSpec', 'vmSpec', '{ { $vmSpecIndex } }', 'e_specId')-->
+<div class="modal fade popup_editBox" id="specAssist" tabindex="-1" role="dialog" aria-hidden="true">
+
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+
+			<div class="modal-body">
+				<div class="pop-body">
+
+					<div class="title_box">
+						<div class="title">CSP Spec List 1</div>
+					</div>
+
+					<div class="pop-cont">
+						<div class="spec_box">
+							<div class="toptxt search">
+								<label>Search</label>
+								<input type="submit" name="" class="btn_search_spec" title="" value=""
+									onclick="searchSpecsByRange('searchVmSpecAssistAtReg')" />
+								<ul>
+									<li class="reg_1">
+										<label class="assistLabel">Cloud Provider</label>
+										<select class="selectbox white pline w3" name="assistSpecProviderName"
+											id="assistSpecProviderName"
+											onchange="filterConnectionByProvider(this.value, 'assistSpecConnectionName')">
+											<option value="" selected>Select Cloud Provider</option>
+											{{ range $item := .CloudOSList}}
+											<option value="{{ $item }}">{{ $item }}</option>
+											{{ end }}
+											<option value="MOCK">MOCK</option> <!-- 임시로 MOCK 추가-->
+										</select>
+
+									</li>
+									<li class="reg_1">
+										<label class="assistLabel"></span>Connection Name</label>
+										<select class="selectbox white pline w3" name="assistSpecConnectionName"
+											id="assistSpecConnectionName">
+											<option value="" selected>Selected ConnectionName</option>
+										</select>
+									</li>
+								</ul>
+
+							</div>
+							<div class="s_box s_box_1">
+								<ul>
+
+									<li>
+										<label>Memory</label>
+										<div class="s_slider_box">
+											<input type="text" id="assist_num_memory_min"
+												name="assist_max_num_memory_min" value="0" placeholder="1"
+												class="components_input txt_ipbox" title="" disabled />
+											<div class="slider_ip">
+												<button class="btn_s btn_s_minus">-</button>
+												<div class="slider_bar">
+													<!-- <input type="text" name="" value="" placeholder=""
+														class="slider_bar" title="" data-slider-min="0"
+														data-slider-max="100" data-slider-step="1"
+														data-slider-value="1" /> -->
+												</div>
+												<button class="btn_s btn_s_plus">+</button>
+											</div>
+											<input type="text" id="assist_num_memory_max"
+												name="assist_max_num_memory_min" value="100" placeholder="1"
+												class="components_input txt_ipbox" title="" disabled />
+										</div>
+										<span class="stxt">TiB</span>
+									</li>
+
+									<!--									<li>-->
+									<!--										<label>Core</label>-->
+									<!--										<div class="s_slider_box">-->
+									<!--											<input type="text" id="assist_num_core_min" name="assist_num_core_min"-->
+									<!--												value="0" placeholder="0" class="components_input txt_ipbox" title=""-->
+									<!--												disabled />-->
+									<!--											<div class="slider_ip">-->
+									<!--												<button class="btn_s btn_s_minus">-</button>-->
+									<!--												<div class="slider_bar">-->
+									<!--												</div>-->
+									<!--												<button class="btn_s btn_s_plus">+</button>-->
+									<!--											</div>-->
+									<!--											<input type="text" id="assist_num_core_max" name="assist_num_core_max"-->
+									<!--												value="100" placeholder="0" class="components_input txt_ipbox" title=""-->
+									<!--												disabled />-->
+									<!--										</div>-->
+									<!--										<span class="stxt">Unit</span>-->
+									<!--									</li>-->
+
+								</ul>
+							</div>
+
+							<div class="s_box s_box_2">
+								<ul>
+									<li>
+										<label>vCPU</label>
+										<div class="s_slider_box">
+											<input type="text" id="assist_num_vCPU_min" name="assist_num_vCPU_min"
+												value="0" placeholder="0" class="components_input txt_ipbox" title=""
+												disabled />
+											<div class="slider_ip">
+												<button class="btn_s btn_s_minus">-</button>
+												<div class="slider_bar">
+													<!-- <input type="text" name="" value="" placeholder=""
+														class="slider_bar" title="" data-slider-min="0"
+														data-slider-max="10" data-slider-step="1"
+														data-slider-value="0" /> -->
+												</div>
+												<button class="btn_s btn_s_plus">+</button>
+											</div>
+											<input type="text" id="assist_num_vCPU_max" name="assist_num_vCPU_max"
+												value="100" placeholder="0" class="components_input txt_ipbox" title=""
+												disabled />
+										</div>
+										<span class="stxt">Unit</span>
+									</li>
+
+									<!--									<li>-->
+									<!--										<label>ebs bandwidth</label>-->
+									<!--										<div class="s_slider_box">-->
+									<!--											<input type="text" id="assist_ebs_bw_Mbps_min" name="assist_ebs_bw_Mbps_min"-->
+									<!--												value="0" placeholder="0" class="components_input txt_ipbox" title=""-->
+									<!--												disabled />-->
+									<!--											<div class="slider_ip">-->
+									<!--												<button class="btn_s btn_s_minus">-</button>-->
+									<!--												<div class="slider_bar">-->
+									<!--													&lt;!&ndash; <input type="text" name="" value="" placeholder=""-->
+									<!--														class="slider_bar" title="" data-slider-min="0"-->
+									<!--														data-slider-max="100" data-slider-step="1"-->
+									<!--														data-slider-value="0" /> &ndash;&gt;-->
+									<!--												</div>-->
+									<!--												<button class="btn_s btn_s_plus">+</button>-->
+									<!--											</div>-->
+									<!--											<input type="text" id="assist_ebs_bw_Mbps_max" name="assist_ebs_bw_Mbps_max"-->
+									<!--												value="100" placeholder="0" class="components_input txt_ipbox" title=""-->
+									<!--												disabled />-->
+									<!--										</div>-->
+									<!--										<span class="stxt">Mbps</span>-->
+									<!--									</li>-->
+
+								</ul>
+							</div>
+
+						</div>
+
+						<div class="toptxt">
+							<label>Spec List : <span id="assistSpecCount"></span></label>
+						</div>
+
+						<div class="top_info">
+							<ul>
+								<li>
+									<a href="javascript:void(0);">Filter</a>
+									<div class="infobox">
+										<div class="box">
+											<ul>
+												<li><a href="javascript:void(0);"
+														onclick="commonPromptOpen('RsFltSrvImgId', 'serverImageList')">Image
+														ID</a></li>
+												<li><a href="javascript:void(0);"
+														onclick="commonPromptOpen('RsFltSrvImgName', 'serverImageList')">Image
+														Name</a></li>
+											</ul>
+										</div>
+									</div>
+								</li>
+								<li>
+									<a href="javascript:void(0);">Sort</a>
+									<div class="infobox">
+										<div class="box">
+											<ul>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSpecList', 'Name')">Name</a></li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSpecList', 'Memory')">Memory</a>
+												</li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSpecList', 'VCPC Info')">VCPU
+														Info</a></li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSpecList', 'GPU')">GPU</a></li>
+											</ul>
+										</div>
+									</div>
+								</li>
+								<li><a href="javascript:void(0);"><img src="/assets/img/common/icon_question.png"
+											alt="" /></a>
+								</li>
+							</ul>
+						</div>
+
+						<!-- table scrollbar -->
+						<div class="dtbox scrollbar-inner">
+							<div class="dataTable dt_overlay">
+								<table cellpadding="0" cellspacing="0" summary="" id="popCloudConnection">
+									<!-- <colgroup><col width="35%"><col width="25%"><col width=""></colgroup> -->
+									<thead>
+										<tr>
+											<th>Name</th>
+											<th>Csp SpecName</th>
+											<th>Memory</th>
+											<th>VCPU Info</th>
+											<th>GPU</th>
+										</tr>
+									</thead>
+									<tbody id="assistSpecList">
+
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<!-- //table scrollbar -->
+
+					</div>
+
+				</div>
+
+				<div class="btnbox">
+					<div class="btn_right">
+						<button name="" value="" class="btn_apply btn_co btn_cr_g"
+							onclick="applyAssistValidCheck('vmSpecAssist');"><span>Apply</span></button>
+						<button name="" value="" class="btn_cancel btn_co btn_cr_b" data-dismiss="modal">cancel</button>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+
+</div>
+<!-- Spec Assist popup -->
+
+<!-- Image Assist popup setValueToFormObj('es_imageList', 'tab_vmImage', 'vmImage', '{ {$vmInageIndex} }', 'e_imageId') 팝업 닫히기 전에 호출해야함-->
+<div class="modal fade popup_editBox" id="imageAssist" tabindex="-1" role="dialog" aria-hidden="true">
+
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+
+			<div class="modal-body">
+				<div class="pop-body">
+
+					<div class="title_box">
+						<div class="title">CSP Image List</div>
+					</div>
+
+					<div class="pop-cont">
+						<div class="image_box">
+							<div class="toptxt search">
+								<label>Search</label>
+								<ul>
+									<li class="reg_1">
+										<label class="assistLabel">Cloud Provider</label>
+										<select class="selectbox white pline w3" name="AssistImageProviderName"
+											id="assistImageProviderName"
+											onchange="filterConnectionByProvider(this.value, 'assistImageConnectionName')">
+											<option value="" selected>Select Cloud Provider</option>
+											{{ range $item := .CloudOSList}}
+											<option value="{{ $item }}">{{ $item }}</option>
+											{{ end }}
+											<option value="MOCK">MOCK</option> <!-- 임시로 MOCK 추가-->
+										</select>
+
+									</li>
+									<li class="reg_1">
+										<label class="assistLabel"></span>Connection Name</label>
+										<select class="selectbox white pline w3" name="assistImageConnectionName"
+											id="assistImageConnectionName">
+											<option value="" selected>Selected ConnectionName</option>
+										</select>
+									</li>
+								</ul>
+							</div>
+							<div>
+								<input type="text" id="keywordAssistImage" placeholder="Input Keyword"
+									class="pline image"
+									onkeyup="searchAssistImageByEnter(event, 'searchVmImageAssistAtReg')" />
+								<input type="button" name="" class="btn_search_image" title="" value=""
+									onclick="searchVmImageByKeyword('searchVmImageAssistAtReg')" />
+							</div>
+							<div class="keyword_box" id="searchAssistImageKeywords">
+								<input type="submit" name="" class="btn_del_all" title="" value="필터 지우기"
+									onclick="delAllKeyword()" />
+							</div>
+						</div>
+
+						<div class="toptxt">
+							<label>Image List : <span id="assistVmImageCount"></span></label>
+						</div>
+
+
+
+						<div class="top_info">
+							<ul>
+								<li>
+									<a href="javascript:void(0);">Filter</a>
+									<div class="infobox">
+										<div class="box">
+											<ul>
+												<li><a href="javascript:void(0);"
+														onclick="commonPromptOpen('RsFltSrvImgId', 'serverImageList')">Image
+														ID</a></li>
+												<li><a href="javascript:void(0);"
+														onclick="commonPromptOpen('RsFltSrvImgName', 'serverImageList')">Image
+														Name</a></li>
+											</ul>
+										</div>
+									</div>
+								</li>
+								<li>
+									<a href="javascript:void(0);">Sort</a>
+									<div class="infobox">
+										<div class="box">
+											<ul>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSpecList', 'Name')">Name</a></li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSpecList', 'Status')">Status</a>
+												</li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSpecList', 'GuestOS')">GuestOS</a>
+												</li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSpecList', 'IID nameId')">IID
+														nameId</a></li>
+											</ul>
+										</div>
+									</div>
+								</li>
+								<li><a href="javascript:void(0);"><img src="/assets/img/common/icon_question.png"
+											alt="" /></a>
+								</li>
+							</ul>
+						</div>
+
+
+						<!-- table scrollbar -->
+						<div class="dtbox scrollbar-inner">
+							<div class="dataTable dt_overlay">
+								<table cellpadding="0" cellspacing="0" summary="" id="popAssistVmImageTable">
+									<!-- <colgroup><col width="35%"><col width="25%"><col width=""></colgroup> -->
+									<thead>
+										<tr>
+											<th>Name</th>
+											<th>CspImageName</th>
+											<th>CspImageId</th>
+										</tr>
+									</thead>
+									<tbody id="assistVmImageList">
+
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<!-- //table scrollbar -->
+
+					</div>
+
+				</div>
+
+				<div class="btnbox">
+					<div class="btn_right">
+						<button name="" value="" class="btn_apply btn_co btn_cr_g"
+							onclick="applyAssistValidCheck('vmImageAssist');"><span>Apply</span></button>
+						<button name="" value="" class="btn_cancel btn_co btn_cr_b" data-dismiss="modal">cancel</button>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+
+</div>
+<!-- Image Assist popup -->
+
+
+<!-- Image Assist popup : 없는 image 등록 시  -->
+<div class="modal fade popup_editBox" id="imageLookupAssist" tabindex="-1" role="dialog" aria-hidden="true">
+
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+
+			<div class="modal-body">
+				<div class="pop-body">
+
+					<div class="title_box">
+						<div class="title">CSP Image List</div>
+					</div>
+
+					<div class="pop-cont">
+						<div class="image_box">
+							<div class="toptxt search">
+								<label>Search</label>
+								<ul>
+									<li class="reg_1">
+										<label class="assistLabel">Cloud Provider</label>
+										<select class="selectbox white pline w3" name="AssistLookupImageProviderName"
+											id="assistLookupImageProviderName"
+											onchange="getConnectionListForSelectbox(this.value, 'assistLookupImageConnectionName')">
+											<option value="" selected>Select Cloud Provider</option>
+											{{ range $item := .CloudOSList}}
+											<option value="{{ $item }}">{{ $item }}</option>
+											{{ end }}
+											<option value="MOCK">MOCK</option> <!-- 임시로 MOCK 추가-->
+										</select>
+
+									</li>
+									<li class="reg_1">
+										<label class="assistLabel"></span>Connection Name</label>
+										<select class="selectbox white pline w3" name="assistLookupImageConnectionName"
+											id="assistLookupImageConnectionName"
+											onchange="clearLookupAssistImageList('assistLookupVmImageList')">
+											<option value="" selected>Selected ConnectionName</option>
+										</select>
+									</li>
+								</ul>
+							</div>
+							<div>
+								<input type="text" id="image_keyword" placeholder="Input Keyword" class="pline image"
+									onkeyup="displaySearchLookupImageKeywordwithEnter(event)" />
+								<input type="submit" name="" class="btn_search_image" title="" value=""
+									onclick="lookupVmImageList()" />
+							</div>
+							<div class="keyword_box">
+								<input type="submit" name="" class="btn_del_all" title="" value="필터 지우기"
+									onclick="delAllKeyword()" />
+							</div>
+						</div>
+
+						<div class="toptxt">
+							<button type="button" class="btn btn-sm btn-dark"
+								onclick="commonConfirmOpen('FetchImages')">Fetch Images</button>
+							<label>Image List : <span id="lookupVmImageCount"></span></label>
+						</div>
+
+
+
+						<div class="top_info">
+							<ul>
+								<li>
+									<a href="javascript:void(0);">Filter</a>
+									<div class="infobox">
+										<div class="box">
+											<ul>
+												<li><a href="javascript:void(0);"
+														onclick="commonPromptOpen('RsFltSrvImgId', 'popAssistVmImageTable')">Image
+														ID</a></li>
+												<li><a href="javascript:void(0);"
+														onclick="commonPromptOpen('RsFltSrvImgName', 'popAssistVmImageTable')">Image
+														Name</a></li>
+											</ul>
+										</div>
+									</div>
+								</li>
+								<li>
+									<a href="javascript:void(0);">Sort</a>
+									<div class="infobox">
+										<div class="box">
+											<ul>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistVmImageList', 'Name')">Name</a></li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistVmImageList', 'Status')">Status</a>
+												</li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistVmImageList', 'GuestOS')">GuestOS</a>
+												</li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistVmImageList', 'IID nameId')">IID
+														nameId</a></li>
+											</ul>
+										</div>
+									</div>
+								</li>
+								<li><a href="javascript:void(0);"><img src="/assets/img/common/icon_question.png"
+											alt="" /></a>
+								</li>
+							</ul>
+						</div>
+
+
+						<!-- table scrollbar -->
+						<div class="dtbox scrollbar-inner">
+							<div class="dataTable dt_overlay">
+								<table cellpadding="0" cellspacing="0" summary="" id="popAssistLookupVmImageTable">
+									<!-- <colgroup><col width="35%"><col width="25%"><col width=""></colgroup> -->
+									<thead>
+										<tr>
+											<th>Name</th>
+											<th>Status</th>
+											<th>GuestOS</th>
+											<th>IID nameId</th>
+											<th>IID systemId</th>
+										</tr>
+									</thead>
+									<tbody id="assistLookupVmImageList">
+
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<!-- //table scrollbar -->
+
+					</div>
+
+				</div>
+
+				<div class="btnbox">
+					<div class="btn_right">
+						<button name="" value="" class="btn_apply btn_co btn_cr_g"><span>Apply</span></button>
+						<button name="" value="" class="btn_cancel btn_co btn_cr_b" data-dismiss="modal">cancel</button>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+
+</div>
+<!-- Image Assist popup -->
+
+
+<!-- Spec Lookup Assist popup : 없는 spec 등록 시 -->
+<div class="modal fade popup_editBox" id="specLookupAssist" tabindex="-1" role="dialog" aria-hidden="true">
+
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+
+			<div class="modal-body">
+				<div class="pop-body">
+
+					<div class="title_box">
+						<div class="title">CSP Spec List</div>
+					</div>
+
+					<div class="pop-cont">
+
+						<div class="spec_box">
+							<div class="toptxt search">
+								<label>Search</label>
+								<input type="submit" name="" class="btn_search_spec" title="" value=""
+									onclick="lookupSpecList()" />
+								<ul>
+									<li class="reg_1">
+										<label class="assistLabel">Cloud Provider</label>
+										<select class="selectbox white pline w3" name="assistLookupSpecProviderName"
+											id="assistLookupSpecProviderName"
+											onchange="getConnectionListForSelectbox(this.value, 'assistLookupSpecConnectionName')">
+											<option value="" selected>Select Cloud Provider</option>
+											{{ range $item := .CloudOSList}}
+											<option value="{{ $item }}">{{ $item }}</option>
+											{{ end }}
+											<option value="MOCK">MOCK</option> <!-- 임시로 MOCK 추가-->
+										</select>
+
+									</li>
+									<li class="reg_1">
+										<label class="assistLabel"></span>Connection Name</label>
+										<select class="selectbox white pline w3" name="assistLookupSpecConnectionName"
+											id="assistLookupSpecConnectionName"
+											onchange="clearLookupAssistSpecList('assistLookupSpecList')">
+											<option value="" selected>Selected ConnectionName</option>
+										</select>
+									</li>
+								</ul>
+
+							</div>
+							<div class="s_box s_box_1">
+								<ul>
+									<li>
+										<label>Memory</label>
+										<div class="s_slider_box">
+											<input type="text" id="assistLookup_num_memory_min"
+												name="assistLookup_max_num_memory_min" value="0" placeholder="1"
+												class="components_input txt_ipbox" title="" disabled />
+											<div class="slider_ip">
+												<button class="btn_s btn_s_minus">-</button>
+												<div class="slider_bar">
+												</div>
+												<button class="btn_s btn_s_plus">+</button>
+											</div>
+											<input type="text" id="assistLookup_num_memory_max"
+												name="assistLookup_max_num_memory_min" value="100" placeholder="1"
+												class="components_input txt_ipbox" title="" disabled />
+										</div>
+										<span class="stxt">TiB</span>
+									</li>
+
+									<li>
+										<label>Core</label>
+										<div class="s_slider_box">
+											<input type="text" id="assistLookup_num_core_min" name="assist_num_core_min"
+												value="0" placeholder="0" class="components_input txt_ipbox" title=""
+												disabled />
+											<div class="slider_ip">
+												<button class="btn_s btn_s_minus">-</button>
+												<div class="slider_bar">
+												</div>
+												<button class="btn_s btn_s_plus">+</button>
+											</div>
+											<input type="text" id="assistLookup_num_core_max" name="assist_num_core_max"
+												value="100" placeholder="0" class="components_input txt_ipbox" title=""
+												disabled />
+										</div>
+										<span class="stxt">Unit</span>
+									</li>
+
+								</ul>
+							</div>
+
+							<div class="s_box s_box_2">
+								<ul>
+									<li>
+										<label>vCPU</label>
+										<div class="s_slider_box">
+											<input type="text" id="assistLookup_num_vCPU_min" name="assist_num_vCPU_min"
+												value="0" placeholder="0" class="components_input txt_ipbox" title=""
+												disabled />
+											<div class="slider_ip">
+												<button class="btn_s btn_s_minus">-</button>
+												<div class="slider_bar">
+
+												</div>
+												<button class="btn_s btn_s_plus">+</button>
+											</div>
+											<input type="text" id="assistLookup_num_vCPU_max" name="assist_num_vCPU_max"
+												value="100" placeholder="0" class="components_input txt_ipbox" title=""
+												disabled />
+										</div>
+										<span class="stxt">Unit</span>
+									</li>
+
+
+									<li>
+										<label>ebs bandwidth</label>
+										<div class="s_slider_box">
+											<input type="text" id="assistLookup_ebs_bw_Mbps_min"
+												name="assist_ebs_bw_Mbps_min" value="0" placeholder="0"
+												class="components_input txt_ipbox" title="" disabled />
+											<div class="slider_ip">
+												<button class="btn_s btn_s_minus">-</button>
+												<div class="slider_bar">
+
+												</div>
+												<button class="btn_s btn_s_plus">+</button>
+											</div>
+											<input type="text" id="assistLookup_ebs_bw_Mbps_max"
+												name="assist_ebs_bw_Mbps_max" value="100" placeholder="0"
+												class="components_input txt_ipbox" title="" disabled />
+										</div>
+										<span class="stxt">Mbps</span>
+									</li>
+
+								</ul>
+							</div>
+
+						</div>
+
+						<div class="toptxt">
+							<button type="button" class="btn btn-sm btn-dark"
+								onclick="commonConfirmOpen('FetchSpecs')">Fetch Specs</button>
+							<label>Spec List : <span id="lookupSpecCount"></span></label>
+						</div>
+
+
+						<div class="top_info">
+							<ul>
+								<li>
+									<a href="javascript:void(0);">Filter</a>
+									<div class="infobox">
+										<div class="box">
+											<ul>
+												<li><a href="javascript:void(0);"
+														onclick="commonPromptOpen('RsFltSrvImgId', 'serverImageList')">Image
+														ID</a></li>
+												<li><a href="javascript:void(0);"
+														onclick="commonPromptOpen('RsFltSrvImgName', 'serverImageList')">Image
+														Name</a></li>
+											</ul>
+										</div>
+									</div>
+								</li>
+								<li>
+									<a href="javascript:void(0);">Sort</a>
+									<div class="infobox">
+										<div class="box">
+											<ul>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSpecList', 'Name')">Region</a>
+												</li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSpecList', 'Name')">Name</a></li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSpecList', 'Memory')">Memory</a>
+												</li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSpecList', 'VCPC Info')">VCPC
+														Info</a></li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSpecList', 'GPU')">GPU</a></li>
+											</ul>
+										</div>
+									</div>
+								</li>
+							</ul>
+						</div>
+
+						<!-- table scrollbar -->
+						<div class="dtbox scrollbar-inner">
+							<div class="dataTable dt_overlay">
+								<table cellpadding="0" cellspacing="0" summary="" id="popLookupSpec">
+									<!-- <colgroup><col width="35%"><col width="25%"><col width=""></colgroup> -->
+									<thead>
+										<tr>
+											<th>Region</th>
+											<th>Name</th>
+											<th>Memory</th>
+											<th>VCPC Info</th>
+											<th>GPU</th>
+										</tr>
+									</thead>
+									<tbody id="assistLookupSpecList">
+
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<!-- //table scrollbar -->
+
+					</div>
+
+				</div>
+
+				<div class="btnbox">
+					<div class="btn_right">
+						<button name="" value="" class="btn_apply btn_co btn_cr_g"><span>Apply</span></button>
+						<button name="" value="" class="btn_cancel btn_co btn_cr_b" data-dismiss="modal">cancel</button>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+
+</div>
+<!-- Spec Lookup Assist popup -->
+
+<!-- Network Assist popup setVnetValueToFormObj('es_vNetList', 'tab_vNet', '{ {$vNetItem.ID} }','vNet', '{ {$vNetIndex} }', 'e_vNetId')-->
+<div class="modal fade popup_editBox" id="networkAssist" tabindex="-1" role="dialog" aria-hidden="true">
+
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+
+			<div class="modal-body">
+				<div class="pop-body">
+
+					<div class="title_box">
+						<div class="title">Network List</div>
+					</div>
+
+					<div class="pop-cont">
+						<div class="search_box">
+							<div class="toptxt search">
+								<label>Search</label>
+								<ul>
+									<li class="reg_1">
+										<label class="assistLabel">Cloud Provider</label>
+										<select class="selectbox white pline w3" name="AssistNetworkProviderName"
+											id="assistNetworkProviderName"
+											onchange="getConnectionListForSelectbox(this.value, 'assistNetworkConnectionName')">
+											<option value="" selected>Select Cloud Provider</option>
+											{{ range $item := .CloudOSList}}
+											<option value="{{ $item }}">{{ $item }}</option>
+											{{ end }}
+										</select>
+
+									</li>
+									<li class="reg_1">
+										<label class="assistLabel"></span>Connection Name</label>
+										<select class="selectbox white pline w3" name="assistNetworkConnectionName"
+											id="assistNetworkConnectionName">
+											<option value="" selected>Selected ConnectionName</option>
+										</select>
+									</li>
+								</ul>
+							</div>
+							<div>
+								<input type="text" id="keywordAssistNetwork" placeholder="Input Keyword"
+									class="pline image"
+									onkeyup="searchAssistNetworkByEnter(event, 'searchNetworkAssistAtReg')" />
+								<input type="button" name="" class="btn_search_image" title="" value=""
+									onclick="searchNetworkByKeyword('searchNetworkAssistAtReg')" />
+							</div>
+							<div class="keyword_box" id="searchAssistNetworkKeywords">
+								<input type="submit" name="" class="btn_del_all" title="" value="필터 지우기"
+									onclick="delAllKeyword()" />
+							</div>
+
+						</div>
+						<div class="top_info">
+							<ul>
+								<li>
+									<a href="javascript:void(0);">Filter</a>
+									<div class="infobox">
+										<div class="box">
+											<ul>
+												<li><a href="javascript:void(0);"
+														onclick="commonPromptOpen('AssistVnetName', 'serverImageList')">Image
+														ID</a></li>
+												<li><a href="javascript:void(0);"
+														onclick="commonPromptOpen('AssistVnetName', 'serverImageList')">Image
+														Name</a></li>
+											</ul>
+										</div>
+									</div>
+								</li>
+								<li>
+									<a href="javascript:void(0);">Sort</a>
+									<div class="infobox">
+										<div class="box">
+											<ul>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistVnetList', 'Name')">Name</a></li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistVnetList', 'Status')">Status</a>
+												</li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistVnetList', 'GuestOS')">GuestOS</a>
+												</li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistVnetList', 'IID nameId')">IID
+														nameId</a></li>
+											</ul>
+										</div>
+									</div>
+								</li>
+								<li><a href="javascript:void(0);"><img src="/assets/img/common/icon_question.png"
+											alt="" /></a>
+								</li>
+							</ul>
+						</div>
+
+
+						<!-- table scrollbar -->
+						<div class="dtbox scrollbar-inner">
+							<div class="dataTable dt_overlay">
+								<table cellpadding="0" cellspacing="0" summary="" id="popAssistVnetTable">
+									<!-- <colgroup><col width="35%"><col width="25%"><col width=""></colgroup> -->
+									<thead>
+										<tr>
+											<th>Name</th>
+											<th>CIDR Block</th>
+											<th>Subnet Name</th>
+											<th>Description</th>
+										</tr>
+									</thead>
+									<tbody id="assistVnetList">
+
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<!-- //table scrollbar -->
+
+					</div>
+
+				</div>
+
+				<div class="btnbox">
+					<div class="btn_right">
+						<button name="" value="" class="btn_apply btn_co btn_cr_g"
+							onclick="applyAssistValidCheck('networkAssist');"><span>Apply</span></button>
+						<button name="" value="" class="btn_cancel btn_co btn_cr_b" data-dismiss="modal">cancel</button>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+
+</div>
+<!-- Network Assist popup -->
+
+<!-- Security Assist popup setValueToFormObj('e_securityGroupList', 'tab_securityGroupInfo', 'securityGroup', '{ {$securityGroupIndex} }', 'e_securityGroupIds') -->
+<div class="modal fade popup_editBox" id="securityGroupAssist" tabindex="-1" role="dialog" aria-hidden="true">
+
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+
+			<div class="modal-body">
+				<div class="pop-body">
+
+					<div class="title_box">
+						<div class="title">Security Group List</div>
+					</div>
+
+					<div class="pop-cont">
+						<div class="search_box">
+							<div class="toptxt search">
+								<label>Search</label>
+								<ul>
+									<li class="reg_1">
+										<label class="assistLabel">Cloud Provider</label>
+										<select class="selectbox white pline w3" name="assistSecurityGroupProviderName"
+											id="assistSecurityGroupProviderName"
+											onchange="filterConnectionByProvider(this.value, 'assistSecurityGroupConnectionName')">
+											<option value="" selected>Select Cloud Provider</option>
+											{{ range $item := .CloudOSList}}
+											<option value="{{ $item }}">{{ $item }}</option>
+											{{ end }}
+											<option value="MOCK">MOCK</option> <!-- 임시로 MOCK 추가-->
+										</select>
+
+									</li>
+									<li class="reg_1">
+										<label class="assistLabel"></span>Connection Name</label>
+										<select class="selectbox white pline w3"
+											name="assistSecurityGroupConnectionName"
+											id="assistSecurityGroupConnectionName">
+											<option value="" selected>Selected ConnectionName</option>
+										</select>
+									</li>
+								</ul>
+							</div>
+
+							<div>
+								<input type="text" id="keywordAssistSecurityGroup" placeholder="Input Keyword"
+									class="pline image"
+									onkeyup="searchAssistSecurityGroupByEnter(event, 'searchSecurityGroupAssistAtReg')" />
+								<input type="button" name="" class="btn_search_image" title="" value=""
+									onclick="searchSecurityGroupByKeyword('searchSecurityGroupAssistAtReg')" />
+							</div>
+						</div>
+						<div class="keyword_box" id="searchAssistSecurityGroupKeywords">
+							<input type="submit" name="" class="btn_del_all" title="" value="필터 지우기"
+								onclick="delAllKeyword()" />
+						</div>
+
+						<div class="top_info">
+							<ul>
+								<li>
+									<a href="javascript:void(0);">Filter</a>
+									<div class="infobox">
+										<div class="box">
+											<ul>
+												<li><a href="javascript:void(0);"
+														onclick="commonPromptOpen('RsFltSrvImgId', 'serverImageList')">Image
+														ID</a></li>
+												<li><a href="javascript:void(0);"
+														onclick="commonPromptOpen('RsFltSrvImgName', 'serverImageList')">Image
+														Name</a></li>
+											</ul>
+										</div>
+									</div>
+								</li>
+								<li>
+									<a href="javascript:void(0);">Sort</a>
+									<div class="infobox">
+										<div class="box">
+											<ul>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSecurityGroupList', 'Name')">Name</a>
+												</li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSecurityGroupList', 'Status')">Status</a>
+												</li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSecurityGroupList', 'GuestOS')">GuestOS</a>
+												</li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSecurityGroupList', 'IID nameId')">IID
+														nameId</a></li>
+											</ul>
+										</div>
+									</div>
+								</li>
+								<li><a href="javascript:void(0);"><img src="/assets/img/common/icon_question.png"
+											alt="" /></a>
+								</li>
+							</ul>
+						</div>
+						<!-- table scrollbar -->
+						<div class="dtbox scrollbar-inner">
+							<div class="dataTable dt_overlay">
+								<table cellpadding="0" cellspacing="0" summary="" id="popAssistSecurityGroupTable">
+									<!-- <colgroup><col width="35%"><col width="25%"><col width=""></colgroup> -->
+									<thead>
+										<tr>
+											<th>Name</th>
+											<th>VPC Id</th>
+											<th>Description</th>
+											<th>Firewall RuleSet</th>
+										</tr>
+									</thead>
+									<tbody id="assistSecurityGroupList">
+
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<!-- //table scrollbar -->
+
+					</div>
+				</div>
+				<div class="btnbox">
+					<div class="btn_right">
+						<button name="" value="" class="btn_apply btn_co btn_cr_g"
+							onclick="applyAssistValidCheck('securityGroupAssist')"><span>Apply</span></button>
+						<button name="" value="" class="btn_cancel btn_co btn_cr_b" data-dismiss="modal">cancel</button>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+
+</div>
+<!-- Security Assist popup -->
+
+<!-- SSH Assist popup setValueToFormObj('es_sshKeyList', 'tab_sshKey', 'sshKey', '{ {$sshKeyIndex} }', 'e_sshKeyId')-->
+<div class="modal fade popup_editBox" id="sshKeyAssist" tabindex="-1" role="dialog" aria-hidden="true">
+
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+
+			<div class="modal-body">
+				<div class="pop-body">
+
+					<div class="title_box">
+						<div class="title">SSH Key List</div>
+					</div>
+
+					<div class="pop-cont">
+						<div class="search_box">
+							<div class="toptxt search">
+								<label>Search</label>
+								<ul>
+									<li class="reg_1">
+										<label class="assistLabel">Cloud Provider</label>
+										<select class="selectbox white pline w3" name="assistSshKeyProviderName"
+											id="assistSshKeyProviderName"
+											onchange="filterConnectionByProvider(this.value, 'assistSshKeyConnectionName')">
+											<option value="" selected>Select Cloud Provider</option>
+											{{ range $item := .CloudOSList}}
+											<option value="{{ $item }}">{{ $item }}</option>
+											{{ end }}
+											<option value="MOCK">MOCK</option> <!-- 임시로 MOCK 추가-->
+										</select>
+
+									</li>
+									<li class="reg_1">
+										<label class="assistLabel"></span>Connection Name</label>
+										<select class="selectbox white pline w3" name="assistSshKeyConnectionName"
+											id="assistSshKeyConnectionName">
+											<option value="" selected>Selected ConnectionName</option>
+										</select>
+									</li>
+								</ul>
+							</div>
+
+							<div>
+								<input type="text" id="keywordAssistSshKey" placeholder="Input Keyword"
+									class="pline image"
+									onkeyup="searchAssistSshKeyByEnter(event, 'searchSshKeyAssistAtReg')" />
+								<input type="button" name="" class="btn_search_image" title="" value=""
+									onclick="searchSshKeyByKeyword('searchSshKeyAssistAtReg')" />
+							</div>
+							<div class="keyword_box" id="searchAssistSshKeyKeywords">
+								<input type="submit" name="" class="btn_del_all" title="" value="필터 지우기"
+									onclick="delAllKeyword()" />
+							</div>
+						</div>
+						<div class="top_info">
+							<ul>
+								<li>
+									<a href="javascript:void(0);">Filter</a>
+									<div class="infobox">
+										<div class="box">
+											<ul>
+												<li><a href="javascript:void(0);"
+														onclick="commonPromptOpen('RsFltSrvImgId', 'serverImageList')">Image
+														ID</a></li>
+												<li><a href="javascript:void(0);"
+														onclick="commonPromptOpen('RsFltSrvImgName', 'serverImageList')">Image
+														Name</a></li>
+											</ul>
+										</div>
+									</div>
+								</li>
+								<li>
+									<a href="javascript:void(0);">Sort</a>
+									<div class="infobox">
+										<div class="box">
+											<ul>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSecurityGroupList', 'Name')">Name</a>
+												</li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSecurityGroupList', 'Status')">Status</a>
+												</li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSecurityGroupList', 'GuestOS')">GuestOS</a>
+												</li>
+												<li><a href="javascript:void(0);"
+														onclick="tableSort('assistSecurityGroupList', 'IID nameId')">IID
+														nameId</a></li>
+											</ul>
+										</div>
+									</div>
+								</li>
+								<li><a href="javascript:void(0);"><img src="/assets/img/common/icon_question.png"
+											alt="" /></a>
+								</li>
+							</ul>
+						</div>
+
+						<!-- table scrollbar -->
+						<div class="dtbox scrollbar-inner">
+							<div class="dataTable dt_overlay">
+								<table cellpadding="0" cellspacing="0" summary="" id="popAssistSshKeyTable">
+									<!-- <colgroup><col width="35%"><col width="25%"><col width=""></colgroup> -->
+									<thead>
+										<tr>
+											<th>Key Name</th>
+											<th>Connection Name</th>
+											<th>Description</th>
+										</tr>
+									</thead>
+									<tbody id="assistSshKeyList">
+
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<!-- //table scrollbar -->
+
+					</div>
+
+				</div>
+
+				<div class="btnbox">
+					<div class="btn_right">
+						<button name="" value="" class="btn_apply btn_co btn_cr_g"
+							onclick="applyAssistValidCheck('sshKeyAssist');"><span>Apply</span></button>
+						<button name="" value="" class="btn_cancel btn_co btn_cr_b" data-dismiss="modal">cancel</button>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+
+</div>
+<!-- SSH Assist popup -->
+
+<script src="/assets/js/jquery-ui.min.js"></script>
+<script src="/assets/js/operation/manages/mcismng/vmassistpopup.js"></script>
+
+<script>
+
+	$(function () {
+		$(".spec_box .s_slider_box").each(function () {
+			var $Slider_list = $(this);
+			var $Slider_div = $Slider_list.find('.slider_bar');
+			var $min_input = $Slider_list.find("[id$='min']");
+			var $max_input = $Slider_list.find("[id$='max']");
+			var $btn_plus = $Slider_list.find('.btn_s_plus');
+			var $btn_minus = $Slider_list.find('.btn_s_minus');
+			$Slider_div.slider({
+				range: true,
+				min: 0,
+				max: 100,
+				step: 1,
+				values: [0, 100],
+				slide: function (event, ui) {
+					$min_input.val(ui.values[0].toString());
+					$max_input.val(ui.values[1].toString());
+				}
+			});
+		})
+	})
+
+
+</script>
+
+
+{{end}}

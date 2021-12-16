@@ -214,7 +214,7 @@ function addWorkNode(){
     //$("#aa").css("display", "block");
     // console.log($("#mcks_Worker_list").html())
 
-    $("#workerAddCount_" + addWorkerIndex).text(addWorkerIndex);
+    $("#workerAddCount_" + addWorkerIndex).text( (addWorkerIndex + 1 ));
     }catch(e){
         console.log(e);
     }

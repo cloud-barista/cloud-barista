@@ -10,44 +10,35 @@ import (
 
 type Config struct {
 	InfluxDB       InfluxDB
-	CollectManager CollectManager
-	APIServer      APIServer
-	Monitoring     Monitoring
 	Kapacitor      Kapacitor
 	Kafka          Kafka
-	GrpcServer     GrpcServer
-}
-
-type Kapacitor struct {
-	EndpointUrl string `json:"endpoint_url" mapstructure:"endpoint_url"`
-}
-
-type Kafka struct {
-	EndpointUrl         string `json:"endpoint_url" mapstructure:"endpoint_url"`
-	ExternalIP          string `json:"external_ip" mapstructure:"external_ip"`
-	DeployType          string `json:"deploy_type" mapstructure:"deploy_type"`
-	HelmExternalPort    int    `json:"helm_external_port" mapstructure:"helm_external_port"`
-	ComposeExternalPort int    `json:"compose_external_port" mapstructure:"compose_external_port"`
-	InternalPort        int    `json:"internal_port" mapstructure:"internal_port"`
+	Dragonfly      Dragonfly
+	Monitoring     Monitoring
 }
 
 type InfluxDB struct {
 	EndpointUrl             string `json:"endpoint_url" mapstructure:"endpoint_url"`
-	InternalPort            int    `json:"internal_port" mapstructure:"internal_port"`
-	ExternalPort            int    `json:"external_port" mapstructure:"external_port"`
+	HelmPort                int    `json:"helm_port" mapstructure:"helm_port"`
 	Database                string
 	UserName                string `json:"user_name" mapstructure:"user_name"`
 	Password                string
 	RetentionPolicyDuration string `json:"rpDuration" mapstructure:"rpDuration"`
 }
 
-type CollectManager struct {
-	CollectorIP       string `json:"collector_ip" mapstructure:"collector_ip"`
-	CollectorGroupCnt int    `json:"collectorGroup_count" mapstructure:"collector_group_count"`
+type Kapacitor struct {
+	EndpointUrl string `json:"endpoint_url" mapstructure:"endpoint_url"`
+	HelmPort  int    `json:"helm_port" mapstructure:"helm_port"`
 }
 
-type APIServer struct {
-	Port int
+type Kafka struct {
+	EndpointUrl string `json:"endpoint_url" mapstructure:"endpoint_url"`
+	HelmPort    int    `json:"helm_port" mapstructure:"helm_port"`
+}
+
+type Dragonfly struct {
+	DragonflyIP string `json:"dragonfly_ip" mapstructure:"dragonfly_ip"`
+	Port int `json:"port" mapstructure:"port"`
+	HelmPort int `json:"helm_port" mapstructure:"helm_port"`
 }
 
 type Monitoring struct {
@@ -59,18 +50,7 @@ type Monitoring struct {
 	PullerInterval          int    `json:"puller_interval" mapstructure:"puller_interval"`       // 모니터링 puller 실행 주기
 	PullerAggregateInterval int    `json:"puller_aggregate_interval" mapstructure:"puller_aggregate_interval"`
 	AggregateType           string `json:"aggregate_type" mapstructure:"aggregate_type"`
-}
-
-type GrpcServer struct {
-	Port int
-}
-
-func (kapacitor Kapacitor) GetKapacitorEndpointUrl() string {
-	return kapacitor.EndpointUrl
-}
-
-func (kafka Kafka) GetKafkaEndpointUrl() string {
-	return kafka.EndpointUrl
+	DeployType              string `json:"deploy_type" mapstructure:"deploy_type"`
 }
 
 var once sync.Once
@@ -95,22 +75,6 @@ func (config *Config) SetMonConfig(newMonConfig Monitoring) {
 
 func (config *Config) GetMonConfig() Monitoring {
 	return config.Monitoring
-}
-
-func (config *Config) GetInfluxDBConfig() InfluxDB {
-	return config.InfluxDB
-}
-
-func (config *Config) GetKapacitorConfig() Kapacitor {
-	return config.Kapacitor
-}
-
-func (config *Config) GetKafkaConfig() Kafka {
-	return config.Kafka
-}
-
-func (config *Config) GetGrpcConfig() GrpcServer {
-	return config.GrpcServer
 }
 
 func loadConfigFromYAML(config *Config) {

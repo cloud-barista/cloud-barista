@@ -1,3 +1,17 @@
+/*
+Copyright 2019 The Cloud-Barista Authors.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+// Package mcis is to handle REST API for mcis
 package mcis
 
 import (
@@ -12,11 +26,11 @@ import (
 // RestPostMcisPolicy godoc
 // @Summary Create MCIS Automation policy
 // @Description Create MCIS Automation policy
-// @Tags [MCIS] Auto control policy management (WIP)
+// @Tags [Infra service] MCIS Auto control policy management (WIP)
 // @Accept  json
 // @Produce  json
-// @Param nsId path string true "Namespace ID"
-// @Param mcisId path string true "MCIS ID"
+// @Param nsId path string true "Namespace ID" default(ns01)
+// @Param mcisId path string true "MCIS ID" default(mcis01)
 // @Param mcisInfo body mcis.McisPolicyInfo true "Details for an MCIS object"
 // @Success 200 {object} mcis.McisPolicyInfo
 // @Failure 404 {object} common.SimpleMsg
@@ -44,11 +58,11 @@ func RestPostMcisPolicy(c echo.Context) error {
 // RestGetMcisPolicy godoc
 // @Summary Get MCIS Policy
 // @Description Get MCIS Policy
-// @Tags [MCIS] Auto control policy management (WIP)
+// @Tags [Infra service] MCIS Auto control policy management (WIP)
 // @Accept  json
 // @Produce  json
-// @Param nsId path string true "Namespace ID"
-// @Param mcisId path string true "MCIS ID"
+// @Param nsId path string true "Namespace ID" default(ns01)
+// @Param mcisId path string true "MCIS ID" default(mcis01)
 // @Success 200 {object} mcis.McisPolicyInfo
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
@@ -83,10 +97,10 @@ type RestGetAllMcisPolicyResponse struct {
 // RestGetAllMcisPolicy godoc
 // @Summary List all MCIS policies
 // @Description List all MCIS policies
-// @Tags [MCIS] Auto control policy management (WIP)
+// @Tags [Infra service] MCIS Auto control policy management (WIP)
 // @Accept  json
 // @Produce  json
-// @Param nsId path string true "Namespace ID"
+// @Param nsId path string true "Namespace ID" default(ns01)
 // @Success 200 {object} RestGetAllMcisPolicyResponse
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
@@ -116,7 +130,7 @@ func RestGetAllMcisPolicy(c echo.Context) error {
 // RestPutMcisPolicy godoc
 // @Summary Update MCIS Policy
 // @Description Update MCIS Policy
-// @Tags [MCIS] Auto control policy management (WIP)
+// @Tags [Infra service] MCIS Auto control policy management (WIP)
 // @Accept  json
 // @Produce  json
 // @Param mcisInfo body McisPolicyInfo true "Details for an MCIS Policy object"
@@ -132,11 +146,11 @@ func RestPutMcisPolicy(c echo.Context) error {
 // DelMcisPolicy godoc
 // @Summary Delete MCIS Policy
 // @Description Delete MCIS Policy
-// @Tags [MCIS] Auto control policy management (WIP)
+// @Tags [Infra service] MCIS Auto control policy management (WIP)
 // @Accept  json
 // @Produce  json
-// @Param nsId path string true "Namespace ID"
-// @Param mcisId path string true "MCIS ID"
+// @Param nsId path string true "Namespace ID" default(ns01)
+// @Param mcisId path string true "MCIS ID" default(mcis01)
 // @Success 200 {object} common.SimpleMsg
 // @Failure 404 {object} common.SimpleMsg
 // @Router /ns/{nsId}/policy/mcis/{mcisId} [delete]
@@ -152,17 +166,17 @@ func RestDelMcisPolicy(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, &mapA)
 	}
 
-	mapA := map[string]string{"message": "Deleting the MCIS Policy info"}
+	mapA := map[string]string{"message": "Deleted the MCIS Policy info"}
 	return c.JSON(http.StatusOK, &mapA)
 }
 
 // RestDelAllMcisPolicy godoc
 // @Summary Delete all MCIS policies
 // @Description Delete all MCIS policies
-// @Tags [MCIS] Auto control policy management (WIP)
+// @Tags [Infra service] MCIS Auto control policy management (WIP)
 // @Accept  json
 // @Produce  json
-// @Param nsId path string true "Namespace ID"
+// @Param nsId path string true "Namespace ID" default(ns01)
 // @Success 200 {object} common.SimpleMsg
 // @Failure 404 {object} common.SimpleMsg
 // @Router /ns/{nsId}/policy/mcis [delete]

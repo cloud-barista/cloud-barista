@@ -176,7 +176,7 @@ func SetupAndRun(cmd *cobra.Command, args []string) {
 		case "create":
 			result, err = ccm.CreateImage(inData)
 		case "list":
-			result, err = ccm.ListImage(connectionName)
+			result, err = ccm.ListImageByParam(connectionName)
 		case "get":
 			result, err = ccm.GetImageByParam(connectionName, imageName)
 		case "delete":
@@ -213,6 +213,10 @@ func SetupAndRun(cmd *cobra.Command, args []string) {
 			result, err = ccm.RemoveSubnetByParam(connectionName, vpcName, subnetName, force)
 		case "removecsp-subnet":
 			result, err = ccm.RemoveCSPSubnetByParam(connectionName, vpcName, cspID)
+		case "register":
+			result, err = ccm.RegisterVPC(inData)
+		case "unregister":
+			result, err = ccm.UnregisterVPCByParam(connectionName, vpcName)
 		}
 	case "security":
 		switch cmd.Name() {
@@ -228,6 +232,10 @@ func SetupAndRun(cmd *cobra.Command, args []string) {
 			result, err = ccm.ListAllSecurityByParam(connectionName)
 		case "deletecsp":
 			result, err = ccm.DeleteCSPSecurityByParam(connectionName, cspID)
+		case "register":
+			result, err = ccm.RegisterSecurity(inData)
+		case "unregister":
+			result, err = ccm.UnregisterSecurityByParam(connectionName, securityName)
 		}
 	case "keypair":
 		switch cmd.Name() {
@@ -243,13 +251,21 @@ func SetupAndRun(cmd *cobra.Command, args []string) {
 			result, err = ccm.ListAllKeyByParam(connectionName)
 		case "deletecsp":
 			result, err = ccm.DeleteCSPKeyByParam(connectionName, cspID)
+		case "register":
+			result, err = ccm.RegisterKey(inData)
+		case "unregister":
+			result, err = ccm.UnregisterKeyByParam(connectionName, keypairName)
 		}
 	case "vm":
 		switch cmd.Name() {
 		case "start":
 			result, err = ccm.StartVM(inData)
-		case "control":
-			result, err = ccm.ControlVMByParam(connectionName, vmName, action)
+		case "suspend":
+			result, err = ccm.ControlVMByParam(connectionName, vmName, "suspend")
+		case "resume":
+			result, err = ccm.ControlVMByParam(connectionName, vmName, "resume")
+		case "reboot":
+			result, err = ccm.ControlVMByParam(connectionName, vmName, "reboot")
 		case "liststatus":
 			result, err = ccm.ListVMStatusByParam(connectionName)
 		case "getstatus":
@@ -264,6 +280,10 @@ func SetupAndRun(cmd *cobra.Command, args []string) {
 			result, err = ccm.ListAllVMByParam(connectionName)
 		case "terminatecsp":
 			result, err = ccm.TerminateCSPVMByParam(connectionName, cspID)
+		case "register":
+			result, err = ccm.RegisterVM(inData)
+		case "unregister":
+			result, err = ccm.UnregisterVMByParam(connectionName, vmName)
 		}
 	case "ssh":
 		switch cmd.Name() {

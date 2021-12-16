@@ -14,14 +14,17 @@ import (
 	model "github.com/cloud-barista/cb-webtool/src/model"
 	// "github.com/cloud-barista/cb-webtool/src/model/spider"
 	"github.com/cloud-barista/cb-webtool/src/model/dragonfly"
-	"github.com/cloud-barista/cb-webtool/src/model/tumblebug"
+	// "github.com/cloud-barista/cb-webtool/src/model/tumblebug"
+	// tbcommon "github.com/cloud-barista/cb-webtool/src/model/tumblebug/common"
+	// tbmcir "github.com/cloud-barista/cb-webtool/src/model/tumblebug/mcir"
+	tbmcis "github.com/cloud-barista/cb-webtool/src/model/tumblebug/mcis"
 
 	util "github.com/cloud-barista/cb-webtool/src/util"
 )
 
 // VM 에 모니터링 Agent 설치
 ///ns/{nsId}/monitoring/install/mcis/{mcisId}
-func RegBenchmarkAgentInVm(nameSpaceID string, mcisID string, vmMonitoringAgentReg *tumblebug.McisCmdReq) (*tumblebug.VmMonitoringAgentInfo, model.WebStatus) {
+func RegBenchmarkAgentInVm(nameSpaceID string, mcisID string, vmMonitoringAgentReg *tbmcis.McisCmdReq) (*tbmcis.AgentInstallContentWrapper, model.WebStatus) {
 	fmt.Println("RegBenchmarkAgentInVm ************ : ")
 	var originalUrl = "/ns/{nsId}/monitoring/install/mcis/{mcisId}"
 
@@ -37,7 +40,7 @@ func RegBenchmarkAgentInVm(nameSpaceID string, mcisID string, vmMonitoringAgentR
 	fmt.Println(string(pbytes))
 	resp, err := util.CommonHttp(url, pbytes, http.MethodPost)
 
-	vmMonitoringAgentInfo := tumblebug.VmMonitoringAgentInfo{}
+	vmMonitoringAgentInfo := tbmcis.AgentInstallContentWrapper{}
 	if err != nil {
 		fmt.Println(err)
 		return &vmMonitoringAgentInfo, model.WebStatus{StatusCode: 500, Message: err.Error()}
@@ -63,7 +66,8 @@ func RegBenchmarkAgentInVm(nameSpaceID string, mcisID string, vmMonitoringAgentR
 
 func RegMonitoringAgentInVm(nameSpaceID string, mcisID string, vmMonitoringAgentReg *dragonfly.VmMonitoringInstallReg) (*model.WebStatus, model.WebStatus) {
 	fmt.Println("RegMonitoringAgentInVm ************ : ")
-	var originalUrl = "/agent/install"
+	//var originalUrl = "/agent/install"
+	var originalUrl = "/agent"
 	urlParam := util.MappingUrlParameter(originalUrl, nil)
 
 	// Command  string `json:"command"`
@@ -93,9 +97,11 @@ func RegMonitoringAgentInVm(nameSpaceID string, mcisID string, vmMonitoringAgent
 	if convertErr != nil {
 		log.Println(convertErr)
 	}
-
+	//vmMonitoringInstallReg
 	fmt.Println(urlValues)
-	resp, err := util.CommonHttpFormData(url, urlValues, http.MethodPost)
+	//resp, err := util.CommonHttpFormData(url, urlValues, http.MethodPost)
+	pbytes, _ := json.Marshal(vmMonitoringAgentReg)
+	resp, err := util.CommonHttp(url, pbytes, http.MethodPost)
 
 	webStatus := model.WebStatus{}
 	if err != nil {
@@ -120,7 +126,7 @@ func RegMonitoringAgentInVm(nameSpaceID string, mcisID string, vmMonitoringAgent
 }
 
 // Get Monitoring Data
-func GetVmMonitoringInfoData(nameSpaceID string, mcisID string, metric string) (*tumblebug.VmMonitoringAgentInfo, model.WebStatus) {
+func GetVmMonitoringInfoData(nameSpaceID string, mcisID string, metric string) (*tbmcis.MonResultSimpleResponse, model.WebStatus) {
 	var originalUrl = "/ns/{nsId}/monitoring/mcis/{mcisId}/metric/{metric}"
 
 	var paramMapper = make(map[string]string)
@@ -135,25 +141,26 @@ func GetVmMonitoringInfoData(nameSpaceID string, mcisID string, metric string) (
 	resp, err := util.CommonHttpWithoutParam(url, http.MethodGet)
 
 	// defer body.Close()
-	vmMonitoringAgentInfo := tumblebug.VmMonitoringAgentInfo{}
+	vmMonitoringResult := tbmcis.MonResultSimpleResponse{}
 	if err != nil {
 		fmt.Println(err)
-		return &vmMonitoringAgentInfo, model.WebStatus{StatusCode: 500, Message: err.Error()}
+		return &vmMonitoringResult, model.WebStatus{StatusCode: 500, Message: err.Error()}
 	}
 
 	respBody := resp.Body
 	respStatus := resp.StatusCode
 
-	json.NewDecoder(respBody).Decode(&vmMonitoringAgentInfo)
-	fmt.Println(vmMonitoringAgentInfo)
+	json.NewDecoder(respBody).Decode(&vmMonitoringResult)
+	fmt.Println(vmMonitoringResult)
 
-	return &vmMonitoringAgentInfo, model.WebStatus{StatusCode: respStatus}
+	return &vmMonitoringResult, model.WebStatus{StatusCode: respStatus}
 }
 
 // VM monitoring
 // Get vm monitoring info
 // 멀티 클라우드 인프라 VM 모니터링 정보 조회
-func GetVmMonitoring(vmMonitoring *dragonfly.VmMonitoring) (*dragonfly.VmMonitoringInfo, model.WebStatus) {
+func GetVmMonitoring(vmMonitoring *dragonfly.VmMonitoring) (map[string]interface{}, model.WebStatus) {
+	//func GetVmMonitoring(vmMonitoring *dragonfly.VmMonitoring) (*dragonfly.VmMonitoringInfo, model.WebStatus) {
 	nameSpaceID := vmMonitoring.NameSpaceID
 	mcisID := vmMonitoring.McisID
 	vmID := vmMonitoring.VmID
@@ -184,20 +191,48 @@ func GetVmMonitoring(vmMonitoring *dragonfly.VmMonitoring) (*dragonfly.VmMonitor
 	resp, err := util.CommonHttpWithoutParam(url, http.MethodGet)
 
 	// defer body.Close()
-	vmMonitoringInfo := dragonfly.VmMonitoringInfo{}
+	//vmMonitoringInfo := dragonfly.VmMonitoringInfo{}
+	vmMonitoringInfo := make(map[string]interface{})
 	if err != nil {
 		fmt.Println(err)
-		return &vmMonitoringInfo, model.WebStatus{StatusCode: 500, Message: err.Error()}
+		return vmMonitoringInfo, model.WebStatus{StatusCode: 500, Message: err.Error()}
 	}
 	// util.DisplayResponse(resp) // 수신내용 확인
 
 	respBody := resp.Body
 	respStatus := resp.StatusCode
 
-	json.NewDecoder(respBody).Decode(&vmMonitoringInfo)
-	fmt.Println(vmMonitoringInfo)
+	if metric == "cpu" {
+		vmMonitoringInfoByCpu := dragonfly.VmMonitoringInfoByCpu{}
+		json.NewDecoder(respBody).Decode(&vmMonitoringInfoByCpu)
 
-	return &vmMonitoringInfo, model.WebStatus{StatusCode: respStatus}
+		//vmMonitoringInfo.ValuesByCpu = vmMonitoringInfoByCpu
+		vmMonitoringInfo[metric] = vmMonitoringInfoByCpu
+	} else if metric == "memory" {
+		vmMonitoringInfoByMemory := dragonfly.VmMonitoringInfoByMemory{}
+		json.NewDecoder(respBody).Decode(&vmMonitoringInfoByMemory)
+
+		//vmMonitoringInfo.ValuesByMemory = vmMonitoringInfoByMemory
+		vmMonitoringInfo[metric] = vmMonitoringInfoByMemory
+	} else if metric == "disk" {
+		vmMonitoringInfoByDisk := dragonfly.VmMonitoringInfoByDisk{}
+		json.NewDecoder(respBody).Decode(&vmMonitoringInfoByDisk)
+
+		//vmMonitoringInfo.ValuesByDisk = vmMonitoringInfoByDisk
+		vmMonitoringInfo[metric] = vmMonitoringInfoByDisk
+	} else if metric == "network" {
+		vmMonitoringInfoByNetwork := dragonfly.VmMonitoringInfoByNetwork{}
+		json.NewDecoder(respBody).Decode(&vmMonitoringInfoByNetwork)
+
+		//vmMonitoringInfo.ValuesByNetwork = vmMonitoringInfoByNetwork
+		vmMonitoringInfo[metric] = vmMonitoringInfoByNetwork
+	}
+
+	//json.NewDecoder(respBody).Decode(&vmMonitoringInfo)
+	//fmt.Println(vmMonitoringInfo)
+
+	//return &vmMonitoringInfo, model.WebStatus{StatusCode: respStatus}
+	return vmMonitoringInfo, model.WebStatus{StatusCode: respStatus}
 }
 
 // 멀티 클라우드 인프라 VM 온디맨드 모니터링 정보 조회
@@ -325,17 +360,19 @@ func PutMonigoringConfig(monitoringConfigReg *dragonfly.MonitoringConfigReg) (*d
 
 	fmt.Println("Update MonigoringConfigReg : ", url)
 
-	fmt.Println(monitoringConfigReg)
-
+	//fmt.Println(monitoringConfigReg)
+	//
 	urlValues, convertErr := util.StructToMapByJson(monitoringConfigReg)
 	if convertErr != nil {
 		log.Println(convertErr)
 	}
 
 	fmt.Println(urlValues)
-	resp, err := util.CommonHttpFormData(url, urlValues, http.MethodPut)
-	// resp, err := util.CommonHttp(url, pbytes, http.MethodPut)
+	//resp, err := util.CommonHttpFormData(url, urlValues, http.MethodPut)
+	pbytes, _ := json.Marshal(monitoringConfigReg)
+	resp, err := util.CommonHttp(url, pbytes, http.MethodPut)
 	resultMonitoringConfig := dragonfly.MonitoringConfig{}
+
 	if err != nil {
 		log.Println("-----")
 		fmt.Println(err)
@@ -404,6 +441,7 @@ func ResetMonigoringConfig(monitoringConfig *dragonfly.MonitoringConfig) (*drago
 // Install agent to vm
 // 모니터링 에이전트 설치 : 위에 RegMonitoringAgentInVm 와 뭐가 다른거지?
 func InstallAgentToVm(nameSpaceID string, vmMonitoringInstallReg *dragonfly.VmMonitoringInstallReg) (*dragonfly.VmMonitoringInstallReg, model.WebStatus) {
+	//var originalUrl = "/agent/install"
 	var originalUrl = "/agent/install"
 	//{{ip}}:{{port}}/dragonfly/agent/install
 	urlParam := util.MappingUrlParameter(originalUrl, nil)
@@ -442,7 +480,8 @@ func InstallAgentToVm(nameSpaceID string, vmMonitoringInstallReg *dragonfly.VmMo
 // 모니터링 에이전트 제거
 // Uninstall agent to vm
 func UnInstallAgentToVm(nameSpaceID string, vmMonitoringInstallReg *dragonfly.VmMonitoringInstallReg) (*dragonfly.VmMonitoringInstallReg, model.WebStatus) {
-	var originalUrl = "/agent/uninstall"
+	//var originalUrl = "/agent/uninstall"
+	var originalUrl = "/agent"
 	//{{ip}}:{{port}}/dragonfly/agent/uninstall
 	urlParam := util.MappingUrlParameter(originalUrl, nil)
 
@@ -549,17 +588,17 @@ func RegMonitoringAlert(vmMonitoringAlertInfo *dragonfly.VmMonitoringAlertInfo) 
 	url := util.DRAGONFLY + urlParam
 	// url := util.DRAGONFLY + "/alert/task"
 
-	// pbytes, _ := json.Marshal(vmMonitoringAlertInfo)
-	// fmt.Println(string(pbytes))
-	// resp, err := util.CommonHttp(url, pbytes, http.MethodPost)
+	pbytes, _ := json.Marshal(vmMonitoringAlertInfo)
+	fmt.Println(string(pbytes))
+	resp, err := util.CommonHttp(url, pbytes, http.MethodPost)
 
-	urlValues, convertErr := util.StructToMapByJson(vmMonitoringAlertInfo)
-	if convertErr != nil {
-		log.Println(convertErr)
-	}
-
-	fmt.Println(urlValues)
-	resp, err := util.CommonHttpFormData(url, urlValues, http.MethodPost)
+	//urlValues, convertErr := util.StructToMapByJson(vmMonitoringAlertInfo)
+	//if convertErr != nil {
+	//	log.Println(convertErr)
+	//}
+	//
+	//fmt.Println(urlValues)
+	//resp, err := util.CommonHttpFormData(url, urlValues, http.MethodPost)
 
 	resultVmMonitoringAlertInfo := dragonfly.VmMonitoringAlertInfo{}
 	if err != nil {
@@ -721,17 +760,17 @@ func RegMonitoringAlertEventHandler(vmMonitoringAlertEventHandlerInfoReg *dragon
 	url := util.DRAGONFLY + urlParam
 	// url := util.DRAGONFLY + "/alert/eventhandler"
 
-	// pbytes, _ := json.Marshal(vmMonitoringAlertEventHandlerInfoReg)
-	// fmt.Println(string(pbytes))
-	// resp, err := util.CommonHttp(url, pbytes, http.MethodPost)
+	pbytes, _ := json.Marshal(vmMonitoringAlertEventHandlerInfoReg)
+	fmt.Println(string(pbytes))
+	resp, err := util.CommonHttp(url, pbytes, http.MethodPost)
 
-	urlValues, convertErr := util.StructToMapByJson(vmMonitoringAlertEventHandlerInfoReg)
-	if convertErr != nil {
-		log.Println(convertErr)
-	}
-
-	fmt.Println(urlValues)
-	resp, err := util.CommonHttpFormData(url, urlValues, http.MethodPost)
+	//urlValues, convertErr := util.StructToMapByJson(vmMonitoringAlertEventHandlerInfoReg)
+	//if convertErr != nil {
+	//	log.Println(convertErr)
+	//}
+	//
+	//fmt.Println(urlValues)
+	//resp, err := util.CommonHttpFormData(url, urlValues, http.MethodPost)
 
 	resultVmMonitoringAlertEventHandlerInfoReg := dragonfly.VmMonitoringAlertEventHandlerInfoReg{}
 	if err != nil {
@@ -884,10 +923,11 @@ func GetMonitoringAlertLogList(taskName string, logLevel string) ([]dragonfly.Vm
 	paramMapper[":task_name"] = taskName
 	paramMapper["{logLevel}"] = logLevel
 	urlParam := util.MappingUrlParameter(originalUrl, paramMapper)
-
+	//
 	url := util.DRAGONFLY + urlParam
-	resp, err := util.CommonHttpFormData(url, nil, http.MethodGet)
-	// resp, err := util.CommonHttp(url, nil, http.MethodGet)
+
+	//resp, err := util.CommonHttpFormData(url, nil, http.MethodGet)
+	resp, err := util.CommonHttp(url, nil, http.MethodGet)
 
 	if err != nil {
 		fmt.Println(err)

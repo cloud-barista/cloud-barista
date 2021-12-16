@@ -26,7 +26,9 @@
 | --- |   |   |   |
 | cb-tumblebug | http://{{host}}:1323/tumblebug | http://{{host}}:8000/tumblebug | http://{{host}}:50252  |
 | --- |   |   |   |
-| cb-ladybug | http://{{host}}:8080/ladybug | http://{{host}}:8000/ladybug  |   |
+| cb-mcks | http://{{host}}:1470/mcks | http://{{host}}:8000/mcks  |   |
+| --- |   |   |   |
+| cb-ladybug | http://{{host}}:1592/ladybug | http://{{host}}:8000/ladybug  |   |
 | --- |   |   |   |
 | cb-dragonfly | http://{{host}}:9090/dragonfly | http://{{host}}:8000/dragonfly | http://{{host}}:9999<!--8094/udp-->  |
 

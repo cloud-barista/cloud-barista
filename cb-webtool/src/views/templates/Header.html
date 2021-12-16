@@ -1,67 +1,316 @@
 {{define "Header"}}
-<div id="contents">
-			
-	<!-- container -->
-	<div id="container">
+<script type="text/javascript">
+  var lastCallTime = "0"; // 호출하면 호출시간을 return하여 해당시간 이후Data만 가져오도록
+  var messageData = "";//받아온 Data
+  var loc = window.location;
+  var uri = "ws:";
+  var ws;
+  if (loc.protocol === "https:") {
+    uri = "wss:";
+  }
+  uri += "//" + loc.host;
+  uri += "/ws/websocketdata"; // Gorilla websocket
 
-	<!-- header -->
-	<div class="header">
-			<div class="logo"><img src="/assets/img/common/img_logo.png" alt="Cloud Barista"/></div>
-			
-			<a href="javascript:;" id="btn_menu"><span></span></a>
-			<input type="hidden" id="returnMessage" value='{{ .Message }}'/>
-			<input type="hidden" id="returnStatusCode" value='{{ .Status }}'/>
-				
-			<div class="topmenu">
-				<ul>
-					<li class="logout">
-						<a href="javascript:void(0);" data-toggle="modal" data-target="#logout" onClick="commonConfirmOpen('Logout')">
-							<img src="/assets/img/common/icon_logout.png" alt=""/> Logout</a>
-					</li>
-					<!-- <li class="add">
+  ws = new WebSocket(uri);
+
+  // websocket open
+  ws.onopen = (event) => {
+    console.log("Connected");
+    let sendData = { event: "open" };
+    // 현재날짜 -2시간 이후의 data만 가져온다.
+    ws.send(JSON.stringify(sendData));
+    console.log(event);
+  };
+  // websocket req :
+  var interval = setInterval(function () {
+    getWebsocketData();
+  }, 30000); // 30초마다
+
+  // websocket message response
+  ws.onmessage = (event) => {
+    console.log(event.data);
+    let recData = JSON.parse(event.data);
+    console.log("recData.event= " + recData.event);
+    console.log(recData);
+
+    switch (recData.event) {
+      case "res":
+        var out = document.getElementById("callTime");
+        lastCallTime = recData.callTime;
+        messageData = recData.message;
+        console.log(recData);
+        break;
+      default:
+        // var out = document.getElementById('callTime');
+        // out.innerHTML += recData;
+        $("#callTime").empty();
+        $("#callTime").append("<br> by res open");
+        console.log(recData);
+        break;
+    }
+  };
+
+  // websocket close : page 이동, 브라우저가 닫히는 경우 close로 해당 websocket를 닫아준다.
+  window.addEventListener("beforeunload", function (e) {
+    let sendData = { event: "close" };
+    ws.send(JSON.stringify(sendData));
+    console.log("beforeunload");
+    console.log(sendData);
+  });
+  ws.onclose = function () {
+    console.log("Closed");
+  };
+
+  // 웹소켓 data 조회
+  function getWebsocketData() {
+    let sendData = { event: "req", callTime: "" + lastCallTime };
+    // sequence 를 받아 최종 sequence 보다 큰 것들만 가져온다.
+    ws.send(JSON.stringify(sendData));
+  }
+
+  // 반복 중단
+  function stopInterval() {
+    clearInterval(interval);
+  }
+
+  function setCallTime(lastCallTime) {
+    var out = document.getElementById("callTime");
+    out.innerHTML = lastCallTime;
+  }
+
+  // 날짜(data)를 넘기면 yyyymmddhh24miss 형태로 반환
+  function yyyymmddhh24miss(d) {
+    function pad(n) { return n < 10 ? "0" + n : n }
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds())
+  }
+
+</script>
+<div id="contents">
+  <!-- container -->
+  <div id="container">
+    <!-- header -->
+    <div class="header">
+
+
+      <a href="javascript:;" id="btn_menu"><span></span></a>
+      <input type="hidden" id="returnMessage" value="{{ .Message }}" />
+      <input type="hidden" id="returnStatusCode" value="{{ .Status }}" />
+
+      <div class="topmenu">
+        <ul>
+          <li class="logout">
+            <a href="javascript:void(0);" data-toggle="modal" data-target="#logout"
+              onClick="commonConfirmOpen('Logout')">
+              <img src="/assets/img/common/icon_logout.png" alt="" /> Logout</a>
+          </li>
+          <!-- <li class="add">
 						<img src="/assets/img/common/icon_add.png" alt=""/>
 						<div class="infobox">
 							<div class="box box_txt">See you in the next release !</div>
 						</div>
 					</li> -->
-					<li class="notice">
-						<img src="/assets/img/common/icon_notice.png" alt=""/>
-						<div class="infobox">
-							<div class="box box_txt">See you in the next release !</div>
-						</div>
-					</li>
-					<!-- <li class="email">
+          <li class="notice">
+            <img src="/assets/img/common/icon_notice.png" alt="" />
+            <span class="badge badge-icon" id="badge"></span>
+            <div class="infobox">
+              <!-- <div class="box box_txt">See you in the next release !</div> -->
+              <div class="notice_table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+                      <th>Type</th>
+                      <th id="thDescription">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody id="callTime">
+                    <script>
+                      var previous = "0";
+                      var badgeIdx = 0;
+                      var maxProcessTime = new Date("0").valueOf();
+                      let lastCallTimeValue = new Date(lastCallTime / 1000).valueOf();
+                      var out = document.getElementById("callTime");
+                      var badge = document.getElementById("badge");
+                      setInterval(function () {
+                        // console.log("lastcalltime:", lastCallTime);
+                        // console.log("lastcalltimevalue:", lastCallTimeValue);
+                        // console.log(messageData);
+
+                        var maxIdx = 0;
+                        if (messageData.length === 0) { return; } //메세지 없음
+
+                        console.log("append data")
+                        for (idx in messageData) {
+                          let processTime = new Date(messageData[idx].processTime).valueOf();
+                          if (maxProcessTime < processTime) {
+                            maxProcessTime = new Date(messageData[idx].processTime).valueOf();
+                            maxIdx = idx;
+                          }
+                          console.log("compare time ::: " + lastCallTimeValue + " : " + processTime);
+                          if (processTime > lastCallTimeValue) {
+                            var tr = document.createElement("tr");
+                            var th = document.createElement("th");
+                            var tdType = document.createElement("td");
+                            var tdDescription = document.createElement("td");
+                            tdDescription.setAttribute("id", "tdDescription");
+                            out.appendChild(tr);
+                            tr.appendChild(th);
+                            tr.appendChild(tdType);
+                            tr.appendChild(tdDescription);
+                            th.innerHTML = yyyymmddhh24miss(new Date(messageData[idx].processTime))
+                            tdType.innerHTML = messageData[idx].taskType;
+                            var splited = messageData[idx].taskKey.split("||");
+                            var splitedIdx = splited.length - 1;
+                            tdDescription.innerHTML = splited[splitedIdx] + " " + messageData[idx].lifeCycle + " " + messageData[idx].status;
+
+                            // 처음 open시에는 badge표시 안함
+                            if (lastCallTimeValue == 0) { continue; }
+
+                            badge.innerHTML = ++badgeIdx;
+                            badge.style.display = "inline-block";
+                          }
+
+
+                        };
+                        //td.innerHTML = valueString
+                        // var valueString = messageData.taskType + " : " + messageData.lifeCycle + " : " + messageData.status
+                        // valueString += "<br> taskKey : " + messageData.taskKey
+                        // valueString += "<br> " + messageData.processTime
+                        // td.innerHTML = valueString
+                        lastCallTimeValue = new Date(messageData[maxIdx].processTime).valueOf();
+                        messageData = "";
+
+
+
+                      }, 1000);
+                    </script>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </li>
+          <!-- <li class="email">
 						<img src="/assets/img/common/icon_email.png" alt=""/><span>7</span>
 						<div class="infobox">
 							<div class="box box_txt">See you in the next release !</div>
 						</div>
 					</li> -->
-					<li class="setting">
-						<a href="javascript:void(0);"><img src="/assets/img/common/icon_setting.png" alt=""/></a>
-						<div class="infobox">
-							<div class="box">
-								<p>Cloud Setting</p>
-								<ul>
-									<li><a href="javascript:void(0);" data-toggle="modal" data-target="#Connection" onClick="commonConfirmOpen('MoveToConnection')">[Cloud] Connection</a></li>
-								</ul>
-							</div>
-						</div>
-					</li>
-					<li class="question">
-						<a href="javascript:void(0);" onclick="showHelp()">
-							<img src="/assets/img/common/icon_question.png" alt="Api call test"/>
-						</a>
-					</li>
-				</ul>
-			</div>
-			
-		</div>
-		<!-- //header -->
+          <li class="setting">
+            <a href="javascript:void(0);"><img src="/assets/img/common/icon_setting.png" alt="" /></a>
+            <div class="infobox">
+              <div class="box">
+                <p>Cloud Setting</p>
+                <ul>
+                  <li>
+                    <a href="javascript:void(0);" data-toggle="modal" data-target="#Connection"
+                      onClick="commonConfirmOpen('MoveToConnection')">[Cloud] Connection</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </li>
+          <li class="question">
+            <a href="javascript:void(0);" onclick="showHelp()">
+              <img src="/assets/img/common/icon_question.png" alt="Api call test" />
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- //header -->
 
-		<!-- Loading bar -->
-		<div class="loading-container" id="loadingContainer" tabindex="-1" style="display:none">
-			<div class="loading"></div>
-			<div id="loading-text" >loading</div>
-		</div>
-		<!-- // Loading bar -->
-{{end}}
+    <!-- Loading bar -->
+    <div class="loading-container" id="loadingContainer" tabindex="-1" style="display: none">
+      <div class="loading"></div>
+      <div id="loading-text">loading</div>
+    </div>
+    <!-- // Loading bar -->
+    <!-- Loading bar -->
+    <div class="loading-container" id="Ajax_Loading" tabindex="-1" style="display: none">
+      <div class="loading"></div>
+      <div>loading</div>
+    </div>
+    <!-- // Loading bar -->
+
+    <!-- <script type="text/javascript">
+      var lastCallTime = "0"; // 호출하면 호출시간을 return하여 해당시간 이후Data만 가져오도록
+      var loc = window.location;
+      var uri = "ws:";
+      var ws;
+      if (loc.protocol === "https:") {
+        uri = "wss:";
+      }
+      uri += "//" + loc.host;
+      uri += "/ws/websocketdata"; // Gorilla websocket
+
+      ws = new WebSocket(uri);
+
+      // websocket open
+      ws.onopen = (event) => {
+        console.log("Connected");
+        let sendData = { event: "open" };
+        // 현재날짜 -2시간 이후의 data만 가져온다.
+        ws.send(JSON.stringify(sendData));
+        console.log(event);
+      };
+      // websocket req :
+      var interval = setInterval(function () {
+        getWebsocketData();
+      }, 5000); // 30초마다
+
+      // websocket message response
+      ws.onmessage = (event) => {
+        console.log(event.data);
+        let recData = JSON.parse(event.data);
+        console.log("recData.event= " + recData.event);
+        console.log(recData);
+
+        switch (recData.event) {
+          case "res":
+            var out = document.getElementById("callTime");
+            var jsonStr = JSON.stringify(recData);
+            lastCallTime = recData.callTime;
+            out.value += lastCallTime;
+            console.log(recData);
+            break;
+          default:
+            // var out = document.getElementById('callTime');
+            // out.innerHTML += recData;
+            $("#callTime").empty();
+            $("#callTime").append("<br> by res open");
+            console.log(recData);
+            break;
+        }
+      };
+
+      // websocket close : page 이동, 브라우저가 닫히는 경우 close로 해당 websocket를 닫아준다.
+      window.addEventListener("beforeunload", function (e) {
+        let sendData = { event: "close" };
+        ws.send(JSON.stringify(sendData));
+        console.log("beforeunload");
+        console.log(sendData);
+      });
+      ws.onclose = function () {
+        console.log("Closed");
+      };
+
+      // 웹소켓 data 조회
+      function getWebsocketData() {
+        let sendData = { event: "req", callTime: "" + lastCallTime };
+        // sequence 를 받아 최종 sequence 보다 큰 것들만 가져온다.
+        ws.send(JSON.stringify(sendData));
+      }
+
+      // 반복 중단
+      function stopInterval() {
+        clearInterval(interval);
+      }
+
+      function setCallTime(lastCallTime) {
+        var out = document.getElementById("callTime");
+        out.innerHTML = lastCallTime;
+      }
+    </script> -->
+    {{end}}
+  </div>
+</div>

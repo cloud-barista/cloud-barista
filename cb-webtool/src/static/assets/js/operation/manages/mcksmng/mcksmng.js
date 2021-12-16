@@ -61,7 +61,8 @@ function showServerListAndStatusArea(uid, mcksIndex){
             var nodeID = $("#mcksNodeUID_" + thisMcksIndex + "_" + nodeIndexOfMcks).val();
             var nodeName = $("#mcksNodeName_" + thisMcksIndex + "_" + nodeIndexOfMcks).val();
                 
-            nodeStatusIcon ="bgbox_g"
+            //nodeStatusIcon ="bgbox_g"
+            nodeStatusIcon = "bgbox_b"
             // node 목록 표시
             mcksNodes += '<li class="sel_cr ' + nodeStatusIcon + '"><a href="javascript:void(0);" onclick="nodeDetailInfo(\''+thisMcksIndex+'\',\''+nodeIndexOfMcks+'\')"><span class="txt">'+nodeName+'</span></a></li>';
         }
@@ -126,7 +127,6 @@ function deleteMCKS(){
             // 여러개를 지울 때 호출하는 함수를 만들어 여기에서 호출
         }else{
             console.log("checked nothing")
-           
         }
     })
 
@@ -139,6 +139,7 @@ function deleteMCKS(){
     }
 
     // TODO : 삭제 호출부분 function으로 뺼까?
+    //var url = "/ns/{namespace}/clusters/{cluster}"
     var url = "/operation/manages/mcksmng/" + mcksID + "/" + mcksName;               
     axios.delete(url,{})
         .then(result=>{

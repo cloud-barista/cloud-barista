@@ -15,11 +15,11 @@ definitions:
         weight: 0
     backend:
       - url_pattern: /*bypass
-  - name: Ladybug
+  - name: MCKS
     active: true
-    endpoint: /ladybug/*bypass
+    endpoint: /mcks/*bypass
     hosts:
-      - host: http://cb-ladybug:8080
+      - host: http://cb-mcks:1470
         weight: 0
     backend:
       - url_pattern: /*bypass

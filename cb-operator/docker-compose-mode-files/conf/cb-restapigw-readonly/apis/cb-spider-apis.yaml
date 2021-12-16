@@ -1,0 +1,62 @@
+definitions:
+  # CB-Spider에서 지원하는 CloudOS 목록 표시
+  # - name: 'Spider GET /cloudos'
+  #   active: true
+  #   endpoint: /spider/cloudos
+  #   # hosts:
+  #   #   - host: http://cb-spider:1024
+  #   #     weight: 0
+  #   method: GET
+  #   # timeout: 10m
+  #   # output_encoding: json
+  #   # except_querystrings: []
+  #   # except_headers: []
+  #   # health_check:
+  #   #   url: ""
+  #   #   timeout: 0s
+  #   backend:
+  #     - hosts:
+  #       - host: http://cb-spider:1024
+  #         weight: 0
+  #       # timeout: 10m
+  #       # method: GET
+  #       url_pattern: /spider/cloudos
+  #       # encoding: json
+  #       # group: ""
+  #       # blacklist: []
+  #       # whitelist: []
+  #       # mapping: {}
+  #       # is_collection: false
+  #       # wrap_collection_to_json: false
+  #       # target: ""
+  #       # middleware: null
+  #       # disable_host_sanitize: false
+  #       # lb_mode: ""
+  #       middleware:
+  #         mw-http:
+  #           return_error_details: GET_cloudos
+- name: 'Spider GET 1stPath'
+  active: true
+  endpoint: /spider/:FirstPath
+  method: GET
+  backend:
+    - hosts:
+      - host: http://cb-spider:1024
+        weight: 0
+      url_pattern: /spider/{{.FirstPath}}
+      middleware:
+        mw-http:
+          return_error_details: GET_1stPath
+          
+- name: 'Spider GET 1stPath 2ndPath'
+  active: true
+  endpoint: /spider/:FirstPath/:SecondPath
+  method: GET
+  backend:
+    - hosts:
+      - host: http://cb-spider:1024
+        weight: 0
+      url_pattern: /spider/{{.FirstPath}}/{{.SecondPath}}
+      middleware:
+        mw-http:
+          return_error_details: GET_1stPath_2ndPath

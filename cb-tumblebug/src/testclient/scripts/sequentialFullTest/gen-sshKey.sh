@@ -1,35 +1,15 @@
 #!/bin/bash
 
-TestSetFile=${4:-../testSet.env}
-if [ ! -f "$TestSetFile" ]; then
-	echo "$TestSetFile does not exist."
-	exit
-fi
-source $TestSetFile
-source ../conf.env
-
 echo "####################################################################"
 echo "## Generate SSH KEY (PEM, PPK)"
 echo "####################################################################"
 
-CSP=${1}
-REGION=${2:-1}
-POSTFIX=${3:-developer}
-
-source ../common-functions.sh
-getCloudIndex $CSP
-
-MCISID=${CONN_CONFIG[$INDEX,$REGION]}-${POSTFIX}
+source ../init.sh
 
 if [ "${INDEX}" == "0" ]; then
 	# MCISPREFIX=avengers
-	MCISID=${MCISPREFIX}-${POSTFIX}
+	MCISID=${POSTFIX}
 fi
-
-#install jq and puttygen
-echo "[Check jq and putty-tools package (if not, install)]"
-if ! dpkg-query -W -f='${Status}' jq | grep "ok installed"; then sudo apt install -y jq; fi
-if ! dpkg-query -W -f='${Status}' putty-tools | grep "ok installed"; then sudo apt install -y putty-tools; fi
 
 # curl -H "${AUTH}" -sX GET http://$TumblebugServer/tumblebug/ns/$NSID/resources/sshKey/$MCIRID -H 'Content-Type: application/json' | jq '.privateKey' | sed -e 's/\\n/\n/g' -e 's/\"//g' > ./sshkey-tmp/$MCISID.pem
 # chmod 600 ./sshkey-tmp/$MCISID.pem
@@ -39,10 +19,10 @@ echo ""
 echo "[CHECK REMOTE COMMAND BY CB-TB API]"
 echo " This will retrieve verified SSH username"
 
-./command-mcis.sh $CSP $REGION $POSTFIX $TestSetFile
+./command-mcis.sh -n $POSTFIX -f $TestSetFile
 
-MCISINFO=$(curl -H "${AUTH}" -sX GET http://$TumblebugServer/tumblebug/ns/$NSID/mcis/${MCISID}?action=status)
-VMARRAY=$(jq '.status.vm' <<<"$MCISINFO")
+MCISINFO=$(curl -H "${AUTH}" -sX GET http://$TumblebugServer/tumblebug/ns/$NSID/mcis/${MCISID})
+VMARRAY=$(jq '.vm' <<<"$MCISINFO")
 
 echo "$VMARRAY" | jq ''
 
@@ -51,54 +31,55 @@ echo "[GENERATED PRIVATE KEY (PEM, PPK)]"
 # echo -e " ./sshkey-tmp/$MCISID.pem \n ./sshkey-tmp/$MCISID.ppk"
 echo ""
 
+
 echo "[MCIS INFO: $MCISID]"
 for row in $(echo "${VMARRAY}" | jq -r '.[] | @base64'); do
-	_jq() {
-		echo ${row} | base64 --decode | jq -r ${1}
-	}
+	{
+		_jq() {
+			echo ${row} | base64 --decode | jq -r ${1}
+		}
 
-	id=$(_jq '.id')
-	ip=$(_jq '.publicIp')
+		id=$(_jq '.id')
+		ip=$(_jq '.publicIP')]
+		VMKEYID=$(_jq '.sshKeyId')
 
-	VMINFO=$(curl -H "${AUTH}" -sX GET http://$TumblebugServer/tumblebug/ns/$NSID/mcis/${MCISID}/vm/${id})
-	VMKEYID=$(jq -r '.sshKeyId' <<<"$VMINFO")
+		# KEYFILENAME="MCIS_${MCISID}_VM_${id}"
+		KEYFILENAME="${VMKEYID}"
 
-	# KEYFILENAME="MCIS_${MCISID}_VM_${id}"
-	KEYFILENAME="${VMKEYID}"
+		curl -H "${AUTH}" -sX GET http://$TumblebugServer/tumblebug/ns/$NSID/resources/sshKey/$VMKEYID -H 'Content-Type: application/json' | jq '.privateKey' | sed -e 's/\\n/\n/g' -e 's/\"//g' >./sshkey-tmp/$KEYFILENAME.pem
+		chmod 600 ./sshkey-tmp/$KEYFILENAME.pem
+		puttygen ./sshkey-tmp/$KEYFILENAME.pem -o ./sshkey-tmp/$KEYFILENAME.ppk -O private
 
-	curl -H "${AUTH}" -sX GET http://$TumblebugServer/tumblebug/ns/$NSID/resources/sshKey/$VMKEYID -H 'Content-Type: application/json' | jq '.privateKey' | sed -e 's/\\n/\n/g' -e 's/\"//g' >./sshkey-tmp/$KEYFILENAME.pem
-	chmod 600 ./sshkey-tmp/$KEYFILENAME.pem
-	puttygen ./sshkey-tmp/$KEYFILENAME.pem -o ./sshkey-tmp/$KEYFILENAME.ppk -O private
-
-	printf ' [VMIP]: %s   [MCISID]: %s   [VMID]: %s\n' "$ip" "$MCISID" "$id"
-
-	echo -e " ./sshkey-tmp/$KEYFILENAME.pem \n ./sshkey-tmp/$KEYFILENAME.ppk"
-	echo ""
+		echo " PEM: ./sshkey-tmp/$KEYFILENAME.pem  PPK: ./sshkey-tmp/$KEYFILENAME.ppk"
+	} &
 done
+wait
+
 
 echo ""
 echo "[SSH COMMAND EXAMPLE]"
 for row in $(echo "${VMARRAY}" | jq -r '.[] | @base64'); do
-	_jq() {
-		echo ${row} | base64 --decode | jq -r ${1}
-	}
+	{
+		_jq() {
+			echo ${row} | base64 --decode | jq -r ${1}
+		}
 
-	id=$(_jq '.id')
-	ip=$(_jq '.publicIp')
+		id=$(_jq '.id')
+		ip=$(_jq '.publicIP')
+		privIp=$(_jq '.privateIP')
+		VMKEYID=$(_jq '.sshKeyId')
 
-	VMINFO=$(curl -H "${AUTH}" -sX GET http://$TumblebugServer/tumblebug/ns/$NSID/mcis/${MCISID}/vm/${id})
-	VMKEYID=$(jq -r '.sshKeyId' <<<"$VMINFO")
+		KEYINFO=$(curl -H "${AUTH}" -sX GET http://$TumblebugServer/tumblebug/ns/${NSID}/resources/sshKey/${VMKEYID})
+		USERNAME=$(jq -r '.verifiedUsername' <<<"$KEYINFO")
 
-	KEYINFO=$(curl -H "${AUTH}" -sX GET http://$TumblebugServer/tumblebug/ns/${NSID}/resources/sshKey/${VMKEYID})
-	USERNAME=$(jq -r '.verifiedUsername' <<<"$KEYINFO")
+		# KEYFILENAME="MCIS_${MCISID}_VM_${id}"
+		KEYFILENAME="${VMKEYID}"
 
-	# KEYFILENAME="MCIS_${MCISID}_VM_${id}"
-	KEYFILENAME="${VMKEYID}"
-
-	echo ""
-	# USERNAME="ubuntu"
-	printf ' [VMIP]: %s   [MCISID]: %s   [VMID]: %s\n' "$ip" "$MCISID" "$id"
-	printf ' ssh -i ./sshkey-tmp/%s.pem %s@%s -o StrictHostKeyChecking=no\n' "$KEYFILENAME" "$USERNAME" "$ip"
+		echo ""
+		# USERNAME="ubuntu"
+		printf ' [VMIP]: %s (priv: %s)   [MCISID]: %s   [VMID]: %s\n ssh -i ./sshkey-tmp/%s.pem %s@%s -o StrictHostKeyChecking=no\n' "$ip" "$privIp" "$MCISID" "$id" "$KEYFILENAME" "$USERNAME" "$ip"
+	} &
 done
+wait
 
 echo ""

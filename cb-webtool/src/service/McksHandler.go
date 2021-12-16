@@ -3,6 +3,9 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	tbcommon "github.com/cloud-barista/cb-webtool/src/model/tumblebug/common"
+	"github.com/labstack/echo"
+
 	// "io"
 	"log"
 	"net/http"
@@ -21,7 +24,7 @@ import (
 func GetHealthy() model.WebStatus {
 	var originalUrl = "/healthy"
 	urlParam := util.MappingUrlParameter(originalUrl, nil)
-	url := util.LADYBUG + urlParam
+	url := util.MCKS + urlParam
 	resp, err := util.CommonHttp(url, nil, http.MethodGet)
 	// resp, err := util.CommonHttpWithoutParam(url, http.MethodGet)
 
@@ -48,8 +51,8 @@ func GetClusterList(nameSpaceID string) ([]ladybug.ClusterInfo, model.WebStatus)
 	paramMapper["{namespace}"] = nameSpaceID
 	urlParam := util.MappingUrlParameter(originalUrl, paramMapper)
 
-	url := util.LADYBUG + urlParam
-	// url := util.LADYBUG + "/ns/" + nameSpaceID + "/clusters"
+	url := util.MCKS + urlParam
+	// url := util.MCKS + "/ns/" + nameSpaceID + "/clusters"
 	resp, err := util.CommonHttp(url, nil, http.MethodGet)
 	// resp, err := util.CommonHttpWithoutParam(url, http.MethodGet)
 
@@ -72,6 +75,41 @@ func GetClusterList(nameSpaceID string) ([]ladybug.ClusterInfo, model.WebStatus)
 	return clusterList["items"], model.WebStatus{StatusCode: respStatus}
 }
 
+//
+func GetClusterListByID(nameSpaceID string) ([]string, model.WebStatus) {
+	var originalUrl = "/ns/{namespace}/clusters"
+
+	var paramMapper = make(map[string]string)
+	paramMapper["{namespace}"] = nameSpaceID
+	urlParam := util.MappingUrlParameter(originalUrl, paramMapper)
+
+	url := util.MCKS + urlParam
+	// url := util.MCKS + "/ns/" + nameSpaceID + "/clusters"
+	resp, err := util.CommonHttp(url, nil, http.MethodGet)
+	// resp, err := util.CommonHttpWithoutParam(url, http.MethodGet)
+
+	if err != nil {
+		fmt.Println(err)
+		return nil, model.WebStatus{StatusCode: 500, Message: err.Error()}
+	}
+
+	respBody := resp.Body
+	respStatus := resp.StatusCode
+	// 원래는 items 와 kind 가 들어오는데
+	// kind에는 clusterlist 라는 것만 있고 실제로는 items 에 cluster 정보들이 있음.
+	// 그래서 굳이 kind까지 처리하지 않고 item만 return
+	clusterList := map[string][]ladybug.ClusterInfo{}
+	json.NewDecoder(respBody).Decode(&clusterList)
+	fmt.Println(clusterList["items"])
+	log.Println(respBody)
+	// util.DisplayResponse(resp) // 수신내용 확인
+	ids := []string{}
+	for _, keyMcksInfo := range clusterList["items"] {
+		ids = append(ids, keyMcksInfo.Mcis) // ID값이 없어 MCIS항목으로 처리
+	}
+	return ids, model.WebStatus{StatusCode: respStatus}
+}
+
 // 특정 Cluster 조회
 func GetClusterData(nameSpaceID string, cluster string) (*ladybug.ClusterInfo, model.WebStatus) {
 	var originalUrl = "/ns/{namespace}/clusters/{cluster}"
@@ -81,7 +119,7 @@ func GetClusterData(nameSpaceID string, cluster string) (*ladybug.ClusterInfo, m
 	paramMapper["{cluster}"] = cluster
 	urlParam := util.MappingUrlParameter(originalUrl, paramMapper)
 
-	url := util.LADYBUG + urlParam
+	url := util.MCKS + urlParam
 
 	// resp, err := util.CommonHttp(url, nil, http.MethodGet)
 	resp, err := util.CommonHttpWithoutParam(url, http.MethodGet)
@@ -111,7 +149,7 @@ func RegCluster(nameSpaceID string, clusterReq *ladybug.ClusterRegReq) (*ladybug
 	var paramMapper = make(map[string]string)
 	paramMapper["{namespace}"] = nameSpaceID
 	urlParam := util.MappingUrlParameter(originalUrl, paramMapper)
-	url := util.LADYBUG + urlParam
+	url := util.MCKS + urlParam
 
 	pbytes, _ := json.Marshal(clusterReq)
 	fmt.Println(string(pbytes))
@@ -142,6 +180,49 @@ func RegCluster(nameSpaceID string, clusterReq *ladybug.ClusterRegReq) (*ladybug
 	return &returnClusterInfo, returnStatus
 }
 
+// Cluster 생성
+func RegClusterByAsync(nameSpaceID string, clusterReq *ladybug.ClusterRegReq, c echo.Context) {
+
+	var originalUrl = "/ns/{namespace}/clusters"
+
+	var paramMapper = make(map[string]string)
+	paramMapper["{namespace}"] = nameSpaceID
+	urlParam := util.MappingUrlParameter(originalUrl, paramMapper)
+	url := util.MCKS + urlParam
+
+	pbytes, _ := json.Marshal(clusterReq)
+	fmt.Println(string(pbytes))
+	resp, err := util.CommonHttp(url, pbytes, http.MethodPost)
+
+	taskKey := nameSpaceID + "||" + "mcks" + "||" + clusterReq.Name // TODO : 공통 function으로 뺄 것.
+
+	if err != nil {
+		fmt.Println(err)
+		StoreWebsocketMessage(util.TASK_TYPE_MCKS, taskKey, util.MCKS_LIFECYCLE_CREATE, util.TASK_STATUS_FAIL, c) // session에 작업내용 저장
+	}
+
+	respBody := resp.Body
+	respStatus := resp.StatusCode
+
+	if respStatus != 200 && respStatus != 201 { // 호출은 정상이나, 가져온 결과값이 200, 201아닌 경우 message에 담겨있는 것을 WebStatus에 set
+		//errorInfo := model.ErrorInfo{}
+		//json.NewDecoder(respBody).Decode(&errorInfo)
+		//fmt.Println("respStatus != 200 reason ", errorInfo)
+		//returnStatus.Message = errorInfo.Message
+		failResultInfo := tbcommon.TbSimpleMsg{}
+		json.NewDecoder(respBody).Decode(&failResultInfo)
+		log.Println("RegMcksByAsync ", failResultInfo)
+		StoreWebsocketMessage(util.TASK_TYPE_MCKS, taskKey, util.MCKS_LIFECYCLE_CREATE, util.TASK_STATUS_FAIL, c) // session에 작업내용 저장
+
+	} else {
+		returnClusterInfo := ladybug.ClusterInfo{}
+		json.NewDecoder(respBody).Decode(&returnClusterInfo)
+		fmt.Println(returnClusterInfo)
+		StoreWebsocketMessage(util.TASK_TYPE_MCKS, taskKey, util.MCKS_LIFECYCLE_CREATE, util.TASK_STATUS_COMPLETE, c) // session에 작업내용 저장
+	}
+
+}
+
 // Cluster 삭제
 func DelCluster(nameSpaceID string, clusterName string) (*ladybug.StatusInfo, model.WebStatus) {
 	var originalUrl = "/ns/{namespace}/clusters/{cluster}"
@@ -150,7 +231,7 @@ func DelCluster(nameSpaceID string, clusterName string) (*ladybug.StatusInfo, mo
 	paramMapper["{namespace}"] = nameSpaceID
 	paramMapper["{cluster}"] = clusterName
 	urlParam := util.MappingUrlParameter(originalUrl, paramMapper)
-	url := util.LADYBUG + urlParam
+	url := util.MCKS + urlParam
 
 	if clusterName == "" {
 		return nil, model.WebStatus{StatusCode: 500, Message: "cluster is required"}
@@ -175,6 +256,63 @@ func DelCluster(nameSpaceID string, clusterName string) (*ladybug.StatusInfo, mo
 		return &statusInfo, model.WebStatus{StatusCode: respStatus, Message: statusInfo.Message}
 	}
 	return &statusInfo, model.WebStatus{StatusCode: respStatus}
+}
+
+// Cluster 삭제 비동기 처리
+func DelClusterByAsync(nameSpaceID string, clusterName string, c echo.Context) {
+	var originalUrl = "/ns/{namespace}/clusters/{cluster}"
+
+	var paramMapper = make(map[string]string)
+	paramMapper["{namespace}"] = nameSpaceID
+	paramMapper["{cluster}"] = clusterName
+	urlParam := util.MappingUrlParameter(originalUrl, paramMapper)
+	url := util.MCKS + urlParam
+
+	//if clusterName == "" {
+	//	return nil, model.WebStatus{StatusCode: 500, Message: "cluster is required"}
+	//}
+
+	// 경로안에 parameter가 있어 추가 param없이 호출 함.
+	resp, err := util.CommonHttp(url, nil, http.MethodDelete)
+
+	//statusInfo := ladybug.StatusInfo{}
+	//if err != nil {
+	//	fmt.Println("delCluster ", err)
+	//	return &statusInfo, model.WebStatus{StatusCode: 500, Message: err.Error()}
+	//}
+
+	//respBody := resp.Body
+	//respStatus := resp.StatusCode
+	//
+	//json.NewDecoder(respBody).Decode(&statusInfo)
+	//fmt.Println(statusInfo)
+
+	taskKey := nameSpaceID + "||" + "mcks" + "||" + clusterName
+
+	if err != nil {
+		fmt.Println(err)
+		StoreWebsocketMessage(util.TASK_TYPE_MCKS, taskKey, util.MCKS_LIFECYCLE_DELETE, util.TASK_STATUS_FAIL, c) // session에 작업내용 저장
+	}
+
+	respBody := resp.Body
+	respStatus := resp.StatusCode
+
+	if respStatus != 200 && respStatus != 201 { // 호출은 정상이나, 가져온 결과값이 200, 201아닌 경우 message에 담겨있는 것을 WebStatus에 set
+		//errorInfo := model.ErrorInfo{}
+		//json.NewDecoder(respBody).Decode(&errorInfo)
+		//fmt.Println("respStatus != 200 reason ", errorInfo)
+		//returnStatus.Message = errorInfo.Message
+		failResultInfo := tbcommon.TbSimpleMsg{}
+		json.NewDecoder(respBody).Decode(&failResultInfo)
+		log.Println("DelMcksByAsync ", failResultInfo)
+		StoreWebsocketMessage(util.TASK_TYPE_MCKS, taskKey, util.MCKS_LIFECYCLE_DELETE, util.TASK_STATUS_FAIL, c) // session에 작업내용 저장
+
+	} else {
+		returnClusterInfo := ladybug.ClusterInfo{}
+		json.NewDecoder(respBody).Decode(&returnClusterInfo)
+		fmt.Println(returnClusterInfo)
+		StoreWebsocketMessage(util.TASK_TYPE_MCKS, taskKey, util.MCKS_LIFECYCLE_DELETE, util.TASK_STATUS_COMPLETE, c) // session에 작업내용 저장
+	}
 }
 
 // MCKS의 상태값 숫자로 표시
@@ -242,7 +380,7 @@ func GetNodeList(nameSpaceID string, clusterName string) (ladybug.NodeList, mode
 	paramMapper["{cluster}"] = clusterName
 	urlParam := util.MappingUrlParameter(originalUrl, paramMapper)
 
-	url := util.LADYBUG + urlParam
+	url := util.MCKS + urlParam
 
 	resp, err := util.CommonHttp(url, nil, http.MethodGet)
 	// resp, err := util.CommonHttpWithoutParam(url, http.MethodGet)
@@ -274,7 +412,7 @@ func GetNodeData(nameSpaceID string, clusterName string, node string) (*ladybug.
 	paramMapper["{node}"] = node
 	urlParam := util.MappingUrlParameter(originalUrl, paramMapper)
 
-	url := util.LADYBUG + urlParam
+	url := util.MCKS + urlParam
 
 	// resp, err := util.CommonHttp(url, nil, http.MethodGet)
 	resp, err := util.CommonHttpWithoutParam(url, http.MethodGet)
@@ -305,7 +443,7 @@ func RegNode(nameSpaceID string, clusterName string, nodeRegReq *ladybug.NodeReg
 	paramMapper["{namespace}"] = nameSpaceID
 	paramMapper["{cluster}"] = clusterName
 	urlParam := util.MappingUrlParameter(originalUrl, paramMapper)
-	url := util.LADYBUG + urlParam
+	url := util.MCKS + urlParam
 
 	pbytes, _ := json.Marshal(nodeRegReq)
 	fmt.Println(string(pbytes))
@@ -345,7 +483,7 @@ func DelNode(nameSpaceID string, clusterName string, node string) (*ladybug.Stat
 	paramMapper["{cluster}"] = clusterName
 	paramMapper["{node}"] = node
 	urlParam := util.MappingUrlParameter(originalUrl, paramMapper)
-	url := util.LADYBUG + urlParam
+	url := util.MCKS + urlParam
 
 	if clusterName == "" {
 		return nil, model.WebStatus{StatusCode: 500, Message: "cluster is required"}

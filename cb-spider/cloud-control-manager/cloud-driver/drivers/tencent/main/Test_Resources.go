@@ -26,7 +26,7 @@ var cblogger *logrus.Logger
 func init() {
 	// cblog is a global variable.
 	cblogger = cblog.GetLogger("TencentCloud Resource Test")
-	cblog.SetLevel("info")
+	cblog.SetLevel("debug")
 }
 
 // Test VMSpec
@@ -42,12 +42,12 @@ func handleVMSpec() {
 
 	handler := ResourceHandler.(irs.VMSpecHandler)
 
-	config := testconf.ReadConfigFile()
+	//config := testconf.ReadConfigFile()
 	reqVMSpec := "C2.4XLARGE64" // GPU 1개
 
-	reqZone := config.Tencent.Zone
+	//reqZone := config.Tencent.Zone
 
-	cblogger.Info("reqZone : ", reqZone)
+	//cblogger.Info("reqZone : ", reqZone)
 	cblogger.Info("reqVMSpec : ", reqVMSpec)
 
 	for {
@@ -71,7 +71,7 @@ func handleVMSpec() {
 			switch commandNum {
 			case 1:
 				fmt.Println("Start ListVMSpec() ...")
-				result, err := handler.ListVMSpec(reqZone)
+				result, err := handler.ListVMSpec()
 				if err != nil {
 					cblogger.Error("VMSpec 목록 조회 실패 : ", err)
 				} else {
@@ -84,7 +84,7 @@ func handleVMSpec() {
 
 			case 2:
 				fmt.Println("Start GetVMSpec() ...")
-				result, err := handler.GetVMSpec(reqZone, reqVMSpec)
+				result, err := handler.GetVMSpec(reqVMSpec)
 				if err != nil {
 					cblogger.Error(reqVMSpec, " VMSpec 정보 조회 실패 : ", err)
 				} else {
@@ -95,7 +95,7 @@ func handleVMSpec() {
 
 			case 3:
 				fmt.Println("Start ListOrgVMSpec() ...")
-				result, err := handler.ListOrgVMSpec(reqZone)
+				result, err := handler.ListOrgVMSpec()
 				if err != nil {
 					cblogger.Error("VMSpec 목록 조회 실패 : ", err)
 				} else {
@@ -108,7 +108,7 @@ func handleVMSpec() {
 
 			case 4:
 				fmt.Println("Start GetOrgVMSpec() ...")
-				result, err := handler.GetOrgVMSpec(reqZone, reqVMSpec)
+				result, err := handler.GetOrgVMSpec(reqVMSpec)
 				if err != nil {
 					cblogger.Error(reqVMSpec, " VMSpec 정보 조회 실패 : ", err)
 				} else {
@@ -139,7 +139,7 @@ func handleSecurity() {
 	//config := readConfigFile()
 	//VmID := config.Aws.VmID
 
-	securityName := "CB-SecurityTest"
+	securityName := "CB-SecurityTestAll"
 	securityId := "sg-6wedru4yb4m6qqfvd3sj"
 	vpcId := "vpc-6wei16ufuimfcct41o0xh"
 
@@ -190,12 +190,21 @@ func handleSecurity() {
 						// 	CIDR:       "0.0.0.0/0",
 						// },
 						{
+							FromPort:   "20",
+							ToPort:     "-",
+							IPProtocol: "tcp",
+							Direction:  "inbound",
+							CIDR:       "0.0.0.0/0",
+						},
+
+						{
 							FromPort:   "8080",
 							ToPort:     "",
 							IPProtocol: "tcp",
 							Direction:  "inbound",
 							CIDR:       "0.0.0.0/0",
 						},
+
 						// {
 						// 	FromPort:   "40",
 						// 	ToPort:     "",
@@ -411,7 +420,7 @@ func handleVPC() {
 		//CidrBlock: "192.168.0.0/16",
 	}
 
-	reqVpcId := irs.IID{SystemId: "vpc-6we11xwqjc9tyma5i68z0"}
+	reqVpcId := irs.IID{SystemId: "vpc-2u04wg6k"}
 
 	for {
 		fmt.Println("Handler Management")
@@ -603,7 +612,7 @@ func handleVM() {
 		cblogger.Error(err)
 	}
 	vmHandler := ResourceHandler.(irs.VMHandler)
-	VmID := irs.IID{SystemId: "i-6weayupx7qvidhmyl48d"}
+	VmID := irs.IID{SystemId: "ins-rqoo65fo"}
 
 	for {
 		fmt.Println("VM Management")
@@ -632,16 +641,21 @@ func handleVM() {
 
 			case 1:
 				vmReqInfo := irs.VMReqInfo{
-					IId:      irs.IID{NameId: "mcloud-barista-vm-test"},
-					ImageIID: irs.IID{SystemId: "img-22trbn9x"}, //Ubuntu Server 20.04 LTS 64
-					//ImageIID:          irs.IID{SystemId: "img-pi0ii46r"}, //Ubuntu Server 18.04.1 LTS 64
-					VpcIID:            irs.IID{SystemId: "vpc-k5r709q6"},
-					SubnetIID:         irs.IID{SystemId: "subnet-a620oq9t"},
-					SecurityGroupIIDs: []irs.IID{{SystemId: "sg-4a4qaitk"}, {SystemId: "sg-aj1mgiwy"}},
-					VMSpecName:        "S5.SMALL1",
-					KeyPairIID:        irs.IID{SystemId: "skey-oipwukuv"},
+					IId: irs.IID{NameId: "mcloud-barista-vm-test"},
+					//IId:      irs.IID{NameId: "bill-test"},
+					//ImageIID: irs.IID{SystemId: "img-22trbn9x"}, //Ubuntu Server 20.04 LTS 64
+					ImageIID:          irs.IID{SystemId: "img-pi0ii46r"}, //Ubuntu Server 18.04.1 LTS 64
+					VpcIID:            irs.IID{SystemId: "vpc-2u04wg7k"},
+					SubnetIID:         irs.IID{SystemId: "subnet-ccawa5nz"}, //Zone2
+					SecurityGroupIIDs: []irs.IID{{SystemId: "sg-3baxppe6"}},
+					VMSpecName:        "C4.LARGE8",
+					KeyPairIID:        irs.IID{SystemId: "skey-lk66iuyh"}, //cb_user_test
 					//VMUserId:          "root", //root만 가능
 					//VMUserPasswd: "Cbuser!@#", //대문자 소문자 모두 사용되어야 함. 그리고 숫자나 특수 기호 중 하나가 포함되어야 함.
+					//RootDiskType: "CLOUD_PREMIUM", //LOCAL_BASIC/LOCAL_SSD/CLOUD_BASIC/CLOUD_SSD/CLOUD_PREMIUM
+					RootDiskType: "CLOUD_SSD", //LOCAL_BASIC/LOCAL_SSD/CLOUD_BASIC/CLOUD_SSD/CLOUD_PREMIUM
+					RootDiskSize: "60",        //Image Size 보다 작으면 에러 남
+					//RootDiskSize: "Default", //Image Size 보다 작으면 에러 남
 				}
 
 				vmInfo, err := vmHandler.StartVM(vmReqInfo)
@@ -753,12 +767,12 @@ func handleVM() {
 
 func main() {
 	cblogger.Info("Tencent Cloud Resource Test")
-	handleVPC() //VPC
-	//handleKeyPair()
+	//handleVPC() //VPC
 	//handleVMSpec()
 	//handleSecurity()
 	//handleImage() //AMI
-	//handleVM()
+	//handleKeyPair()
+	handleVM()
 
 	//handlePublicIP() // PublicIP 생성 후 conf
 	//handleVNic() //Lancard

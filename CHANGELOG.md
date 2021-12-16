@@ -1,41 +1,80 @@
-
-# v0.4.0 (Cafe Mocha) (2021.06.30.)
+# v0.5.0 (Affogato, 2021.12.16.)
 
 ## [CB-Spider]
 
-- ChangeLog: https://github.com/cloud-barista/cb-spider/blob/master/CHANGELOG.md
+- ChangeLog: https://github.com/cloud-barista/cb-spider/blob/master/CHANGELOG.md#v050-affogato-20211216
 - API reference: https://github.com/cloud-barista/cb-spider/wiki/CB-Spider-User-Interface
 
 ## [CB-Tumblebug]
 
-- ChangeLog: https://github.com/cloud-barista/cb-tumblebug/blob/main/CHANGELOG.md#v040-cafemocha-20210630
+- ChangeLog: https://github.com/cloud-barista/cb-tumblebug/blob/main/CHANGELOG.md#v050-affogato-20211216
+- API reference: https://cloud-barista.github.io/cb-tumblebug-api-web/?url=https://raw.githubusercontent.com/cloud-barista/cb-tumblebug/v0.5.0/src/api/rest/docs/swagger.yaml
+
+## [CB-Dragonfly]
+
+- ChangeLog: https://github.com/cloud-barista/cb-dragonfly/blob/master/CHANGELOG.md#v050-affogato-20211216
+- API reference: https://documenter.getpostman.com/view/10735617/UVCCfPcj
+
+## [CB-MCKS]
+
+* ChangeLog: https://github.com/cloud-barista/cb-mcks/blob/master/CHANGELOG.md#v050-affogato-20211216
+* API reference: https://cloud-barista.github.io/cb-mcks-api-web/?url=https://raw.githubusercontent.com/cloud-barista/cb-mcks/master/src/docs/v0.5.0.yaml
+
+## [cb-webtool]
+
+- ChangeLog: https://github.com/cloud-barista/cb-webtool/blob/master/CHANGELOG.md#v050-affogato-20211216
+
+## [cb-operator]
+
+- ChangeLog: https://github.com/cloud-barista/cb-operator/blob/master/CHANGELOG.md#v050-affogato-20211216
+
+## [cb-log]
+
+- ChangeLog: https://github.com/cloud-barista/cb-log/blob/master/CHANGELOG.md#v050-affogato-20211216
+
+## [cb-store]
+
+- ChangeLog: https://github.com/cloud-barista/cb-store/blob/master/CHANGELOG.md#v050-affogato-20211216
+
+
+
+# v0.4.0 (Cafe Mocha, 2021.06.30.)
+
+## [CB-Spider]
+
+- ChangeLog: https://github.com/cloud-barista/cb-spider/blob/master/CHANGELOG.md#v040-cafemocha-20210630
+- API reference: https://github.com/cloud-barista/cb-spider/wiki/CB-Spider-User-Interface
+
+## [CB-Tumblebug]
+
+- ChangeLog: https://github.com/cloud-barista/cb-tumblebug/blob/main/CHANGELOG.md#v040-cafe-mocha-20210630
 - API reference: https://cloud-barista.github.io/cb-tumblebug-api-web/?url=https://raw.githubusercontent.com/cloud-barista/cb-tumblebug/main/src/api/rest/docs/v0.4.0.yaml
 
 ## [CB-Dragonfly]
 
-- ChangeLog: https://github.com/cloud-barista/cb-dragonfly/blob/master/CHANGELOG.md
-- API reference: https://documenter.getpostman.com/view/7454078/TzkyLKJy
+- ChangeLog: https://github.com/cloud-barista/cb-dragonfly/blob/master/CHANGELOG.md#v040-cafe-mocha-20210630
+- API reference: https://documenter.getpostman.com/view/10735617/UVCCfPcj
 
-## [CB-Ladybug]
+## [CB-MCKS]
 
-* ChangeLog: https://github.com/cloud-barista/cb-ladybug/blob/master/CHANGELOG.md#v040-cafemocha-20210630
-* API reference: https://cloud-barista.github.io/cb-ladybug-api-web/?url=https://raw.githubusercontent.com/cloud-barista/cb-ladybug/master/src/docs/v0.4.0.yaml
+* ChangeLog: https://github.com/cloud-barista/cb-mcks/blob/master/CHANGELOG.md#v040-cafe-mocha-20210630
+* API reference: https://cloud-barista.github.io/cb-mcks-api-web/?url=https://raw.githubusercontent.com/cloud-barista/cb-mcks/master/src/docs/v0.4.0.yaml
 
 ## [cb-webtool]
 
-- ChangeLog: https://github.com/cloud-barista/cb-webtool/blob/master/CHANGELOG.md
+- ChangeLog: https://github.com/cloud-barista/cb-webtool/blob/master/CHANGELOG.md#v040-cafe-mocha-20210630
 
 ## [cb-operator]
 
-- ChangeLog: https://github.com/cloud-barista/cb-operator/blob/master/CHANGELOG.md
+- ChangeLog: https://github.com/cloud-barista/cb-operator/blob/master/CHANGELOG.md#v040-cafe-mocha-20210630
 
 ## [cb-log]
 
-- ChangeLog: https://github.com/cloud-barista/cb-log/blob/master/CHANGELOG.md
+- ChangeLog: https://github.com/cloud-barista/cb-log/blob/master/CHANGELOG.md#v040-cafe-mocha-20210630
 
 ## [cb-store]
 
-- ChangeLog: https://github.com/cloud-barista/cb-store/blob/master/CHANGELOG.md
+- ChangeLog: https://github.com/cloud-barista/cb-store/blob/master/CHANGELOG.md#v040-cafe-mocha-20210630
 
 
 
@@ -107,7 +146,7 @@
 - 해당사항 없음
 
 
-## [CB-Ladybug]
+## [CB-MCKS]
 
 ### API Change
 - 클러스터 생성 기능 API 추가
@@ -139,7 +178,7 @@
 - Add mode-selection feature (#39)
 - Add Helm chart (#40)
 - Add PVC for Cloud-Barista components (#44)
-- Add CB-Ladybug to docker-compose.yaml and Helm chart (#71)
+- Add CB-MCKS to docker-compose.yaml and Helm chart (#71)
 - Add Prometheus and Grafana to CB Helm chart (#81)
 - Change docker network name (#87)
 
@@ -187,7 +226,7 @@
 - MCIS 라이프사이클 오류 개선
 
 
-## [CB-Ladybug]
+## [CB-MCKS]
 
 ### API Change
 - 클러스터 생성 기능 API 추가

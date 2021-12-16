@@ -21,3 +21,7 @@ data:
     {{ range .Files.Lines "files/conf/calllog_conf.yaml" }}
     {{ . }}
     {{ end }}
+  cloudos.yaml: |-
+    {{ range .Files.Lines "files/conf/cloudos.yaml" }}
+    {{ . }}
+    {{ end }}

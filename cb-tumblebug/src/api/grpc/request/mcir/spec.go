@@ -319,7 +319,7 @@ func (r *MCIRRequest) UpdateSpec() (string, error) {
 	}
 
 	// Unmarshal (json/yaml -> Request Input)
-	var item pb.TbSpecInfoRequest
+	var item pb.TbUpdateSpecRequest
 	err := gc.ConvertToMessage(r.InType, r.InData, &item)
 	if err != nil {
 		return "", err
@@ -338,7 +338,7 @@ func (r *MCIRRequest) UpdateSpec() (string, error) {
 	return gc.ConvertToOutput(r.OutType, &resp.Item)
 }
 
-// ListLookupSpec - LookupSpecs
+// ListLookupSpec is to LookupSpecs
 func (r *MCIRRequest) ListLookupSpec() (string, error) {
 	// Check input data
 	if r.InData == "" {
@@ -365,7 +365,7 @@ func (r *MCIRRequest) ListLookupSpec() (string, error) {
 	return gc.ConvertToOutput(r.OutType, &resp)
 }
 
-// GetLookupSpec - LookupSpec
+// GetLookupSpec is to LookupSpec
 func (r *MCIRRequest) GetLookupSpec() (string, error) {
 	// Check input data
 	if r.InData == "" {

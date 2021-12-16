@@ -1,0 +1,20 @@
+apiVersion: v2
+name: cb-restapigw-readonly
+type: application
+version: 0.5.0
+appVersion: 0.5.0
+description: cb-restapigw Helm chart
+
+# dependencies:
+#   - name: influxdb
+#     version: ~0.4.8
+#     repository: "https://charts.bitnami.com/bitnami"
+#     condition: influxdb.enabled
+#   - name: grafana
+#     version: ~6.6.4
+#     repository: "https://grafana.github.io/helm-charts"
+#     condition: grafana.enabled
+#   - name: jaeger
+#     version: ~0.28.0
+#     repository: "https://jaegertracing.github.io/helm-charts"
+#     condition: jaeger.enabled

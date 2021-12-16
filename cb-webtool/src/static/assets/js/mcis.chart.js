@@ -42,6 +42,8 @@ function show_monitoring(){
     }
     
 }
+
+var vmChart;
 function showMonitoring(mcis_id, vm_id, metric, periodType, duration){
 	// $("#cpu").empty()
 	// $("#memory").empty()
@@ -50,7 +52,7 @@ function showMonitoring(mcis_id, vm_id, metric, periodType, duration){
 	$("#canvas_vm").empty();
 	var statisticsCriteria = "last";
     
-	getVmMetric("canvas_vm",metric,mcis_id,vm_id,metric,periodType,statisticsCriteria,duration);
+	getVmMetric(vmChart,"canvas_vm",metric,mcis_id,vm_id,metric,periodType,statisticsCriteria,duration);
 }
 function genChartFmt(chart_target){
 
@@ -523,13 +525,17 @@ window.chartColors = {
 
 
 //vm 의 통계조회
-function getVmMetric(chartTarget,target, mcisID, vmID, metric, periodType,statisticsCriteria, duration){     
+function getVmMetric(vmChart, chartTarget,target, mcisID, vmID, metric, periodType,statisticsCriteria, duration){
 	console.log("====== Start GetMetric ====== ")
 	var color = "";
     var metric_size ="";
 
-    var vmChart = setVmChart(chartTarget,target);
-	vmChart.clear()
+    if( vmChart){
+        vmChart.destroy();
+    }
+    vmChart = setVmChartInit(vmChart, chartTarget, target);
+    // var vmChart = setVmChart(chartTarget,target);
+	// vmChart.clear()
     
 	var url = "/operation/manages/mcismng/proc/vmmonitoring"    
     console.log("Request URL : ",url)
@@ -604,7 +610,47 @@ function getVmMetric(chartTarget,target, mcisID, vmID, metric, periodType,statis
 	
 }
 
+function setVmChartInit(vmChart, chartTarget,target){
+    var ctx = document.getElementById(chartTarget).getContext('2d')
+    vmChart = new Chart(ctx,{
+        type:"line",
+        data:{},
+        options:{
+            responsive: true,
+            title: {
+                display: true,
+                text: target
+            },
+            tooltips: {
+                mode: 'index',
+                intersect: false,
+            },
+            hover: {
+                mode: 'nearest',
+                intersect: true
+            },
+            scales: {
+                x: {
+                    display: true,
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Time'
+                    }
+                },
+                y: {
+                    display: true,
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Value'
+                    }
+                }
+            }
+        }
+    });
+    return vmChart;
+}
 
+// 이전버전 : vmChart를 매번 생성하여 return
 function setVmChart(chartTarget,target){
     var ctx = document.getElementById(chartTarget).getContext('2d')
     var vmChart = new Chart(ctx,{

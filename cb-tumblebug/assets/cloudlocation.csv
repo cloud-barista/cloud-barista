@@ -64,31 +64,31 @@ aws,us-west-1,California,37.3500,-121.9600
 aws,us-west-2,Oregon,46.1500,-123.8800
 aws,us-gov-east-1,AWS GovCloud (US-East),37.0000,-81.0000
 aws,us-gov-west-1,AWS GovCloud (US),40.0000,-120.0000
-gcp,asia-east1,Changhua County  Taiwan,24.0756,120.5451
+gcp,asia-east1,Changhua County Taiwan,24.0756,120.5451
 gcp,asia-east2,Hong Kong,22.3964,114.1095
-gcp,asia-northeast1,Tokyo  Japan,35.6895,139.6917
-gcp,asia-northeast2,Osaka  Japan,34.6937,135.5022
-gcp,asia-northeast3,Seoul  South Korea,37.2000,127.0000
-gcp,asia-south1,Mumbai  India,19.0761,72.8774
-gcp,asia-southeast1,Jurong West  Singapore,1.3400,103.7041
-gcp,asia-southeast2,Jakarta  Indonesia,-6.2000,106.8160
-gcp,australia-southeast1,Sydney  Australia,-33.8651,151.2099
-gcp,europe-north1,Hamina  Finland,60.5700,27.2000
-gcp,europe-west1,St. Ghislain  Belgium,50.4482,3.8189
-gcp,europe-west2,London  England  UK,51.5099,-0.1181
-gcp,europe-west3,Frankfurt  Germany,50.1109,8.6821
-gcp,europe-west4,Eemshaven  Netherlands,53.4423,6.8253
-gcp,europe-west6,Zurich  Switzerland,47.3667,8.5500
-gcp,europe-central2,Warsaw  Poland,52.237049,21.017532
-gcp,northamerica-northeast1,Montreal  Quebec  Canada,45.5089,-73.5617
-gcp,southamerica-east1,Osasco (Sao Paulo)  Brazil,-23.5325,-46.7917
-gcp,us-central1,Council Bluffs  Iowa  USA,41.2522,-95.8575
-gcp,us-east1,Moncks Corner  South Carolina  USA,33.1913,-80.0040
-gcp,us-east4,Ashburn  Northern Virginia  USA,39.0403,-77.4852
-gcp,us-west1,The Dalles  Oregon  USA,45.5946,-121.1787
-gcp,us-west2,Los Angeles  California  USA,34.0522,-118.2437
-gcp,us-west3,Salt Lake City  Utah  USA,40.7587,-111.8762
-gcp,us-west4,Las Vegas  Nevada  USA,36.1146,-115.1728
+gcp,asia-northeast1,Tokyo Japan,35.6895,139.6917
+gcp,asia-northeast2,Osaka Japan,34.6937,135.5022
+gcp,asia-northeast3,Seoul South Korea,37.2000,127.0000
+gcp,asia-south1,Mumbai India,19.0761,72.8774
+gcp,asia-southeast1,Jurong West Singapore,1.3400,103.7041
+gcp,asia-southeast2,Jakarta Indonesia,-6.2000,106.8160
+gcp,australia-southeast1,Sydney Australia,-33.8651,151.2099
+gcp,europe-north1,Hamina Finland,60.5700,27.2000
+gcp,europe-west1,St. Ghislain Belgium,50.4482,3.8189
+gcp,europe-west2,London England UK,51.5099,-0.1181
+gcp,europe-west3,Frankfurt Germany,50.1109,8.6821
+gcp,europe-west4,Eemshaven Netherlands,53.4423,6.8253
+gcp,europe-west6,Zurich Switzerland,47.3667,8.5500
+gcp,europe-central2,Warsaw Poland,52.237049,21.017532
+gcp,northamerica-northeast1,Montreal Quebec Canada,45.5089,-73.5617
+gcp,southamerica-east1,Osasco (Sao Paulo) Brazil,-23.5325,-46.7917
+gcp,us-central1,Council Bluffs Iowa USA,41.2522,-95.8575
+gcp,us-east1,Moncks Corner South Carolina USA,33.1913,-80.0040
+gcp,us-east4,Ashburn Northern Virginia USA,39.0403,-77.4852
+gcp,us-west1,The Dalles Oregon USA,45.5946,-121.1787
+gcp,us-west2,Los Angeles California USA,34.0522,-118.2437
+gcp,us-west3,Salt Lake City Utah USA,40.7587,-111.8762
+gcp,us-west4,Las Vegas Nevada USA,36.1146,-115.1728
 alibaba,cn-qingdao,China (Qingdao),36.3000,120.2200
 alibaba,cn-beijing,China (Beijing),39.5427,116.2350
 alibaba,cn-zhangjiakou,China (Zhangjiakou),40.4836,114.5245
@@ -99,8 +99,8 @@ alibaba,cn-shenzhen,China (Shenzhen),22.5428,114.0629
 alibaba,cn-heyuan,China (Heyuan),23.7333,114.6830
 alibaba,cn-chengdu,China (Chengdu),30.6570,104.0800
 alibaba,cn-hongkong,China (Hong Kong),22.4464,114.5095
-alibaba,cn-wulanchabu,China (Ulanqab),40.9937, 113.1333
-alibaba,cn-guangzhou,China (Guangzhou),23.1292, 113.3288
+alibaba,cn-wulanchabu,China (Ulanqab),40.9937,113.1333
+alibaba,cn-guangzhou,China (Guangzhou),23.1292,113.3288
 alibaba,ap-southeast-1,Singapore,1.3500,103.2000
 alibaba,ap-southeast-2,Australia (Sydney),-33.1651,151.8099
 alibaba,ap-southeast-3,Malaysia (Kuala Lumpur),3.1408,101.6932
@@ -121,6 +121,37 @@ ncp,jpn-1,Japan,35.6895,139.6917
 ncp,uswn-1,US Western,37.3500,-121.9600
 ncp,den-1,Germany,50.1109,8.6821
 openstack,regionone,South Korea (Daejeon),36.3804,127.3650
+tencent,ap-singapore,Southeast Asia (Singapore),1.352083,103.819839
+tencent,ap-jakarta,Southeast Asia (Jakarta),-6.175110,106.865036
+tencent,ap-seoul,Northeast Asia (Seoul),37.566536,126.977966
+tencent,ap-tokyo,Northeast Asia (Tokyo),35.689487,139.691711
+tencent,ap-mumbai,South Asia (Mumbai),19.075983,72.877655
+tencent,ap-bangkok,Southeast Asia (Bangkok),13.756331,100.501765
+tencent,na-toronto,North America (Toronto),43.653226,-79.383184
+tencent,na-siliconvalley,Western US (Silicon Valley),37.387474,-122.057543
+tencent,na-ashburn,Eastern US (Virginia),37.431573,-78.656894
+tencent,eu-frankfurt,Europe (Frankfurt),50.110922,8.682127
+tencent,eu-moscow,Europe (Moscow),55.755826,37.6173
+tencent,ap-guangzhou,South China (Guangzhou),23.12911,113.264385
+tencent,ap-shanghai,East China (Shanghai),31.23039,121.473702
+tencent,ap-nanjing,East China (Nanjing),32.060255,118.796877
+tencent,ap-beijing,North China (Beijing),39.9042,116.407396
+tencent,ap-chengdu,Southwest China (Chengdu),30.572815,104.066801
+tencent,ap-chongqing,Southwest China (Chongqing),29.431586,106.912251
+tencent,ap-hongkong,Hong Kong,22.396428,114.109497
+ktcloud,KOR-Cheonan,Cheon-an - South Korea,36.812583,127.107005
+ktcloud,KOR-Seoul,Seoul - South Korea,37.566535,126.977969
+ktcloud,KOR-Kimhae,Kimhae - South Korea,35.228545,128.889352
+ktcloud,US,LA - US,34.052234,-118.243685
+ibm,us-south,Dallas (US South),32.776664,-96.796988
+ibm,br-sao,Sao Paulo (Brazil),-23.55052,-46.633309
+ibm,ca-tor,Toronto (Canada),43.653226,-79.383184
+ibm,us-east,Washington DC (US East),38.907192,-77.036871
+ibm,eu-de,Frankfurt (Germany),50.110922,8.682127
+ibm,eu-gb,London (United Kingdom),51.507351,-0.127758
+ibm,jp-osa,Osaka (Japan),34.693738,135.502165
+ibm,au-syd,Sydney (Australia),-33.86882,151.209296
+ibm,jp-tok,Tokyo (Japan),35.689488,139.691706
 cloudtwin,default,South Korea (Daejeon),36.3804,127.3650
 mock,default,South Korea (Seoul),37.0000,126.0000
 ufc,ufc,South Korea (Seoul),37.4767,126.8841

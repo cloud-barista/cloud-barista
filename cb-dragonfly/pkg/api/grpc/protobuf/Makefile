@@ -1,3 +1,4 @@
+
 regenerate:
 	# gogo proto compile
 	protoc \

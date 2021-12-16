@@ -2,38 +2,48 @@ package agent
 
 import (
 	"fmt"
+	"github.com/labstack/echo/v4"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
 
-	"github.com/labstack/echo/v4"
-
 	"github.com/cloud-barista/cb-dragonfly/pkg/api/rest"
 
-	"github.com/cloud-barista/cb-dragonfly/pkg/core/agent"
+	"github.com/cloud-barista/cb-dragonfly/pkg/api/core/agent"
 )
 
+// InstallTelegraf 에이전트 설치
+// @Summary Install agent to vm
+// @Description 모니터링 에이전트 설치
+// @Tags [Agent] Monitoring Agent
+// @Accept  json
+// @Produce  json
+// @Param agentInfo body rest.AgentType true "Details for an Agent Install object"
+// @Success 200 {object} rest.SimpleMsg
+// @Failure 404 {object} rest.SimpleMsg
+// @Failure 500 {object} rest.SimpleMsg
+// @Router /agent [post]
 func InstallTelegraf(c echo.Context) error {
-	// form 파라미터 값 가져오기
-	nsId := c.FormValue("ns_id")
-	mcisId := c.FormValue("mcis_id")
-	vmId := c.FormValue("vm_id")
-	publicIp := c.FormValue("public_ip")
-	userName := c.FormValue("user_name")
-	sshKey := c.FormValue("ssh_key")
-	cspType := c.FormValue("cspType")
-	port := c.FormValue("port")
-
+	params := &rest.AgentType{}
+	if err := c.Bind(params); err != nil {
+		return err
+	}
+	inputServiceType := strings.ToLower(params.ServiceType)
 	// form 파라미터 값 체크
-	if nsId == "" || mcisId == "" || vmId == "" || publicIp == "" || userName == "" || sshKey == "" || cspType == "" {
+	if params.NsId == "" || params.McisId == "" || params.VmId == "" || params.PublicIp == "" || params.UserName == "" || params.SshKey == "" || params.CspType == "" {
 		return c.JSON(http.StatusInternalServerError, rest.SetMessage("failed to get package. query parameter is missing"))
 	}
-	if port == "" {
-		port = "22"
+	if inputServiceType == "" || inputServiceType == "default" {
+		inputServiceType = "mcis"
+	} else {
+		inputServiceType = "mcks"
+	}
+	if params.Port == "" {
+		params.Port = "22"
 	}
 
-	errCode, err := agent.InstallTelegraf(nsId, mcisId, vmId, publicIp, userName, sshKey, cspType, port)
+	errCode, err := agent.InstallAgent(params.NsId, params.McisId, params.VmId, params.PublicIp, params.UserName, params.SshKey, params.CspType, params.Port, inputServiceType)
 	if errCode != http.StatusOK {
 		return c.JSON(errCode, rest.SetMessage(err.Error()))
 	}
@@ -115,25 +125,33 @@ func GetTelegrafPkgFile(c echo.Context) error {
 	return c.File(file)
 }
 
+// UninstallAgent 에이전트 삭제
+// @Summary Uninstall agent to vm
+// @Description 모니터링 에이전트 제거
+// @Tags [Agent] Monitoring Agent
+// @Accept  json
+// @Produce  json
+// @Param agentInfo body rest.AgentType true "Details for an Agent Remove object"
+// @Success 200 {object} rest.SimpleMsg
+// @Failure 404 {object} rest.SimpleMsg
+// @Failure 500 {object} rest.SimpleMsg
+// @Router /agent [delete]
 func UninstallAgent(c echo.Context) error {
-	nsId := c.FormValue("ns_id")
-	mcisId := c.FormValue("mcis_id")
-	vmId := c.FormValue("vm_id")
-	publicIp := c.FormValue("public_ip")
-	userName := c.FormValue("user_name")
-	sshKey := c.FormValue("ssh_key")
-	cspType := c.FormValue("cspType")
-	port := c.FormValue("port")
+	params := &rest.AgentType{}
+	if err := c.Bind(params); err != nil {
+		return err
+	}
+
 	// form 파라미터 값 체크
-	if nsId == "" || mcisId == "" || vmId == "" || publicIp == "" || userName == "" || sshKey == "" || cspType == "" {
+	if params.NsId == "" || params.McisId == "" || params.VmId == "" || params.PublicIp == "" || params.UserName == "" || params.SshKey == "" || params.CspType == "" {
 		return c.JSON(http.StatusInternalServerError, rest.SetMessage("failed to get package. query parameter is missing"))
 	}
 
-	if port == "" {
-		port = "22"
+	if params.Port == "" {
+		params.Port = "22"
 	}
 
-	errCode, err := agent.UninstallAgent(nsId, mcisId, vmId, publicIp, userName, sshKey, cspType, port)
+	errCode, err := agent.UninstallAgent(params.NsId, params.McisId, params.VmId, params.PublicIp, params.UserName, params.SshKey, params.CspType, params.Port)
 	if errCode != http.StatusOK {
 		fmt.Println(errCode)
 		return c.JSON(errCode, rest.SetMessage(err.Error()))

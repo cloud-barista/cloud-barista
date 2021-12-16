@@ -720,8 +720,9 @@ func handleImage() {
 					cblogger.Infof(" Image 목록 조회 실패 : ", err)
 				} else {
 					cblogger.Info("Image 목록 조회 결과")
-					cblogger.Info(result)
-					spew.Dump(result)
+					cblogger.Debug(result)
+					cblogger.Infof("로그 레벨 : [%s]", cblog.GetLevel())
+					//spew.Dump(result)
 					cblogger.Info("출력 결과 수 : ", len(result))
 
 					//조회및 삭제 테스트를 위해 리스트의 첫번째 정보의 ID를 요청ID로 자동 갱신함.
@@ -897,14 +898,22 @@ func handleVM() {
 
 			case 1:
 				vmReqInfo := irs.VMReqInfo{
-					IId: irs.IID{NameId: "mcloud-barista-iid-vm-test"},
+					IId: irs.IID{NameId: "mcloud-barista-cb-user-test"},
 					//ImageIID:          irs.IID{SystemId: "ami-001b6f8703b50e077"}, //centos-stable-7.2003.13-ebs-202005201235
 					//ImageIID:          irs.IID{SystemId: "ami-059b6d3840b03d6dd"}, //Ubuntu Server 20.04 LTS (HVM)
-					ImageIID:          irs.IID{SystemId: "ami-059b6d3840b03d6dd"}, //Ubuntu Server 20.04 LTS (HVM)
+					//ImageIID:          irs.IID{SystemId: "ami-09e67e426f25ce0d7"}, //Ubuntu Server 20.04 LTS (HVM) - 버지니아 북부 리전
+					//ImageIID:          irs.IID{SystemId: "ami-059b6d3840b03d6dd"}, //Ubuntu Server 20.04 LTS (HVM)
+					ImageIID:          irs.IID{SystemId: "ami-0fe22bffdec36361c"}, //Ubuntu Server 18.04 LTS (HVM) - Japan 리전
 					SubnetIID:         irs.IID{SystemId: "subnet-0a6ca346752be1ca4"},
-					SecurityGroupIIDs: []irs.IID{{SystemId: "sg-0556ddbff4cab480e"}},
+					SecurityGroupIIDs: []irs.IID{{SystemId: "sg-03685021f07b3ccd3"}},
 					VMSpecName:        "t2.micro",
-					KeyPairIID:        irs.IID{SystemId: "CB-KeyPairTest123123"},
+					KeyPairIID:        irs.IID{SystemId: "japan-test"},
+
+					RootDiskType: "standard", //gp2/standard/io1/io2/sc1/st1/gp3
+					//RootDiskType: "gp2", //gp2/standard/io1/io2/sc1/st1/gp3
+					//RootDiskType: "gp3", //gp2/standard/io1/io2/sc1/st1/gp3
+					RootDiskSize: "60", //최소 8GB 이상이어야 함.
+					//RootDiskSize: "Default", //8GB
 				}
 
 				vmInfo, err := vmHandler.StartVM(vmReqInfo)
@@ -914,6 +923,7 @@ func handleVM() {
 				} else {
 					cblogger.Info("VM 생성 완료!!", vmInfo)
 					spew.Dump(vmInfo)
+					VmID = vmInfo.IId
 				}
 				//cblogger.Info(vm)
 
@@ -1025,14 +1035,14 @@ func handleVMSpec() {
 
 	handler := ResourceHandler.(irs.VMSpecHandler)
 
-	config := readConfigFile()
+	//config := readConfigFile()
 	//reqVMSpec := config.Aws.VMSpec
 	//reqVMSpec := "t2.small"	// GPU가 없음
 	//reqVMSpec := "p3.2xlarge" // GPU 1개
 	reqVMSpec := "p3.8xlarge" // GPU 4개
 
-	reqRegion := config.Aws.Region
-	reqRegion = "us-east-1"
+	//reqRegion := config.Aws.Region
+	//reqRegion = "us-east-1"
 	cblogger.Info("reqVMSpec : ", reqVMSpec)
 
 	for {
@@ -1056,7 +1066,7 @@ func handleVMSpec() {
 			switch commandNum {
 			case 1:
 				fmt.Println("Start ListVMSpec() ...")
-				result, err := handler.ListVMSpec(reqRegion)
+				result, err := handler.ListVMSpec()
 				if err != nil {
 					cblogger.Error("VMSpec 목록 조회 실패 : ", err)
 				} else {
@@ -1070,7 +1080,7 @@ func handleVMSpec() {
 
 			case 2:
 				fmt.Println("Start GetVMSpec() ...")
-				result, err := handler.GetVMSpec(reqRegion, reqVMSpec)
+				result, err := handler.GetVMSpec(reqVMSpec)
 				if err != nil {
 					cblogger.Error(reqVMSpec, " VMSpec 정보 조회 실패 : ", err)
 				} else {
@@ -1082,7 +1092,7 @@ func handleVMSpec() {
 
 			case 3:
 				fmt.Println("Start ListOrgVMSpec() ...")
-				result, err := handler.ListOrgVMSpec(reqRegion)
+				result, err := handler.ListOrgVMSpec()
 				if err != nil {
 					cblogger.Error("VMSpec Org 목록 조회 실패 : ", err)
 				} else {
@@ -1100,7 +1110,7 @@ func handleVMSpec() {
 
 			case 4:
 				fmt.Println("Start GetOrgVMSpec() ...")
-				result, err := handler.GetOrgVMSpec(reqRegion, reqVMSpec)
+				result, err := handler.GetOrgVMSpec(reqVMSpec)
 				if err != nil {
 					cblogger.Error(reqVMSpec, " VMSpec Org 정보 조회 실패 : ", err)
 				} else {
