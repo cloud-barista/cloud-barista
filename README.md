@@ -107,30 +107,35 @@ Please note that the source code of CB-Larva would not be released and archived 
 
   - CB-Spider 설치 및 실행
     - [cloud-barista/cb-spider README를 참고하여 설정, 설치](/cb-spider/)
-    - cb-spider 실행 (cb-spider API 서버 실행)
+    - CB-Spider 실행
 
   - CB-Tumblebug 설치 및 실행
     - [cloud-barista/cb-tumblebug README를 참고하여 설정, 설치](/cb-tumblebug/)
       - CB-Spider API 서버 주소를 conf/setup.env 에 설정
       - CB-Dragonfly API 서버 주소를 conf/setup.env 에 설정
-    - cb-tumblebug 실행 (cb-tumblebug API 서버 실행)
+    - CB-Tumblebug 실행
+
+  - CB-MCKS 설치 및 실행
+    - [cloud-barista/cb-mcks README를 참고하여 설정, 설치](/cb-mcks/)
+      - CB-Spider API 서버 주소를 conf/setup.env 에 설정
+      - CB-Tumblebug API 서버 주소를 conf/setup.env 에 설정
+    - CB-MCKS 실행
 
   - CB-Ladybug 설치 및 실행
     - [cloud-barista/cb-ladybug README를 참고하여 설정, 설치](/cb-ladybug/)
-      - CB-Spider API 서버 주소를 conf/setup.env 에 설정
-      - CB-Tumblebug API 서버 주소를 conf/setup.env 에 설정
-    - cb-ladybug 실행 (cb-ladybug API 서버 실행)
+      - CB-MCKS API 서버 주소를 conf/setup.env 에 설정
+    - CB-Ladybug 실행
 
   - CB-Dragonfly 설치 및 실행
     - [cloud-barista/cb-dragonfly README를 참고하여 설정, 설치](/cb-dragonfly/)
-    - cb-dragonfly 실행 (cb-dragonfly API 서버 실행)
+    - CB-Dragonfly 실행
 
   - cb-webtool 설치 및 실행
     - [cloud-barista/cb-webtool README를 참고하여 설정, 설치](/cb-webtool/)
       - CB-Spider API 서버 주소를 conf/setup.env 에 설정
       - CB-Tumblebug API 서버 주소를 conf/setup.env 에 설정
       - CB-Dragonfly API 서버 주소를 conf/setup.env 에 설정
-    - cb-webtool 실행 (cb-webtool GUI 서버 실행)
+    - cb-webtool 실행
 
 ***
 
@@ -149,11 +154,11 @@ Please note that the source code of CB-Larva would not be released and archived 
 ### 주요 서비스 2) 멀티 클라우드 쿠버네티스 서비스 (MCKS)
 
 - 멀티 클라우드 쿠버네티스 서비스 환경 구성
-  - [CB-Ladybug 설정 및 실행](https://github.com/cloud-barista/cb-ladybug#getting-started)
-    - CB-Tumblebug (필수)
+  - [CB-MCKS 설정 및 실행](https://github.com/cloud-barista/cb-mcks#getting-started)
     - CB-Spider (필수)
+    - CB-Tumblebug (필수)
     - cb-webtool (Web기반 GUI)
-- [멀티 클라우드 쿠버네티스 서비스 사용 방법](https://github.com/cloud-barista/cb-ladybug/tree/master/docs/test#test)
+- [멀티 클라우드 쿠버네티스 서비스 사용 방법](https://github.com/cloud-barista/cb-mcks/tree/master/docs/test#test)
 
 ***
 
@@ -168,8 +173,9 @@ Please note that the source code of CB-Larva would not be released and archived 
 
 - 개발 단계: 기능 개발 우선 단계 (상용 활용시 안정화 및 보완 필요)
 - CSP 연동 검증 상태
-  - CB-Tumblebug 기준 테스트 완료된 CSP: AWS, GCP, Azure, Alibaba, Cloudit
-  - CB-Ladybug 기준 테스트 완료된 CSP: AWS, GCP, Azure
-  - 현재는 개발 단계이므로 기능 안정성은 낮을 수 있음 (버그 리포트 기여 환영합니다..!)
+  - CB-Spider 기준 테스트 완료된 CSP: [링크 1](https://github.com/cloud-barista/cb-spider#3-제공-자원) 및 [링크 2](https://github.com/cloud-barista/cb-spider/wiki/Supported-CloudOS) 참고
+  - CB-Tumblebug 기준 테스트 완료된 CSP: [링크](https://github.com/cloud-barista/cb-tumblebug/wiki/Supported-CSPs) 참고
+  - CB-MCKS 기준 테스트 완료된 CSP: [링크](https://github.com/cloud-barista/cb-mcks/wiki/Supported-Cloud-Providers) 참고
+  - 현재는 개발 단계이므로 기능 안정성은 낮을 수 있음 (버그 리포트 기여 환영합니다!)
 
 ***
