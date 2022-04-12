@@ -11,7 +11,7 @@ replace (
 
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
-	github.com/beego/beego/v2 v2.0.1
+	github.com/beego/beego/v2 v2.0.2
 	github.com/cloud-barista/cb-log v0.5.0
 	github.com/cloud-barista/cb-spider v0.4.19
 	github.com/cloud-barista/cb-store v0.5.0
