@@ -33,6 +33,10 @@ func MappingMonMetric(metricName string, metricVal *interface{}) (interface{}, e
 		metricKeyArr = Network{}.GetField()
 	case "net":
 		metricKeyArr = Network{}.GetField()
+	case "node":
+		metricKeyArr = MCK8SNode{}.GetField()
+	case "pod":
+		metricKeyArr = MCK8SPod{}.GetField()
 	default:
 		err = errors.New("not found metric")
 	}

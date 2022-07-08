@@ -24,9 +24,10 @@ import (
 )
 
 func GetUserInfo(c echo.Context, userID string) (map[string]string, bool) {
+	user := os.Getenv("LoginUser")
 	store := echosession.FromContext(c) // store내 param은 모두 소문자.
 	result, ok := store.Get(userID)
-	if !ok && userID == "admin" { // admin일 때 해당 정보가 없으면 admin정보를 다시 set.
+	if !ok && userID == user { // setup.env에서 받아온 userID와 비교
 		setAdminUser(c)
 		result, ok = store.Get(userID)
 	}

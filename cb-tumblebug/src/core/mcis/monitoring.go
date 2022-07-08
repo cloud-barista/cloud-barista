@@ -132,13 +132,13 @@ func CheckDragonflyEndpoint() error {
 			fmt.Println(err)
 			return err
 		}
-		defer res.Body.Close()
 
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			fmt.Println(err)
 			return err
 		}
+		defer res.Body.Close()
 
 		fmt.Println(string(body))
 		return nil
@@ -256,15 +256,16 @@ func CallMonitoringAsync(wg *sync.WaitGroup, nsID string, mcisID string, mcisSer
 			errStr += "/ " + err.Error()
 		}
 
-		defer res.Body.Close()
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			common.CBLog.Error(err)
 			errStr += "/ " + err.Error()
 		}
+		defer res.Body.Close()
 
 		result = string(body)
 	}
+	defer res.Body.Close()
 
 	//wg.Done() //goroutin sync done
 
@@ -363,10 +364,8 @@ func InstallMonitorAgentToMcis(nsId string, mcisId string, mcisServiceType strin
 		resultTmp.VmIp = v.VmIp
 		resultTmp.Result = v.Result
 		content.ResultArray = append(content.ResultArray, resultTmp)
-		//fmt.Println("result from goroutin " + v)
 	}
 
-	//fmt.Printf("%+v\n", content)
 	common.PrintJsonPretty(content)
 
 	return content, nil
@@ -419,9 +418,8 @@ func GetMonitoringData(nsId string, mcisId string, metric string) (MonResultSimp
 		vmIp, _ := GetVmIp(nsId, mcisId, vmId)
 
 		// DF: Get vm on-demand monitoring metric info
-		// Path Para: /ns/:nsId/mcis/:mcisId/vm/:vmId/agent_ip/:agent_ip/metric/:metric_name/ondemand-monitoring-info
+		// Path Param: /ns/:nsId/mcis/:mcisId/vm/:vmId/agent_ip/:agent_ip/metric/:metric_name/ondemand-monitoring-info
 		cmd := "/ns/" + nsId + "/mcis/" + mcisId + "/vm/" + vmId + "/agent_ip/" + vmIp + "/metric/" + metric + "/ondemand-monitoring-info"
-		//fmt.Println("[CMD] " + cmd)
 
 		go CallGetMonitoringAsync(&wg, nsId, mcisId, vmId, vmIp, method, metric, cmd, &resultArray)
 
@@ -432,11 +430,9 @@ func GetMonitoringData(nsId string, mcisId string, metric string) (MonResultSimp
 	content.McisId = mcisId
 	for _, v := range resultArray {
 		content.McisMonitoring = append(content.McisMonitoring, v)
-		//fmt.Println("result from goroutin " + v)
 	}
 
 	fmt.Printf("%+v\n", content)
-	//common.PrintJsonPretty(content)
 
 	return content, nil
 
@@ -464,7 +460,6 @@ func CallGetMonitoringAsync(wg *sync.WaitGroup, nsID string, mcisID string, vmID
 			Timeout: time.Duration(responseLimit) * time.Minute,
 		}
 		req, err := http.NewRequest(method, url, nil)
-		// errStr := ""
 		if err != nil {
 			common.CBLog.Error(err)
 			errStr = err.Error()
@@ -485,14 +480,15 @@ func CallGetMonitoringAsync(wg *sync.WaitGroup, nsID string, mcisID string, vmID
 				errStr = err1.Error()
 			}
 
-			defer res.Body.Close()
 			body, err2 := ioutil.ReadAll(res.Body)
 			if err2 != nil {
 				common.CBLog.Error(err2)
 				errStr = err2.Error()
 			}
+			defer res.Body.Close()
 			response = string(body)
 		}
+
 	} else {
 		reqParams := df_pb.VMOnDemandMonQryRequest{
 			NsId:    nsID,
@@ -512,11 +508,8 @@ func CallGetMonitoringAsync(wg *sync.WaitGroup, nsID string, mcisID string, vmID
 		if err != nil {
 			common.CBLog.Error(err)
 		}
-		fmt.Println(result) // for debug
 		response = result
 	}
-
-	//common.PrintJsonPretty(response) // for debuging
 
 	if !gjson.Valid(response) {
 		fmt.Println("!gjson.Valid(response)")

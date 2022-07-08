@@ -5,6 +5,7 @@ import (
 )
 
 type SpiderVMInfo struct {
+	CspId            string                `json:"cspid"`
 	IID              tbcommon.TbIID        `json:"iid"`
 	ImageIID         tbcommon.TbIID        `json:"imageIId"`
 	KeyPairIID       tbcommon.TbIID        `json:"keyPairIId"`
@@ -32,6 +33,10 @@ type SpiderVMInfo struct {
 	VmspecName   string `json:"vmspecName"`
 	VmuserId     string `json:"vmuserId"`
 	VmuserPasswd string `json:"vmuserPasswd"`
+
+	RootDeviceName string `json:"rootDeviceName"`
+	RootDiskSize   string `json:"rootDiskSize"`
+	RootDiskType   string `json:"rootDiskType"`
 
 	VpcIID  tbcommon.TbIID `json:"vpcIID"`
 	VpcName string         `json:"vpcName"`

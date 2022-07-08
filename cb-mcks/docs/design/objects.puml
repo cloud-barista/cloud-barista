@@ -45,6 +45,16 @@ object openstackCredential #WhiteSmoke {
 	domain_name
 	project_id
 }
+object ibmCredential #WhiteSmoke {
+	api_key
+}
+object clouditCredential #WhiteSmoke {
+	identity_endpoint
+	username
+	password
+	auth_token
+	tenant_id
+}
 
 object config #WhiteSmoke {
 }
@@ -57,6 +67,8 @@ azureCredential	--|>	credential
 alibabaCredential	--|>	credential
 tencentCredential	--|>	credential
 openstackCredential	--|>	credential
+ibmCredential   --|>	credential
+clouditCredential --|>	credential
 config			-->		credential
 config			-->		region
 

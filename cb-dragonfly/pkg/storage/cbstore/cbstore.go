@@ -32,12 +32,15 @@ func (cs *CBStore) StorePut(key string, value string) error {
 	return cs.Store.Put(key, value)
 }
 
-func (cs *CBStore) StoreGet(key string) string {
-	keyVal, _ := cs.Store.Get(key)
-	if keyVal == nil {
-		return ""
+func (cs *CBStore) StoreGet(key string) (*string, error) {
+	keyVal, err := cs.Store.Get(key)
+	if err != nil {
+		return nil, err
 	}
-	return keyVal.Value
+	if keyVal == nil {
+		return nil, nil
+	}
+	return &keyVal.Value, nil
 }
 
 func (cs *CBStore) StoreGetToInt(key string) int {
@@ -61,11 +64,11 @@ func (cs *CBStore) StoreDelete(key string) error {
 	return cs.Store.Delete(key)
 }
 
-func (cs *CBStore) StoreGetListMap(key string, sortAscend bool) map[string]string {
+func (cs *CBStore) StoreGetListMap(key string, sortAscend bool) (map[string]string, error) {
 	keyVal, err := cs.Store.GetList(key, sortAscend)
 	if err != nil {
 		util.GetLogger().Error(err)
-		return map[string]string{}
+		return nil, err
 	}
 	result := map[string]string{}
 	for _, ev := range keyVal {
@@ -73,14 +76,14 @@ func (cs *CBStore) StoreGetListMap(key string, sortAscend bool) map[string]strin
 			result[ev.Key] = ev.Value
 		}
 	}
-	return result
+	return result, nil
 }
 
-func (cs *CBStore) StoreGetListArray(key string, sortAscend bool) []string {
+func (cs *CBStore) StoreGetListArray(key string, sortAscend bool) ([]string, error) {
 	keyVal, err := cs.Store.GetList(key, sortAscend)
 	if err != nil {
 		util.GetLogger().Error(err)
-		return []string{err.Error()}
+		return nil, err
 	}
 	var result []string
 	for _, ev := range keyVal {
@@ -88,7 +91,7 @@ func (cs *CBStore) StoreGetListArray(key string, sortAscend bool) []string {
 			result = append(result, ev.Key)
 		}
 	}
-	return result
+	return result, nil
 }
 
 func (cs *CBStore) StoreDelList(key string) error {

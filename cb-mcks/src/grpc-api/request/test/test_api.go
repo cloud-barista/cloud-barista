@@ -10,6 +10,7 @@ import (
 	"github.com/cloud-barista/cb-spider/interface/api"
 	sp_api "github.com/cloud-barista/cb-spider/interface/api"
 	tb_api "github.com/cloud-barista/cb-tumblebug/src/api/grpc/request"
+	"github.com/cloud-barista/cb-tumblebug/src/core/common"
 )
 
 //  Data Structure to contain user configuration
@@ -321,7 +322,7 @@ func CreateNSApiTest() {
 		logger.Fatal(err)
 	}
 
-	reqNs := &tb_api.NsReq{
+	reqNs := &common.NsReq{
 		Name:        namespace,
 		Description: "NameSpace for General Testing",
 	}

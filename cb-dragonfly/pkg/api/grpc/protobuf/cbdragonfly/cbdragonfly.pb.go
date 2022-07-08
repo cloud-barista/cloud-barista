@@ -2285,7 +2285,13 @@ type InstallAgentRequest struct {
 	SshKey               string   `protobuf:"bytes,6,opt,name=ssh_key,proto3" json:"ssh_key" yaml:"ssh_key"`
 	CspType              string   `protobuf:"bytes,7,opt,name=csp_type,proto3" json:"csp_type" yaml:"csp_type"`
 	Port                 string   `protobuf:"bytes,8,opt,name=port,proto3" json:"port" yaml:"port"`
-	ServiceType                 string   `protobuf:"bytes,8,opt,name=port,proto3" json:"service_type" yaml:"service_type"`
+	ServiceType          string   `protobuf:"bytes,9,opt,name=service_type,proto3" json:"service_type" yaml:"service_type"`
+	Mck8sId              string   `protobuf:"bytes,10,opt,name=mck8s_id,proto3" json:"mck8s_id" yaml:"mck8s_id"`
+	APIServerURL         string   `protobuf:"bytes,11,opt,name=apiserver_url,proto3" json:"apiserver_url" yaml:"apiserver_url"`
+	ServerCA             string   `protobuf:"bytes,12,opt,name=service_ca,proto3" json:"service_ca" yaml:"service_ca"`
+	ClientCA             string   `protobuf:"bytes,13,opt,name=client_ca,proto3" json:"client_ca" yaml:"client_ca"`
+	ClientKey            string   `protobuf:"bytes,14,opt,name=client_key,proto3" json:"client_key" yaml:"client_key"`
+	ClientToken          string   `protobuf:"bytes,15,opt,name=client_token,proto3" json:"client_token" yaml:"client_token"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`

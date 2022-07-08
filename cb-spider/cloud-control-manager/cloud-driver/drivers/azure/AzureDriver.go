@@ -14,6 +14,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/Azure/azure-sdk-for-go/profiles/2020-09-01/monitor/mgmt/insights"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2021-03-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2021-02-01/network"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2020-10-01/resources"
@@ -47,6 +48,7 @@ func (AzureDriver) GetDriverCapability() idrv.DriverCapabilityInfo {
 	drvCapabilityInfo.PublicIPHandler = false
 	drvCapabilityInfo.VMHandler = true
 	drvCapabilityInfo.VMSpecHandler = true
+	drvCapabilityInfo.NLBHandler = true
 
 	return drvCapabilityInfo
 }
@@ -82,6 +84,10 @@ func (driver *AzureDriver) ConnectCloud(connectionInfo idrv.ConnectionInfo) (ico
 	if err != nil {
 		return nil, err
 	}
+	Ctx, sgRuleClient, err := getSecurityGroupRuleClient(connectionInfo.CredentialInfo)
+	if err != nil {
+		return nil, err
+	}
 	Ctx, vNicClient, err := getVNicClient(connectionInfo.CredentialInfo)
 	if err != nil {
 		return nil, err
@@ -114,23 +120,44 @@ func (driver *AzureDriver) ConnectCloud(connectionInfo idrv.ConnectionInfo) (ico
 	if err != nil {
 		return nil, err
 	}
+	Ctx, nlbClient, err := getNLBClient(connectionInfo.CredentialInfo)
+	if err != nil {
+		return nil, err
+	}
+	Ctx, nlbBackendAddressPoolsClient, err := getNLBBackendAddressPoolsClient(connectionInfo.CredentialInfo)
+	if err != nil {
+		return nil, err
+	}
+	Ctx, nlbLoadBalancingRulesClient, err := getLoadBalancingRulesClient(connectionInfo.CredentialInfo)
+	if err != nil {
+		return nil, err
+	}
+	Ctx, metricClient, err := getMetricClient(connectionInfo.CredentialInfo)
+	if err != nil {
+		return nil, err
+	}
 
 	iConn := azcon.AzureCloudConnection{
-		CredentialInfo:      connectionInfo.CredentialInfo,
-		Region:              connectionInfo.RegionInfo,
-		Ctx:                 Ctx,
-		VMClient:            VMClient,
-		ImageClient:         imageClient,
-		PublicIPClient:      publicIPClient,
-		SecurityGroupClient: sgClient,
-		VNetClient:          VNetClient,
-		VNicClient:          vNicClient,
-		IPConfigClient:      IPConfigClient,
-		SubnetClient:        SubnetClient,
-		VMImageClient:       VMImageClient,
-		DiskClient:          DiskClient,
-		VmSpecClient:        VmSpecClient,
-		SshKeyClient:        sshKeyClient,
+		CredentialInfo:               connectionInfo.CredentialInfo,
+		Region:                       connectionInfo.RegionInfo,
+		Ctx:                          Ctx,
+		VMClient:                     VMClient,
+		ImageClient:                  imageClient,
+		PublicIPClient:               publicIPClient,
+		SecurityGroupClient:          sgClient,
+		SecurityGroupRuleClient:      sgRuleClient,
+		VNetClient:                   VNetClient,
+		VNicClient:                   vNicClient,
+		IPConfigClient:               IPConfigClient,
+		SubnetClient:                 SubnetClient,
+		VMImageClient:                VMImageClient,
+		DiskClient:                   DiskClient,
+		VmSpecClient:                 VmSpecClient,
+		SshKeyClient:                 sshKeyClient,
+		NLBClient:                    nlbClient,
+		NLBBackendAddressPoolsClient: nlbBackendAddressPoolsClient,
+		NLBLoadBalancingRulesClient:  nlbLoadBalancingRulesClient,
+		MetricClient:                 metricClient,
 	}
 	return &iConn, nil
 }
@@ -147,6 +174,9 @@ func checkResourceGroup(credential idrv.CredentialInfo, region idrv.RegionInfo) 
 	ctx, _ := context.WithTimeout(context.Background(), cspTimeout*time.Second)
 
 	rg, err := resourceClient.Get(ctx, region.ResourceGroup)
+	if err != nil {
+		return nil
+	}
 
 	// 해당 리소스 그룹이 없을 경우 생성
 	if rg.ID == nil {
@@ -212,6 +242,20 @@ func getSecurityGroupClient(credential idrv.CredentialInfo) (context.Context, *n
 	}
 
 	sgClient := network.NewSecurityGroupsClient(credential.SubscriptionId)
+	sgClient.Authorizer = authorizer
+	ctx, _ := context.WithTimeout(context.Background(), cspTimeout*time.Second)
+
+	return ctx, &sgClient, nil
+}
+
+func getSecurityGroupRuleClient(credential idrv.CredentialInfo) (context.Context, *network.SecurityRulesClient, error) {
+	config := auth.NewClientCredentialsConfig(credential.ClientId, credential.ClientSecret, credential.TenantId)
+	authorizer, err := config.Authorizer()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	sgClient := network.NewSecurityRulesClient(credential.SubscriptionId)
 	sgClient.Authorizer = authorizer
 	ctx, _ := context.WithTimeout(context.Background(), cspTimeout*time.Second)
 
@@ -328,4 +372,60 @@ func getVmSpecClient(credential idrv.CredentialInfo) (context.Context, *compute.
 	ctx, _ := context.WithTimeout(context.Background(), cspTimeout*time.Second)
 
 	return ctx, &vmSpecClient, nil
+}
+
+func getNLBClient(credential idrv.CredentialInfo) (context.Context, *network.LoadBalancersClient, error) {
+	config := auth.NewClientCredentialsConfig(credential.ClientId, credential.ClientSecret, credential.TenantId)
+	authorizer, err := config.Authorizer()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	nlbClient := network.NewLoadBalancersClient(credential.SubscriptionId)
+	nlbClient.Authorizer = authorizer
+	ctx, _ := context.WithTimeout(context.Background(), cspTimeout*time.Second)
+
+	return ctx, &nlbClient, nil
+}
+
+func getNLBBackendAddressPoolsClient(credential idrv.CredentialInfo) (context.Context, *network.LoadBalancerBackendAddressPoolsClient, error) {
+	config := auth.NewClientCredentialsConfig(credential.ClientId, credential.ClientSecret, credential.TenantId)
+	authorizer, err := config.Authorizer()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	nlbBackendAddressPoolsClient := network.NewLoadBalancerBackendAddressPoolsClient(credential.SubscriptionId)
+	nlbBackendAddressPoolsClient.Authorizer = authorizer
+	ctx, _ := context.WithTimeout(context.Background(), cspTimeout*time.Second)
+
+	return ctx, &nlbBackendAddressPoolsClient, nil
+}
+
+func getLoadBalancingRulesClient(credential idrv.CredentialInfo) (context.Context, *network.LoadBalancerLoadBalancingRulesClient, error) {
+	config := auth.NewClientCredentialsConfig(credential.ClientId, credential.ClientSecret, credential.TenantId)
+	authorizer, err := config.Authorizer()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	nlbBackendAddressPoolsClient := network.NewLoadBalancerLoadBalancingRulesClient(credential.SubscriptionId)
+	nlbBackendAddressPoolsClient.Authorizer = authorizer
+	ctx, _ := context.WithTimeout(context.Background(), cspTimeout*time.Second)
+
+	return ctx, &nlbBackendAddressPoolsClient, nil
+}
+
+func getMetricClient(credential idrv.CredentialInfo) (context.Context, *insights.MetricsClient, error) {
+	config := auth.NewClientCredentialsConfig(credential.ClientId, credential.ClientSecret, credential.TenantId)
+	authorizer, err := config.Authorizer()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	metricClient := insights.NewMetricsClient(credential.SubscriptionId)
+	metricClient.Authorizer = authorizer
+	ctx, _ := context.WithTimeout(context.Background(), cspTimeout*time.Second)
+
+	return ctx, &metricClient, nil
 }

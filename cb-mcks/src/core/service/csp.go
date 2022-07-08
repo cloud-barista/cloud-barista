@@ -3,11 +3,12 @@ package service
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"strings"
 
-	"github.com/cloud-barista/cb-mcks/src/core/model/tumblebug"
-	"github.com/cloud-barista/cb-mcks/src/utils/config"
-	logger "github.com/sirupsen/logrus"
+	"github.com/cloud-barista/cb-mcks/src/core/app"
+	"github.com/cloud-barista/cb-mcks/src/core/tumblebug"
+	"github.com/cloud-barista/cb-mcks/src/utils/lang"
 )
 
 const (
@@ -15,6 +16,7 @@ const (
 	AZURE_IMAGE_ID   = "Canonical:UbuntuServer:18.04-LTS:latest"
 	ALIBABA_IMAGE_ID = "ubuntu_18_04_x64_20G_alibase_20210521.vhd"
 	TENCENT_IMAGE_ID = "img-pi0ii46r"
+	CLOUDIT_IMAGE_ID = "Ubuntu 18.04"
 )
 
 // region별 AMI :  (AMI 이름 : ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-20200908, 소유자:099720109477 )
@@ -42,42 +44,75 @@ var imageMap = map[string]string{
 	"sa-east-1":      "ami-0fd2c3d373788b726", //남아메리카 (상파울루)
 }
 
-// get vm image-id
-func GetVmImageId(csp config.CSP, configName string, region *tumblebug.Region) (string, error) {
+var ibmImageMap = map[string]string{
+	"us-south": "r006-9de77234-3189-42f8-982d-f2266477cfe0", //미국 남부
+	"br-sao":   "r042-92d1cd12-f014-4b9a-abf8-c5ca6494a9e5", //브라질
+	"us-east":  "r014-dc446598-a1b5-41c3-a1d6-add3afaf264e", //미국 동부
+	"eu-de":    "r010-1f68eb2d-f35c-4959-8f4b-2b2f9cf78102", //독일
+	"ca-tor":   "r038-e92647cf-8be9-438a-b94c-251cc86bc99a", //캐나다
+	"eu-gb":    "r018-1d7417c6-893e-49d4-b14d-9643d6b29812", //영국
+	"au-syd":   "r026-a8c25ce6-0ca1-43e9-9b41-411c6217b8b8", //호주
+	"jp-osa":   "r034-522c639c-52e1-4cab-8dfb-bc0fb9f6f577", //일본 (오사카)
+	"jp-tok":   "r022-61fdadec-6b03-4bd2-bfca-62cd16f5673f", //일본 (도쿄)
+}
 
-	if csp == config.CSP_GCP {
+// get a cidr-block
+func getCSPCidrBlock(csp app.CSP) string {
+
+	switch csp {
+	case app.CSP_AWS:
+		return fmt.Sprintf("192.168.%d.0/24", 10+rand.Intn(10))
+	case app.CSP_GCP:
+		return fmt.Sprintf("192.168.%d.0/24", 20+rand.Intn(10))
+	case app.CSP_AZURE:
+		return fmt.Sprintf("192.168.%d.0/24", 30+rand.Intn(10))
+	case app.CSP_ALIBABA:
+		return fmt.Sprintf("192.168.%d.0/24", 40+rand.Intn(10))
+	case app.CSP_TENCENT:
+		return fmt.Sprintf("192.168.%d.0/24", 50+rand.Intn(10))
+	case app.CSP_IBM:
+		return fmt.Sprintf("192.168.%d.0/24", 60+rand.Intn(10))
+	case app.CSP_OPENSTACK:
+		return fmt.Sprintf("192.168.%d.0/24", 70+rand.Intn(10))
+	case app.CSP_CLOUDIT:
+		return "10.0.244.0/22"
+	}
+
+	return "192.168.255.0/24"
+}
+
+// get a vm-image-id
+func getCSPImageId(csp app.CSP, configName string, region *tumblebug.Region) (string, error) {
+
+	if csp == app.CSP_GCP {
 		return GCP_IMAGE_ID, nil
-	} else if csp == config.CSP_AZURE {
+	} else if csp == app.CSP_AZURE {
 		return AZURE_IMAGE_ID, nil
-	} else if csp == config.CSP_ALIBABA {
+	} else if csp == app.CSP_ALIBABA {
 		return ALIBABA_IMAGE_ID, nil
-	} else if csp == config.CSP_TENCENT {
+	} else if csp == app.CSP_TENCENT {
 		return TENCENT_IMAGE_ID, nil
-	} else if csp == config.CSP_OPENSTACK {
+	} else if csp == app.CSP_CLOUDIT {
+		return CLOUDIT_IMAGE_ID, nil
+	} else if csp == app.CSP_OPENSTACK {
 		// openstack : lookupImages를 통해 사용자가 등록한 이미지를 검색하여, 이미지 이름에 'ubuntu'와 '1804'가 포함된 이미지 정보 가져오기
 		lookupImages := tumblebug.NewLookupImages(configName)
-		err := lookupImages.LookupImages()
-		if err != nil {
-			return "", errors.New(fmt.Sprintf("failed to lookup images on openstack (connection='%s', cause=%v)", configName, err))
+		if exist, err := lookupImages.GET(); err != nil {
+			return "", errors.New(fmt.Sprintf("Failed to lookup a images on openstack. (connection=%s, cause='%v')", configName, err))
+		} else if !exist {
+			return "", errors.New(fmt.Sprintf("Could not be found a image on openstack. (connection=%s)", configName))
 		}
 
-		var filterImages []tumblebug.LookupImagesInfo
-		for _, li := range lookupImages.Image {
-			imageInfo := tumblebug.LookupImagesInfo{
-				NameId:   li.IId.NameId,
-				FilterId: GetVmImageName(li.IId.NameId),
-			}
-			filterImages = append(filterImages, imageInfo)
-		}
-
-		for _, fi := range filterImages {
-			if strings.Contains(fi.FilterId, "ubuntu") && strings.Contains(fi.FilterId, "1804") {
-				return fi.NameId, nil
+		for _, image := range lookupImages.Images {
+			id := strings.ToLower(lang.GetOnlyLettersAndNumbers(image.IId.NameId))
+			if strings.Contains(id, "ubuntu") && strings.Contains(id, "1804") {
+				return image.IId.NameId, nil
 			}
 		}
-		return "", errors.New(fmt.Sprintf("request not found ubuntu 18.04 image on openstack. please create an image based on Ubuntu 18.04 The image name must include 'ubuntu' and '18.04'. (connection='%s')", configName))
 
-	} else if csp == config.CSP_AWS {
+		return "", errors.New(fmt.Sprintf("Could not be found a ubuntu 18.04 image on openstack. please create an image based on Ubuntu 18.04 The image name must include 'ubuntu' and '18.04'. (connection=%s)", configName))
+
+	} else if csp == app.CSP_AWS {
 		// AWS : 리전별 AMI 가져오기
 		regionName := ""
 		for _, info := range region.KeyValueInfoList {
@@ -88,40 +123,40 @@ func GetVmImageId(csp config.CSP, configName string, region *tumblebug.Region) (
 		}
 
 		if regionName == "" {
-			return "", errors.New(fmt.Sprintf("request not found AMI on AWS (cause = region name is empty, connection='%s', region name='%s')", configName, region.RegionName))
+			return "", errors.New(fmt.Sprintf("Could not be found a AMI on AWS. (cause = region name is empty, connection=%s, region=%s)", configName, region.RegionName))
 		}
 
 		// TODO [update/hard-coding] region별 image id
 		imageId := imageMap[regionName]
 		if imageId == "" {
-			return "", errors.New(fmt.Sprintf("request not found AMI on AWS image map (connection='%s', region='%s')", configName, regionName))
+			return "", errors.New(fmt.Sprintf("Could not be found a AMI on AWS image map. (connection=%s, region=%s)", configName, regionName))
 		}
 
-		logger.Infof("AMI find OK (ami='%s', region='%s')", imageId, regionName)
 		return imageId, nil
 
+	} else if csp == app.CSP_IBM {
+		// IBM : 리전별 image 가져오기
+		regionName := ""
+		for _, info := range region.KeyValueInfoList {
+			if info.Key == "Region" {
+				regionName = info.Value //get region name
+				break
+			}
+		}
+
+		if regionName == "" {
+			return "", errors.New(fmt.Sprintf("Could not be found a image on IBM. (cause = region name is empty, connection=%s, region=%s)", configName, region.RegionName))
+		}
+
+		// TODO [update/hard-coding] region별 image id
+		imageId := ibmImageMap[regionName]
+		if imageId == "" {
+			return "", errors.New(fmt.Sprintf("Could not be found a image on IBM image map. (connection=%s, region=%s)", configName, regionName))
+		}
+
+		return imageId, nil
 	} else {
-		return "", errors.New(fmt.Sprintf("CSP '%s' is not supported (Not found \"vm-machine-image\")", csp))
+		return "", errors.New(fmt.Sprintf("CSP '%s' is not supported. (could not be found 'vm-machine-image')", csp))
 	}
 
-}
-
-// get CSP Name
-func GetCSPName(providerName string) (config.CSP, error) {
-
-	switch strings.ToLower(providerName) {
-	case string(config.CSP_AWS):
-		return config.CSP_AWS, nil
-	case string(config.CSP_GCP):
-		return config.CSP_GCP, nil
-	case string(config.CSP_AZURE):
-		return config.CSP_AZURE, nil
-	case string(config.CSP_ALIBABA):
-		return config.CSP_ALIBABA, nil
-	case string(config.CSP_TENCENT):
-		return config.CSP_TENCENT, nil
-	case string(config.CSP_OPENSTACK):
-		return config.CSP_OPENSTACK, nil
-	}
-	return "", errors.New(providerName + "is not supported")
 }

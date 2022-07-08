@@ -12,7 +12,7 @@
 
 ```
 [NOTE]
-CB-MCKS is currently under development. (The latest version is v0.5.0 (Affogato))
+CB-MCKS is currently under development. (The latest version is v0.6.0 (Cafe Latte))
 So, we do not recommend using the current release in production.
 Please note that the functionalities of CB-MCKS are not stable and secure yet.
 If you have any difficulties in using CB-MCKS, please let us know.
@@ -27,8 +27,8 @@ If you have any difficulties in using CB-MCKS, please let us know.
 
 ### Dependencies
 
-* CB-Tumblebug [v0.5.0](https://github.com/cloud-barista/cb-tumblebug/releases/tag/v0.5.0)
-* CB-Spider [v0.5.0](https://github.com/cloud-barista/cb-spider/releases/tag/v0.5.0)
+* CB-Tumblebug [v0.6.0](https://github.com/cloud-barista/cb-tumblebug/releases/tag/v0.6.0)
+* CB-Spider [v0.6.0](https://github.com/cloud-barista/cb-spider/releases/tag/v0.6.0)
 
 
 ### Clone
@@ -44,6 +44,7 @@ $ go get -v all
 ```
 $ export CBLOG_ROOT="$(pwd)"
 $ export CBSTORE_ROOT="$(pwd)"
+$ export APP_ROOT="$(pwd)"
 $ go run src/main.go
 ```
 
@@ -56,6 +57,7 @@ $ go build -o cb-mcks src/main.go
 ```
 $ export CBLOG_ROOT="$(pwd)"
 $ export CBSTORE_ROOT="$(pwd)"
+$ export APP_ROOT="$(pwd)"
 $ nohup ./cb-mcks & > /dev/null
 ```
 

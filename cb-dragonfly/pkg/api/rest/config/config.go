@@ -18,8 +18,8 @@ import (
 // @Tags [Setting] Multi-Cloud Monitor Policy Setting
 // @Accept  json
 // @Produce  json
-// @Param monitorInfo body config.Monitoring true "Details for an Monitor object"
-// @Success 200 {object} Monitoring
+// @Param monitorInfo body pkgconfig.Monitoring true "Details for an Monitor object"
+// @Success 200 {object} pkgconfig.Monitoring
 // @Failure 404 {object} rest.SimpleMsg
 // @Failure 500 {object} rest.SimpleMsg
 // @Router /config [put]
@@ -45,7 +45,7 @@ func SetMonConfig(c echo.Context) error {
 // @Tags [Setting] Multi-Cloud Monitor Policy Setting
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} config.Monitoring
+// @Success 200 {object} pkgconfig.Monitoring
 // @Failure 404 {object} rest.SimpleMsg
 // @Failure 500 {object} rest.SimpleMsg
 // @Router /config [get]
@@ -63,7 +63,7 @@ func GetMonConfig(c echo.Context) error {
 // @Tags [Setting] Multi-Cloud Monitor Policy Setting
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} config.Monitoring
+// @Success 200 {object} pkgconfig.Monitoring
 // @Failure 404 {object} rest.SimpleMsg
 // @Failure 500 {object} rest.SimpleMsg
 // @Router /config/reset [put]

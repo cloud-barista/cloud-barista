@@ -7,12 +7,14 @@ const (
 
 // CB-Store key
 const (
-	Agent             = "/monitoring/agents/"
-	MonConfig         = "/monitoring/configs"
-	EventLog          = "/monitoring/eventLogs"
-	CollectorPolicy   = "/monitoring/collectorPolicy"
-	Topic             = "/push/topic"
-	CollectorTopicMap = "/push/collectorTopicMap"
+	Agent                  = "/monitoring/agents/"
+	MonConfig              = "/monitoring/configs"
+	EventLog               = "/monitoring/eventLogs"
+	CollectorPolicy        = "/monitoring/collectorPolicy"
+	Topic                  = "/push/topic"
+	CollectorTopicMap      = "/push/collectorTopicMap"
+	MCK8STopic             = "/mck8s/push/topic"
+	MCK8SCollectorTopicMap = "/mck8s/push/collectorTopicMap"
 )
 
 const (
@@ -63,8 +65,8 @@ const (
 )
 
 const (
-	LabelKey  = "name"
-	Namespace = "dragonfly"
+	LabelKey = "name"
+	//Namespace = "dragonfly"
 	//CollectorImage = "docker.io/hojun121/collector:latest"
 	CollectorImage = "cloudbaristaorg/cb-dragonfly:0.5.0-collector"
 )

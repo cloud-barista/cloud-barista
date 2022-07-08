@@ -12,6 +12,7 @@ package resources
 
 import (
 	"fmt"
+	"sync"
 
 	cblog "github.com/cloud-barista/cb-log"
 	irs "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces/resources"
@@ -28,6 +29,8 @@ func init() {
 	securityInfoMap = make(map[string][]*irs.SecurityInfo)
 }
 
+var sgMapLock = new(sync.RWMutex)
+
 // (1) create securityInfo object
 // (2) insert securityInfo into global Map
 func (securityHandler *MockSecurityHandler) CreateSecurity(securityReqInfo irs.SecurityReqInfo) (irs.SecurityInfo, error) {
@@ -40,11 +43,13 @@ func (securityHandler *MockSecurityHandler) CreateSecurity(securityReqInfo irs.S
 	// (1) create securityInfo object
 	securityInfo := irs.SecurityInfo{securityReqInfo.IId,
 		securityReqInfo.VpcIID,
-		securityReqInfo.Direction,
+		// deprecated; securityReqInfo.Direction,
 		securityReqInfo.SecurityRules,
 		nil}
 
 	// (2) insert SecurityInfo into global Map
+sgMapLock.Lock()
+defer sgMapLock.Unlock()
 	infoList, _ := securityInfoMap[mockName]
 	infoList = append(infoList, &securityInfo)
 	securityInfoMap[mockName] = infoList
@@ -76,7 +81,7 @@ func CloneSecurityInfo(srcInfo irs.SecurityInfo) irs.SecurityInfo {
 	clonedInfo := irs.SecurityInfo{
 		IId:       irs.IID{srcInfo.IId.NameId, srcInfo.IId.SystemId},
 		VpcIID:    irs.IID{srcInfo.VpcIID.NameId, srcInfo.VpcIID.SystemId},
-		Direction: srcInfo.Direction,
+		// deprecated; Direction: srcInfo.Direction,
 
 		// Need not clone
 		SecurityRules: srcInfo.SecurityRules,
@@ -91,6 +96,8 @@ func (securityHandler *MockSecurityHandler) ListSecurity() ([]*irs.SecurityInfo,
 	cblogger.Info("Mock Driver: called ListSecurity()!")
 
 	mockName := securityHandler.MockName
+sgMapLock.RLock()
+defer sgMapLock.RUnlock()
 	infoList, ok := securityInfoMap[mockName]
 	if !ok {
 		return []*irs.SecurityInfo{}, nil
@@ -103,16 +110,19 @@ func (securityHandler *MockSecurityHandler) GetSecurity(iid irs.IID) (irs.Securi
 	cblogger := cblog.GetLogger("CB-SPIDER")
 	cblogger.Info("Mock Driver: called GetSecurity()!")
 
-	infoList, err := securityHandler.ListSecurity()
-	if err != nil {
-		cblogger.Error(err)
-		return irs.SecurityInfo{}, err
-	}
+sgMapLock.RLock()
+defer sgMapLock.RUnlock()
+
+	mockName := securityHandler.MockName
+        infoList, ok := securityInfoMap[mockName]
+        if !ok {
+		return irs.SecurityInfo{}, fmt.Errorf("%s SecurityGroup does not exist!!", iid.NameId)
+        }
 
 	// infoList is already cloned in ListSecurity()
 	for _, info := range infoList {
 		if info.IId.NameId == iid.NameId {
-			return *info, nil
+			return CloneSecurityInfo(*info), nil
 		}
 	}
 
@@ -123,13 +133,15 @@ func (securityHandler *MockSecurityHandler) DeleteSecurity(iid irs.IID) (bool, e
 	cblogger := cblog.GetLogger("CB-SPIDER")
 	cblogger.Info("Mock Driver: called DeleteSecurity()!")
 
-	infoList, err := securityHandler.ListSecurity()
-	if err != nil {
-		cblogger.Error(err)
-		return false, err
-	}
+sgMapLock.Lock()
+defer sgMapLock.Unlock()
 
 	mockName := securityHandler.MockName
+        infoList, ok := securityInfoMap[mockName]
+        if !ok {
+                return false, fmt.Errorf("%s SecurityGroup does not exist!!", iid.NameId)
+        }
+
 	for idx, info := range infoList {
 		if info.IId.SystemId == iid.SystemId {
 			infoList = append(infoList[:idx], infoList[idx+1:]...)
@@ -139,3 +151,127 @@ func (securityHandler *MockSecurityHandler) DeleteSecurity(iid irs.IID) (bool, e
 	}
 	return false, nil
 }
+
+
+func (securityHandler *MockSecurityHandler) AddRules(sgIID irs.IID, securityRules *[]irs.SecurityRuleInfo) (irs.SecurityInfo, error) {
+        cblogger := cblog.GetLogger("CB-SPIDER")
+        cblogger.Info("Mock Driver: called AddRules()!")
+
+sgMapLock.Lock()
+defer sgMapLock.Unlock()
+
+        mockName := securityHandler.MockName
+        infoList, ok := securityInfoMap[mockName]
+        if !ok {
+                return irs.SecurityInfo{}, fmt.Errorf("%s SecurityGroup does not exist!!", sgIID.NameId)
+        }
+
+	// check if all input rules exist
+        for _, info := range infoList {
+                if info.IId.NameId == sgIID.NameId {
+                        for _, reqRuleInfo := range *securityRules {
+                                for _, ruleInfo := range *info.SecurityRules {
+                                        if isEqualRule(&ruleInfo, &reqRuleInfo) {
+                                                errMSG := fmt.Sprintf("%s SecurityGroup already has this rule: %v!!", sgIID.NameId, reqRuleInfo)
+                                                errMSG += fmt.Sprintf(" #### %s SecurityGroup has %v!!", sgIID.NameId, *info.SecurityRules)
+                                                return irs.SecurityInfo{}, fmt.Errorf(errMSG)
+                                        }
+                                }
+                        }
+                }
+        }
+
+	// Add all rules
+        for _, info := range infoList {
+                if info.IId.NameId == sgIID.NameId {
+			*info.SecurityRules = append(*info.SecurityRules, *securityRules...)
+                        return CloneSecurityInfo(*info), nil
+                }
+        }
+
+	return irs.SecurityInfo{}, fmt.Errorf("%s SecurityGroup does not exist!!", sgIID.NameId)
+}
+
+func (securityHandler *MockSecurityHandler) RemoveRules(sgIID irs.IID, securityRules *[]irs.SecurityRuleInfo) (bool, error) {
+        cblogger := cblog.GetLogger("CB-SPIDER")
+        cblogger.Info("Mock Driver: called RemoveRules()!")
+
+sgMapLock.Lock()
+defer sgMapLock.Unlock()
+
+        mockName := securityHandler.MockName
+        infoList, ok := securityInfoMap[mockName]
+        if !ok {
+                return false, fmt.Errorf("%s SecurityGroup does not exist!!", sgIID.NameId)
+        }
+
+        // check if all input rules do not exist
+        for _, info := range infoList {
+                if info.IId.NameId == sgIID.NameId {
+                        for _, reqRuleInfo := range *securityRules {
+				existFlag := false
+                                for _, ruleInfo := range *info.SecurityRules {
+                                        if isEqualRule(&ruleInfo, &reqRuleInfo) {
+						existFlag = true
+                                        }
+                                }
+				if !existFlag {
+                                                errMSG := fmt.Sprintf("%s SecurityGroup does not have this rule: %v!!", sgIID.NameId, reqRuleInfo)
+                                                errMSG += fmt.Sprintf(" #### %s SecurityGroup has %v!!", sgIID.NameId, *info.SecurityRules)
+                                                return false, fmt.Errorf(errMSG)
+				}
+                        }
+                }
+        }
+
+        for _, info := range infoList {
+                if (*info).IId.NameId == sgIID.NameId {
+                        for idx, ruleInfo := range *info.SecurityRules {
+				for _, reqRuleInfo := range *securityRules {
+					if isEqualRule(&ruleInfo, &reqRuleInfo) {
+						*info.SecurityRules = removeRule(info.SecurityRules, idx)
+						//return true, nil
+					}
+				}
+			}
+                }
+        }
+
+
+        return true, nil
+}
+
+func isEqualRule(a *irs.SecurityRuleInfo, b *irs.SecurityRuleInfo) bool {
+	/*------------------------------
+	type SecurityRuleInfo struct {
+		Direction  string
+		IPProtocol string
+		FromPort   string
+		ToPort     string
+		CIDR       string
+	}
+	-------------------------------*/
+
+	if a.Direction != b.Direction {
+		return false
+	}
+	if a.IPProtocol != b.IPProtocol {
+		return false
+	}
+	if a.FromPort != b.FromPort {
+		return false
+	}
+	if a.ToPort != b.ToPort {
+		return false
+	}
+	if a.CIDR != b.CIDR {
+		return false
+	}
+
+	return true
+}
+
+func removeRule(list *[]irs.SecurityRuleInfo, idx int) []irs.SecurityRuleInfo {
+	return append((*list)[:idx], (*list)[idx+1:]...)
+}
+

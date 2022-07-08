@@ -150,6 +150,7 @@ function commonConfirmOpen(targetAction, caller) {
             ["Provider", "Would you like to set Cloud Provider ?"],
 
             ["MoveToConnection", "Would you like to set Cloud config ?"],
+            ["ChangeConnection", "Would you like to change Cloud connection ?"],
             ["DeleteCloudConnection", "Would you like to delete <br /> the Cloud connection? "],
 
             ["DeleteCredential", "Would you like to delete <br /> the Credential? "],
@@ -197,6 +198,7 @@ function commonConfirmOpen(targetAction, caller) {
             ["MoveToMcisManagementFromDashboard", "Would you like to manage MCIS ?"],
 
             ["AddNewMcis", "Would you like to create MCIS ?"],
+            ["AddNewMcisDynamic", "Would you like to create MCIS ?"],
             ["DeleteMcis", "Are you sure to delete this MCIS? "],
             ["ImportScriptOfMcis", "Would you like to import MCIS script? "],
             ["ExportScriptOfMcis", "Would you like to export MCIS script? "],
@@ -229,6 +231,8 @@ function commonConfirmOpen(targetAction, caller) {
 
             ["AddMonitoringAlertEventHandler", "Would you like to add<br />Monitoring Alert Event-Handler ?"],
             ["deleteMonitoringAlertEventHandler", "Are you sure to delete<br />this Monitoring Alert Event-Handler?"],
+
+            ["RegisterRecommendSpec", "현재 해당 connection에서 사용가능한 spec 이 없습니다. 등록 하시겠습니까?"],
         ]
     );
     console.log(confirmModalTextMap.get(targetAction));
@@ -281,6 +285,8 @@ function commonConfirmOk() {
     } else if (targetAction == "MoveToConnection") {
         var targetUrl = "/setting/connections/cloudconnectionconfig/mngform"
         changePage(targetUrl)
+    } else if (targetAction == "ChangeConnection") { // recommendvm에서 다른 connection 선택 시
+        changeCloudConnection()
     } else if (targetAction == "DeleteCloudConnection") {
         deleteCloudConnection();
     } else if (targetAction == "Config") {
@@ -455,6 +461,10 @@ function commonConfirmOk() {
         deleteMonitoringAlertEventHandler();
     } else if (targetAction == "DeleteMcks") {
         deleteMCKS();
+    } else if (targetAction == "RegisterRecommendSpec") {
+        commonPromptOpen("RegisterRecommendSpec")
+    } else if (targetAction == "AddNewMcisDynamic") {
+        createMcisDynamic()
     } else {
         alert("수행할 function 정의되지 않음 " + targetAction);
     }
@@ -524,6 +534,9 @@ function commonPromptOpen(targetAction, targetObjId) {
             ["RemoteCommandMcis", "Please enter a command to execute"],
             ["RemoteCommandVmOfMcis", "Please enter a command to execute"],
 
+            ["RegisterRecommendSpec", "등록할 Spec의 이름을 입력하세요"],
+            ["AddNewMcisDynamic", "생성할 MCIS의 이름을 입력하세요"],
+
         ]
     );
     console.log(promptModalTextMap.get(targetAction));
@@ -567,52 +580,63 @@ function commonPromptOk() {
             filterTable(targetObjId, "Credential", targetValue)
         }
     } else if (targetAction == 'RsFltVPCName') {// Name이라는 Column을 Filtering
+        var filterKey = "name"
         if (targetValue) {
-            filterTable(targetObjId, "VPC Name", targetValue)
+            getCommonSecurityGroupList("", "name", "", filterKey, targetValue)
         }
     } else if (targetAction == 'RsFltCIDRBlock') {// Name이라는 Column을 Filtering
+        var filterKey = "cidrBlock"
         if (targetValue) {
-            filterTable(targetObjId, "CIDR Block", targetValue)
+            getCommonSecurityGroupList("", "name", "", filterKey, targetValue)
         }
     } else if (targetAction == 'RsFltSecurityGroupName') {// Name이라는 Column을 Filtering
+        var filterKey = "cspSecurityGroupName"
         if (targetValue) {
-            filterTable(targetObjId, "SecurityGroup Name", targetValue)
+            getCommonSecurityGroupList("securitygroupmng", "name", "", filterKey, targetValue)
         }
     } else if (targetAction == 'RsFltConnectionName') {// Name이라는 Column을 Filtering
+        var filterKey = "connectionName"
         if (targetValue) {
-            filterTable(targetObjId, "Connection Name", targetValue)
+            getCommonSecurityGroupList("securitygroupmng", "name", "", filterKey, targetValue)
         }
     } else if (targetAction == 'RsFltSshName') {// Name이라는 Column을 Filtering
         if (targetValue) {
             filterTable(targetObjId, "Name", targetValue)
         }
     } else if (targetAction == 'RsFltSshConnName') {// Name이라는 Column을 Filtering
+        var filterKey = "connectionName"
         if (targetValue) {
-            filterTable(targetObjId, "Connection Name", targetValue)
+            getCommonSshKeyList("", "name", "", filterKey, targetValue)
         }
     } else if (targetAction == 'RsFltSshKeyName') {// Name이라는 Column을 Filtering
+        var filterKey = "name"
         if (targetValue) {
-            filterTable(targetObjId, "SSH KEY Name", targetValue)
+            getCommonSshKeyList("", "name", "", filterKey, targetValue)
         }
     } else if (targetAction == 'RsFltSrvImgId') {// Name이라는 Column을 Filtering
+        var filterKey = "cspImageId"
         if (targetValue) {
-            filterTable(targetObjId, "Image ID", targetValue)
+            getCommonVirtualMachineImageList("virtualmachineimagemng", "name", "", filterKey, targetValue)
         }
     } else if (targetAction == 'RsFltSrvImgName') {// Name이라는 Column을 Filtering
+        var filterKey = "name"
         if (targetValue) {
-            filterTable(targetObjId, "Image Name", targetValue)
+            getCommonVirtualMachineImageList("virtualmachineimagemng", "name", "", filterKey, targetValue)
         }
     } else if (targetAction == 'RsFltSrvSpecName') {// Name이라는 Column을 Filtering
+        var filterKey = "name"
         if (targetValue) {
-            filterTable(targetObjId, "Name", targetValue)
+            getCommonVirtualMachineSpecList("virtualmachinespecmng", "name", "", filterKey, targetValue)
         }
     } else if (targetAction == 'RsFltSrvSpecConnName') {// Name이라는 Column을 Filtering
+        var filterKey = "connectionName"
         if (targetValue) {
-            filterTable(targetObjId, "Connection Name", targetValue)
+            getCommonVirtualMachineSpecList("virtualmachinespecmng", "name", "", filterKey, targetValue)
         }
     } else if (targetAction == 'RsFltSrvCspSpecName') {// Name이라는 Column을 Filtering
+        var filterKey = "cspSpecName"
         if (targetValue) {
-            filterTable(targetObjId, "CSP Spec Name", targetValue)
+            getCommonVirtualMachineSpecList("virtualmachinespecmng", "name", "", filterKey, targetValue)
         }
     } else if (targetAction == 'NSFltName') {// Name이라는 Column을 Filtering
         if (targetValue) {
@@ -677,6 +701,11 @@ function commonPromptOk() {
         if (targetValue) {
             remoteCommandVmMcis(targetValue);
         }
+    } else if (targetAction == 'RegisterRecommendSpec') {
+        createRecommendSpec(targetValue);
+    } else if (targetAction == 'AddNewMcisDynamic') {
+        $("#mcis_name").val(targetValue)
+        createMcisDynamic()
     }
 
 
@@ -1224,5 +1253,31 @@ function showBtnDelAll() {
 //필터 지우기 버튼 숨기기
 function hideBtnDelAll() {
     $(".btn_del_all").css("display", "none");
+}
+
+// TODO : util.js로 옮길 것
+// select box의 option text에 compareText가 있으면 show 없으면 hide
+function selectBoxFilterByText(targetObject, compareText) {
+    $('#' + targetObject + ' option').filter(function () {
+        if (this.value == "") return;
+        console.log(this.text + " : " + compareText)
+        console.log(this.text.indexOf(compareText) > -1)
+        this.text.indexOf(compareText) > -1 ? $(this).show() : $(this).hide();
+    });
+}
+
+// TODO : util.js로 옮길 것
+// select box의 option text에 compareText1 && compareText2가 모두 있으면 show 없으면 hide
+function selectBoxFilterBy2Texts(targetObject, compareText1, compareText2) {
+    $('#' + targetObject + ' option').filter(function () {
+        if (this.value == "") return;
+        console.log(this.text + " : " + compareText1)
+        console.log(this.text.indexOf(compareText1) > -1)
+        if (this.text.indexOf(compareText1) > -1 && this.text.indexOf(compareText2) > -1) {
+            $(this).show()
+        } else {
+            $(this).hide();
+        }
+    });
 }
 

@@ -21,7 +21,6 @@
   <configuration default="false" name="cb-dragonfly" type="GoApplicationRunConfiguration" factoryName="Go Application">
     <module name="cb-dragonfly" />
     <working_directory value="$PROJECT_DIR$/" />
-    <go_parameters value="-i" />
     <envs>
       <env name="CBSTORE_ROOT" value="$PROJECT_DIR$" />
       <env name="CBLOG_ROOT" value="$PROJECT_DIR$" />

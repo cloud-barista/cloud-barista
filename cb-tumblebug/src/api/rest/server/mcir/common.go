@@ -49,7 +49,6 @@ func RestDelAllResources(c echo.Context) error {
 		return c.JSON(http.StatusConflict, &mapA)
 	}
 
-	//mapA := map[string]string{"message": "All " + resourceType + "s has been deleted"}
 	return c.JSON(http.StatusOK, output)
 }
 
@@ -109,6 +108,8 @@ func RestGetAllResources(c echo.Context) error {
 	nsId := c.Param("nsId")
 
 	optionFlag := c.QueryParam("option")
+	filterKey := c.QueryParam("filterKey")
+	filterVal := c.QueryParam("filterVal")
 
 	resourceType := strings.Split(c.Path(), "/")[5]
 	// c.Path(): /tumblebug/ns/:nsId/resources/spec/:specId
@@ -125,7 +126,7 @@ func RestGetAllResources(c echo.Context) error {
 		return c.JSON(http.StatusOK, &content)
 	} else {
 
-		resourceList, err := mcir.ListResource(nsId, resourceType)
+		resourceList, err := mcir.ListResource(nsId, resourceType, filterKey, filterVal)
 		if err != nil {
 			mapA := map[string]string{"message": "Failed to list " + resourceType + "s; " + err.Error()}
 			return c.JSON(http.StatusNotFound, &mapA)
@@ -137,11 +138,6 @@ func RestGetAllResources(c echo.Context) error {
 				Image []mcir.TbImageInfo `json:"image"`
 			}
 
-			if resourceList == nil {
-				return c.JSON(http.StatusOK, &content)
-			}
-
-			// When err == nil && resourceList != nil
 			content.Image = resourceList.([]mcir.TbImageInfo) // type assertion (interface{} -> array)
 			return c.JSON(http.StatusOK, &content)
 		case common.StrSecurityGroup:
@@ -149,11 +145,6 @@ func RestGetAllResources(c echo.Context) error {
 				SecurityGroup []mcir.TbSecurityGroupInfo `json:"securityGroup"`
 			}
 
-			if resourceList == nil {
-				return c.JSON(http.StatusOK, &content)
-			}
-
-			// When err == nil && resourceList != nil
 			content.SecurityGroup = resourceList.([]mcir.TbSecurityGroupInfo) // type assertion (interface{} -> array)
 			return c.JSON(http.StatusOK, &content)
 		case common.StrSpec:
@@ -161,11 +152,6 @@ func RestGetAllResources(c echo.Context) error {
 				Spec []mcir.TbSpecInfo `json:"spec"`
 			}
 
-			if resourceList == nil {
-				return c.JSON(http.StatusOK, &content)
-			}
-
-			// When err == nil && resourceList != nil
 			content.Spec = resourceList.([]mcir.TbSpecInfo) // type assertion (interface{} -> array)
 			return c.JSON(http.StatusOK, &content)
 		case common.StrSSHKey:
@@ -173,11 +159,6 @@ func RestGetAllResources(c echo.Context) error {
 				SshKey []mcir.TbSshKeyInfo `json:"sshKey"`
 			}
 
-			if resourceList == nil {
-				return c.JSON(http.StatusOK, &content)
-			}
-
-			// When err == nil && resourceList != nil
 			content.SshKey = resourceList.([]mcir.TbSshKeyInfo) // type assertion (interface{} -> array)
 			return c.JSON(http.StatusOK, &content)
 		case common.StrVNet:
@@ -185,11 +166,6 @@ func RestGetAllResources(c echo.Context) error {
 				VNet []mcir.TbVNetInfo `json:"vNet"`
 			}
 
-			if resourceList == nil {
-				return c.JSON(http.StatusOK, &content)
-			}
-
-			// When err == nil && resourceList != nil
 			content.VNet = resourceList.([]mcir.TbVNetInfo) // type assertion (interface{} -> array)
 			return c.JSON(http.StatusOK, &content)
 		default:
@@ -248,8 +224,6 @@ func RestCheckResource(c echo.Context) error {
 
 	if err != nil {
 		common.CBLog.Error(err)
-		//mapA := map[string]string{"message": err.Error()}
-		//return c.JSON(http.StatusFailedDependency, &mapA)
 		return c.JSON(http.StatusNotFound, &content)
 	}
 
@@ -273,7 +247,6 @@ func RestTestAddObjectAssociation(c echo.Context) error {
 		mapA := map[string]string{"message": err.Error()}
 		return c.JSON(http.StatusInternalServerError, &mapA)
 	}
-	//mapA := map[string]int8{"inUseCount": inUseCount}
 	return c.JSON(http.StatusOK, vmKeyList)
 }
 
@@ -294,7 +267,6 @@ func RestTestDeleteObjectAssociation(c echo.Context) error {
 		mapA := map[string]string{"message": err.Error()}
 		return c.JSON(http.StatusInternalServerError, &mapA)
 	}
-	//mapA := map[string]int8{"inUseCount": inUseCount}
 	return c.JSON(http.StatusOK, vmKeyList)
 }
 
@@ -391,7 +363,6 @@ func RestDelAllDefaultResources(c echo.Context) error {
 		return c.JSON(http.StatusConflict, &mapA)
 	}
 
-	//mapA := map[string]string{"message": "All default resources have been deleted"}
 	return c.JSON(http.StatusOK, output)
 }
 

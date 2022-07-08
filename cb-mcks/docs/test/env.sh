@@ -14,10 +14,10 @@ fi
 # 1. CSP
 if [ "$#" -gt 0 ]; then v_CSP="$1"; else	v_CSP="${CSP}"; fi
 if [ "${v_CSP}" = "" ]; then
-	read -e -p "Cloud ? [AWS(default) or GCP or AZURE or ALIBABA or TENCENT or OPENSTACK] : "  v_CSP
+	read -e -p "Cloud ? [AWS(default) or GCP or AZURE or ALIBABA or TENCENT or OPENSTACK or IBM] : "  v_CSP
 fi
 
-if [ "${v_CSP}" != "GCP" ] && [ "${v_CSP}" != "AWS" ] && [ "${v_CSP}" != "AZURE" ] && [ "${v_CSP}" != "ALIBABA" ] && [ "${v_CSP}" != "TENCENT" ] && [ "${v_CSP}" != "OPENSTACK" ]; then echo "[ERROR] missing <cloud>"; exit -1;fi
+if [ "${v_CSP}" != "GCP" ] && [ "${v_CSP}" != "AWS" ] && [ "${v_CSP}" != "AZURE" ] && [ "${v_CSP}" != "ALIBABA" ] && [ "${v_CSP}" != "TENCENT" ] && [ "${v_CSP}" != "OPENSTACK" ] && [ "${v_CSP}" != "IBM" ]; then echo "[ERROR] missing <cloud>"; exit -1;fi
 
 # credential file
 if [ "$#" -gt 1 ]; then v_FILE="$2"; else	v_FILE="${CRT_FILE}"; fi
@@ -77,6 +77,13 @@ if [ "${v_CSP}" = "OPENSTACK" ]; then
 
 fi
 
+# credential (ibm)
+if [ "${v_CSP}" = "IBM" ]; then
+
+	export IBM_API_KEY="$(cat ${v_FILE} | jq '.apikey' | sed  '/^$/d; s/\r//; s/"//g')"
+
+fi
+
 # ------------------------------------------------------------------------------
 # print info.
 echo ""
@@ -105,3 +112,5 @@ echo -E "- Username          is '${OS_USERNAME}'"
 echo -E "- Password          is '${OS_PASSWORD}'"
 echo -E "- DomainName        is '${OS_USER_DOMAIN_NAME}'"
 echo -E "- ProjectID         is '${OS_PROJECT_ID}'"
+echo "IBM"
+echo -E "- APIKEY     is '${IBM_API_KEY}'"

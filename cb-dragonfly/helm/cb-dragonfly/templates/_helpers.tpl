@@ -61,3 +61,25 @@ Create the name of the service account to use
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Create the name of the Cluster Role to use
+*/}}
+{{- define "cb-dragonfly.clusterRoleName" -}}
+{{- if .Values.clusterRole.create -}}
+    {{ default (include "cb-dragonfly.fullname" .) .Values.clusterRole.name }}
+{{- else -}}
+    {{ default "default" .Values.clusterRole.name }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Create the name of the Role Binding to use
+*/}}
+{{- define "cb-dragonfly.roleBindingName" -}}
+{{- if .Values.roleBinding.create -}}
+    {{ default (include "cb-dragonfly.fullname" .) .Values.roleBinding.name }}
+{{- else -}}
+    {{ default "default" .Values.roleBinding.name }}
+{{- end -}}
+{{- end -}}

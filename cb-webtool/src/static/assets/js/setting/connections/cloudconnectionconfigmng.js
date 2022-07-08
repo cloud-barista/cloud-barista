@@ -14,6 +14,12 @@ $(document).ready(function () {
         changePage(targetUrl)
     })
 
+
+    $('#Inspect_Resources_All').on('shown.bs.modal', function () {// bootstrap 3 또는 4
+        setInspectResourcesListAll()
+    });
+
+
     // css class 의 .btn_ok 에 대한 event를 따로 정의 함.
     // $('#AddBox .btn_ok.register').click(function(){
     // }
@@ -809,7 +815,7 @@ function saveNewCredential() {
     var credentialInfo = "";
     // provider에 따라 사용하는 key가 불규칙적임.
 
-    if (providerName == "AWS" || providerName == "TENCENT" ) {
+    if (providerName == "AWS" || providerName == "TENCENT") {
         credentialInfo = {
             CredentialName: credentialName,
             ProviderName: providerName,
@@ -1132,12 +1138,12 @@ function selCredentialProvider(providerName) {
 }
 
 // Map 관련 설정
-function setMap(locationInfo){
+function setMap(locationInfo) {
     //show_mcis2(url,JZMap);
     //function show_mcis2(url, map){
     // var JZMap = map;
 
-    if( locationInfo == undefined) {
+    if (locationInfo == undefined) {
         var locationInfo = new Object();
         locationInfo.id = "1"
         locationInfo.name = "pin"
@@ -1167,3 +1173,161 @@ function setMap(locationInfo){
 }
 
 // Map 관련 설정 끝.
+
+function setInspectResourcesList() {
+    var connectionName = $("#inspectResourceConnectionName").val()
+    var resourceType = $("#inspectResourcesType").val()
+
+    var url = "/setting/resources/inspectresources/list"
+
+    var obj = {
+        connectionName: connectionName,
+        resourceType: resourceType
+    }
+
+    axios.post(url, obj, {
+
+    }).then(result => {
+        console.log("inspect: ", result);
+        if (result.status == 200 || result.status == 201) {
+            console.log(result.data.inspectResource.resources);
+            var data = result.data.inspectResource.resources
+            inspectResourcesListCallbackSuccess(data)
+        } else {
+            commonAlert("Set Inspect Resource List Fail")
+        }
+
+
+    }).catch((error) => {
+        console.warn(error);
+        console.log(error.response)
+        var errorMessage = error.response.data.error;
+        var statusCode = error.response.status;
+        commonErrorAlert(statusCode, errorMessage)
+    });
+}
+
+function inspectResourcesListCallbackSuccess(data) {
+    var onCspTotal = data.onCspTotal.info
+    var onSpider = data.onSpider.info
+    var onTumblebug = data.onTumblebug.info
+    var html = ""
+    var totalList = new Array()
+
+    if (onCspTotal) {
+        onCspTotal.map((item, index) => (
+            totalList.push({
+                id: item.idByCsp,
+                name: item.refNameOrId,
+                spider: "",
+                tumblebug: "",
+            })
+        ))
+    }
+
+    if (onSpider) {
+        onSpider.map((spider, index) => {
+            var isExist = false
+            totalList.map((item, idx) => {
+                if (item.id == spider.idByCsp) {
+                    item.spider = spider.idBySp
+                    isExist = true
+                }
+            })
+
+            // onCspTotal에 없는 리소스인 경우 추가
+            if (!isExist) {
+                totalList.push({
+                    id: spider.idByCsp,
+                    name: "",
+                    spider: spider.idBySp,
+                    tumblebug: "",
+                })
+            }
+        })
+    }
+
+    if (onTumblebug) {
+        onTumblebug.map((tumblebug, index) => {
+            totalList.map((item, idx) => {
+                if (item.id == tumblebug.idByCsp) {
+                    item.tumblebug = tumblebug.idByTb
+                }
+            })
+
+        })
+    }
+
+    console.log(totalList);
+
+    if (totalList.length == 0) {
+        html += '<tr><td class="overlay hidden" data-th="" colspan="3">No Data</td></tr>'
+    } else {
+        totalList.map((item, index) => {
+            html += '<tr>'
+                + '<input type="hidden" id="inspect_resource_id" value=' + item.id + '/>'
+                + '<td class="overlay hidden" data-th="name">' + item.name + '</td>'
+                + '<td class="overlay hidden" data-th="spider">' + item.spider + '</td>'
+                + '<td class="overlay hidden" data-th="tumblebug">' + item.tumblebug + '</td>'
+                + '</tr>'
+        })
+    }
+
+    $("#inspectResourcesList").empty()
+    $("#inspectResourcesList").append(html)
+
+}
+
+function setInspectResourcesListAll() {
+    var url = "/setting/resources/inspectresourcesoverview"
+
+    axios.post(url, {
+
+    }).then(result => {
+        console.log("inspect all: ", result);
+        if (result.status == 200 || result.status == 201) {
+            console.log(result.data.inspectResourceAllResult);
+            var data = result.data.inspectResourceAllResult
+            inspectResourcesListAllCallbackSuccess(data)
+        } else {
+            commonAlert("Set Inspect Resource List Fail")
+        }
+
+
+    }).catch((error) => {
+        console.warn(error);
+        console.log(error.response)
+        var errorMessage = error.response.data.error;
+        var statusCode = error.response.status;
+        commonErrorAlert(statusCode, errorMessage)
+    });
+}
+
+function inspectResourcesListAllCallbackSuccess(data) {
+    var inspectResult = data.inspectResult
+    var cspOnlyOverview = data.cspOnlyOverview
+    var tumblebugOverview = data.tumblebugOverview
+    var inspectResult = data.inspectResult
+    var html = ""
+    var cspOnlyOverviewHtml = 'VNet:' + cspOnlyOverview.vNet + ', Security Group: ' + cspOnlyOverview.securityGroup + ', SSH Key: ' + cspOnlyOverview.sshKey + ', VM: ' + cspOnlyOverview.vm
+    var tumblebugHtml = 'VNet:' + tumblebugOverview.vNet + ', Security Group: ' + tumblebugOverview.securityGroup + ', SSH Key: ' + tumblebugOverview.sshKey + ', VM: ' + tumblebugOverview.vm
+
+    inspectResult.map((item, index) => {
+        html += '<tr>'
+            + '<input type="hidden" id="inspect_resource_all_id" value=' + item.connectionName + '/>'
+            + '<td class="overlay hidden" data-th="connection_name">' + item.connectionName + '</td>'
+            + '<td class="overlay hidden" data-th="csp_only_resource"> VNet:' + item.cspOnlyOverview.vNet + '<br/> Security Group: ' + item.cspOnlyOverview.securityGroup + '<br/> SSH Key: ' + item.cspOnlyOverview.sshKey + '<br/> VM: ' + item.cspOnlyOverview.vm + '</td>'
+            + '<td class="overlay hidden" data-th="tumblebug_resource"> VNet:' + item.tumblebugOverview.vNet + '<br/> Security Group: ' + item.tumblebugOverview.securityGroup + '<br/> SSH Key: ' + item.tumblebugOverview.sshKey + '<br/> VM: ' + item.tumblebugOverview.vm + '</td>'
+            + '</tr>'
+    })
+
+    $("#inspect_csp_only").empty()
+    $("#inspect_csp_only").append(cspOnlyOverviewHtml)
+
+    $("#inspect_tumblebug").empty()
+    $("#inspect_tumblebug").append(tumblebugHtml)
+
+    $("#inspectResourcesAllList").empty()
+    $("#inspectResourcesAllList").append(html)
+
+}

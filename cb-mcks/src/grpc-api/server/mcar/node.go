@@ -7,7 +7,7 @@ import (
 	"github.com/cloud-barista/cb-mcks/src/grpc-api/logger"
 	pb "github.com/cloud-barista/cb-mcks/src/grpc-api/protobuf/cbmcks"
 
-	"github.com/cloud-barista/cb-mcks/src/core/model"
+	"github.com/cloud-barista/cb-mcks/src/core/app"
 	"github.com/cloud-barista/cb-mcks/src/core/service"
 )
 
@@ -28,7 +28,7 @@ func (s *MCARService) AddNode(ctx context.Context, req *pb.NodeCreateRequest) (*
 	}
 
 	// GRPC 메시지에서 MCKS 객체로 복사
-	var mcarObj model.NodeReq
+	var mcarObj app.NodeReq
 	err := gc.CopySrcToDest(&req.Item, &mcarObj)
 	if err != nil {
 		return nil, gc.ConvGrpcStatusErr(err, "", "MCARService.AddNode()")

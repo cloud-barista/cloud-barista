@@ -2,6 +2,7 @@ package task
 
 import (
 	"fmt"
+	"github.com/cloud-barista/cb-dragonfly/pkg/config"
 	v1 "github.com/cloud-barista/cb-dragonfly/pkg/storage/metricstore/influxdb/v1"
 	"regexp"
 	"strings"
@@ -13,7 +14,6 @@ import (
 	"github.com/cloud-barista/cb-dragonfly/pkg/api/core/alert/eventhandler"
 	"github.com/cloud-barista/cb-dragonfly/pkg/api/core/alert/topichandler"
 	"github.com/cloud-barista/cb-dragonfly/pkg/api/core/alert/types"
-	"github.com/cloud-barista/cb-dragonfly/pkg/config"
 )
 
 const (
@@ -89,23 +89,29 @@ func CreateTask(alertTaskReq types.AlertTaskReq) (*types.AlertTask, error) {
 	if alertTaskReq.AlertEventType == eventhandler.SlackType {
 		topicHandlerOpts["workspace"] = alertTaskReq.AlertEventName
 	}
+	if alertTaskReq.AlertEventType == eventhandler.POSTType {
+		topicHandlerOpts["url"] = alertTaskReq.AlertPostUrl
+	}
 	err = topichandler.CreateTopicHandler(fmt.Sprintf(KapacitorTaskFormat, alertTaskInfo.Name), alertTaskInfo.AlertEventType, topicHandlerOpts)
 	if err != nil {
 		return nil, err
 	}
-	var dragonflyPort int
-	if config.GetInstance().Monitoring.DeployType == "helm" {
-		dragonflyPort = config.GetInstance().Dragonfly.HelmPort
-	} else {
-		dragonflyPort = config.GetInstance().Dragonfly.Port
-	}
-	// Create Log Topic Handler
-	logOpts := map[string]interface{}{
-		"url": fmt.Sprintf("http://%s:%d/dragonfly/alert/event", config.GetInstance().Dragonfly.DragonflyIP, dragonflyPort),
-	}
-	err = topichandler.CreateTopicHandler(fmt.Sprintf(KapacitorTaskFormat, alertTaskInfo.Name), eventhandler.POSTType, logOpts)
-	if err != nil {
-		return nil, err
+
+	if alertTaskInfo.AlertEventType != eventhandler.POSTType {
+		var dragonflyPort int
+		if config.GetInstance().Monitoring.DeployType == "helm" {
+			dragonflyPort = config.GetInstance().Dragonfly.HelmPort
+		} else {
+			dragonflyPort = config.GetInstance().Dragonfly.Port
+		}
+		// Create Log Topic Handler
+		logOpts := map[string]interface{}{
+			"url": fmt.Sprintf("http://%s:%d/dragonfly/alert/event", config.GetInstance().Dragonfly.DragonflyIP, dragonflyPort),
+		}
+		err = topichandler.CreateTopicHandler(fmt.Sprintf(KapacitorTaskFormat, alertTaskInfo.Name), eventhandler.POSTType, logOpts)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &alertTaskInfo, nil
@@ -166,9 +172,12 @@ func DeleteTask(taskId string) error {
 	if err != nil {
 		return err
 	}
-	err = topichandler.DeleteTopicHandler(fmt.Sprintf(KapacitorTaskFormat, taskId), eventhandler.POSTType)
-	if err != nil {
-		return err
+
+	if alertTaskInfo.AlertEventType != eventhandler.POSTType {
+		err = topichandler.DeleteTopicHandler(fmt.Sprintf(KapacitorTaskFormat, taskId), eventhandler.POSTType)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Delete Event Logs
@@ -218,6 +227,11 @@ func setTemplateVars(alertTaskReq types.AlertTaskReq) (map[string]kapacitorclien
 
 	varMaps["alert_event_type"] = newTaskVar(kapacitorclient.VarString, alertTaskReq.AlertEventType)
 	varMaps["alert_event_name"] = newTaskVar(kapacitorclient.VarString, alertTaskReq.AlertEventName)
+	url := "example"
+	if alertTaskReq.AlertPostUrl != "" {
+		url = alertTaskReq.AlertPostUrl
+	}
+	varMaps["alert_post_url"] = newTaskVar(kapacitorclient.VarString, url)
 	varMaps["custom_message"] = newTaskVar(kapacitorclient.VarString, alertTaskReq.AlertEventMessage)
 	varMaps["alert_message"] = newTaskVar(kapacitorclient.VarString, fmt.Sprintf(AlertMessageFormat, alertTaskReq.AlertEventMessage))
 	varMaps["topic_name"] = newTaskVar(kapacitorclient.VarString, fmt.Sprintf(KapacitorTaskFormat, alertTaskReq.Name))
@@ -260,6 +274,8 @@ func mappingAlertTaskInfo(task kapacitorclient.Task) types.AlertTask {
 		AlertEventType:    getVarByKey(task.Vars, "alert_event_type").(string),
 		AlertEventName:    getVarByKey(task.Vars, "alert_event_name").(string),
 		AlertEventMessage: getVarByKey(task.Vars, "custom_message").(string),
+
+		AlertPostUrl: getVarByKey(task.Vars, "alert_post_url").(string),
 	}
 	return alertTask
 }

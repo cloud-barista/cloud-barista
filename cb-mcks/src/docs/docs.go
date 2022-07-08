@@ -56,6 +56,86 @@ var doc = `{
                 }
             }
         },
+        "/mcir/connections/{connection}/specs": {
+            "get": {
+                "description": "List Specs",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Mcir"
+                ],
+                "summary": "List Specs",
+                "operationId": "List Spec",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Connection Name",
+                        "name": "connection",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "Y",
+                            "N"
+                        ],
+                        "type": "string",
+                        "description": "string enums",
+                        "name": "control-plane",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "if Control-Plane, \u003e= 2",
+                        "name": "cpu-min",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 99999,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": " \u003c= 99999",
+                        "name": "cpu-max",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": " if Control-Plane, \u003e= 2",
+                        "name": "memory-min",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 99999,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": " \u003c= 99999",
+                        "name": "memory-max",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/service.SpecList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/app.Status"
+                        }
+                    }
+                }
+            }
+        },
         "/ns/{namespace}/clusters": {
             "get": {
                 "description": "List all Clusters",
@@ -116,12 +196,30 @@ var doc = `{
                         "required": true
                     },
                     {
+                        "enum": [
+                            "1.18",
+                            "1.23"
+                        ],
+                        "type": "string",
+                        "description": "string enums",
+                        "name": "minorversion",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Patch version",
+                        "name": "patchversion",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Request Body to create cluster",
                         "name": "ClusterReq",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ClusterReq"
+                            "$ref": "#/definitions/app.ClusterReq"
                         }
                     }
                 ],
@@ -231,7 +329,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.Status"
+                            "$ref": "#/definitions/app.Status"
                         }
                     },
                     "400": {
@@ -328,7 +426,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.NodeReq"
+                            "$ref": "#/definitions/app.NodeReq"
                         }
                     }
                 ],
@@ -452,7 +550,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.Status"
+                            "$ref": "#/definitions/app.Status"
                         }
                     },
                     "400": {
@@ -472,9 +570,117 @@ var doc = `{
         }
     },
     "definitions": {
+        "app.ClusterConfigKubernetesReq": {
+            "type": "object",
+            "properties": {
+                "networkCni": {
+                    "type": "string",
+                    "enum": [
+                        "canal",
+                        "kilo"
+                    ],
+                    "example": "kilo"
+                },
+                "podCidr": {
+                    "type": "string",
+                    "example": "10.244.0.0/16"
+                },
+                "serviceCidr": {
+                    "type": "string",
+                    "example": "10.96.0.0/12"
+                },
+                "serviceDnsDomain": {
+                    "type": "string",
+                    "example": "cluster.local"
+                }
+            }
+        },
+        "app.ClusterConfigReq": {
+            "type": "object",
+            "properties": {
+                "kubernetes": {
+                    "$ref": "#/definitions/app.ClusterConfigKubernetesReq"
+                }
+            }
+        },
+        "app.ClusterReq": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "$ref": "#/definitions/app.ClusterConfigReq"
+                },
+                "controlPlane": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/app.NodeSetReq"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "installMonAgent": {
+                    "type": "string",
+                    "default": "yes",
+                    "example": "no"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "cluster-01"
+                },
+                "worker": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/app.NodeSetReq"
+                    }
+                }
+            }
+        },
+        "app.NodeReq": {
+            "type": "object",
+            "properties": {
+                "controlPlane": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/app.NodeSetReq"
+                    }
+                },
+                "worker": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/app.NodeSetReq"
+                    }
+                }
+            }
+        },
+        "app.NodeSetReq": {
+            "type": "object",
+            "properties": {
+                "connection": {
+                    "type": "string",
+                    "example": "config-aws-ap-northeast-2"
+                },
+                "count": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "spec": {
+                    "type": "string",
+                    "example": "t2.medium"
+                }
+            }
+        },
         "app.Status": {
             "type": "object",
             "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "kind": {
+                    "type": "string"
+                },
                 "message": {
                     "type": "string",
                     "example": "Any message"
@@ -501,6 +707,9 @@ var doc = `{
                     "type": "string",
                     "default": "yes",
                     "example": "no"
+                },
+                "k8sVersion": {
+                    "type": "string"
                 },
                 "kind": {
                     "type": "string"
@@ -531,24 +740,7 @@ var doc = `{
                     }
                 },
                 "status": {
-                    "type": "object",
-                    "properties": {
-                        "message": {
-                            "type": "string"
-                        },
-                        "phase": {
-                            "type": "string",
-                            "enum": [
-                                "Pending",
-                                "Provisioning",
-                                "Provisioned",
-                                "Failed"
-                            ]
-                        },
-                        "reason": {
-                            "type": "string"
-                        }
-                    }
+                    "$ref": "#/definitions/model.ClusterStatus"
                 }
             }
         },
@@ -566,73 +758,23 @@ var doc = `{
                 }
             }
         },
-        "model.ClusterReq": {
+        "model.ClusterStatus": {
             "type": "object",
             "properties": {
-                "config": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.Config"
-                },
-                "controlPlane": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.NodeConfig"
-                    }
-                },
-                "description": {
+                "message": {
                     "type": "string"
                 },
-                "installMonAgent": {
-                    "type": "string",
-                    "default": "yes",
-                    "example": "no"
-                },
-                "label": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "cluster-01"
-                },
-                "worker": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.NodeConfig"
-                    }
-                }
-            }
-        },
-        "model.Config": {
-            "type": "object",
-            "properties": {
-                "kubernetes": {
-                    "type": "object",
-                    "$ref": "#/definitions/model.Kubernetes"
-                }
-            }
-        },
-        "model.Kubernetes": {
-            "type": "object",
-            "properties": {
-                "networkCni": {
+                "phase": {
                     "type": "string",
                     "enum": [
-                        "canal",
-                        "kilo"
-                    ],
-                    "example": "canal"
+                        "Pending",
+                        "Provisioning",
+                        "Provisioned",
+                        "Failed"
+                    ]
                 },
-                "podCidr": {
-                    "type": "string",
-                    "example": "10.244.0.0/16"
-                },
-                "serviceCidr": {
-                    "type": "string",
-                    "example": "10.96.0.0/12"
-                },
-                "serviceDnsDomain": {
-                    "type": "string",
-                    "example": "cluster.local"
+                "reason": {
+                    "type": "string"
                 }
             }
         },
@@ -654,7 +796,9 @@ var doc = `{
                         "azure",
                         "alibaba",
                         "tencent",
-                        "openstack"
+                        "openstack",
+                        "ibm",
+                        "cloudit"
                     ]
                 },
                 "cspLabel": {
@@ -687,23 +831,6 @@ var doc = `{
                 }
             }
         },
-        "model.NodeConfig": {
-            "type": "object",
-            "properties": {
-                "connection": {
-                    "type": "string",
-                    "example": "config-aws-ap-northeast-2"
-                },
-                "count": {
-                    "type": "integer",
-                    "example": 3
-                },
-                "spec": {
-                    "type": "string",
-                    "example": "t2.medium"
-                }
-            }
-        },
         "model.NodeList": {
             "type": "object",
             "properties": {
@@ -718,33 +845,45 @@ var doc = `{
                 }
             }
         },
-        "model.NodeReq": {
+        "service.SpecList": {
             "type": "object",
             "properties": {
-                "controlPlane": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.NodeConfig"
-                    }
+                "connectionName": {
+                    "type": "string"
                 },
-                "worker": {
+                "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.NodeConfig"
+                        "$ref": "#/definitions/service.Vmspecs"
                     }
-                }
-            }
-        },
-        "model.Status": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
                 },
                 "kind": {
                     "type": "string"
+                }
+            }
+        },
+        "service.Vmspecs": {
+            "type": "object",
+            "properties": {
+                "cpu": {
+                    "type": "object",
+                    "properties": {
+                        "clock": {
+                            "description": "output - GHz",
+                            "type": "string"
+                        },
+                        "count": {
+                            "description": "output",
+                            "type": "string"
+                        }
+                    }
                 },
-                "message": {
+                "memory": {
+                    "description": "output",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "output",
                     "type": "string"
                 }
             }

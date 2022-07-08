@@ -9,6 +9,8 @@ type TbSshKeyInfo struct {
 
 	ConnectionName string `json:"connectionName"`
 	CspSshKeyName  string `json:"cspSshKeyName"`
+	CspSshKeyId    string `json:"cspSshKeyId"`
+	SystemLabel    string `json:"systemLabel"`
 
 	Description     string                `json:"description"`
 	Fingerprint     string                `json:"fingerprint"`

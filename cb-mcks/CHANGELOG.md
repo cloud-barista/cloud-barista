@@ -1,5 +1,51 @@
 # Cloud-Barista Multi-Cloud Kubernetes Service Framework (CB-MCKS) ChangeLog
 
+## v0.6.0 (CafeLatte, 2022.07.08.)
+
+### Tested with
+
+- CB-Spider (https://github.com/cloud-barista/cb-spider/releases/tag/v0.6.0)
+- CB-Tumblebug (https://github.com/cloud-barista/cb-tumblebug/releases/tag/v0.6.0)
+- CB-Dragonfly (https://github.com/cloud-barista/cb-dragonfly/releases/tag/v0.6.0)
+
+
+### API Change
+
+- Add support for k8s 1.23 version [#136](https://github.com/cloud-barista/cb-mcks/pull/136)
+- Improve a cbadm cli [#135](https://github.com/cloud-barista/cb-mcks/pull/135)
+
+### Feature
+
+- Add support for IBM-cloud [#119](https://github.com/cloud-barista/cb-mcks/pull/119)
+- Implement 'get VM SpecList' rest API  feature [#128](https://github.com/cloud-barista/cb-mcks/pull/128)
+- Implement 'get VM SpecList' gRPC API  feature [#129](https://github.com/cloud-barista/cb-mcks/pull/129)
+- Add support for Cloudit [#131](https://github.com/cloud-barista/cb-mcks/pull/131)
+- Add support for k8s 1.23 version [#136](https://github.com/cloud-barista/cb-mcks/pull/136)
+- Add a inline parameters to cbadm commands(create a cluster & add nodes) [#137](https://github.com/cloud-barista/cb-mcks/pull/137)
+
+### Bug Fix
+
+- Modify the worker-join process hang when creating a cluster by applying Kilo-CNI [#121](https://github.com/cloud-barista/cb-mcks/pull/121)
+- Duplicated private-ip problem on multiple VPCs [#124](https://github.com/cloud-barista/cb-mcks/pull/124)
+- Delete body for http get Method [#126](https://github.com/cloud-barista/cb-mcks/pull/126)
+- Bump github.com/beego/beego/v2 from 2.0.1 to 2.0.2 [#132](https://github.com/cloud-barista/cb-mcks/pull/132)
+- Insert swapoff into k8s 1.23 install script [#138](https://github.com/cloud-barista/cb-mcks/pull/138)
+
+### Refactoring
+
+- Improve a source structure [#122](https://github.com/cloud-barista/cb-mcks/pull/122)
+
+### Documentation
+
+- Tidy markdown documents [#118](https://github.com/cloud-barista/cb-mcks/pull/118)
+- Fix connectioninfo-create.sh 'CSP' add [#130](https://github.com/cloud-barista/cb-mcks/pull/130)
+
+
+### Note
+- Full Changelog: https://github.com/cloud-barista/cb-mcks/compare/v0.5.0...v0.6.0
+
+***
+
 ## v0.5.0 (Affogato, 2021.12.16.)
 
 ### Tested with

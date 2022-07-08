@@ -119,7 +119,15 @@ fullnameOverride: "cb-dragonfly"
 serviceAccount:
   create: true
   annotations: {}
-  name:
+  name: dragonfly-sa
+
+clusterRole:
+  create: true
+  name: dragonfly-cr
+
+roleBinding:
+  create: true
+  name: dragonfly-cb
 
 podSecurityContext: {}
   # fsGroup: 2000

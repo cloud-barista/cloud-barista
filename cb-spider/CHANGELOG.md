@@ -1,4 +1,27 @@
-# v0.5.0-Affogato (2021.12.16.)
+# v0.6.0 (Cafe Latte, 2022.07.08.)
+
+### API Change
+
+- Add AddRules and RemoveRules API to change the rules of SecurityGroup ([v0.5.5](https://github.com/cloud-barista/cb-spider/releases/tag/v0.5.5))
+
+
+### Feature
+- Support Security Group Rules Specs and VM Access Validation Test ([v0.5.5](https://github.com/cloud-barista/cb-spider/releases/tag/v0.5.5))
+- [CB-Spider Network Load Balancer Specification and Driver API Definition](https://github.com/cloud-barista/cb-spider/wiki/Network-Load-Balancer-and-Driver-API)
+  - Add initial NLB Driver of AWS, GCP, Azure, Alibaba, Tencent, IBM, OPenStack, Cloudit, Mock
+  - Support REST Runtime and API of NLB
+  - Add AdminWeb Pages of NLB
+  - Currently in Alpha Testing
+- AdminWeb Enhancements
+  - [Add Log windows to show API call status](https://github.com/cloud-barista/cb-spider/wiki/%5BAdminWeb%5D-API-Call-Log-Page-Guide)
+  - Download the private key after creating VM KeyPair
+- Add new Locking mechanism 'sp-lock' and Concurrent Tests ([v0.5.9](https://github.com/cloud-barista/cb-spider/releases/tag/v0.5.9))
+- Enhance the VM Lifecycle Control 
+
+
+***
+
+# v0.5.0 (Affogato, 2021.12.16.)
 
 ### API Change
 
@@ -8,14 +31,14 @@
 ### Feature
 - Add a common Validator and apply it to user's input arguments ([#394 (comment)](https://github.com/cloud-barista/cb-spider/issues/394#issuecomment-963167074))
 - Enhance the SSH Key management and insertion method of cb-user into VM ([#480](https://github.com/cloud-barista/cb-spider/issues/480) [#508](https://github.com/cloud-barista/cb-spider/pull/508) [v0.4.14](https://github.com/cloud-barista/cb-spider/releases/tag/v0.4.14))
-- Add vm control button for AdminWeb ( [#483](https://github.com/cloud-barista/cb-spider/pull/483) )
+- Add vm control button for AdminWeb ([#483](https://github.com/cloud-barista/cb-spider/pull/483))
 - Enhance IID(Integrated ID) with IID2 ([v0.4.11](https://github.com/cloud-barista/cb-spider/releases/tag/v0.4.11))
-- Add 'SERVER_ADDRESS' configuration to run in firewall or Kubernetes env. ([v0.4.4](https://github.com/cloud-barista/cb-spider/releases/tag/v0.4.4))
-- Update the version info AdminWeb and spctl with 0.5.0
+- Add `SERVER_ADDRESS` configuration to run in firewall or Kubernetes env. ([v0.4.4](https://github.com/cloud-barista/cb-spider/releases/tag/v0.4.4))
+- Update the version info AdminWeb and spctl with `0.5.0`
 
 ***
 
-# v0.4.0-CafeMocha (2021.06.30.)
+# v0.4.0 (Cafe Mocha, 2021.06.30.)
 
 ### API Change
 
@@ -29,11 +52,11 @@
 - Support single VM User with cb-user ([#230](https://github.com/cloud-barista/cb-spider/issues/230))
 - Enhance the method of Call Log Elapsed time ([#359](https://github.com/cloud-barista/cb-spider/issues/359) [ref](https://github.com/cloud-barista/cb-spider/wiki/StartVM-and-TerminateVM-Main-Flow-of-Cloud-Drivers))
 - Change the OpenStack Go SDK for Improvement ([#368](https://github.com/cloud-barista/cb-spider/pull/368) [#370](https://github.com/cloud-barista/cb-spider/pull/370))
-  - github.com/rackspace/gophercloud => github.com/gophercloud/gophercloud
+  - `github.com/rackspace/gophercloud` => `github.com/gophercloud/gophercloud`
 - Update the CSP Go sdk package of cloud drivers ([#328](https://github.com/cloud-barista/cb-spider/issues/328) [ref](https://github.com/cloud-barista/cb-spider/wiki/What-is-the-CSP-SDK-API-Version-of-drivers))
 - Shorten the SG delimiter: `-delimiter-` => `-deli-`
 - Support Server Status and Endpoint info
-  - ./bin/endpoint-info.sh
+  - `./bin/endpoint-info.sh`
 - Add SecurityGroup Source filter with CIDR ([#355](https://github.com/cloud-barista/cb-spider/issues/355))
 - Integrate tencent driver with current state
 - Add REST Basic Auth ([#261](https://github.com/cloud-barista/cb-spider/issues/261) [#412](https://github.com/cloud-barista/cb-spider/pull/412))
@@ -78,7 +101,7 @@
 - 통합ID IID Manager 추가 ([#163](https://github.com/cloud-barista/cb-spider/pull/163) [#194](https://github.com/cloud-barista/cb-spider/pull/194))  
 - VPC/Subnet 기능 추가  ([#9](https://github.com/cloud-barista/cb-spider/pull/9) [#226](https://github.com/cloud-barista/cb-spider/pull/226)) 
 - VNic, PublicIP 자동 관리 기능으로 개선
-- Cloud Driver 및 Region 정보 자동 등록 지원 도구 추가 utils/import-info/*
+- Cloud Driver 및 Region 정보 자동 등록 지원 도구 추가 (`utils/import-info/*`)
 - Docker Driver 추가(Hetero Multi-IaaS 제어)
 - Android 운영 환경을 위한 plugin off mode 추가 ([3938ea0](https://github.com/cloud-barista/cb-spider/commit/3938ea0c70e69664a62eb3cee6611cfbf26ea4ea))  
 

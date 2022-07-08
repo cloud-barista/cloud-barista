@@ -4,6 +4,9 @@ type TbSpecInfo struct {
 	AssociatedObjectList []string `json:"associatedObjectList"`
 
 	ConnectionName string  `json:"connectionName"`
+	ProviderName   string  `json:"providerName"`
+	RegionName     string  `json:"regionName"`
+	SystemLabel    string  `json:"systemLabel"`
 	CostPerHour    float32 `json:"costPerHour"`
 	CspSpecName    string  `json:"cspSpecName"`
 	Description    string  `json:"description"`
@@ -40,6 +43,8 @@ type TbSpecInfo struct {
 	OrderInFilteredResult int    `json:"orderInFilteredResult"`
 	OsType                string `json:"osType"`
 	StorageGiB            int    `json:"storageGiB"`
+	RootDiskSize          string `json:"rootDiskSize"`
+	RootDiskType          string `json:"rootDiskType"`
 }
 
 type TbSpecInfos []TbSpecInfo

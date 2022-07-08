@@ -4,7 +4,7 @@
 
 # Go 빌드 이미지 버전 및 알파인 OS 버전 정보
 ARG BASE_IMAGE_BUILDER=golang
-ARG GO_VERSION=1.15
+ARG GO_VERSION=1.16
 ARG ALPINE_VERSION=3
 
 ###################################################
@@ -38,7 +38,7 @@ RUN apk add --no-cache \
     librdkafka-dev \
     pkgconf
 
-RUN go build -tags musl ${GO_FLAGS} -ldflags "${LD_FLAGS}" -o ${OUTPUT} -i ./pkg \
+RUN go mod vendor && go build -tags musl ${GO_FLAGS} -ldflags "${LD_FLAGS}" -o ${OUTPUT} ./pkg \
     && chmod +x ${OUTPUT}
 
 ###################################################
@@ -78,7 +78,6 @@ COPY --from=go-builder ${GOPATH}/src/github.com/cloud-barista/cb-dragonfly/bin/c
 RUN chmod +x /opt/cb-dragonfly/bin/cb-dragonfly \
     && ln -s /opt/cb-dragonfly/bin/cb-dragonfly /usr/bin
 
-#EXPOSE 8094/udp
 EXPOSE 9090
 EXPOSE 9999
 

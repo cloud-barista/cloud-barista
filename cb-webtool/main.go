@@ -331,6 +331,7 @@ func main() {
 			"setting/connections/cloud/RegionModal",
 			"setting/connections/cloud/CredentialModal",
 			"setting/connections/cloud/DriverModal",
+			"setting/connections/cloud/InspectModal",
 			"templates/Footer",
 		},
 		DisableCache: true,
@@ -571,7 +572,13 @@ func main() {
 
 	e.GET("/operation/manages/mcismng/list", controller.GetMcisList) // 등록된 namespace의 MCIS 목록 조회. Tumblebuck 호출
 	e.POST("/operation/manages/mcismng/reg/proc", controller.McisRegProc)
+	e.POST("/operation/manages/mcismng/mcisdynamic/proc", controller.McisDynamicRegProc)
 	e.DELETE("/operation/manages/mcismng/:mcisID", controller.McisDelProc)
+	e.POST("/operation/manages/mcismng/registercspvm", controller.RegisterCspVm)
+	e.POST("/operation/manages/mcismng/list", controller.GetConnectionConfigCandidateList)
+
+	e.POST("/operation/manages/mcismng/mcisrecommendvm/list", controller.GetMcisRecommendVmSpecList) // 경로를 mcismng 아래로 해야할 지
+	e.POST("/operation/manages/mcismng/mcisdynamiccheck/list", controller.GetConnectionConfigCandidateList)
 
 	// TODO : namespace는 서버에 저장된 것을 사용하는데... 자칫하면 namespace와 다른 mcis의 vm으로 날아갈 수 있지 않나???
 	e.GET("/operation/manages/mcismng/:mcisID", controller.GetMcisInfoData)
@@ -587,6 +594,8 @@ func main() {
 	e.POST("/operation/manages/mcismng/cmd/mcis/:mcisID", controller.CommandMcis)
 	e.POST("/operation/manages/mcismng/cmd/mcis/:mcisID/vm/:vmID", controller.CommandVmOfMcis)
 
+	e.POST("/operation/manages/mcismng/network/mcis/:mcisID", controller.RegAdaptiveNetwork)
+	e.PUT("/operation/manages/mcismng/network/mcis/:mcisID", controller.UpdateAdaptiveNetwork)
 	// e.POST("/operation/manages/mcis/proc/vmmonitoring", controller.GetVmMonitoring)
 
 	// e.GET("/mcis/list/:mcis_id/:mcis_name", controller.McisListFormWithParam)
@@ -622,11 +631,11 @@ func main() {
 	// // e.POST("/NS/reg/proc", controller.NsRegController)
 	// // e.GET("/GET/ns", controller.GetNameSpace)
 	namespaceGroup := e.Group("/setting/namespaces", namespaceTemplate)
-	namespaceGroup.GET("/namespace/mngform", controller.NameSpaceMngForm)      // namespace 보여주는 form 표시. DashboardController로 이동?
-	namespaceGroup.GET("/namespace/list", controller.GetNameSpaceList)         // 등록된 namespace 목록 조회. Tumblebuck 호출
-	namespaceGroup.GET("/namespace/set/:nameSpaceID", controller.SetNameSpace) // default namespace set
-	namespaceGroup.POST("/namespace/reg/proc", controller.NameSpaceRegProc)    // namespace 등록 처리
-	// namespaceGroup.PUT("/namespace/update/proc", controller.NameSpaceUpdateProc)// namespace 수정 : TB에 해당기능없음.
+	namespaceGroup.GET("/namespace/mngform", controller.NameSpaceMngForm)             // namespace 보여주는 form 표시. DashboardController로 이동?
+	namespaceGroup.GET("/namespace/list", controller.GetNameSpaceList)                // 등록된 namespace 목록 조회. Tumblebuck 호출
+	namespaceGroup.GET("/namespace/set/:nameSpaceID", controller.SetNameSpace)        // default namespace set
+	namespaceGroup.POST("/namespace/reg/proc", controller.NameSpaceRegProc)           // namespace 등록 처리
+	namespaceGroup.PUT("/namespace/update/proc", controller.NameSpaceUpdateProc)      // namespace 수정
 	namespaceGroup.DELETE("/namespace/del/:nameSpaceID", controller.NameSpaceDelProc) // namespace 삭제 처리
 
 	cloudConnectionGroup := e.Group("/setting/connections", cloudConnectionTemplate)
@@ -663,7 +672,11 @@ func main() {
 	cloudConnectionGroup.DELETE("/config/del/:configID", controller.ConfigDelProc)
 
 	resourcesGroup := e.Group("/setting/resources", resourceTemplate)
-	e.POST("/getinspectresources", controller.GetInspectResourceList)
+	e.POST("/setting/resources/inspectresources/list", controller.GetInspectResourceList)
+	e.POST("/setting/resources/inspectresourcesoverview", controller.GetInspectResourcesOverview)
+	e.POST("/setting/resources/registercspresources", controller.RegisterCspResourcesProc)
+	e.POST("/setting/resources/registercspresourcesall", controller.RegisterCspResourcesAllProc)
+
 	resourcesGroup.GET("/network/mngform", controller.VpcMngForm)
 	resourcesGroup.GET("/network/list", controller.GetVpcList)
 	resourcesGroup.GET("/network/:vNetID", controller.GetVpcData)
@@ -676,9 +689,14 @@ func main() {
 	resourcesGroup.POST("/securitygroup/reg", controller.SecirityGroupRegProc)
 	resourcesGroup.DELETE("/securitygroup/del/:securityGroupID", controller.SecirityGroupDelProc)
 
+	e.POST("/setting/resources/securitygroup/:securityGroupID/firewallrules/reg", controller.FirewallRegProc)
+
+	e.DELETE("/setting/resources/securitygroup/:securityGroupID/firewallrules/del", controller.FirewallDelProc)
+
 	resourcesGroup.GET("/sshkey/mngform", controller.SshKeyMngForm) // Form + SshKeyMng 같이 앞으로 넘길까?
 	resourcesGroup.GET("/sshkey/list", controller.GetSshKeyList)
 	resourcesGroup.GET("/sshkey/:sshKeyID", controller.GetSshKeyData)
+	resourcesGroup.PUT("/sshkey/update/:sshKeyID", controller.SshKeyUpdateProc)
 	resourcesGroup.POST("/sshkey/reg", controller.SshKeyRegProc)             // RegProc _ SshKey 같이 앞으로 넘길까
 	resourcesGroup.DELETE("/sshkey/del/:sshKeyID", controller.SshKeyDelProc) // DelProc + SskKey 같이 앞으로 넘길까
 

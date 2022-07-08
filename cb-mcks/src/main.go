@@ -3,9 +3,9 @@ package main
 import (
 	"sync"
 
+	"github.com/cloud-barista/cb-mcks/src/core/app"
 	grpcserver "github.com/cloud-barista/cb-mcks/src/grpc-api/server"
 	restapi "github.com/cloud-barista/cb-mcks/src/rest-api"
-	"github.com/cloud-barista/cb-mcks/src/utils/config"
 )
 
 // @title CB-MCKS REST API
@@ -25,7 +25,7 @@ import (
 // @securityDefinitions.basic BasicAuth
 func main() {
 
-	config.Setup()
+	app.Setup()
 
 	wg := new(sync.WaitGroup)
 

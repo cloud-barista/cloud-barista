@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
+	"time"
 
 	"github.com/spf13/cobra"
 
+	"github.com/cloud-barista/cb-mcks/src/grpc-api/cbadm/app"
 	"github.com/cloud-barista/cb-mcks/src/grpc-api/logger"
 	lb_api "github.com/cloud-barista/cb-mcks/src/grpc-api/request"
 )
@@ -18,31 +19,15 @@ import (
 
 // ===== [ Private Functions ] =====
 
-func readInDataFromFile() {
-	logger := logger.NewLogger()
-	if inData == "" {
-		if inFile != "" {
-			dat, err := ioutil.ReadFile(inFile)
-			if err != nil {
-				logger.Error("failed to read file : ", inFile)
-				return
-			}
-			inData = string(dat)
-		}
-	}
-}
-
 // ===== [ Public Functions ] =====
 
 // SetupAndRun - MCKS GRPC CLI 구동
-func SetupAndRun(cmd *cobra.Command, args []string) {
+func SetupAndRun(cmd *cobra.Command, o *app.Options) {
 	logger := logger.NewLogger()
 
 	var (
-		result string
+		result = ""
 		err    error
-
-		mcar *lb_api.MCARApi = nil
 	)
 
 	// panic 처리
@@ -52,13 +37,26 @@ func SetupAndRun(cmd *cobra.Command, args []string) {
 		}
 	}()
 
-	if cmd.Parent().Name() == "cluster" || cmd.Parent().Name() == "node" || cmd.Name() == "healthy" {
+	if o.Output != "json" && o.Output != "yaml" {
+		logger.Error("failed to validate --output parameter : ", o.Output)
+		return
+	}
+	mcar := lb_api.NewMCARManager()
+	//cim := sp_api.NewCloudInfoManager()
+
+	if cmd.Name() == "cluster" || cmd.Name() == "node" || cmd.Name() == "healthy" {
 		// LB API 설정
-		mcar = lb_api.NewMCARManager()
-		err = mcar.SetConfigPath(configFile)
+		mckscli := app.Config.GetCurrentContext().Mckscli
+
+		err := mcar.SetServerAddr(mckscli.ServerAddr)
 		if err != nil {
-			logger.Error("failed to set config : ", err)
-			return
+			logger.Error("server_addr set failed", err)
+		}
+
+		timeout, _ := time.ParseDuration(mckscli.Timeout)
+		err = mcar.SetTimeout(timeout)
+		if err != nil {
+			logger.Error("timeout set failed", err)
 		}
 		err = mcar.Open()
 		if err != nil {
@@ -66,27 +64,35 @@ func SetupAndRun(cmd *cobra.Command, args []string) {
 			return
 		}
 		defer mcar.Close()
-	}
 
-	// 입력 파라미터 처리
-	if outType != "json" && outType != "yaml" {
-		logger.Error("failed to validate --output parameter : ", outType)
-		return
+		mcar.SetInType("json")
+		mcar.SetOutType(o.Output)
 	}
-	if inType != "json" && inType != "yaml" {
-		logger.Error("failed to validate --input parameter : ", inType)
-		return
+	// todo
+	if cmd.Name() == "credential" {
+		/*	cim := sp_api.NewCloudInfoManager()
+			fmt.Println(cim)
+
+			spidercli := app.Config.GetCurrentContext().SpiderCli
+
+			err := cim.SetServerAddr(spidercli.ServerAddr)
+			if err != nil {
+				logger.Error("server_addr set failed", err)
+			}
+
+			timeout, _ := time.ParseDuration(spidercli.Timeout)
+			err = cim.SetTimeout(timeout)
+			if err != nil {
+				logger.Error("timeout set failed", err)
+			}
+			err = cim.Open()
+			if err != nil {
+				logger.Error("spdier api open failed : ", err)
+				return
+			}
+			defer cim.Close()
+		*/
 	}
-
-	if cmd.Parent().Name() == "cluster" || cmd.Parent().Name() == "node" || cmd.Name() == "healthy" {
-		mcar.SetInType(inType)
-		mcar.SetOutType(outType)
-	}
-
-	logger.Debug("--input parameter value : ", inType)
-	logger.Debug("--output parameter value : ", outType)
-
-	result = ""
 	err = nil
 
 	switch cmd.Parent().Name() {
@@ -95,32 +101,49 @@ func SetupAndRun(cmd *cobra.Command, args []string) {
 		case "healthy":
 			result, err = mcar.Healthy()
 		}
-	case "cluster":
+	case "get":
 		switch cmd.Name() {
-		case "create":
-			result, err = mcar.CreateCluster(inData)
-		case "list":
-			result, err = mcar.ListClusterByParam(nameSpaceID)
-		case "get":
-			result, err = mcar.GetClusterByParam(nameSpaceID, clusterName)
-		case "delete":
-			result, err = mcar.DeleteClusterByParam(nameSpaceID, clusterName)
+		case "cluster":
+			if o.Name == "" {
+				result, err = mcar.ListClusterByParam(o.Namespace)
+			} else {
+				result, err = mcar.GetClusterByParam(o.Namespace, o.Name)
+			}
+		case "node":
+			if o.Name == "" {
+				result, err = mcar.ListNodeByParam(o.Namespace, clusterName)
+			} else {
+				result, err = mcar.GetNodeByParam(o.Namespace, clusterName, o.Name)
+			}
+		case "credential":
+			if o.Name == "" {
+				//result, err = cim.ListCredential()
+			} else {
+				//result, err = cim.GetCredentialByParam(o.Name)
+			}
 		}
-	case "node":
+	case "create":
 		switch cmd.Name() {
-		case "add":
-			result, err = mcar.AddNode(inData)
-		case "list":
-			result, err = mcar.ListNodeByParam(nameSpaceID, clusterName)
-		case "get":
-			result, err = mcar.GetNodeByParam(nameSpaceID, clusterName, nodeName)
-		case "remove":
-			result, err = mcar.RemoveNodeByParam(nameSpaceID, clusterName, nodeName)
+		case "cluster":
+			result, err = mcar.CreateCluster(o.Data)
+		case "node":
+			result, err = mcar.AddNode(o.Data)
+		case "credential":
+			// result, err = cim.CreateCredential(o.Data)
+		}
+	case "delete":
+		switch cmd.Name() {
+		case "cluster":
+			result, err = mcar.DeleteClusterByParam(o.Namespace, o.Name)
+		case "node":
+			result, err = mcar.RemoveNodeByParam(o.Namespace, clusterName, o.Name)
+		case "credential":
+			// result, err = cim.DeleteCredentialByParam(o.Name)
 		}
 	}
 
 	if err != nil {
-		if outType == "yaml" {
+		if o.Output == "yaml" {
 			fmt.Fprintf(cmd.OutOrStdout(), "message: %v\n", err)
 		} else {
 			fmt.Fprintf(cmd.OutOrStdout(), "{\"message\": \"%v\"}\n", err)
@@ -128,5 +151,4 @@ func SetupAndRun(cmd *cobra.Command, args []string) {
 	} else {
 		fmt.Fprintf(cmd.OutOrStdout(), "%s\n", result)
 	}
-
 }

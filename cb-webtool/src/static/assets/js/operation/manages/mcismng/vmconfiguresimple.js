@@ -1,6 +1,21 @@
-// $(document).ready(function(){
+$(document).ready(function () {
+	$('.btn_recommend').on('click', function () {
+		showRecommendAssistPopup();
+	});
 
-// })
+})
+
+function showRecommendAssistPopup() {
+	console.log("showRecommendAssistPopup")
+	$("#recommendVmAssist").modal();
+
+}
+
+function showConnectionAssistPopup() {
+	console.log("showConnectionAssistPopup")
+	$("#connectionAssist").modal();
+
+}
 
 // getConnectionListForSelectbox 로 변경
 // function changeProvider(provider, target){
@@ -19,9 +34,9 @@ function changeConnectionInfo(configName) {
 	getSpecInfo(configName);
 }
 
-function getVmiInfo() {
+function getVmiInfo(configName) {
 
-	var configName = $("#s_regConnectionName option:selected").val();
+	//var configName = $("#ss_regConnectionName option:selected").val();
 
 	console.log("2 : ", configName);
 	// getCommonVirtualMachineImageList("mcissimpleconfigure", "name"); setCommonVirtualMachineImageList()
@@ -47,14 +62,14 @@ function getVmiInfo() {
 			return;
 		}
 
-		html += "<option value=''>Select Image</option>"
+		html += "<option value=''>Select OS Platform</option>"
 		for (var i in data) {
 			if (data[i].connectionName == configName) {
 				html += '<option value="' + data[i].id + '" >' + data[i].name + '(' + data[i].id + ')</option>';
 			}
 		}
-		$("#s_imageId").empty();
-		$("#s_imageId").append(html);//which OS
+		$("#ss_imageId").empty();
+		$("#ss_imageId").append(html);//which OS
 
 		//  }).catch(function(error){
 		// 	console.log(error);        
@@ -70,7 +85,7 @@ function getVmiInfo() {
 function getSecurityInfo(configName) {
 	var configName = configName;
 	if (!configName) {
-		configName = $("#s_regConnectionName option:selected").val();
+		configName = $("#ss_regConnectionName option:selected").val();
 	}
 	//  var url = CommonURL+"/ns/"+NAMESPACE+"/resources/securityGroup";
 	var url = "/setting/resources" + "/securitygroup/list"
@@ -106,7 +121,7 @@ function getSecurityInfo(configName) {
 function getSpecInfo(configName) {
 	var configName = configName;
 	if (!configName) {
-		configName = $("#s_regConnectionName option:selected").val();
+		configName = $("#ss_regConnectionName option:selected").val();
 	}
 
 	var url = "/setting/resources" + "/vmspec/list"
@@ -122,7 +137,7 @@ function getSpecInfo(configName) {
 		var data = result.data.VmSpecList
 		console.log("spec result : ", data)
 		if (data) {
-			html += "<option value=''>Select SpecName</option>"
+			html += "<option value=''>Select Spec</option>"
 			data.filter(csp => csp.connectionName === configName).map(item => (
 				html += '<option value="' + item.id + '">' + item.name + '(' + item.cspSpecName + ')</option>'
 			))
@@ -132,15 +147,15 @@ function getSpecInfo(configName) {
 		}
 
 
-		$("#s_spec").empty();
-		$("#s_spec").append(html);
+		$("#ss_spec").empty();
+		$("#ss_spec").append(html);
 
 	})
 }
 function getSSHKeyInfo(configName) {
 	//  var configName = configName;
 	if (!configName) {
-		configName = $("#s_regConnectionName option:selected").val();
+		configName = $("#ss_regConnectionName option:selected").val();
 	}
 	//  var url = CommonURL+"/ns/"+NAMESPACE+"/resources/sshKey";
 	var url = "/setting/resources" + "/sshkey/list"
@@ -153,13 +168,14 @@ function getSSHKeyInfo(configName) {
 	}).then(result => {
 		console.log("sshKeyInfo result :", result)
 		data = result.data.SshKeyList
+		html += '<option value="">Select SSH Key</option>'
 		for (var i in data) {
 			if (data[i].connectionName == configName) {
 				html += '<option value="' + data[i].id + '" >' + data[i].cspSshKeyName + '(' + data[i].id + ')</option>';
 			}
 		}
-		$("#s_sshKey").empty();
-		$("#s_sshKey").append(html);
+		$("#ss_sshKey").empty();
+		$("#ss_sshKey").append(html);
 
 	})
 }
@@ -169,7 +185,7 @@ function getVnetInfo(configName) {
 	var configName = configName;
 	console.log("get vnet INfo config name : ", configName)
 	if (!configName) {
-		configName = $("#s_regConnectionName option:selected").val();
+		configName = $("#ss_regConnectionName option:selected").val();
 	}
 	console.log("get vnet INfo config name : ", configName)
 	// var url = CommonURL+"/ns/"+NAMESPACE+"/resources/vNet";
@@ -229,36 +245,55 @@ const Simple_Server_Config_Arr = new Array();
 var simple_data_cnt = 0
 const cloneObj = obj => JSON.parse(JSON.stringify(obj))
 function simpleDone_btn() {
+	$("#s_regProvider").val($("#ss_regProvider").val())
+	$("#s_name").val($("#ss_name").val())
+	$("#s_description").val($("#ss_description").val())
+	$("#s_regConnectionName").val($("#ss_regConnectionName").val())
+	$("#s_spec").val($("#ss_spec").val())
+	$("#s_imageId").val($("#ss_imageId").val())
+	$("#s_sshKey").val($("#ss_sshKey").val())
+	$("#s_vm_cnt").val($("#ss_vm_add_cnt").val() + "")
+
+	console.log($("#s_imageId").val());
+	console.log($("#ss_imageId").val());
+
 	var simple_form = $("#simple_form").serializeObject()
+	console.log(simple_form);
+
 	var server_name = simple_form.name
-	var server_cnt = parseInt(simple_form.s_vm_add_cnt)
+	var server_cnt = parseInt(simple_form.vmGroupSize)
+	// simple_form.vmGroupSize = server_cnt
 	console.log('server_cnt : ', server_cnt)
 	var add_server_html = "";
 
+	// if (server_cnt > 1) {
+	// 	for (var i = 1; i <= server_cnt; i++) {
+	// 		var new_vm_name = server_name + "-" + i;
+	// 		var object = cloneObj(simple_form)
+	// 		object.name = new_vm_name
+	// 		add_server_html += '<li onclick="view_simple(\'' + simple_data_cnt + '\')">'
+	// 			+ '<div class="server server_on bgbox_b">'
+	// 			+ '<div class="icon"></div>'
+	// 			+ '<div class="txt">' + new_vm_name + '</div>'
+	// 			+ '</div>'
+	// 			+ '</li>';
+	// 		Simple_Server_Config_Arr.push(object)
+	// 		console.log(i + "번째 Simple form data 입니다. : ", object);
+	// 	}
+	// } else {
+	Simple_Server_Config_Arr.push(simple_form)
+	displayServerCnt = ""
 	if (server_cnt > 1) {
-		for (var i = 1; i <= server_cnt; i++) {
-			var new_vm_name = server_name + "-" + i;
-			var object = cloneObj(simple_form)
-			object.name = new_vm_name
-			add_server_html += '<li onclick="view_simple(\'' + simple_data_cnt + '\')">'
-				+ '<div class="server server_on bgbox_b">'
-				+ '<div class="icon"></div>'
-				+ '<div class="txt">' + new_vm_name + '</div>'
-				+ '</div>'
-				+ '</li>';
-			Simple_Server_Config_Arr.push(object)
-			console.log(i + "번째 Simple form data 입니다. : ", object);
-		}
-	} else {
-		Simple_Server_Config_Arr.push(simple_form)
-		add_server_html += '<li onclick="view_simple(\'' + simple_data_cnt + '\')">'
-			+ '<div class="server server_on bgbox_b">'
-			+ '<div class="icon"></div>'
-			+ '<div class="txt">' + server_name + '</div>'
-			+ '</div>'
-			+ '</li>';
-
+		displayServerCnt = '(' + server_cnt + ')'
 	}
+	add_server_html += '<li onclick="view_simple(\'' + simple_data_cnt + '\')">'
+		+ '<div class="server server_on bgbox_b">'
+		+ '<div class="icon"></div>'
+		+ '<div class="txt">' + server_name + displayServerCnt + '</div>'
+		+ '</div>'
+		+ '</li>';
+
+	// }
 	$(".simple_servers_config").removeClass("active");
 	console.log("add server html");
 	$("#mcis_server_list").prepend(add_server_html)
@@ -384,3 +419,18 @@ function importFileProcess(file) {
 		console.log(error);
 	}
 }
+
+// Provider변경시 connection 정보 filter
+// function getConnectionListFilterForSimpleSelectbox(referenceObj, targetConnectionObj) {
+// 	var referenceVal = $('#' + referenceObj).val();
+// 	//var regionValue = region.substring(region.indexOf("]") ).trim();  
+// 	// console.log(region + ", regionValue = " + regionValue);
+// 	selectBoxFilterByText(targetConnectionObj, referenceVal)
+
+
+// 	// $("#" + targetConnectionObj + " option:eq(0)").attr("selected", "selected");
+// 	$("#es_regConnectionName").val("");
+// 	setConnectionValue("");// val("")을 했을 때 자동으로 설정이 안되어서 setConnectionValue("")으로 값 set.
+
+// }
+

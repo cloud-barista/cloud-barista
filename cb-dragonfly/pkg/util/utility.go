@@ -4,16 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/cloud-barista/cb-dragonfly/pkg/types"
-	appsv1 "k8s.io/api/apps/v1"
-	apiv1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"math"
 	"net/url"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/cloud-barista/cb-dragonfly/pkg/types"
+	appsv1 "k8s.io/api/apps/v1"
+	apiv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func StructToMap(i interface{}) (values url.Values) {
@@ -48,13 +49,13 @@ func StructToMap(i interface{}) (values url.Values) {
 func ToMap(val interface{}) (map[string]interface{}, error) {
 
 	// Convert struct to bytes
-	bytes := new(bytes.Buffer)
-	if err := json.NewEncoder(bytes).Encode(val); err != nil {
+	byteBuffer := new(bytes.Buffer)
+	if err := json.NewEncoder(byteBuffer).Encode(val); err != nil {
 		return nil, err
 	}
 
 	// Convert bytes to map
-	byteData := bytes.Bytes()
+	byteData := byteBuffer.Bytes()
 	resultMap := map[string]interface{}{}
 	if err := json.Unmarshal(byteData, &resultMap); err != nil {
 		return nil, err
@@ -165,16 +166,18 @@ func GetCspCollectorIdx(topic string) (collectorIdx int) {
 	return
 }
 
-func Unique(intSlice []string) []string {
+func Unique(slice []string, sortOption bool) []string {
 	keys := make(map[string]bool)
 	list := []string{}
-	for _, entry := range intSlice {
+	for _, entry := range slice {
 		if _, value := keys[entry]; !value {
 			keys[entry] = true
 			list = append(list, entry)
 		}
 	}
-	sort.Strings(list)
+	if sortOption {
+		sort.Strings(list)
+	}
 	return list
 }
 
@@ -260,12 +263,10 @@ func ToFixed(num float64, precision int) float64 {
 	return float64(round(num*output)) / output
 }
 
-//func SliceContainsItem(slice []string, item string) bool {
-//	set := make(map[string]struct{}, len(slice))
-//	for _, s := range slice {
-//		set[s] = struct{}{}
-//	}
-//
-//	_, ok := set[item]
-//	return ok
-//}
+func CheckMCK8SType(serviceType string) bool {
+	return strings.EqualFold(serviceType, types.MCK8S) || strings.EqualFold(serviceType, types.KUBERNETES) || strings.EqualFold(serviceType, types.K8S)
+}
+
+func CheckMCISType(serviceType string) bool {
+	return strings.EqualFold(serviceType, types.MCIS) || strings.EqualFold(serviceType, types.VM)
+}

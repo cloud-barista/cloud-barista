@@ -9,7 +9,7 @@ import (
 )
 
 type KafkaStruct struct {
-	AdminClient *kafka.AdminClient
+	AdminClient    *kafka.AdminClient
 	ConsumerClient *kafka.Consumer
 }
 
@@ -24,10 +24,10 @@ var kafkaConn KafkaStruct
 //}()
 func Initialize() error {
 	kafkaConfig := &kafka.ConfigMap{
-		"bootstrap.servers": fmt.Sprintf("%s", config.GetDefaultConfig().Kafka.EndpointUrl),
-		"group.id":          "myGroup",
+		"bootstrap.servers":  fmt.Sprintf("%s", config.GetDefaultConfig().Kafka.EndpointUrl),
+		"group.id":           "myGroup",
 		"enable.auto.commit": true,
-		"auto.offset.reset": "earliest",
+		"auto.offset.reset":  "earliest",
 	}
 	admin, err := kafka.NewAdminClient(kafkaConfig)
 	consumer, err := kafka.NewConsumer(kafkaConfig)

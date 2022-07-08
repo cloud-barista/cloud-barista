@@ -194,6 +194,7 @@ func RunServer() {
 
 		//----------CloudDriverInfo
 		{"POST", "/driver", RegisterCloudDriver},
+		{"POST", "/driver/upload", UploadCloudDriver},
 		{"GET", "/driver", ListCloudDriver},
 		{"GET", "/driver/:DriverName", GetCloudDriver},
 		{"DELETE", "/driver/:DriverName", UnRegisterCloudDriver},
@@ -247,6 +248,7 @@ func RunServer() {
 		{"DELETE", "/cspvpc/:Id", DeleteCSPVPC},
 
 		//----------SecurityGroup Handler
+		{"GET", "/getsecuritygroupowner", GetSGOwnerVPC},
 		{"POST", "/regsecuritygroup", RegisterSecurity},
 		{"DELETE", "/regsecuritygroup/:Name", UnregisterSecurity},
 
@@ -254,6 +256,10 @@ func RunServer() {
 		{"GET", "/securitygroup", ListSecurity},
 		{"GET", "/securitygroup/:Name", GetSecurity},
 		{"DELETE", "/securitygroup/:Name", DeleteSecurity},
+		//-- for rule
+		{"POST", "/securitygroup/:SGName/rules", AddRules},
+		{"DELETE", "/securitygroup/:SGName/rules", RemoveRules}, // no force option
+		// no CSP Option, {"DELETE", "/securitygroup/:SGName/csprules", RemoveCSPRules},
 		//-- for management
 		{"GET", "/allsecuritygroup", ListAllSecurity},
 		{"DELETE", "/cspsecuritygroup/:Id", DeleteCSPSecurity},
@@ -283,6 +289,7 @@ func RunServer() {
 			{"DELETE", "/publicip/:PublicIPId", deletePublicIP},
 		*/
 		//----------VM Handler
+		{"GET", "/getvmusingresources", GetVMUsingRS},
 		{"POST", "/regvm", RegisterVM},
 		{"DELETE", "/regvm/:Name", UnregisterVM},
 
@@ -301,13 +308,38 @@ func RunServer() {
 		// only for AdminWeb
 		{"PUT", "/controlvm/:Name", ControlVM}, // suspend, resume, reboot
 
+                //----------NLB Handler
+                {"GET", "/getnlbowner", GetNLBOwnerVPC},
+                {"POST", "/regnlb", RegisterNLB},
+                {"DELETE", "/regnlb/:Name", UnregisterNLB},
+
+                {"POST", "/nlb", CreateNLB},
+                {"GET", "/nlb", ListNLB},
+                {"GET", "/nlb/:Name", GetNLB},
+                {"DELETE", "/nlb/:Name", DeleteNLB},
+                //-- for vm
+                {"POST", "/nlb/:Name/vms", AddNLBVMs},
+                {"DELETE", "/nlb/:Name/vms", RemoveNLBVMs}, // no force option
+                {"PUT", "/nlb/:Name/listener", ChangeListener},
+                {"PUT", "/nlb/:Name/vmgroup", ChangeVMGroup},
+                {"PUT", "/nlb/:Name/healthchecker", ChangeHealthChecker},
+                {"GET", "/nlb/:Name/health", GetVMGroupHealthInfo},
+
+                //-- for management
+                {"GET", "/allnlb", ListAllNLB},
+                {"DELETE", "/cspnlb/:Id", DeleteCSPNLB},
+
 		//-------------------------------------------------------------------//
+		//----------SPLock Info
+		{"GET", "/splockinfo", GetAllSPLockInfo},
 		//----------SSH RUN
 		{"POST", "/sshrun", SSHRun},
 
 		//----------AdminWeb Handler
 		{"GET", "/adminweb", aw.Frame},
 		{"GET", "/adminweb/top", aw.Top},
+		{"GET", "/adminweb/log", aw.Log},
+
 		{"GET", "/adminweb/driver", aw.Driver},
 		{"GET", "/adminweb/credential", aw.Credential},
 		{"GET", "/adminweb/region", aw.Region},
@@ -322,6 +354,8 @@ func RunServer() {
 		{"GET", "/adminweb/keypairmgmt/:ConnectConfig", aw.KeyPairMgmt},
 		{"GET", "/adminweb/vm/:ConnectConfig", aw.VM},
 		{"GET", "/adminweb/vmmgmt/:ConnectConfig", aw.VMMgmt},
+		{"GET", "/adminweb/nlb/:ConnectConfig", aw.NLB},
+		{"GET", "/adminweb/nlbmgmt/:ConnectConfig", aw.NLBMgmt},
 
 		{"GET", "/adminweb/vmimage/:ConnectConfig", aw.VMImage},
 		{"GET", "/adminweb/vmspec/:ConnectConfig", aw.VMSpec},

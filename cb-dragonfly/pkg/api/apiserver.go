@@ -2,6 +2,8 @@ package api
 
 import (
 	"fmt"
+	"github.com/cloud-barista/cb-dragonfly/pkg/api/rest/metric/mcis"
+	"github.com/cloud-barista/cb-dragonfly/pkg/api/rest/metric/mck8s"
 	"github.com/cloud-barista/cb-dragonfly/pkg/api/rest/topic"
 	"net/http"
 	"sync"
@@ -14,7 +16,6 @@ import (
 	"github.com/cloud-barista/cb-dragonfly/pkg/api/rest/alert"
 	restconfig "github.com/cloud-barista/cb-dragonfly/pkg/api/rest/config"
 	"github.com/cloud-barista/cb-dragonfly/pkg/api/rest/healthcheck"
-	"github.com/cloud-barista/cb-dragonfly/pkg/api/rest/metric"
 	"github.com/cloud-barista/cb-dragonfly/pkg/config"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -69,17 +70,19 @@ func (apiServer *APIServer) SetRoutingRule(e *echo.Echo) {
 	//dragonfly.GET("/ns/:ns_id/mcis/:mcis_id/rt-info", metric.GetMCISRealtimeMonInfo)
 
 	// MCIS 모니터링 (Milkyway)
-	dragonfly.GET("/ns/:ns_id/mcis/:mcis_id/vm/:vm_id/agent_ip/:agent_ip/mcis_metric/:metric_name/mcis-monitoring-info", metric.GetMCISMetric)
+	dragonfly.GET("/ns/:ns_id/mcis/:mcis_id/vm/:vm_id/agent_ip/:agent_ip/mcis_metric/:metric_name/mcis-monitoring-info", mcis.GetMCISMetric)
 	// 멀티클라우드 인프라 VM 온디멘드 모니터링
-	dragonfly.GET("/ns/:ns/mcis/:mcis_id/vm/:vm_id/agent_ip/:agent_ip/metric/:metric_name/ondemand-monitoring-info", metric.GetVMOnDemandMetric)
+	dragonfly.GET("/ns/:ns/mcis/:mcis_id/vm/:vm_id/agent_ip/:agent_ip/metric/:metric_name/ondemand-monitoring-info", mcis.GetVMOnDemandMetric)
 	// 멀티클라우드 인프라 네트워크 패킷 모니터링
-	dragonfly.GET("/ns/:ns_id/mcis/:mcis_id/vm/:vm_id/watchtime/:watch_time/mcis-networkpacket-info", metric.GetMCISOnDemandPacket)
+	dragonfly.GET("/ns/:ns_id/mcis/:mcis_id/vm/:vm_id/watchtime/:watch_time/mcis-networkpacket-info", mcis.GetMCISOnDemandPacket)
 	// 멀티클라우드 인프라 VM Process 모니터링
-	dragonfly.GET("/agentip/:agent_ip/mcis-process-info", metric.GetMCISOnDemandProcess)
+	dragonfly.GET("/agentip/:agent_ip/mcis-process-info", mcis.GetMCISOnDemandProcess)
 	// 멀티클라우드 인프라 VM Spec 모니터링
-	dragonfly.GET("/ns/:ns/mcis/:mcis_id/mcis-spec-info", metric.GetMCISSpec)
+	dragonfly.GET("/ns/:ns/mcis/:mcis_id/mcis-spec-info", mcis.GetMCISSpec)
 	// 멀티 클라우드 인프라 VM 모니터링/실시간 모니터링 정보 조회
-	dragonfly.GET("/ns/:ns_id/mcis/:mcis_id/vm/:vm_id/metric/:metric_name/info", metric.GetVMMonInfo)
+	dragonfly.GET("/ns/:ns_id/mcis/:mcis_id/vm/:vm_id/metric/:metric_name/info", mcis.GetVMMonInfo)
+	// 멀티 클라우드 쿠버네티스 서비스 모니터링 정보 조회
+	dragonfly.GET("/ns/:ns_id/mck8s/:mck8s_id/metric/:metric_name/info", mck8s.GetMCK8SMonInfo)
 
 	// windows 에이전트 config, package 파일 다운로드
 	//dragonfly.GET("/installer/cbinstaller.zip", agent.GetWindowInstaller)
@@ -92,11 +95,11 @@ func (apiServer *APIServer) SetRoutingRule(e *echo.Echo) {
 	dragonfly.DELETE("/agent", agent.UninstallAgent)
 
 	// 에이전트 메타데이터
-	dragonfly.GET("/agent/metadata", agent.ListAgentMetadata)
-	dragonfly.GET("/agent/metadata/ns/:ns/mcis/:mcis_id/vm/:vm_id/csp/:csp_type", agent.GetAgentMetadata)
-	dragonfly.GET("/agent/metadata/ns/:ns/mcis/:mcis_id/vm/:vm_id/csp/:csp_type/agent_ip/:agent_ip", agent.PutAgentMetadata)
+	dragonfly.GET("/agents/metadata", agent.ListAgentMetadata)
+	dragonfly.GET("/agent/metadata", agent.GetAgentMetadata)
+	dragonfly.PUT("/agent/metadata", agent.PutAgentMetadata)
 
-	// 삭제할 토픽 큐 등록
+	// 삭제할 토픽 큐 등록 ( deployment collector 로 부터 삭제가 필요한 topic 들을 받기 위한 api )
 	dragonfly.GET("/topic/delete/:topic", topic.AddDeleteTopicToQueue)
 
 	// 알람 이벤트 핸들러 조회, 생성, 삭제

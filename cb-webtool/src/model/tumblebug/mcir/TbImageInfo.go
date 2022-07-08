@@ -20,6 +20,7 @@ type TbImageInfo struct {
 	Name         string                `json:"name"`
 	Namespace    string                `json:"namespace"` //required
 	Status       string                `json:"status"`
+	SystemLabel  string                `json:"systemLabel"`
 }
 
 type TbImageInfos []TbImageInfo

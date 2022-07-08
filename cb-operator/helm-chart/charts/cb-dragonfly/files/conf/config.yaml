@@ -22,6 +22,7 @@ dragonfly:
   dragonfly_ip: 127.0.0.1                           # Cloud-Barista를 설치 및 실행하는 VM/물리머신의 Public IP 주소를 기재
   port: 9090
   helm_port: 30090
+  helm_namespace: "cloud-barista"
 
 # monitoring interval configuration info
 monitoring:

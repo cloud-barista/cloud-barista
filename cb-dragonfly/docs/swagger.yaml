@@ -1,6 +1,6 @@
 basePath: /dragonfly
 definitions:
-  agent.AgentInfo:
+  common.AgentInfo:
     properties:
       agent_health:
         type: string
@@ -10,21 +10,30 @@ definitions:
         type: string
       agent_unhealthy_resp_cnt:
         type: integer
+      apiserver_url:
+        type: string
+      client_ca:
+        type: string
+      client_key:
+        type: string
+      client_token:
+        type: string
       csp_type:
         type: string
       mcis_id:
+        type: string
+      mck8s_id:
         type: string
       ns_id:
         type: string
       public_ip:
         type: string
+      server_ca:
+        type: string
+      service_type:
+        type: string
       vm_id:
         type: string
-    type: object
-  agent.MetaDataListType:
-    properties:
-      id(ns_id/mcis_id/vm_id/csp_type):
-        $ref: '#/definitions/agent.AgentInfo'
     type: object
   config.Monitoring:
     properties:
@@ -53,37 +62,43 @@ definitions:
         description: 모니터링 puller 실행 주기
         type: integer
     type: object
-  metric.CBMCISMetric:
+  github.com_cloud-barista_cb-dragonfly_pkg_api_rest_agent.MetaDataListType:
     properties:
-      desc:
-        type: string
-      elapsed:
-        type: string
-      result:
-        type: string
-      specid:
-        type: string
-      unit:
-        type: string
+      id(ns_id/mcis_id/vm_id/csp_type):
+        $ref: '#/definitions/common.AgentInfo'
     type: object
-  metric.MCBMCISMetric:
+  pkg_api_rest_agent.MetaDataListType:
     properties:
-      resultarray:
-        items:
-          $ref: '#/definitions/metric.CBMCISMetric'
-        type: array
+      id(ns_id/mcis_id/vm_id/csp_type):
+        $ref: '#/definitions/common.AgentInfo'
     type: object
   rest.AgentType:
     properties:
-      cspType:
+      apiserver_url:
+        type: string
+      client_ca:
+        type: string
+      client_key:
+        type: string
+      client_token:
+        type: string
+      csp_type:
         type: string
       mcis_id:
+        description: MCIS 모니터링
+        type: string
+      mck8s_id:
+        description: 쿠버네티스 모니터링
         type: string
       ns_id:
         type: string
       port:
         type: string
       public_ip:
+        type: string
+      server_ca:
+        type: string
+      service_type:
         type: string
       ssh_key:
         type: string
@@ -238,6 +253,8 @@ definitions:
         type: string
       alert_math_expression:
         type: string
+      alert_post_url:
+        type: string
       alert_threshold:
         type: number
       critic_event_cnt:
@@ -256,6 +273,26 @@ definitions:
         type: string
       warn_event_cnt:
         type: integer
+    type: object
+  types.CBMCISMetric:
+    properties:
+      desc:
+        type: string
+      elapsed:
+        type: string
+      result:
+        type: string
+      specid:
+        type: string
+      unit:
+        type: string
+    type: object
+  types.MCBMCISMetric:
+    properties:
+      resultarray:
+        items:
+          $ref: '#/definitions/types.CBMCISMetric'
+        type: array
     type: object
 host: localhost:9090
 info:
@@ -297,7 +334,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.SimpleMsg'
-      summary: Uninstall agent to vm
+      summary: Uninstall Agent
       tags:
       - '[Agent] Monitoring Agent'
     post:
@@ -326,14 +363,64 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.SimpleMsg'
-      summary: Install agent to vm
+      summary: Install Agent
       tags:
       - '[Agent] Monitoring Agent'
   /agent/metadata:
     get:
       consumes:
       - application/json
-      description: 에이전트 메타데이터 조회
+      description: 에이전트 메타데이터 단일 조회
+      parameters:
+      - description: 네임스페이스 아이디
+        enum:
+        - test_ns
+        in: query
+        name: ns_id
+        type: string
+      - description: 서비스 타입
+        enum:
+        - mcis
+        in: query
+        name: service_type
+        type: string
+      - description: 서비스 아이디
+        enum:
+        - mcis_id
+        in: query
+        name: service_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Different return structures by the given param
+          schema:
+            allOf:
+            - $ref: '#/definitions/rest.JSONResult'
+            - properties:
+                '[DEFAULT]':
+                  items:
+                    $ref: '#/definitions/pkg_api_rest_agent.MetaDataListType'
+                  type: array
+                '[ID]':
+                  $ref: '#/definitions/common.AgentInfo'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.SimpleMsg'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.SimpleMsg'
+      summary: Get Agent Metadata
+      tags:
+      - '[Agent] Monitoring Agent'
+    put:
+      consumes:
+      - application/json
+      description: 에이전트 메타데이터 수정
       parameters:
       - description: 네임스페이스 아이디
         enum:
@@ -359,6 +446,12 @@ paths:
         in: query
         name: cspType
         type: string
+      - description: MCK8S 아이디
+        enum:
+        - test_mck8s
+        in: query
+        name: mck8sId
+        type: string
       produces:
       - application/json
       responses:
@@ -370,10 +463,10 @@ paths:
             - properties:
                 '[DEFAULT]':
                   items:
-                    $ref: '#/definitions/agent.MetaDataListType'
+                    $ref: '#/definitions/pkg_api_rest_agent.MetaDataListType'
                   type: array
                 '[ID]':
-                  $ref: '#/definitions/agent.AgentInfo'
+                  $ref: '#/definitions/common.AgentInfo'
               type: object
         "404":
           description: Not Found
@@ -383,7 +476,39 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/rest.SimpleMsg'
-      summary: List agent metadata
+      summary: Put Agent Metadata
+      tags:
+      - '[Agent] Monitoring Agent'
+  /agents/metadata:
+    get:
+      consumes:
+      - application/json
+      description: 에이전트 메타데이터 목록 조회
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Different return structures by the given param
+          schema:
+            allOf:
+            - $ref: '#/definitions/rest.JSONResult'
+            - properties:
+                '[DEFAULT]':
+                  items:
+                    $ref: '#/definitions/pkg_api_rest_agent.MetaDataListType'
+                  type: array
+                '[ID]':
+                  $ref: '#/definitions/common.AgentInfo'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.SimpleMsg'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.SimpleMsg'
+      summary: List Agent Metadata
       tags:
       - '[Agent] Monitoring Agent'
   /alert/eventhandler:
@@ -812,19 +937,7 @@ paths:
       description: 서버 헬스체크
       produces:
       - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/rest.SimpleMsg'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/rest.SimpleMsg'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/rest.SimpleMsg'
+      responses: {}
       summary: Server Health Check
       tags:
       - '[Health] Health Check'
@@ -869,9 +982,9 @@ paths:
             - $ref: '#/definitions/rest.JSONResult'
             - properties:
                 '[DEFAULT]':
-                  $ref: '#/definitions/metric.CBMCISMetric'
+                  $ref: '#/definitions/types.CBMCISMetric'
                 '[Mrtt]':
-                  $ref: '#/definitions/metric.MCBMCISMetric'
+                  $ref: '#/definitions/types.MCBMCISMetric'
               type: object
         "404":
           description: Not Found
@@ -951,6 +1064,70 @@ paths:
           schema:
             $ref: '#/definitions/rest.SimpleMsg'
       summary: Get vm monitoring info
+      tags:
+      - '[Monitoring] Monitoring management'
+  /ns/{ns_id}/mck8s/{mck8s_id}/metric/{metric_name}/info:
+    get:
+      consumes:
+      - application/json
+      description: 멀티 클라우드 쿠버네티스 서비스 모니터링 정보 조회
+      parameters:
+      - description: 네임스페이스 아이디
+        in: path
+        name: ns_id
+        required: true
+        type: string
+      - description: MCK8S 아이디
+        in: path
+        name: mck8s_id
+        required: true
+        type: string
+      - description: 메트릭 정보
+        in: path
+        name: metric_name
+        required: true
+        type: string
+      - description: 모니터링 단위
+        enum:
+        - m
+        - h
+        - d
+        in: query
+        name: periodType
+        type: string
+      - description: 모니터링 통계 기준
+        enum:
+        - min
+        - max
+        - avg
+        - last
+        in: query
+        name: statisticsCriteria
+        type: string
+      - description: 모니터링 조회 범위
+        enum:
+        - 5m
+        - 5h
+        - 5d
+        in: query
+        name: duration
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.VMMonInfoType'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/rest.SimpleMsg'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/rest.SimpleMsg'
+      summary: Get Cluster monitoring info
       tags:
       - '[Monitoring] Monitoring management'
   /ns/{ns}/mcis/{mcis_id}/vm/{vm_id}/agent_ip/{agent_ip}/metric/{metric_name}/ondemand-monitoring-info:

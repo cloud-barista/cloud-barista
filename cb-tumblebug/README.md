@@ -14,7 +14,7 @@
 [![Slack](https://img.shields.io/badge/Slack-SIG--TB-brightgreen)](https://cloud-barista.slack.com/archives/CJQ7575PU)
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-35-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-37-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 A sub-system of Cloud-Barista Platform to Deploy and Manage Multi-Cloud Infrastructure.
@@ -254,7 +254,7 @@ Check out [CONTRIBUTING](https://github.com/cloud-barista/cb-tumblebug/blob/main
 
 
    Access to API dashboard (username: default / password: default)
-   http://xxx.xxx.xxx.xxx:1323/tumblebug/swagger/index.html?url=http://xxx.xxx.xxx.xxx:1323/tumblebug/swaggerActive
+   http://xxx.xxx.xxx.xxx:1323/tumblebug/swagger/index.html
 
   ⇨ http server started on [::]:1323
   ⇨ grpc server started on [::]:50252
@@ -701,9 +701,8 @@ Dozing for 1 : 1 (Back to work)
 
 #### 멀티 클라우드 인프라 유스케이스
 
-##### 스크립트를 통해 MCIS에 Nginx 분산 배치
+##### MCIS에 Nginx 분산 배치
   - deploy-nginx-mcis.sh  # 생성된 MCIS(다중VM)에 Nginx 자동 배포
-    - deploy-nginx-mcis.sh -n shson -f ../testSetAws.env # testSetAws.env 에 구성된 정보를 기준으로 MCIS의 모든 VM에 Nginx 및 웹페이지 설치
 
 ##### MCIS Weave Scope 클러스터 모니터링 분산 배치
   - [스크립트를 통해 MCIS에 Weave Scope 클러스터 설치](https://github.com/cloud-barista/cb-tumblebug/wiki/MCIS-WeaveScope-deployment)
@@ -715,8 +714,10 @@ Dozing for 1 : 1 (Back to work)
   - [스크립트를 통해 MCIS에 Ansible 실행 환경 자동 구성](https://github.com/cloud-barista/cb-tumblebug/wiki/MCIS-Ansible-deployment)
 
 ##### MCIS 토이 게임 서버 배치
-  - [스크립트를 통해 MCIS에 토이 게임 서버 설치](https://github.com/cloud-barista/cb-tumblebug/wiki/MCIS-toy-game-deployment)
+  - [스크립트를 통해 MCIS에 토이 게임 서버 배치](https://github.com/cloud-barista/cb-tumblebug/wiki/MCIS-toy-game-deployment)
 
+##### MCIS Xonotic(3D FPS) 게임 서버 배치
+  - [스크립트를 통해 MCIS에 Xonotic 게임 서버 배치](https://github.com/cloud-barista/cb-tumblebug/wiki/Deploy-Xonotic-game-sever-in-a-Cloud-via-CB-Tumblebug)
 
 
 ### CB-Tumblebug REST API 사용
@@ -733,7 +734,10 @@ Dozing for 1 : 1 (Back to work)
    - [MCIS 원격 커맨드](https://cloud-barista.github.io/cb-tumblebug-api-web/?url=https://raw.githubusercontent.com/cloud-barista/cb-tumblebug/main/src/api/rest/docs/swagger.yaml#/%5BMCIS%5D%20Remote%20command/post_ns__nsId__cmd_mcis__mcisId_)
    - [MCIS 조회 및 제어](https://cloud-barista.github.io/cb-tumblebug-api-web/?url=https://raw.githubusercontent.com/cloud-barista/cb-tumblebug/main/src/api/rest/docs/swagger.yaml#/%5BMCIS%5D%20Provisioning%20management/get_ns__nsId__mcis__mcisId_)
    - [MCIS 삭제(MCIS 종료 상태에서만 동작 가능)](https://cloud-barista.github.io/cb-tumblebug-api-web/?url=https://raw.githubusercontent.com/cloud-barista/cb-tumblebug/main/src/api/rest/docs/swagger.yaml#/%5BMCIS%5D%20Provisioning%20management/delete_ns__nsId__mcis)
+4. CB-Tumblebug 최적 배치 및 동적 프로비저닝
+   - [CB-Tumblebug 최적 배치 및 동적 프로비저닝](https://github.com/cloud-barista/cb-tumblebug/wiki/Dynamic-and-optimal-mcis-provisioning-guide)
 
+  
 ***
 ***
 
@@ -788,6 +792,10 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://ie.linkedin.com/in/trionabarrow"><img src="https://avatars.githubusercontent.com/u/2207006?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Tríona Barrow</b></sub></a><br /><a href="https://github.com/cloud-barista/cb-tumblebug/commits?author=polkabunny" title="Code">💻</a></td>
     <td align="center"><a href="https://www.bambutz.dev"><img src="https://avatars.githubusercontent.com/u/7022144?v=4?s=100" width="100px;" alt=""/><br /><sub><b>BamButz</b></sub></a><br /><a href="https://github.com/cloud-barista/cb-tumblebug/commits?author=BamButz" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/dogfootman"><img src="https://avatars.githubusercontent.com/u/80231499?v=4?s=100" width="100px;" alt=""/><br /><sub><b>dogfootman</b></sub></a><br /><a href="#userTesting-dogfootman" title="User Testing">📓</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/choryang"><img src="https://avatars.githubusercontent.com/u/47209678?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Okhee Lee</b></sub></a><br /><a href="#userTesting-choryang" title="User Testing">📓</a></td>
+    <td align="center"><a href="https://github.com/joowons"><img src="https://avatars.githubusercontent.com/u/85204858?v=4?s=100" width="100px;" alt=""/><br /><sub><b>joowon</b></sub></a><br /><a href="#userTesting-joowons" title="User Testing">📓</a></td>
   </tr>
 </table>
 

@@ -1,7 +1,6 @@
 // Proof of Concepts for the Cloud-Barista Multi-Cloud Project.
 //      * Cloud-Barista: https://github.com/cloud-barista
 //
-// EC2 Hander (AWS SDK GO Version 1.16.26, Thanks AWS.)
 //
 // by CB-Spider Team, 2019.03.
 package resources
@@ -9,12 +8,15 @@ package resources
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+
+	//"regexp"
 
 	cblog "github.com/cloud-barista/cb-log"
 	call "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/call-log"
@@ -24,6 +26,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
+	//lighthouse "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/lighthouse/v20200324"
 )
 
 var cblogger *logrus.Logger
@@ -38,30 +41,36 @@ type TencentVMHandler struct {
 	Client *cvm.Client
 }
 
-//VM 이름으로 중복 생성을 막아야 해서 VM존재 여부를 체크함.
-func (vmHandler *TencentVMHandler) isExist(vmName string) (bool, error) {
-	cblogger.Infof("VM조회(Name기반) : %s", vmName)
-	request := cvm.NewDescribeInstancesRequest()
-	request.Filters = []*cvm.Filter{
-		&cvm.Filter{
-			Name:   common.StringPtr("instance-name"),
-			Values: common.StringPtrs([]string{vmName}),
-		},
-	}
+//type TencentCbsHandler struct {
+//	Region idrv.RegionInfo
+//	Client *cbs.Client
+//}
 
-	response, err := vmHandler.Client.DescribeInstances(request)
-	if err != nil {
-		cblogger.Error(err)
-		return false, err
-	}
+// LightHouse 사용을 위한 handler : TODO : region의 disk정보를 가져올 수 있으므로 사용방안 찾기
+//type TencentDiskHandler struct {
+//	Region idrv.RegionInfo
+//	Client *lighthouse.Client
+//}
 
-	if *response.Response.TotalCount < 1 {
-		return false, nil
-	}
+//type DiskInfo struct {
+//	Zone           string
+//	DiskType       string
+//	DiskMinSize    int64
+//	DiskMaxSize    int64
+//	DiskStepSize   int64
+//	DiskSalesState string
+//}
 
-	cblogger.Infof("VM 정보 찾음 - VmId:[%s] / VmName:[%s]", *response.Response.InstanceSet[0].InstanceId, *response.Response.InstanceSet[0].InstanceName)
-	return true, nil
-}
+// Cloud Block Storage(cbs) Disk Info
+//type CbsDiskInfo struct {
+//	DiskType        string
+//	DiskState       string
+//	InstanceIdList  []string
+//	DiskName        string
+//	DiskId          string
+//	SnapshotSize    uint64
+//	SnapshotAbility bool
+//}
 
 // VM생성 시 Zone이 필수라서 Credential의 Zone에만 생성함.
 func (vmHandler *TencentVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, error) {
@@ -77,12 +86,12 @@ func (vmHandler *TencentVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo,
 	//=================================================
 	// 동일 이름 생성 방지 추가(cb-spider 요청 필수 기능)
 	//=================================================
-	isExist, errExist := vmHandler.isExist(vmReqInfo.IId.NameId)
+	vmExist, errExist := vmHandler.vmExist(vmReqInfo.IId.NameId)
 	if errExist != nil {
 		cblogger.Error(errExist)
 		return irs.VMInfo{}, errExist
 	}
-	if isExist {
+	if vmExist {
 		return irs.VMInfo{}, errors.New("A VM with the name " + vmReqInfo.IId.NameId + " already exists.")
 	}
 
@@ -98,7 +107,6 @@ func (vmHandler *TencentVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo,
 		Client: vmHandler.Client,
 	}
 	cblogger.Info(keypairHandler)
-
 	keyPairInfo, errKeyPair := keypairHandler.GetKey(vmReqInfo.KeyPairIID)
 	if errKeyPair != nil {
 		cblogger.Error(errKeyPair)
@@ -165,33 +173,122 @@ func (vmHandler *TencentVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo,
 		DiskType: common.StringPtr("CLOUD_PREMIUM"), //일부 인스턴스의 경우 기본 스토리지가 없는 스펙이 있어서 강제로 CLOUD_PREMIUM 지정
 	}
 	*/
+	request.SystemDisk = &cvm.SystemDisk{}
 
 	//=============================
 	// SystemDisk 처리 - 이슈 #348에 의해 RootDisk 기능 지원
 	//=============================
+	//이슈#660 반영
+	if strings.EqualFold(vmReqInfo.RootDiskType, "default") {
+		vmReqInfo.RootDiskType = ""
+	}
+
 	if vmReqInfo.RootDiskType != "" || vmReqInfo.RootDiskSize != "" {
 		request.SystemDisk = &cvm.SystemDisk{}
-		//=============================
-		// Root Disk Type 변경
-		//=============================
-		if vmReqInfo.RootDiskType != "" {
-			request.SystemDisk.DiskType = common.StringPtr(vmReqInfo.RootDiskType)
-		}
+	}
+	//	request.SystemDisk.DiskType = common.StringPtr(vmReqInfo.RootDiskType)
+	//=============================
+	// Root Disk Type 변경
+	//=============================
 
-		//=============================
-		// Root Disk Size 변경
-		//=============================
-		if vmReqInfo.RootDiskSize != "" {
-			if !strings.EqualFold(vmReqInfo.RootDiskSize, "default") {
-				iDiskSize, err := strconv.ParseInt(vmReqInfo.RootDiskSize, 10, 64)
-				if err != nil {
-					cblogger.Error(err)
-					return irs.VMInfo{}, err
-				}
+	//cloudOSMetaInfo, err := cim.GetCloudOSMetaInfo("TENCENT") // cloudos_meta 에 DiskType, min, max 값 정의 되어있음.
+	//arrDiskSizeOfType := cloudOSMetaInfo.RootDiskSize
+	//
+	//fmt.Println("arrDiskSizeOfType: ", arrDiskSizeOfType)
+	//
 
-				request.SystemDisk.DiskSize = common.Int64Ptr(iDiskSize)
+	//if vmReqInfo.RootDiskType == "" || strings.EqualFold(vmReqInfo.RootDiskType, "default") {
+	//	cblogger.Debug("RootDiskType is default ")
+	//	diskSizeArr := strings.Split(arrDiskSizeOfType[0], "|")
+	//	diskSizeValue.diskType = diskSizeArr[0]
+	//	diskSizeValue.unit = diskSizeArr[3]
+	//	diskSizeValue.diskMinSize, err = strconv.ParseInt(diskSizeArr[1], 10, 64)
+	//	if err != nil {
+	//		cblogger.Error(err)
+	//		return irs.VMInfo{}, err
+	//	}
+	//
+	//	diskSizeValue.diskMaxSize, err = strconv.ParseInt(diskSizeArr[2], 10, 64)
+	//	if err != nil {
+	//		cblogger.Error(err)
+	//		return irs.VMInfo{}, err
+	//	}
+	//
+	//	// default에도 DiskType 넣어야 하나?
+	//	//request.SystemDisk.DiskType = common.StringPtr(vmReqInfo.RootDiskType)
+	//
+	//} else {
+	if !strings.EqualFold(vmReqInfo.RootDiskType, "") {
+		//	isExists := false
+		//	for idx, _ := range arrDiskSizeOfType {
+		//		diskSizeArr := strings.Split(arrDiskSizeOfType[idx], "|")
+		//		fmt.Println("diskSizeArr: ", diskSizeArr)
+		//
+		//		if strings.EqualFold(vmReqInfo.RootDiskType, diskSizeArr[0]) {
+		//			diskSizeValue.diskType = diskSizeArr[0]
+		//			diskSizeValue.unit = diskSizeArr[3]
+		//			diskSizeValue.diskMinSize, err = strconv.ParseInt(diskSizeArr[1], 10, 64)
+		//			if err != nil {
+		//				cblogger.Error(err)
+		//				return irs.VMInfo{}, err
+		//			}
+		//
+		//			diskSizeValue.diskMaxSize, err = strconv.ParseInt(diskSizeArr[2], 10, 64)
+		//			if err != nil {
+		//				cblogger.Error(err)
+		//				return irs.VMInfo{}, err
+		//			}
+		//
+		//			isExists = true
+		//		}
+		//		cblogger.Debug("RootDiskSize isExists "+strconv.FormatInt(int64(idx), 10), isExists)
+		//	}
+		//	cblogger.Debug("RootDiskSize isExists ", isExists)
+		//	if !isExists {
+		//		return irs.VMInfo{}, errors.New("Invalid Root Disk Type : " + vmReqInfo.RootDiskType)
+		//	}
+		//
+		request.SystemDisk.DiskType = common.StringPtr(vmReqInfo.RootDiskType)
+	}
+
+	//}
+
+	//=============================
+	// Root Disk Size 변경
+	//=============================
+	if vmReqInfo.RootDiskSize != "" {
+		if strings.EqualFold(vmReqInfo.RootDiskSize, "default") {
+		} else {
+			rootDiskSize, err := strconv.ParseInt(vmReqInfo.RootDiskSize, 10, 64)
+			if err != nil {
+				cblogger.Error(err)
+				return irs.VMInfo{}, err
 			}
+
+			imageRequest := cvm.NewDescribeImagesRequest()
+
+			imageRequest.ImageIds = common.StringPtrs([]string{vmReqInfo.ImageIID.SystemId})
+
+			response, err := vmHandler.Client.DescribeImages(imageRequest)
+			if err != nil {
+				cblogger.Error(err)
+				return irs.VMInfo{}, err
+			}
+			imageSize := *response.Response.ImageSet[0].ImageSize
+			fmt.Println("image : ", imageSize)
+
+			if rootDiskSize < imageSize {
+				fmt.Println("Disk Size Error!!: ", rootDiskSize, imageSize)
+				return irs.VMInfo{}, errors.New("Root Disk Size must be larger then the image size (" + strconv.FormatInt(imageSize, 10) + " GB).")
+			}
+
+			fmt.Println("rootDiskSize : ", rootDiskSize)
+			fmt.Println("rootDiskSize : ", common.Int64Ptr(rootDiskSize))
+
+			request.SystemDisk.DiskSize = common.Int64Ptr(rootDiskSize)
+			cblogger.Debug("request.SystemDisk.DiskSize ", request.SystemDisk.DiskSize)
 		}
+
 	}
 
 	//=============================
@@ -245,6 +342,10 @@ func (vmHandler *TencentVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo,
 
 	vmInfo, errVmInfo := vmHandler.GetVM(newVmIID)
 	vmInfo.IId.NameId = vmReqInfo.IId.NameId
+	if vmInfo.KeyPairIId.SystemId == "" {
+		vmInfo.KeyPairIId.SystemId = vmReqInfo.KeyPairIID.SystemId // keypairIID가 없으면 채워 넣음, VM 생성 직후에는 안 들어올 수 있음
+	}
+	cblogger.Debug(vmInfo)
 	return vmInfo, errVmInfo
 }
 
@@ -274,7 +375,6 @@ func (vmHandler *TencentVMHandler) SuspendVM(vmIID irs.IID) (irs.VMStatus, error
 
 	/*
 		Instance shutdown mode. Valid values:
-
 		SOFT_FIRST: perform a soft shutdown first, and force shut down the instance if the soft shutdown fails
 		HARD: force shut down the instance directly
 		SOFT: soft shutdown only
@@ -284,7 +384,6 @@ func (vmHandler *TencentVMHandler) SuspendVM(vmIID irs.IID) (irs.VMStatus, error
 
 	/*
 		Billing method of a pay-as-you-go instance after shutdown. Valid values:
-
 		KEEP_CHARGING: billing continues after shutdown
 		STOP_CHARGING: billing stops after shutdown
 		Default value: KEEP_CHARGING. This parameter is only valid for some pay-as-you-go instances using cloud disks. For more information, see No charges when shut down for pay-as-you-go instances.
@@ -324,6 +423,15 @@ func (vmHandler *TencentVMHandler) ResumeVM(vmIID irs.IID) (irs.VMStatus, error)
 		ErrorMSG:     "",
 	}
 
+	curStatus, errStatus := vmHandler.GetVMStatus(vmIID)
+	if errStatus != nil {
+		cblogger.Error(errStatus.Error())
+	}
+	cblogger.Debug(curStatus)
+	if curStatus != "Suspended" {
+		return irs.VMStatus("Failed"), errors.New(string("vm 상태가 Suspended 가 아닙니다." + curStatus))
+	}
+
 	request := cvm.NewStartInstancesRequest()
 	request.InstanceIds = common.StringPtrs([]string{vmIID.SystemId})
 
@@ -359,23 +467,41 @@ func (vmHandler *TencentVMHandler) RebootVM(vmIID irs.IID) (irs.VMStatus, error)
 		ErrorMSG:     "",
 	}
 
-	request := cvm.NewRebootInstancesRequest()
-	request.InstanceIds = common.StringPtrs([]string{vmIID.SystemId})
-
-	callLogStart := call.Start()
-	response, err := vmHandler.Client.RebootInstances(request)
-	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
-
-	if err != nil {
-		callLogInfo.ErrorMSG = err.Error()
-		callogger.Error(call.String(callLogInfo))
-
-		cblogger.Error(err)
-		return irs.VMStatus("Failed"), err
+	curStatus, errStatus := vmHandler.GetVMStatus(vmIID)
+	if errStatus != nil {
+		cblogger.Error(errStatus.Error())
 	}
-	//spew.Dump(response)
-	callogger.Info(call.String(callLogInfo))
-	cblogger.Debug(response.ToJsonString())
+	cblogger.Debug(curStatus)
+	if curStatus == "Running" {
+		request := cvm.NewRebootInstancesRequest()
+		request.InstanceIds = common.StringPtrs([]string{vmIID.SystemId})
+
+		callLogStart := call.Start()
+		response, err := vmHandler.Client.RebootInstances(request)
+		callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+
+		if err != nil {
+			callLogInfo.ErrorMSG = err.Error()
+			callogger.Error(call.String(callLogInfo))
+
+			cblogger.Error(err)
+			return irs.VMStatus("Failed"), err
+		}
+		//spew.Dump(response)
+		callogger.Info(call.String(callLogInfo))
+		cblogger.Debug(response.ToJsonString())
+	} else if curStatus == "Suspended" {
+		_, err := vmHandler.ResumeVM(vmIID)
+		if err != nil {
+			callLogInfo.ErrorMSG = err.Error()
+			callogger.Error(call.String(callLogInfo))
+
+			cblogger.Error(err)
+			return irs.VMStatus("Failed"), err
+		}
+	} else {
+		return irs.VMStatus("Failed"), errors.New(string(curStatus + "상태인 경우에는 Reboot할 수 없습니다."))
+	}
 
 	return irs.VMStatus("Rebooting"), nil
 }
@@ -501,6 +627,8 @@ func (vmHandler *TencentVMHandler) ExtractDescribeInstances(curVm *cvm.Instance)
 		}
 	}
 
+	cblogger.Debug(curVm.LoginSettings)
+
 	if !reflect.ValueOf(curVm.LoginSettings).IsNil() {
 		if !reflect.ValueOf(curVm.LoginSettings.KeyIds).IsNil() {
 			if len(curVm.LoginSettings.KeyIds) > 0 {
@@ -561,13 +689,16 @@ func (vmHandler *TencentVMHandler) ExtractDescribeInstances(curVm *cvm.Instance)
 	if !reflect.ValueOf(curVm.SystemDisk).IsNil() {
 		if !reflect.ValueOf(curVm.SystemDisk.DiskType).IsNil() {
 			keyValueList = append(keyValueList, irs.KeyValue{Key: "SystemDiskType", Value: *curVm.SystemDisk.DiskType})
+			vmInfo.RootDiskType = *curVm.SystemDisk.DiskType
 		}
 		if !reflect.ValueOf(curVm.SystemDisk.DiskId).IsNil() {
 			keyValueList = append(keyValueList, irs.KeyValue{Key: "SystemDiskId", Value: *curVm.SystemDisk.DiskId})
 			vmInfo.VMBootDisk = *curVm.SystemDisk.DiskId
+			vmInfo.RootDeviceName = *curVm.SystemDisk.DiskId
 		}
 		if !reflect.ValueOf(curVm.SystemDisk.DiskSize).IsNil() {
 			keyValueList = append(keyValueList, irs.KeyValue{Key: "SystemDiskSize", Value: strconv.FormatInt(*curVm.SystemDisk.DiskSize, 10)})
+			vmInfo.RootDiskSize = strconv.FormatInt(*curVm.SystemDisk.DiskSize, 10)
 		}
 	}
 
@@ -715,6 +846,9 @@ func (vmHandler *TencentVMHandler) ListVMStatus() ([]*irs.VMStatusInfo, error) {
 	return vmStatusList, nil
 }
 
+//
+// tencent life cycle
+// https://intl.cloud.tencent.com/document/product/213/4856?lang=en&pg=
 func ConvertVMStatusString(vmStatus string) (irs.VMStatus, error) {
 	var resultStatus string
 	cblogger.Infof("vmStatus : [%s]", vmStatus)
@@ -722,6 +856,8 @@ func ConvertVMStatusString(vmStatus string) (irs.VMStatus, error) {
 	if strings.EqualFold(vmStatus, "pending") {
 		//resultStatus = "Creating"	// VM 생성 시점의 Pending은 CB에서는 조회가 안되기 때문에 일단 처리하지 않음.
 		resultStatus = "Resuming" // Resume 요청을 받아서 재기동되는 단계에도 Pending이 있기 때문에 Pending은 Resuming으로 맵핑함.
+	} else if strings.EqualFold(vmStatus, "starting") {
+		resultStatus = "Resuming"
 	} else if strings.EqualFold(vmStatus, "running") {
 		resultStatus = "Running"
 	} else if strings.EqualFold(vmStatus, "stopping") {
@@ -734,6 +870,10 @@ func ConvertVMStatusString(vmStatus string) (irs.VMStatus, error) {
 		resultStatus = "Rebooting"
 	} else if strings.EqualFold(vmStatus, "shutting-down") {
 		resultStatus = "Terminating"
+	} else if strings.EqualFold(vmStatus, "terminating") {
+		resultStatus = "Terminating"
+	} else if strings.EqualFold(vmStatus, "shut-down") {
+		resultStatus = "Terminated"
 	} else if strings.EqualFold(vmStatus, "Terminated") {
 		resultStatus = "Terminated"
 	} else {
@@ -773,7 +913,7 @@ func (vmHandler *TencentVMHandler) WaitForRun(vmIID irs.IID) (irs.VMStatus, erro
 
 		//if curStatus != irs.VMStatus(waitStatus) {
 		curRetryCnt++
-		cblogger.Errorf("VM 상태가 [%s]이 아니라서 1초 대기후 조회합니다.", waitStatus)
+		cblogger.Infof("VM 상태가 [%s]이 아니라서 1초 대기후 조회합니다.", waitStatus)
 		time.Sleep(time.Second * 1)
 		if curRetryCnt > maxRetryCnt {
 			cblogger.Errorf("장시간(%d 초) 대기해도 VM의 Status 값이 [%s]으로 변경되지 않아서 강제로 중단합니다.", maxRetryCnt, waitStatus)
@@ -783,3 +923,213 @@ func (vmHandler *TencentVMHandler) WaitForRun(vmIID irs.IID) (irs.VMStatus, erro
 
 	return irs.VMStatus(waitStatus), nil
 }
+
+//VM 이름으로 중복 생성을 막아야 해서 VM존재 여부를 체크함.
+func (vmHandler *TencentVMHandler) vmExist(vmName string) (bool, error) {
+	cblogger.Infof("VM조회(Name기반) : %s", vmName)
+	request := cvm.NewDescribeInstancesRequest()
+	request.Filters = []*cvm.Filter{
+		&cvm.Filter{
+			Name:   common.StringPtr("instance-name"),
+			Values: common.StringPtrs([]string{vmName}),
+		},
+	}
+
+	response, err := vmHandler.Client.DescribeInstances(request)
+	if err != nil {
+		cblogger.Error(err)
+		return false, err
+	}
+
+	if *response.Response.TotalCount < 1 {
+		return false, nil
+	}
+
+	cblogger.Infof("VM 정보 찾음 - VmId:[%s] / VmName:[%s]", *response.Response.InstanceSet[0].InstanceId, *response.Response.InstanceSet[0].InstanceName)
+	return true, nil
+}
+
+//DescribeDiskConfigs : Querying disk configuration
+/*
+해당 zone에 사용가능한 disk type 및 size 목록
+Region 	Yes 	String 	Common parameter. For more information, please see the list of regions supported by the product.
+Filters.N 	No 	Array of Filter 	Filter list.
+zone
+Filter by availability zone.
+Type: String
+Required: no
+
+Lighthouse API가 있으나 ClientInterface 부분 처리 방법 필요
+사용 방법 예시)
+	var validDiskMin int64
+	var validDiskMax int64
+	diskHandler := TencentDiskHandler{Client: (*lighthouse.Client)(vmHandler.Client)}
+	if vmReqInfo.RootDiskType != "" {
+		request.SystemDisk.DiskType = common.StringPtr(vmReqInfo.RootDiskType)
+
+		diskInfoList, err := diskHandler.DescribeDiskConfigs()
+		if err != nil {
+			cblogger.Debug("there is no available disk ")
+		}
+		for _, diskInfo := range diskInfoList {
+			if strings.EqualFold(vmReqInfo.RootDiskType, diskInfo.DiskType) && strings.EqualFold(diskInfo.DiskSalesState, "AVAILABLE") {
+				validDiskMin = diskInfo.DiskMinSize
+				validDiskMax = diskInfo.DiskMaxSize
+			} else {
+				return irs.VMInfo{}, errors.New("Invalid Root Disk Type : " + vmReqInfo.RootDiskType + ", " + diskInfo.DiskSalesState)
+			}
+		}
+	}
+	cblogger.Debug("request.SystemDisk.DiskType ", request.SystemDisk.DiskType)
+
+  다음 error로 주석 했음.  undefined: "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common".CredentialIface
+*/
+//func (diskHandler *TencentDiskHandler) DescribeDiskConfigs() ([]*DiskInfo, error) {
+//	cblogger.Debug("Start")
+//
+//	callogger := call.GetLogger("HISCALL")
+//	callLogInfo := call.CLOUDLOGSCHEMA{
+//		CloudOS:      call.TENCENT,
+//		RegionZone:   diskHandler.Region.Zone,
+//		ResourceType: call.VM,
+//		ResourceName: "DescribeDiskConfigs()",
+//		CloudOSAPI:   "DescribeInstancesStatus()",
+//		ElapsedTime:  "",
+//		ErrorMSG:     "",
+//	}
+//
+//	request := lighthouse.NewDescribeDiskConfigsRequest()
+//
+//	callLogStart := call.Start()
+//	response, err := diskHandler.Client.DescribeDiskConfigs(request)
+//	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+//
+//	if err != nil {
+//		callLogInfo.ErrorMSG = err.Error()
+//		callogger.Error(call.String(callLogInfo))
+//
+//		cblogger.Error(err)
+//		return nil, err
+//	}
+//	//spew.Dump(response)
+//	callogger.Info(call.String(callLogInfo))
+//	cblogger.Debug(response.ToJsonString())
+//
+//	//var vmStatusList []*irs.VMStatusInfo
+//	var diskInfoList []*DiskInfo
+//	for _, diskConfig := range response.Response.DiskConfigSet {
+//
+//		diskInfo := DiskInfo{
+//			Zone:           *diskConfig.Zone,
+//			DiskType:       *diskConfig.DiskType,
+//			DiskMaxSize:    *diskConfig.MaxDiskSize,
+//			DiskMinSize:    *diskConfig.MinDiskSize,
+//			DiskStepSize:   *diskConfig.MinDiskSize,
+//			DiskSalesState: *diskConfig.DiskSalesState,
+//		}
+//		diskInfoList = append(diskInfoList, &diskInfo)
+//	}
+//
+//	return diskInfoList, nil
+//}
+
+// TODO : cloud storage block Interface에 추가되면 사용할 것
+//func (cbsHandler *TencentCbsHandler) DescribeDisks() ([]*CbsDiskInfo, error) {
+//	cblogger.Debug("Start")
+//
+//	callogger := call.GetLogger("HISCALL")
+//	callLogInfo := call.CLOUDLOGSCHEMA{
+//		CloudOS:      call.TENCENT,
+//		RegionZone:   cbsHandler.Region.Zone,
+//		ResourceType: call.VM,
+//		ResourceName: "DescribeDisks()",
+//		CloudOSAPI:   "DescribeDisks()",
+//		ElapsedTime:  "",
+//		ErrorMSG:     "",
+//	}
+//
+//	request := cbs.NewDescribeDisksRequest()
+//	request.Limit = common.Uint64Ptr(100)
+//
+//	callLogStart := call.Start()
+//	response, err := cbsHandler.Client.DescribeDisks(request)
+//	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+//
+//	if err != nil {
+//		callLogInfo.ErrorMSG = err.Error()
+//		callogger.Error(call.String(callLogInfo))
+//
+//		cblogger.Error(err)
+//		return nil, err
+//	}
+//	//spew.Dump(response)
+//	callogger.Info(call.String(callLogInfo))
+//	cblogger.Debug(response.ToJsonString())
+//	//
+//	//Response *struct {
+//	//	TotalCount *uint64 `json:"TotalCount,omitempty" name:"TotalCount"`
+//	//	DiskSet    []*Disk `json:"DiskSet,omitempty" name:"DiskSet"`
+//	//	RequestId  *string `json:"RequestId,omitempty" name:"RequestId"`
+//	//} `json:"Response"`
+//	//var vmStatusList []*irs.VMStatusInfo
+//
+//	//type Disk struct {
+//	//	DeleteWithInstance    *bool      `json:"DeleteWithInstance,omitempty" name:"DeleteWithInstance"`
+//	//	RenewFlag             *string    `json:"RenewFlag,omitempty" name:"RenewFlag"`
+//	//	DiskType              *string    `json:"DiskType,omitempty" name:"DiskType"`
+//	//	DiskState             *string    `json:"DiskState,omitempty" name:"DiskState"`
+//	//	SnapshotCount         *int64     `json:"SnapshotCount,omitempty" name:"SnapshotCount"`
+//	//	AutoRenewFlagError    *bool      `json:"AutoRenewFlagError,omitempty" name:"AutoRenewFlagError"`
+//	//	Rollbacking           *bool      `json:"Rollbacking,omitempty" name:"Rollbacking"`
+//	//	InstanceIdList        []*string  `json:"InstanceIdList,omitempty" name:"InstanceIdList"`
+//	//	Encrypt               *bool      `json:"Encrypt,omitempty" name:"Encrypt"`
+//	//	DiskName              *string    `json:"DiskName,omitempty" name:"DiskName"`
+//	//	BackupDisk            *bool      `json:"BackupDisk,omitempty" name:"BackupDisk"`
+//	//	Tags                  []*Tag     `json:"Tags,omitempty" name:"Tags"`
+//	//	InstanceId            *string    `json:"InstanceId,omitempty" name:"InstanceId"`
+//	//	AttachMode            *string    `json:"AttachMode,omitempty" name:"AttachMode"`
+//	//	AutoSnapshotPolicyIds []*string  `json:"AutoSnapshotPolicyIds,omitempty" name:"AutoSnapshotPolicyIds"`
+//	//	ThroughputPerformance *uint64    `json:"ThroughputPerformance,omitempty" name:"ThroughputPerformance"`
+//	//	Migrating             *bool      `json:"Migrating,omitempty" name:"Migrating"`
+//	//	DiskId                *string    `json:"DiskId,omitempty" name:"DiskId"`
+//	//	SnapshotSize          *uint64    `json:"SnapshotSize,omitempty" name:"SnapshotSize"`
+//	//	Placement             *Placement `json:"Placement,omitempty" name:"Placement"`
+//	//	IsReturnable          *bool      `json:"IsReturnable,omitempty" name:"IsReturnable"`
+//	//	DeadlineTime          *string    `json:"DeadlineTime,omitempty" name:"DeadlineTime"`
+//	//	Attached              *bool      `json:"Attached,omitempty" name:"Attached"`
+//	//	DiskSize              *uint64    `json:"DiskSize,omitempty" name:"DiskSize"`
+//	//	MigratePercent        *uint64    `json:"MigratePercent,omitempty" name:"MigratePercent"`
+//	//	DiskUsage             *string    `json:"DiskUsage,omitempty" name:"DiskUsage"`
+//	//	DiskChargeType        *string    `json:"DiskChargeType,omitempty" name:"DiskChargeType"`
+//	//	Portable              *bool      `json:"Portable,omitempty" name:"Portable"`
+//	//	SnapshotAbility       *bool      `json:"SnapshotAbility,omitempty" name:"SnapshotAbility"`
+//	//	DeadlineError         *bool      `json:"DeadlineError,omitempty" name:"DeadlineError"`
+//	//	RollbackPercent       *uint64    `json:"RollbackPercent,omitempty" name:"RollbackPercent"`
+//	//	DifferDaysOfDeadline  *int64     `json:"DifferDaysOfDeadline,omitempty" name:"DifferDaysOfDeadline"`
+//	//	ReturnFailCode        *int64     `json:"ReturnFailCode,omitempty" name:"ReturnFailCode"`
+//	//	Shareable             *bool      `json:"Shareable,omitempty" name:"Shareable"`
+//	//	CreateTime            *string    `json:"CreateTime,omitempty" name:"CreateTime"`
+//	//}
+//	var diskInfoList []*CbsDiskInfo
+//	for _, disk := range response.Response.DiskSet {
+//		//	DiskType              *string    `json:"DiskType,omitempty" name:"DiskType"`
+//		//	DiskState             *string    `json:"DiskState,omitempty" name:"DiskState"`
+//		//	InstanceIdList        []*string  `json:"InstanceIdList,omitempty" name:"InstanceIdList"`
+//		//	DiskName              *string    `json:"DiskName,omitempty" name:"DiskName"`
+//		//	DiskId                *string    `json:"DiskId,omitempty" name:"DiskId"`
+//		//	SnapshotSize          *uint64    `json:"SnapshotSize,omitempty" name:"SnapshotSize"`
+//		//	SnapshotAbility       *bool      `json:"SnapshotAbility,omitempty" name:"SnapshotAbility"`
+//		diskInfo := CbsDiskInfo{
+//			DiskType:  *disk.DiskType,
+//			DiskState: *disk.DiskState,
+//			//InstanceIdList:  *disk.InstanceIdList,
+//			DiskName:        *disk.DiskName,
+//			DiskId:          *disk.DiskId,
+//			SnapshotSize:    *disk.SnapshotSize,
+//			SnapshotAbility: *disk.SnapshotAbility,
+//		}
+//		diskInfoList = append(diskInfoList, &diskInfo)
+//	}
+//
+//	return diskInfoList, nil
+//}

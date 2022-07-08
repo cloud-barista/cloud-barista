@@ -45,14 +45,14 @@ services:
       KAFKA_PORT: 9092
       KAFKA_ZOOKEEPER_CONNECT: cb-dragonfly-zookeeper:2181
       KAFKA_DELETE_TOPIC_ENABLE: "true"
-      KAFKA_LOG_RETENTION_HOURS: 1
       # 1 hours (delete logs)
-      KAFKA_LOG_RETENTION_BYTES: 524288000
+      KAFKA_LOG_RETENTION_HOURS: 1
       # 500 MB
-      KAFKA_LOG_SEGMENT_BYTES: 262144000
+      KAFKA_LOG_RETENTION_BYTES: 524288000
       # 250 MB
-      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 600000
+      KAFKA_LOG_SEGMENT_BYTES: 262144000
       # 10 min (check interval)
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 600000
       KAFKA_MESSAGE_TIMESTAMP_TYPE: LogAppendTime
       KAFKA_LOG_MESSAGE_TIMESTAMP_TYPE: LogAppendTime
     volumes:
@@ -110,16 +110,3 @@ services:
       - cb-dragonfly-influxdb
       - cb-dragonfly-kapacitor
       - cb-dragonfly
-
-#  cb-dragonfly-zk-web:
-#    image: goodguide/zk-web
-#    container_name: cb-dragonfly-zk-web
-#    ports:
-#      - "8080:8080"
-#    environment:
-#      - ZKWEB_PORT=8080
-#      - ZKWEB_CREDENTIALS=admin:hello
-#    networks:
-#      cb-dragonfly:
-#        aliases:
-#          - cb-dragonfly-zk-web

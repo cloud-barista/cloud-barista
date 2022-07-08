@@ -216,13 +216,19 @@ function getCommonDriverList(caller, optionParam) {
     });
 }
 
-function getCommonNetworkList(caller, optionParam) {
+function getCommonNetworkList(caller, optionParam, filterKey, filterVal) {
     console.log("vnet : ");
 
     var url = "/setting/resources/network/list"
 
-    if (optionParam != "") {
+    if (optionParam != "" && optionParam != undefined) {
         url += "?option=" + optionParam
+    } else {
+        url += "?option="
+    }
+    if (filterKey != "" && filterKey != undefined) {
+        url += "&filterKey=" + filterKey
+        url += "&filterVal=" + filterVal
     }
 
     axios.get(url, {
@@ -233,6 +239,7 @@ function getCommonNetworkList(caller, optionParam) {
         data = result.data.VNetList;
         console.log("vNetwork Info : ", result);
         console.log("vNetwork data : ", data);
+        //setTotalNetworkList(data)
         getNetworkListCallbackSuccess(caller, data);
     }).catch(error => {
         console.warn(error);
@@ -245,11 +252,17 @@ function getCommonNetworkList(caller, optionParam) {
 }
 
 
-function getCommonSecurityGroupList(caller, sortType, optionParam) {
+function getCommonSecurityGroupList(caller, sortType, optionParam, filterKey, filterVal) {
     var url = "/setting/resources/securitygroup/list";
 
-    if (optionParam != "") {
+    if (optionParam != "" && optionParam != undefined) {
         url += "?option=" + optionParam
+    } else {
+        url += "?option="
+    }
+    if (filterKey != "" && filterKey != undefined) {
+        url += "&filterKey=" + filterKey
+        url += "&filterVal=" + filterVal
     }
 
     axios.get(url, {
@@ -260,7 +273,7 @@ function getCommonSecurityGroupList(caller, sortType, optionParam) {
     }).then(result => {
         console.log("get SG Data : ", result.data);
         var data = result.data.SecurityGroupList; // exception case : if null 
-
+        //setTotalSecurityGroupList(data)
         console.log("Data : ", data);
         if (caller == "securitygroupmng") {
             console.log("return get Data securitygroupmng")
@@ -282,11 +295,17 @@ function getCommonSecurityGroupList(caller, sortType, optionParam) {
     });
 }
 
-function getCommonSshKeyList(caller, optionParam) {
+function getCommonSshKeyList(caller, optionParam, filterKey, filterVal) {
     var url = "/setting/resources/sshkey/list"
 
-    if (optionParam != "") {
+    if (optionParam != "" && optionParam != undefined) {
         url += "?option=" + optionParam
+    } else {
+        url += "?option="
+    }
+    if (filterKey != "" && filterKey != undefined) {
+        url += "&filterKey=" + filterKey
+        url += "&filterVal=" + filterVal
     }
 
     axios.get(url, {
@@ -297,6 +316,7 @@ function getCommonSshKeyList(caller, optionParam) {
     }).then(result => {
         console.log("get SSH Data : ", result.data);
         var data = result.data.SshKeyList; // exception case : if null 
+        //setTotalSshkeyList(data)
         getSshKeyListCallbackSuccess(caller, data)
     }).catch(error => {
         console.warn(error);
@@ -312,13 +332,19 @@ function getCommonSshKeyList(caller, optionParam) {
 
 // connection 정보가 바뀔 때 해당 connection에 등록 된 vmi(virtual machine image) 목록 조회.
 // 공통으로 사용해야하므로 호출후 결과만 리턴... 그러나, ajax로 호출이라 결과 받기 전에 return되므로 해결방안 필요
-function getCommonVirtualMachineImageList(caller, sortType, optionParam) {
+function getCommonVirtualMachineImageList(caller, sortType, optionParam, filterKey, filterVal) {
     var sortType = sortType;
     // var url = CommonURL + "/ns/" + NAMESPACE + "/resources/image";
     var url = "/setting/resources" + "/machineimage/list"
 
-    if (optionParam != "") {
+    if (optionParam != "" && optionParam != undefined) {
         url += "?option=" + optionParam
+    } else {
+        url += "?option="
+    }
+    if (filterKey != "" && filterKey != undefined) {
+        url += "&filterKey=" + filterKey
+        url += "&filterVal=" + filterVal
     }
 
     axios.get(url, {
@@ -330,6 +356,7 @@ function getCommonVirtualMachineImageList(caller, sortType, optionParam) {
         console.log("get Image List : ", result.data);
 
         var data = result.data.VirtualMachineImageList;
+        //setTotalImageList(data)
         // Data가져온 뒤 set할 method 호출
         if (caller == "virtualmachineimagemng") {
             console.log("return get Data")
@@ -341,6 +368,9 @@ function getCommonVirtualMachineImageList(caller, sortType, optionParam) {
             console.log("return get Data")
             getImageListCallbackSuccess(caller, data)
         } else if (caller == "vmcreate") {
+            console.log("return get Data")
+            getImageListCallbackSuccess(caller, data)
+        } else if (caller == "mciscreate") {
             console.log("return get Data")
             getImageListCallbackSuccess(caller, data)
         }
@@ -355,15 +385,25 @@ function getCommonVirtualMachineImageList(caller, sortType, optionParam) {
 }
 
 
-function getCommonVirtualMachineSpecList(caller, sortType, optionParam) {
+function getCommonVirtualMachineSpecList(caller, sortType, optionParam, filterKey, filterVal) {
     console.log("CommonSpecCaller : " + caller);
     console.log("CommonSpecSortType : " + sortType);
+    console.log("filterKey : " + filterKey);
+    console.log("filterVal : " + filterVal);
     // var url = CommonURL + "/ns/" + NAMESPACE + "/resources/image";
     var url = "/setting/resources" + "/vmspec/list"
 
-    if (optionParam != "") {
+    if (optionParam != "" && optionParam != undefined) {
         url += "?option=" + optionParam
+    } else {
+        url += "?option="
     }
+    if (filterKey != "" && filterKey != undefined) {
+        url += "&filterKey=" + filterKey
+        url += "&filterVal=" + filterVal
+    }
+
+    console.log("url: ", url);
 
     axios.get(url, {
         headers: {
@@ -374,18 +414,23 @@ function getCommonVirtualMachineSpecList(caller, sortType, optionParam) {
         console.log("get Spec List : ", result.data);
 
         var data = result.data.VmSpecList;
-
+        //setTotalVmSpecList(data)
         if (caller == "virtualmachinespecmng") {
             console.log("return get Data");
             virtualMachineSpecListCallbackSuccess(caller, data, sortType);
             // setVirtualMachineSpecListAtServerSpec(data, sortType);
-        } else if (caller == "mainspec") {
-            console.log("return get Data")
-            getSpecListCallbackSuccess(caller, data)
-        } else if (caller == "vmcreate") {
-            console.log("return get Data")
+        } else {
             getSpecListCallbackSuccess(caller, data)
         }
+        // } else if (caller == "mainspec") {
+        //     console.log("return get Data")
+        //     getSpecListCallbackSuccess(caller, data)
+        // } else if (caller == "vmcreate") {
+        //     console.log("return get Data")
+        //     getSpecListCallbackSuccess(caller, data)
+        // } else if (caller == "addedspec") {
+        //     getSpecListCallbackSuccess(caller, data)
+        // }
     }).catch(error => {
         console.warn(error);
         console.log(error.response)
@@ -904,4 +949,17 @@ function checkLoadStatus() {
     if (returnStatusCode != 200 && returnStatusCode != 201) {
         commonErrorAlert(returnStatusCode, returnMessage);
     }
+}
+
+
+function getResources(caller) {
+    if (caller == 'vmcreate') {
+        getVmList()
+    }
+    getCommonCloudConnectionList(caller, '', true)
+    getCommonNetworkList(caller)
+    getCommonVirtualMachineImageList(caller)
+    getCommonVirtualMachineSpecList(caller)
+    getCommonSecurityGroupList(caller)
+    getCommonSshKeyList(caller)
 }

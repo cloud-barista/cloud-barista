@@ -3,9 +3,8 @@ package restapi
 import (
 	"net/http"
 
-	"github.com/cloud-barista/cb-mcks/src/core/common"
+	"github.com/cloud-barista/cb-mcks/src/core/app"
 	"github.com/cloud-barista/cb-mcks/src/rest-api/router"
-	"github.com/cloud-barista/cb-mcks/src/utils/config"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
@@ -19,7 +18,7 @@ func Server() {
 
 	// Echo middleware func
 
-	if *config.Config.LoglevelHTTP == true {
+	if *app.Config.LoglevelHTTP == true {
 		e.Use(middleware.Logger()) // Setting logger
 	}
 	e.Use(middleware.Recover())                            // Recover from panics anywhere in the chain
@@ -30,9 +29,13 @@ func Server() {
 
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
-	e.GET(*config.Config.RootURL+"/healthy", router.Healthy)
+	e.GET(*app.Config.RootURL+"/healthy", router.Healthy)
 
-	g := e.Group(*config.Config.RootURL+"/ns", common.NsValidate())
+	m := e.Group(*app.Config.RootURL + "/mcir/connections")
+
+	m.GET("/:connection/specs", router.ListSpec)
+
+	g := e.Group(*app.Config.RootURL+"/ns", validMiddlewareFunc())
 
 	// Routes
 	g.GET("/:namespace/clusters", router.ListCluster)
@@ -47,4 +50,16 @@ func Server() {
 
 	// Start server
 	e.Logger.Fatal(e.Start(":1470"))
+}
+
+func validMiddlewareFunc() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			ns := c.Param("namespace")
+			if ns == "" {
+				return echo.NewHTTPError(http.StatusUnauthorized, "'Namespace' is a mandatory parameter.")
+			}
+			return next(c)
+		}
+	}
 }

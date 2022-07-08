@@ -2,6 +2,7 @@ package alert
 
 import (
 	"fmt"
+	"github.com/cloud-barista/cb-dragonfly/pkg/api/rest"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -47,7 +48,7 @@ func ListEventLog(c echo.Context) error {
 	logLevel := c.QueryParam("level")
 	alertLogList, err := event.ListEventLog(fmt.Sprintf(task.KapacitorTaskFormat, taskName), logLevel)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return c.JSON(http.StatusInternalServerError, rest.SetMessage(fmt.Sprintf("failed to get event log list, error=%s", err)))
 	}
 	return c.JSON(http.StatusOK, alertLogList)
 }

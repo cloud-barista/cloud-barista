@@ -15,10 +15,14 @@ limitations under the License.
 package server
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
 	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 
 	gc "github.com/cloud-barista/cb-tumblebug/src/api/grpc/common"
 	"github.com/cloud-barista/cb-tumblebug/src/api/grpc/config"
@@ -74,13 +78,38 @@ func RunServer() {
 		}
 	}
 
-	//fmt.Printf("\n[CB-Tumblebug: Multi-Cloud Infra Service Management]")
-	//fmt.Printf("\n   Initiating GRPC API Server....__^..^__....")
+	// A context for graceful shutdown (It is based on the signal package)
+	// NOTE -
+	// Use os.Interrupt Ctrl+C or Ctrl+Break on Windows
+	// Use syscall.KILL for Kill(can't be caught or ignored) (POSIX)
+	// Use syscall.SIGTERM for Termination (ANSI)
+	// Use syscall.SIGINT for Terminal interrupt (ANSI)
+	// Use syscall.SIGQUIT for Terminal quit (POSIX)
+	gracefulShutdownContext, stop := signal.NotifyContext(context.TODO(),
+		os.Interrupt, syscall.SIGKILL, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+	defer stop()
+
+	var wg sync.WaitGroup
+
+	// Wait graceful shutdown (and then main thread will be finished)
+	wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+
+		// Block until a signal is triggered
+		<-gracefulShutdownContext.Done()
+
+		fmt.Println("\n[Stop] CB-Tumblebug gRPC Server")
+		gs.GracefulStop()
+	}(&wg)
+
 	fmt.Printf("⇨ grpc server started on [::]%s\n", tumblebugsrv.Addr)
 
 	if err := gs.Serve(conn); err != nil {
 		logger.Error("failed to serve: ", err)
 	}
+
+	wg.Wait()
 }
 
 func configLoad(cf string) (config.GrpcConfig, error) {

@@ -66,7 +66,12 @@ const (
 	StrSpec                       string = "spec"
 	StrVNet                       string = "vNet"
 	StrSubnet                     string = "subnet"
+	StrVM                         string = "vm"
 	StrDefaultResourceName        string = "-systemdefault-"
+	// StrFirewallRule               string = "firewallRule"
+
+	// SystemCommonNs is const for SystemCommon NameSpace ID
+	SystemCommonNs string = "system-purpose-common-ns"
 )
 
 var StartTime string

@@ -1,7 +1,7 @@
 apiVersion: v2
 name: cb-ladybug
 type: application
-version: 0.5.0
-appVersion: 0.5.0
+version: 0.6.0
+appVersion: 0.6.0
 description: CB-Ladybug Helm chart
 

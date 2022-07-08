@@ -1,25 +1,25 @@
 package service
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/cloud-barista/cb-mcks/src/core/app"
 	"github.com/cloud-barista/cb-mcks/src/core/model"
-	"github.com/cloud-barista/cb-mcks/src/core/model/tumblebug"
-	"github.com/cloud-barista/cb-mcks/src/utils/config"
+	"github.com/cloud-barista/cb-mcks/src/core/provision"
+	"github.com/cloud-barista/cb-mcks/src/core/tumblebug"
 	"github.com/cloud-barista/cb-mcks/src/utils/lang"
-	"golang.org/x/sync/errgroup"
 
 	logger "github.com/sirupsen/logrus"
 )
 
+/* get clusters */
 func ListCluster(namespace string) (*model.ClusterList, error) {
 
 	// validate namespace
-	if err := CheckNamespace(namespace); err != nil {
+	if err := verifyNamespace(namespace); err != nil {
 		return nil, err
 	}
 
@@ -31,10 +31,11 @@ func ListCluster(namespace string) (*model.ClusterList, error) {
 	return clusters, nil
 }
 
+/* get a cluster */
 func GetCluster(namespace string, clusterName string) (*model.Cluster, error) {
 
 	// validate namespace
-	if err := CheckNamespace(namespace); err != nil {
+	if err := verifyNamespace(namespace); err != nil {
 		return nil, err
 	}
 
@@ -42,19 +43,43 @@ func GetCluster(namespace string, clusterName string) (*model.Cluster, error) {
 	cluster := model.NewCluster(namespace, clusterName)
 	if exists, err := cluster.Select(); err != nil {
 		return nil, err
-	} else if exists == false {
-		logger.Errorf("cluster does not exist (namespace=%s, cluster=%s)", namespace, clusterName)
-		return nil, errors.New(fmt.Sprintf("Cluster not found (namespace=%s, cluster=%s)", namespace, clusterName))
+	} else if !exists {
+		return nil, errors.New(fmt.Sprintf("Could not be found a cluster '%s' (namespace=%s)", clusterName, namespace))
 	}
 
 	return cluster, nil
 }
 
-func CreateCluster(namespace string, req *model.ClusterReq) (*model.Cluster, error) {
+/* create a cluster */
+func CreateCluster(namespace string, minorversion string, patchversion string, req *app.ClusterReq) (*model.Cluster, error) {
 
-	// validate namespace
-	if err := CheckNamespace(namespace); err != nil {
+	// validate a namespace
+	if err := verifyNamespace(namespace); err != nil {
 		return nil, err
+	}
+	if minorversion == "" {
+		minorversion = "1.18"
+	}
+	if !strings.Contains(minorversion, "1.18") && !strings.Contains(minorversion, "1.23") {
+		return nil, errors.New("Supported Kubernetes version is 1.18 or 1.23")
+	}
+	if patchversion == "" {
+		patchversion = "1"
+	}
+	k8sVersion := fmt.Sprintf("%s.%s-00", minorversion, patchversion)
+
+	// validate prameters
+	if req.ControlPlane[0].Count < 1 {
+		return nil, errors.New("Control-Plane count must be at least one.")
+	}
+	if len(req.Worker) < 1 {
+		return nil, errors.New("Worker must be at least one.")
+	} else {
+		for _, worker := range req.Worker {
+			if worker.Count < 1 {
+				return nil, errors.New(fmt.Sprintf("Worker count must be at least one. (connection=%s)", worker.Connection))
+			}
+		}
 	}
 
 	clusterName := req.Name
@@ -67,395 +92,269 @@ func CreateCluster(namespace string, req *model.ClusterReq) (*model.Cluster, err
 	} else if exists == true {
 		// clean-up if "exists" & "failed-status"
 		if cluster.Status.Phase == model.ClusterPhaseFailed {
-			logger.Infof("clean-up cluster (namespace=%s, cluster=%s, phase=%s, reason=%s, cause=cluster is already exists) ", namespace, clusterName, cluster.Status.Phase, cluster.Status.Reason)
+			logger.Infof("[%s.%s] Clean up a cluster (phase=%s, reason=%s, cause='cluster is already exists') ", namespace, clusterName, cluster.Status.Phase, cluster.Status.Reason)
 			_, err = DeleteCluster(namespace, clusterName)
 			if err != nil {
 				return nil, err
 			}
 		} else {
-			logger.Errorf("cluster already exists (namespace=%s, cluster=%s)", namespace, clusterName)
-			return nil, errors.New(fmt.Sprintf("Cluster already exists. (namespace=%s, cluster=%s)", namespace, clusterName))
+			return nil, errors.New(fmt.Sprintf("The cluster '%s' already exists. (namespace=%s)", clusterName, namespace))
 		}
 	}
+	logger.Infof("[%s.%s] Validation & clean-up has been completed.", namespace, clusterName)
 
-	// start creating a cluster
-	cluster = model.NewCluster(namespace, clusterName)
+	// set cluster paramaters
+	cluster.Version = k8sVersion
 	cluster.NetworkCni = req.Config.Kubernetes.NetworkCni
 	cluster.Label = req.Label
 	cluster.InstallMonAgent = req.InstallMonAgent
 	cluster.Description = req.Description
+	provisioner := provision.NewProvisioner(cluster)
 
 	//update phase(provisioning)
 	if err := cluster.UpdatePhase(model.ClusterPhaseProvisioning); err != nil {
 		return nil, err
 	}
+	logger.Infof("[%s.%s] The phase update has been completed.", namespace, clusterName)
 
-	// MCIS 존재여부 확인
+	// validate exists a MCIS
 	mcis := tumblebug.NewMCIS(namespace, mcisName)
 	if exists, err := mcis.GET(); err != nil {
 		cluster.FailReason(model.GetMCISFailedReason, err.Error())
-		return nil, err
+		return nil, errors.New(cluster.Status.Message)
 	} else if exists {
 		cluster.FailReason(model.AlreadyExistMCISFailedReason, fmt.Sprintf("MCIS already exists. (namespace=%s, mcis=%s)", namespace, mcisName))
-		logger.Errorf("MCIS already exists (namespace=%s, mcis=%s)", namespace, mcisName)
-		return nil, errors.New(fmt.Sprintf("MCIS already exists. (namespace=%s, mcis=%s)", namespace, mcisName))
+		return nil, errors.New(cluster.Status.Message)
 	}
+	logger.Infof("[%s.%s] MCIS validation has been completed. (mcis=%s)", namespace, clusterName, mcisName)
 
-	var nodeConfigInfos []NodeConfigInfo
-	// control plane
-	cp, err := SetNodeConfigInfos(req.ControlPlane, config.CONTROL_PLANE)
-	if err != nil {
-		cluster.FailReason(model.GetControlPlaneConnectionInfoFailedReason, err.Error())
-		return nil, err
-	}
-	nodeConfigInfos = append(nodeConfigInfos, cp...)
-
-	// worker
-	wk, err := SetNodeConfigInfos(req.Worker, config.WORKER)
-	if err != nil {
-		cluster.FailReason(model.GetWorkerConnectionInfoFailedReason, err.Error())
-		return nil, err
-	}
-	nodeConfigInfos = append(nodeConfigInfos, wk...)
-
-	cIdx := 0
-	wIdx := 0
-	var nodes []model.Node
-	var vmInfos []model.VMInfo
-
-	for _, nodeConfigInfo := range nodeConfigInfos {
-		// MCIR - 존재하면 재활용 없다면 생성 기준
-		// 1. create vpc
-		vpc, err := nodeConfigInfo.CreateVPC(namespace)
-		if err != nil {
-			cluster.FailReason(model.CreateVpcFailedReason, fmt.Sprintf("Failed to create VPC. (cause=%s)", err))
-			return nil, err
-		}
-
-		// 2. create firewall
-		fw, err := nodeConfigInfo.CreateFirewall(namespace)
-		if err != nil {
-			cluster.FailReason(model.CreateSecurityGroupFailedReason, fmt.Sprintf("Failed to create firewall. (cause=%v)", err))
-			return nil, err
-		}
-
-		// 3. create sshKey
-		sshKey, err := nodeConfigInfo.CreateSshKey(namespace)
-		if err != nil {
-			cluster.FailReason(model.CreateSSHKeyFailedReason, fmt.Sprintf("Failed to create sshkey. (cause=%v)", err))
-			return nil, err
-		}
-
-		// 4. create image
-		image, err := nodeConfigInfo.CreateImage(namespace)
-		if err != nil {
-			cluster.FailReason(model.CreateVmImageFailedReason, fmt.Sprintf("Failed to create vm-image. (cause=%v)", err))
-			return nil, err
-		}
-
-		// 5. create spec
-		spec, err := nodeConfigInfo.CreateSpec(namespace)
-		if err != nil {
-			cluster.FailReason(model.CreateVmSpecFailedReason, fmt.Sprintf("Failed to create vm-spec. (cause=%v)", err))
-			return nil, err
-		}
-
-		// 6. vm
-		for i := 0; i < nodeConfigInfo.Count; i++ {
-			if nodeConfigInfo.Role == config.CONTROL_PLANE {
-				cIdx++
-			} else {
-				wIdx++
+	// create a MCIR - "vpc, f/w, sshkey, image, spec" - with vlidations
+	mcir := NewMCIR(namespace, app.CONTROL_PLANE, req.ControlPlane[0])
+	reason, msg := mcir.CreateIfNotExist()
+	if reason != "" {
+		cluster.FailReason(reason, msg)
+		return nil, errors.New(msg)
+	} else {
+		// make mics reuqest & provisioner data
+		for i := 0; i < req.ControlPlane[0].Count; i++ {
+			name := lang.GenerateNewNodeName(string(app.CONTROL_PLANE), i+1)
+			if i == 0 {
+				cluster.CpLeader = name
 			}
-
-			vm := model.VM{
-				Config:       nodeConfigInfo.Connection,
-				VPC:          vpc.Name,
-				Subnet:       vpc.Subnets[0].Name,
-				Firewall:     []string{fw.Name},
-				SSHKey:       sshKey.Name,
-				Image:        image.Name,
-				Spec:         spec.Name,
-				UserAccount:  model.VM_USER_ACCOUNT,
-				UserPassword: "",
-				Description:  "",
-			}
-
-			vmInfo := model.VMInfo{
-				Credential: sshKey.PrivateKey,
-				Role:       nodeConfigInfo.Role,
-				Csp:        nodeConfigInfo.Csp,
-			}
-
-			if nodeConfigInfo.Role == config.CONTROL_PLANE {
-				vm.Name = lang.GetNodeName(config.CONTROL_PLANE, cIdx)
-				if cIdx == 1 {
-					vmInfo.IsCPLeader = true
-					cluster.CpLeader = vm.Name
-				}
-			} else {
-				vm.Name = lang.GetNodeName(config.WORKER, wIdx)
-			}
-			vmInfo.Name = vm.Name
-
-			mcis.VMs = append(mcis.VMs, vm)
-			vmInfos = append(vmInfos, vmInfo)
+			mcis.VMs = append(mcis.VMs, mcir.NewVM(namespace, name, mcisName))
+			provisioner.AppendControlPlaneMachine(name, mcir.csp, mcir.region, mcir.zone, mcir.credential)
 		}
 	}
+	logger.Infof("[%s.%s] MCIR(control-plane) creation has been completed.", namespace, clusterName)
 
-	// MCIS 생성
-	mcis.Label = config.MCIS_LABEL
+	idx := 0
+	for _, worker := range req.Worker {
+		mcir := NewMCIR(namespace, app.WORKER, worker)
+		reason, msg := mcir.CreateIfNotExist()
+		if reason != "" {
+			cluster.FailReason(reason, msg)
+			return nil, errors.New(msg)
+		} else {
+			// make mics reuqest & provisioner data
+			for i := 0; i < mcir.vmCount; i++ {
+				name := lang.GenerateNewNodeName(string(app.WORKER), idx+1)
+				mcis.VMs = append(mcis.VMs, mcir.NewVM(namespace, name, mcisName))
+				provisioner.AppendWorkerNodeMachine(name, mcir.csp, mcir.region, mcir.zone, mcir.credential)
+				idx = idx + 1
+			}
+		}
+	}
+	logger.Infof("[%s.%s] MCIR(worker nodes) creation has been completed.", namespace, clusterName)
+
+	// create a MCIS (contains vm)
+	mcis.Label = app.MCIS_LABEL
 	mcis.InstallMonAgent = cluster.InstallMonAgent
-	mcis.SystemLabel = config.MCIS_SYSTEMLABEL
-	logger.Infof("start create MCIS (namespace=%s, cluster=%s, mcis=%s)", namespace, clusterName, mcisName)
-	if err = mcis.POST(); err != nil {
-		cluster.FailReason(model.CreateMCISFailedReason, fmt.Sprintf("Failed to create MCIS. (cause=%v)", err))
-		return nil, err
+	mcis.SystemLabel = app.MCIS_SYSTEMLABEL
+	if err := mcis.POST(); err != nil {
+		cluster.FailReason(model.CreateMCISFailedReason, fmt.Sprintf("Failed to create a MCIS. (cause='%v')", err))
+		return nil, errors.New(cluster.Status.Message)
+	} else {
+		logger.Debugf("[%s.%s] MCIS status is '%s' & vms='%v'", namespace, clusterName, mcis.Status, mcis.VMs)
 	}
-	logger.Infof("create MCIS OK.. (namespace=%s, cluster=%s, mcis=%s)", namespace, clusterName, mcisName)
-
-	cpMcis := tumblebug.MCIS{}
-	// 결과값 저장
 	cluster.MCIS = mcisName
-	for _, vm := range mcis.VMs {
-		for _, vmInfo := range vmInfos {
-			if vm.Name == vmInfo.Name {
-				vm.Credential = vmInfo.Credential
-				vm.Role = vmInfo.Role
-				vm.Csp = vmInfo.Csp
-				vm.IsCPLeader = vmInfo.IsCPLeader
+	logger.Infof("[%s.%s] MCIS creation has been completed.", namespace, clusterName)
 
-				cpMcis.VMs = append(cpMcis.VMs, vm)
-				break
-			}
-		}
-
-		node := model.NewNodeVM(namespace, cluster.Name, vm)
-
-		// insert node in store
-		nodes = append(nodes, *node)
-		if err := node.Insert(); err != nil {
-			cluster.FailReason(model.AddNodeEntityFailedReason, fmt.Sprintf("Failed to add node entity. (cause=%v)", err))
-			return nil, err
+	// update received data & save nodes metadata
+	if nodes, err := provisioner.BindVM(mcis.VMs); err != nil {
+		cluster.FailReason(model.AddNodeEntityFailedReason, err.Error())
+		cleanUpCluster(*cluster, mcis)
+		return nil, errors.New(cluster.Status.Message)
+	} else {
+		cluster.Nodes = nodes
+		if err := cluster.PutStore(); err != nil {
+			cluster.FailReason(model.AddNodeEntityFailedReason, fmt.Sprintf("Failed to add node entity. (cause='%v')", err))
+			return nil, errors.New(cluster.Status.Message)
 		}
 	}
 
-	// bootstrap
-	logger.Infof("start k8s bootstrap (namespace=%s, cluster=%s)", namespace, clusterName)
-
+	// kubernetes provisioning : bootstrap
 	time.Sleep(2 * time.Second)
-
-	eg, _ := errgroup.WithContext(context.Background())
-
-	for _, vm := range cpMcis.VMs {
-		vm := vm
-		eg.Go(func() error {
-			if vm.Status != config.Running || vm.PublicIP == "" {
-				logger.Errorf("cannot do ssh, VM IP is not Running (namespace=%s, cluster=%s, mcis=%s, vm=%s, ip=%s, message=%s)", namespace, clusterName, mcisName, vm.Name, vm.PublicIP, vm.SystemMessage)
-				return errors.New(fmt.Sprintf("Cannot do ssh, VM IP is not Running (vm=%s, ip=%s, systemMessage=%s)", vm.Name, vm.PublicIP, vm.SystemMessage))
-			}
-			if err := vm.ConnectionTest(); err != nil {
-				return err
-			}
-			if err = vm.CopyScripts(cluster.NetworkCni); err != nil {
-				return err
-			}
-			if err = vm.SetSystemd(cluster.NetworkCni); err != nil {
-				return err
-			}
-			if err = vm.Bootstrap(); err != nil {
-				return err
-			}
-			return nil
-		})
+	if err := provisioner.Bootstrap(); err != nil {
+		cluster.FailReason(model.SetupBoostrapFailedReason, fmt.Sprintf("Bootstrap failed. (cause='%v')", err))
+		cleanUpCluster(*cluster, mcis)
+		return nil, errors.New(cluster.Status.Message)
 	}
+	logger.Infof("[%s.%s] Bootstrap has been completed.", namespace, clusterName)
 
-	if err := eg.Wait(); err != nil {
-		cluster.FailReason(model.SetupBoostrapFailedReason, fmt.Sprintf("Bootstrap process failed. (cause=%v)", err))
-		cleanMCIS(mcis, &nodes)
-		return nil, err
+	// kubernetes provisioning : haproxy
+	if err := provisioner.InstallHAProxy(); err != nil {
+		cluster.FailReason(model.SetupHaproxyFailedReason, fmt.Sprintf("Failed to install haproxy. (cause='%v')", err))
+		cleanUpCluster(*cluster, mcis)
+		return nil, errors.New(cluster.Status.Message)
 	}
+	logger.Infof("[%s.%s] HAProxy installation has been completed.", namespace, clusterName)
 
-	// init & join
-	var joinCmd []string
-	IPs := GetControlPlaneIPs(cpMcis.VMs)
+	// kubernetes provisioning :control-plane init
+	var joinCmds []string
+	joinCmds, kubeconfig, err := provisioner.InitControlPlane(req.Config.Kubernetes)
+	if err != nil {
+		cluster.FailReason(model.InitControlPlaneFailedReason, fmt.Sprintf("Fail to initialize Control-plane. (cause='%v')", err))
+		cleanUpCluster(*cluster, mcis)
+		return nil, errors.New(cluster.Status.Message)
+	}
+	cluster.ClusterConfig = kubeconfig
+	logger.Infof("[%s.%s] Control-Plane initialize has been completed.", namespace, clusterName)
 
-	logger.Infof("start k8s init (namespace=%s, cluster=%s)", namespace, clusterName)
-	for _, vm := range cpMcis.VMs {
-		if vm.Role == config.CONTROL_PLANE && vm.IsCPLeader {
-
-			if err := vm.InstallHAProxy(IPs); err != nil {
-				cluster.FailReason(model.SetupHaproxyFailedReason, fmt.Sprintf("Failed to set up haproxy. (cause=%v)", err))
-				cleanMCIS(mcis, &nodes)
-				return nil, err
-			}
-
-			var clusterConfig string
-			joinCmd, clusterConfig, err = vm.ControlPlaneInit(req.Config.Kubernetes)
-			if err != nil {
-				cluster.FailReason(model.InitControlPlaneFailedReason, fmt.Sprintf("Control-plane init. process failed. (cause=%v)", err))
-				cleanMCIS(mcis, &nodes)
-				return nil, err
-			}
-			cluster.ClusterConfig = clusterConfig
-
-			if err = vm.InstallNetworkCNI(req.Config.Kubernetes.NetworkCni); err != nil {
-				cluster.FailReason(model.SetupNetworkCNIFailedReason, fmt.Sprintf("Failed to set up network-cni. (cni=%s)", req.Config.Kubernetes.NetworkCni))
-				cleanMCIS(mcis, &nodes)
-				return nil, err
+	// kubernetes provisioning : control-plane join
+	for _, machine := range provisioner.ControlPlaneMachines {
+		if provisioner.Cluster.CpLeader != machine.Name {
+			if err := machine.JoinControlPlane(&joinCmds[0]); err != nil {
+				cluster.FailReason(model.JoinControlPlaneFailedReason, fmt.Sprintf("Fail to control-plane join. (node=%s)", machine.Name))
+				cleanUpCluster(*cluster, mcis)
+				return nil, errors.New(cluster.Status.Message)
 			}
 		}
 	}
-	logger.Infof("end k8s init (namespace=%s, cluster=%s)", namespace, clusterName)
+	logger.Infof("[%s.%s] Control-Plane join has been completed.", namespace, clusterName)
 
-	logger.Infof("start k8s join (namespace=%s, cluster=%s)", namespace, clusterName)
-	for _, vm := range cpMcis.VMs {
-		if vm.Role == config.CONTROL_PLANE && !vm.IsCPLeader {
-			if err := vm.ControlPlaneJoin(&joinCmd[0]); err != nil {
-				cluster.FailReason(model.JoinControlPlaneFailedReason, fmt.Sprintf("Control-plane join process failed. (vm=%s)", vm.Name))
-				cleanMCIS(mcis, &nodes)
-				return nil, err
-			}
+	// kubernetes provisioning : worker node join
+	for _, machine := range provisioner.WorkerNodeMachines {
+		if err := machine.JoinWorker(&joinCmds[1]); err != nil {
+			cluster.FailReason(model.JoinWorkerFailedReason, fmt.Sprintf("Fail to worker-node join. (node=%s)", machine.Name))
+			cleanUpCluster(*cluster, mcis)
+			return nil, errors.New(cluster.Status.Message)
 		}
 	}
+	logger.Infof("[%s.%s] Woker-nodes join has been completed.", namespace, clusterName)
 
-	for _, vm := range cpMcis.VMs {
-		if vm.Role == config.WORKER {
-			if err := vm.WorkerJoin(&joinCmd[1]); err != nil {
-				cluster.FailReason(model.JoinWorkerFailedReason, fmt.Sprintf("Worker-node join process failed. (vm=%s)", vm.Name))
-				cleanMCIS(mcis, &nodes)
-				return nil, err
-			}
-		}
+	// assign node labels (topology.cloud-barista.github.io/csp , topology.kubernetes.io/region, topology.kubernetes.io/zone)
+	if err = provisioner.AssignNodeLabelAnnotation(); err != nil {
+		logger.Warnf("[%s.%s] Failed to assign node labels (cause='%v')", namespace, clusterName, err)
+	} else {
+		logger.Infof("[%s.%s] Node label assignment has been completed.", namespace, clusterName)
 	}
-	logger.Infof("end k8s join (namespace=%s, cluster=%s)", namespace, clusterName)
 
-	logger.Infof("start add node labels (namespace=%s, cluster=%s)", namespace, clusterName)
-	for _, vm := range cpMcis.VMs {
-		if err := vm.AddNodeLabels(); err != nil {
-			logger.Warnf("failed to add node labels (namespace=%s, cluster=%s, vm=%s, cause=%s)", namespace, clusterName, vm.Name, err)
-		}
+	// kubernetes provisioning : deploy network-cni
+	if err = provisioner.InstallNetworkCni(); err != nil {
+		cluster.FailReason(model.SetupNetworkCNIFailedReason, fmt.Sprintf("Failed to install network-cni. (cni=%s)", req.Config.Kubernetes.NetworkCni))
+		cleanUpCluster(*cluster, mcis)
+		return nil, errors.New(cluster.Status.Message)
 	}
-	logger.Infof("end add node labels (namespace=%s, cluster=%s)", namespace, clusterName)
+	logger.Infof("[%s.%s] CNI installation has been completed.", namespace, clusterName)
 
+	// save nodes metadata & update status
+	for _, node := range cluster.Nodes {
+		node.CreatedTime = lang.GetNowUTC()
+	}
 	cluster.UpdatePhase(model.ClusterPhaseProvisioned)
-
-	nodeList, _ := updateNodesCreatedTime(namespace, clusterName, &nodes)
-	cluster.Nodes = nodeList
+	logger.Infof("[%s.%s] Cluster creation has been completed.", namespace, clusterName)
 
 	return cluster, nil
 }
 
-func DeleteCluster(namespace string, clusterName string) (*model.Status, error) {
+/* delete a cluster */
+func DeleteCluster(namespace string, clusterName string) (*app.Status, error) {
 
 	// validate namespace
-	if err := CheckNamespace(namespace); err != nil {
+	if err := verifyNamespace(namespace); err != nil {
 		return nil, err
 	}
 	// validate exists
 	cluster := model.NewCluster(namespace, clusterName)
-	exists, err := cluster.Select()
-	if err != nil {
+	if exists, err := cluster.Select(); err != nil {
 		return nil, err
-	} else if exists == false {
-		logger.Errorf("cluster not found (namespace=%s, cluster=%s)", namespace, clusterName)
-		return nil, errors.New(fmt.Sprintf("Cluster not found (namespace=%s, cluster=%s)", namespace, clusterName))
+	} else if !exists {
+		return app.NewStatus(app.STATUS_NOTFOUND, fmt.Sprintf("Could not be found cluster '%s'. (namespace=%s)", clusterName, namespace)), nil
 	}
 
-	mcisName := clusterName
-	status := model.NewStatus()
-	status.Code = model.STATUS_UNKNOWN
-
-	logger.Infof("start delete Cluster (namespace=%s, cluster=%s)", namespace, clusterName)
-
-	// 0. set stauts
+	// set a stauts
 	cluster.UpdatePhase(model.ClusterPhaseDeleting)
 
-	// 1.delete MCIS
-	mcis := tumblebug.NewMCIS(namespace, mcisName)
-	exist, err := mcis.GET()
-	if err != nil {
-		return nil, err
-	} else if exist {
-		if err = deleteMCIS(mcis); err != nil {
+	// delete a MCIS
+	if cluster.MCIS != "" {
+		mcis := tumblebug.NewMCIS(namespace, cluster.MCIS)
+		if exist, err := mcis.GET(); err != nil {
 			return nil, err
+		} else if exist {
+			if err = cleanUpMCIS(clusterName, mcis); err != nil {
+				return nil, err
+			} else {
+				logger.Infof("[%s.%s] Clean-up MCIS has been completed.", namespace, clusterName)
+			}
 		}
+		logger.Infof("[%s.%s] MCIS deletion has been completed.", namespace, clusterName)
 	}
 
-	// 2.delete cluster-entity
+	// delete a cluster-entity
 	if err := cluster.Delete(); err != nil {
-		status.Message = fmt.Sprintf("Failed to delete cluster (namespace=%s, cluster=%s)", namespace, clusterName)
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("Failed to delete a cluster-entity. (namespace=%s, cluster=%s)", namespace, clusterName))
 	}
 
-	status.Code = model.STATUS_SUCCESS
-	status.Message = fmt.Sprintf("cluster %s has been deleted", mcisName)
-	return status, nil
+	logger.Infof("[%s.%s] Cluster deletion has been completed.", namespace, clusterName)
+	return app.NewStatus(app.STATUS_SUCCESS, fmt.Sprintf("Cluster '%s' has been deleted", clusterName)), nil
 }
 
-func cleanMCIS(mcis *tumblebug.MCIS, nodesModel *[]model.Node) error {
-
-	logger.Infof("clean MCIS (mcis=%s)", mcis.Name)
-	for _, nd := range *nodesModel {
-		if err := nd.Delete(); err != nil {
-			logger.Warnf("failed to clean MCIS (op=delete, mcis=%s, cause=%V)", mcis.Name, err)
-		}
-		nd.Credential = ""
-		nd.PublicIP = ""
-		if err := nd.Insert(); err != nil {
-			logger.Warnf("failed to clean MCIS (op=insert, mcis=%s, cause=%V)", mcis.Name, err)
-		}
+/* clean-up a Cluster(with MCIS) & update a cluster-entity */
+func cleanUpCluster(cluster model.Cluster, mcis *tumblebug.MCIS) {
+	for _, node := range cluster.Nodes {
+		node.Credential = ""
+		node.PublicIP = ""
+	}
+	if err := cluster.PutStore(); err != nil {
+		logger.Warnf("[%s.%s] Failed to update a cluster-entity. (cause='%v')", cluster.Namespace, cluster.Name, err)
 	}
 
-	return deleteMCIS(mcis)
+	err := cleanUpMCIS(cluster.Name, mcis)
+	if err != nil {
+		logger.Warnf("[%s.%s] Failed to clean up a MCIS. (cause='%v')", cluster.Namespace, cluster.Name, err)
+	} else {
+		logger.Infof("[%s.%s] Garbage data has been cleaned.", cluster.Namespace, cluster.Name)
+	}
 }
 
-func deleteMCIS(mcis *tumblebug.MCIS) error {
+/* clean-up a MCIS  */
+func cleanUpMCIS(clusterName string, mcis *tumblebug.MCIS) error {
 
-	mcisName := mcis.Name
-
-	logger.Infof("terminate MCIS (mcis=%s)", mcisName)
 	if err := mcis.TERMINATE(); err != nil {
-		return errors.New(fmt.Sprintf("Failed to terminate MCIS (mcis=%s)", mcis.Name))
+		return errors.New(fmt.Sprintf("Failed to terminate a MCIS (mcis=%s, cause='%v')", mcis.Name, err))
 	}
 	time.Sleep(5 * time.Second)
 
-	logger.Infof("delete MCIS (mcis=%s)", mcisName)
-	if err := mcis.DELETE(); err != nil {
-		if strings.Contains(err.Error(), "Deletion is not allowed") {
-			logger.Infof("refine mcis (mcis=%s)", mcisName)
-			if err = mcis.REFINE(); err != nil {
-				return errors.New(fmt.Sprintf("Failed to refine MCIS (cause=%v)", err))
-			}
-			logger.Infof("delete MCIS (mcis=%s)", mcisName)
-			if err = mcis.DELETE(); err != nil {
-				return errors.New(fmt.Sprintf("Failed to delete MCIS (cause=%v)", err))
-			}
-		} else {
-			return errors.New(fmt.Sprintf("Failed to delete MCIS (cause=%v)", err))
+	if _, err := mcis.DELETE(); err != nil {
+		if err = mcis.REFINE(); err != nil {
+			logger.Warnf("[%s.%s] Failed to refine a MCIS. (mcis=%s, cause='%v')", mcis.Namespace, clusterName, mcis.Name, err)
+		}
+		if _, err = mcis.DELETE(); err != nil {
+			return errors.New(fmt.Sprintf("Failed to delete a MCIS (cause='%v')", err))
 		}
 	}
 
-	logger.Infof("delete MCIS OK.. (mcis=%s)", mcisName)
 	return nil
+
 }
 
-func updateNodesCreatedTime(namespace string, clusterName string, nodesModel *[]model.Node) ([]model.Node, error) {
-	for _, node := range *nodesModel {
-		node.CreatedTime = lang.GetNowUTC()
-		if err := node.Insert(); err != nil {
-			logger.Warnf("failed to update node's createdtime (mcis=%s, cause=%v)", clusterName, err)
-		}
+/* verify namespace  */
+func verifyNamespace(namespace string) error {
+	ns := tumblebug.NewNS(namespace)
+	if exists, err := ns.GET(); err != nil {
+		return err
+	} else if !exists {
+		return errors.New(fmt.Sprintf("Could not be found a namespace. (namespace=%s)", namespace))
 	}
-
-	var nodes []model.Node
-	nodeList := model.NewNodeList(namespace, clusterName)
-	err := nodeList.SelectList()
-	if err != nil {
-		logger.Warnf("failed to select node list (mcis=%s, cause=%v)", clusterName, err)
-		nodes = *nodesModel
-	}
-	nodes = nodeList.Items
-
-	return nodes, nil
+	return nil
 }

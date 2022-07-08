@@ -168,7 +168,8 @@
 									<input type="hidden" id="sg_info_{{$index}}" value="{{$item.Name}}" />
 									<input type="checkbox" name="chk" value="{{$item.Name}}" id="raw_{{$index}}"
 										title="" />
-									<label for="td_ch1"></label> <span class="ov off"></span>
+									<label for="raw_{{$index}}"></label> <span class="ov off"></span>
+									<input type="hidden" value="{{$item.SystemLabel}}" /><!-- SystemLabel -->
 								</td>
 								<td class="btn_mtd ovm" data-th="name">{{$item.Name}}<span class="ov"></span></td>
 								<td class="overlay hidden" data-th="cidrBlock">{{$item.CidrBlock}}</td>

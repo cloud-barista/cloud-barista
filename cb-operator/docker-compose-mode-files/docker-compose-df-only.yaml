@@ -4,7 +4,7 @@ version: "3.3"
 services:
  # CB-Dragonfly
   cb-dragonfly:
-    image: cloudbaristaorg/cb-dragonfly:0.5.0
+    image: cloudbaristaorg/cb-dragonfly:0.6.0
     container_name: cb-dragonfly
     volumes:
       - ./conf/cb-dragonfly/:/go/src/github.com/cloud-barista/cb-dragonfly/conf/

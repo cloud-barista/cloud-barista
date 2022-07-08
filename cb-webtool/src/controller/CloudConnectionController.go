@@ -950,3 +950,16 @@ func SSHRegForm(c echo.Context) error {
 // 	return c.Redirect(http.StatusTemporaryRedirect, "/login")
 
 // }
+
+func ChangeCloudBaristaConfig(c echo.Context) error {
+	configReq := &tbcommon.TbConfigReq{}
+	if err := c.Bind(configReq); err != nil {
+		// if err := c.Bind(mCISInfoList); err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": "fail",
+			"status":  "5001",
+		})
+	}
+	return nil
+}

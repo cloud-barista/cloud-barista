@@ -263,8 +263,6 @@ func RecommendVmLocation(nsId string, specList *[]mcir.TbSpecInfo, param *[]Para
 				fmt.Printf("\n distances : %v %v %v %v %v \n", distances, max, min, float32(distances[i].distance), (*specList)[distances[i].index].EvaluationScore09)
 			}
 
-			//fmt.Printf("\n distances : %v \n", *specList)
-
 		case "coordinateWithin":
 			//
 		case "coordinateFair":
@@ -359,7 +357,7 @@ func RecommendVmCost(nsId string, specList *[]mcir.TbSpecInfo) ([]mcir.TbSpecInf
 	return result, nil
 }
 
-// RecommendVmPerformance func prioritize specs based on given Perfomance condition
+// RecommendVmPerformance func prioritize specs based on given Performance condition
 func RecommendVmPerformance(nsId string, specList *[]mcir.TbSpecInfo) ([]mcir.TbSpecInfo, error) {
 
 	result := []mcir.TbSpecInfo{}
@@ -392,7 +390,7 @@ func GetRecommendList(nsId string, cpuSize string, memSize string, diskSize stri
 		Price          string
 		ConnectionName string
 	}
-	//fmt.Println("[Get MCISs")
+
 	key := common.GenMcisKey(nsId, "", "") + "/cpuSize/" + cpuSize + "/memSize/" + memSize + "/diskSize/" + diskSize
 	fmt.Println(key)
 	keyValue, err := common.CBStore.GetList(key, true)
@@ -474,8 +472,6 @@ func CorePostMcisRecommend(nsId string, req *McisRecommendReq) ([]TbVmRecommendI
 
 		if err != nil {
 			common.CBLog.Error(err)
-			//mapA := map[string]string{"message": "Failed to recommend MCIS"}
-			//return c.JSON(http.StatusFailedDependency, &mapA)
 			return nil, fmt.Errorf("Failed to recommend MCIS")
 		}
 

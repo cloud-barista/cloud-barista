@@ -4,6 +4,8 @@ package mcir
 type FilterSpecsByRangeRequest struct {
 	ID             string `json:"id"`
 	Name           string `json:"name"`
+	ProviderName   string `json:"providerName"`
+	RegionName     string `json:"regionName"`
 	Description    string `json:"description"`
 	ConnectionName string `json:"connectionName"`
 	CspSpecName    string `json:"cspSpecName"`

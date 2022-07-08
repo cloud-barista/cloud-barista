@@ -1,6 +1,7 @@
 package mcis
 
 type TbMcisInfo struct {
+	ConfigureCloudAdaptiveNetwork string `json:"configureCloudAdaptiveNetwork"`
 	ID              string          `json:"id"`
 	Description     string          `json:"description"`
 	InstallMonAgent string          `json:"installMonAgent"`

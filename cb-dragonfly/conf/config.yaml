@@ -22,11 +22,18 @@ dragonfly:
   dragonfly_ip: 127.0.0.1                           # Cloud-Barista를 설치 및 실행하는 VM/물리머신의 Public IP 주소를 기재
   port: 9090
   helm_port: 30090
+  helm_namespace: "cloud-barista"
+
+agent:
+  mck8s_serviceaccount: cb-dragonfly
+  mck8s_namespace: cb-dragonfly
+  image: "cloudbaristaorg/cb-dragonfly:agent-1.15.4"
 
 # monitoring interval configuration info
 monitoring:
-  agent_interval: 2                                 # agent interval (s)
-  collector_interval: 10                            # aggregate interval (s)
+  agent_interval: 2                                 # agent interval (s)  mcis_agent: 2s(default)  mcks_agent: 30s(default)
+  mcis_collector_interval: 10                       # aggregate interval (s)
+  mck8s_collector_interval: 60                      # aggregate interval (s)
   max_host_count:  5                                # maximum host count per collector
   monitoring_policy: "agentCount"                   # "agentCount" => The number of agent, "csp" => csp group
   default_policy: "push"                            # push, pull

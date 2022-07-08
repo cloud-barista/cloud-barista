@@ -1,11 +1,5 @@
 $(document).ready(function () {
-    getVmList()
-    getCommonCloudConnectionList('vmcreate', '', true)
-    getCommonNetworkList('vmcreate')
-    getCommonVirtualMachineImageList('vmcreate')
-    getCommonVirtualMachineSpecList('vmcreate')
-    getCommonSecurityGroupList('vmcreate')
-    getCommonSshKeyList('vmcreate')
+    getResources('vmcreate')
     // e_vNetListTbody
 
     $('#alertResultArea').on('hidden.bs.modal', function () {// bootstrap 3 또는 4
@@ -552,10 +546,15 @@ function getVmList() {
         })
 }
 
-// 모든 커넥션 목록 ( expert mode, assist에서 사용 )
+// 모든 커넥션 목록
 var totalCloudConnectionList = new Array();
 function getCloudConnectionListCallbackSuccess(caller, data, sortType) {
+    console.log("connection result: ", data);
     totalCloudConnectionList = data;
+}
+
+function setTotalConnectionList() {
+    totalCloudConnectionList
 }
 // 화면 Load시 가져오나 굳이?
 var totalNetworkListByNamespace = new Array();
@@ -733,35 +732,18 @@ function setNetworkListToExpertMode(data, caller) {
     }
 }
 
-
+// e_specListTbody 없는 애를 호출하고 있음.
+// 현재 namespace에 등록된 모든 spec 목록
+var totalVmSpecListByNamespace = new Array()
 function getSpecListCallbackSuccess(caller, data) {
     console.log(data);
-    if (data == null || data == undefined || data == "null") {
+    totalVmSpecListByNamespace = data
 
-    } else {// 아직 data가 1건도 없을 수 있음
-        var html = ""
-        if (data.length > 0) {
-            data.forEach(function (vSpecItem, vSpecIndex) {
-
-                html += '<tr onclick="setValueToFormObj(\'tab_vmSpec\', \'vmSpec\',' + vSpecIndex + ', \'e_specId\');">'
-                    + '     <input type="hidden" id="vmSpec_id_' + vSpecIndex + '" value="' + vSpecItem.id + '"/>'
-                    + '     <input type="hidden" name="vmSpec_connectionName" id="vmSpec_connectionName_' + vSpecIndex + '" value="' + vSpecItem.connectionName + '"/>'
-                    + '     <input type="hidden" name="vmSpec_info" id="vmSpec_info_' + vSpecIndex + '" value="' + vSpecItem.id + '|' + vSpecItem.name + '|' + vSpecItem.connectionName + '|' + vSpecItem.cspImageId + '|' + vSpecItem.cspImageName + '|' + vSpecItem.guestOS + '|' + vSpecItem.description + '"/>'
-                    + '<td class="overlay hidden" data-th="Name">' + vSpecItem.name + '</td>'
-                    + '<td class="btn_mtd ovm td_left" data-th="ConnectionName">'
-                    + vSpecItem.connectionName
-                    + '</td>'
-                    + '<td class="overlay hidden" data-th="CspSpecName">' + vSpecItem.cspSpecName + '</td>'
-
-                    + '<td class="overlay hidden" data-th="Description">' + vSpecItem.description + '</td>'
-                    + '</tr>'
-
-            })
-            $("#e_specListTbody").empty()
-            $("#e_specListTbody").append(html)
-        }
+    if (caller == "addedspec") {
+        changeCloudConnection()
     }
 }
+
 function getSpecListCallbackFail(caller, error) {
     // no data
     var html = ""
@@ -772,8 +754,10 @@ function getSpecListCallbackFail(caller, error) {
     $("#e_specListTbody").append(html)
 }
 
+var totalImageListByNamespace = new Array()
 function getImageListCallbackSuccess(caller, data) {
     console.log(data);
+    totalImageListByNamespace = data
     if (data == null || data == undefined || data == "null") {
 
     } else {// 아직 data가 1건도 없을 수 있음
@@ -1266,6 +1250,67 @@ function filterSshKeyList(keywords, caller) {
 }
 
 
+function createRecommendSpec(recSpecName) {
+    console.log(recSpecName);
+
+    var specId = recSpecName
+    var specName = recSpecName
+    var connectionName = $("#t_regRecommendConn").val()
+    var cspSpecName = $("#t_regRecommendCspSpec").val()
+
+    if (!specName) {
+        alert("Input New Spec Name")
+        return;
+    }
+
+    var url = "/setting/resources" + "/vmspec/reg"
+    console.log("URL : ", url)
+    var obj = {
+        id: specId,
+        name: specName,
+        connectionName: connectionName,
+        cspSpecName: cspSpecName
+    }
+    console.log("info image obj Data : ", obj);
+
+    if (specName) {
+        axios.post(url, obj, {
+            headers: {
+                'Content-type': 'application/json',
+                // 'Authorization': apiInfo,
+            }
+        }).then(result => {
+            console.log("result spec : ", result);
+            var statusCode = result.data.status;
+            if (statusCode == 200 || statusCode == 201) {
+                $("#t_regConnectionName").val(connectionName)
+                $("#t_spec").val(specName)
+                getCommonVirtualMachineSpecList('addedspec')
+                commonAlert("Success Create Spec!!")
+                $("#connectionAssist").modal("hide");
+                $("#recommendVmAssist").modal("hide");
+
+            } else {
+                var message = result.data.message;
+                commonAlert("Fail Create Spec : " + message + "(" + statusCode + ")");
+            }
+
+        }).catch((error) => {
+            console.warn(error);
+            console.log(error.response)
+            var errorMessage = error.response.data.error;
+            var statusCode = error.response.status;
+            commonErrorAlert(statusCode, errorMessage);
+        });
+    } else {
+        commonlert("Input Spec Name")
+
+        return;
+    }
+}
+
+
+
 
 
 
@@ -1273,3 +1318,4 @@ function filterSshKeyList(keywords, caller) {
 function clearAssistSpecList(targetTableList) {
     $("#" + targetTableList).empty()
 }
+

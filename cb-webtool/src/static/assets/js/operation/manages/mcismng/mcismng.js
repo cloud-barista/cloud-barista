@@ -164,6 +164,7 @@ function getCloudConnectionListCallbackSuccess(caller, connectionConfigList, sor
 // MCIS 목록 조회 후 화면에 Set
 function getMcisListCallbackSuccess(caller, mcisList) {
     totalMcisListObj = mcisList;
+    console.log("total mcis:", totalMcisListObj);
     setToTalMcisStatus();// mcis상태 표시 를 위해 필요
     setTotalVmStatus();// mcis 의 vm들 상태표시 를 위해 필요
     setTotalConnection();// Mcis의 provider별 connection 표시를 위해 필요
@@ -1203,24 +1204,8 @@ function vmDetailInfo(mcisID, mcisName, vmID) {
     // connection tab
     var locationInfo = data.location;
     var cloudType = locationInfo.cloudType;
-    var cspIcon = ""
-    if (cloudType == "aws") {
-        cspIcon = "img_logo1"
-    } else if (cloudType == "azure") {
-        cspIcon = "img_logo5"
-    } else if (cloudType == "gcp") {
-        cspIcon = "img_logo7"
-    } else if (cloudType == "cloudit") {
-        cspIcon = "img_logo6"
-    } else if (cloudType == "openstack") {
-        cspIcon = "img_logo9"
-    } else if (cloudType == "alibaba") {
-        cspIcon = "img_logo4"
-    } else {
-        csp_icon = '<img src="/assets/img/contents/img_logo1.png" alt=""/>'
-    }
     $("#server_info_csp_icon").empty()
-    $("#server_info_csp_icon").append('<img src="/assets/img/contents/' + cspIcon + '.png" alt=""/>')
+    $("#server_info_csp_icon").append('<img src="/assets/img/contents/img_logo_' + cloudType + '.png" alt=""/>')
     $("#server_connection_view_csp").val(cloudType)
     $("#manage_mcis_popup_csp").val(cloudType)
 

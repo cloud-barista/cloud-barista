@@ -63,14 +63,14 @@ func makeVPCTRList_html(bgcolor string, height string, fontSize string, infoList
 
 	strRemoveSubnet := fmt.Sprintf(`
                 <a href="javascript:$$REMOVESUBNET$$;">
-                        <font size=%s><b>&nbsp;X</b></font>
+                        <font color=red size=%s><b>&nbsp;X</b></font>
                 </a>
                 `, fontSize)
 
 	strAddSubnet := fmt.Sprintf(`
-                <textarea style="font-size:12px;text-align:center;" name="subnet_text_box_$$ADDVPC$$" id="subnet_text_box_$$ADDVPC$$" cols=40>{ "Name": "subnet-xx", "IPv4_CIDR": "192.168.xx.xx/24"}</textarea>
+                <textarea style="font-size:12px;text-align:center;" name="subnet_text_box_$$ADDVPC$$" id="subnet_text_box_$$ADDVPC$$" cols=40>{ "Name": "subnet-02-add", "IPv4_CIDR": "10.0.12.0/22"}</textarea>
                 <a href="javascript:$$ADDSUBNET$$;">
-                        <font size=%s><b>+</b></font>
+                        <font size=%s><mark><b>+</b></mark></font>
                 </a>
 								`, fontSize)
 
@@ -91,6 +91,7 @@ func makeVPCTRList_html(bgcolor string, height string, fontSize string, infoList
 			for _, kv := range one.KeyValueList {
 				strSubnetList += kv.Key + ":" + kv.Value + ", "
 			}
+			strSubnetList = strings.TrimRight(strSubnetList, ", ")
 			strSubnetList += "}"
 
 			var subnetName = one.IId.NameId
@@ -107,6 +108,7 @@ func makeVPCTRList_html(bgcolor string, height string, fontSize string, infoList
 		for _, kv := range one.KeyValueList {
 			strKeyList += kv.Key + ":" + kv.Value + ", "
 		}
+		strKeyList = strings.TrimRight(strKeyList, ", ")
 		str = strings.ReplaceAll(str, "$$ADDITIONALINFO$$", strKeyList)
 
 		strData += str
@@ -147,7 +149,14 @@ func makePostVPCFunc_js() string {
                         var xhr = new XMLHttpRequest();
                         xhr.open("POST", "$$SPIDER_SERVER$$/spider/vpc", false);
                         xhr.setRequestHeader('Content-Type', 'application/json');
+
+			// client logging
+			parent.frames["log_frame"].Log("curl -sX POST " + "$$SPIDER_SERVER$$/spider/vpc -H 'Content-Type: application/json' -d '" + sendJson + "'");
+
                         xhr.send(sendJson);
+
+			// client logging
+                        parent.frames["log_frame"].Log("   ==> " + xhr.response);
 
 			location.reload();
                 }
@@ -174,7 +183,14 @@ func makePostSubnetFunc_js() string {
                         var xhr = new XMLHttpRequest();
                         xhr.open("POST", "$$SPIDER_SERVER$$/spider/vpc/" + vpcName + "/subnet", false);
                         xhr.setRequestHeader('Content-Type', 'application/json');
+
+			 // client logging
+			parent.frames["log_frame"].Log("curl -sX POST " + "$$SPIDER_SERVER$$/spider/vpc/" + vpcName + "/subnet" + " -H 'Content-Type: application/json' -d '" + sendJson + "'");
+
                         xhr.send(sendJson);
+
+			// client logging
+			parent.frames["log_frame"].Log("   => " + xhr.response);
 
                         location.reload();
                 }
@@ -194,10 +210,17 @@ func makeDeleteVPCFunc_js() string {
                         for (var i = 0; i < checkboxes.length; i++) { // @todo make parallel executions
                                 if (checkboxes[i].checked) {
                                         var xhr = new XMLHttpRequest();
-                                        xhr.open("DELETE", "$$SPIDER_SERVER$$/spider/vpc/" + checkboxes[i].value, false);
+                                        xhr.open("DELETE", "$$SPIDER_SERVER$$/spider/vpc/" + checkboxes[i].value, false); // synch
                                         xhr.setRequestHeader('Content-Type', 'application/json');
 					sendJson = '{ "ConnectionName": "' + connConfig + '"}'
+
+					// client logging
+					parent.frames["log_frame"].Log("curl -sX DELETE " + "$$SPIDER_SERVER$$/spider/vpc/" + checkboxes[i].value +" -H 'Content-Type: application/json' -d '" + sendJson + "'");
+
                                         xhr.send(sendJson);
+
+					// client logging
+					parent.frames["log_frame"].Log("   => " + xhr.response);
                                 }
                         }
 			location.reload();
@@ -219,7 +242,14 @@ func makeDeleteSubnetFunc_js() string {
                         xhr.open("DELETE", "$$SPIDER_SERVER$$/spider/vpc/" + vpcName + "/subnet/" + subnetName, false);
                         xhr.setRequestHeader('Content-Type', 'application/json');
                         sendJson = '{ "ConnectionName": "' + connConfig + '"}'
+
+			 // client logging
+			parent.frames["log_frame"].Log("curl -sX DELETE " + "$$SPIDER_SERVER$$/spider/vpc/" + vpcName + "/subnet/" + subnetName + " -H 'Content-Type: application/json' -d '" + sendJson + "'");
+
                         xhr.send(sendJson);
+
+			// client logging
+			parent.frames["log_frame"].Log("   => " + xhr.response);
 
                         location.reload();
                 }
@@ -237,6 +267,15 @@ func VPC(c echo.Context) error {
 			<html>
 			<head>
 			    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+				<style>
+				th {
+				  border: 1px solid lightgray;
+				}
+				td {
+				  border: 1px solid lightgray;
+				  border-radius: 4px;
+				}
+				</style>
 			    <script type="text/javascript">
 				alert(connConfig)
 			    </script>
@@ -256,6 +295,15 @@ func VPC(c echo.Context) error {
                 <html>
                 <head>
                     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+			<style>
+			th {
+			  border: 1px solid lightgray;
+			}
+			td {
+			  border: 1px solid lightgray;
+			  border-radius: 4px;
+			}
+			</style>
                     <script type="text/javascript">
                 `
 	// (1) make Javascript Function
@@ -289,11 +337,20 @@ func VPC(c echo.Context) error {
 
 	// (4) make TR list with info list
 	// (4-1) get info list
+
+	// client logging
+	htmlStr += genLoggingGETURL(connConfig, "vpc")
+
 	resBody, err := getResourceList_with_Connection_JsonByte(connConfig, "vpc")
 	if err != nil {
 		cblog.Error(err)
+		// client logging
+		htmlStr += genLoggingResult(err.Error())
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+	// client logging
+	htmlStr += genLoggingResult(string(resBody[:len(resBody)-1]))
+
 	var info struct {
 		ResultList []*cres.VPCInfo `json:"vpc"`
 	}
@@ -313,17 +370,17 @@ func VPC(c echo.Context) error {
                                 <input style="font-size:12px;text-align:center;" type="text" name="text_box" id="1" value="vpc-01">
                             </td>
                             <td>
-                                <input style="font-size:12px;text-align:center;" type="text" name="text_box" id="2" value="192.168.0.0/16">
+                                <input style="font-size:12px;text-align:center;" type="text" name="text_box" id="2" value="10.0.0.0/16">
                             </td>
                             <td>
-                                <textarea style="font-size:12px;text-align:center;" name="text_box" id="3" cols=50>[ { "Name": "subnet-01", "IPv4_CIDR": "192.168.1.0/24"} ]</textarea>
+                                <textarea style="font-size:12px;text-align:center;" name="text_box" id="3" cols=50>[ { "Name": "subnet-01", "IPv4_CIDR": "10.0.8.0/22"} ]</textarea>
                             </td>
                             <td>
                                 <input style="font-size:12px;text-align:center;" type="text" name="text_box" id="4" disabled value="N/A">
                             </td>                            
                             <td>
                                 <a href="javascript:postVPC()">
-                                    <font size=3><b>+</b></font>
+                                    <font size=4><mark><b>+</b></mark></font>
                                 </a>
                             </td>
                         </tr>
@@ -338,6 +395,54 @@ func VPC(c echo.Context) error {
 
 	//fmt.Println(htmlStr)
 	return c.HTML(http.StatusOK, htmlStr)
+}
+
+func genLoggingGETURL(connConfig string, rsType string) string {
+	/* return example
+	<script type="text/javascript">
+		parent.frames["log_frame"].Log("curl -sX GET http://localhost:1024/spider/vpc -H 'Content-Type: application/json' -d '{"ConnectionName": "aws-ohio-config"}'   ");
+	</script>
+	*/
+
+        url := "http://" + "localhost" + cr.ServerPort + "/spider/" + rsType + " -H 'Content-Type: application/json' -d '{\\\"ConnectionName\\\": \\\"" + connConfig  + "\\\"}'"
+        htmlStr := `
+                <script type="text/javascript">
+                `
+        htmlStr += `    parent.frames["log_frame"].Log("curl -sX GET ` +  url + `");`
+        htmlStr += `
+                </script>
+                `
+	return htmlStr
+}
+
+func genLoggingResult(response string) string {
+
+        htmlStr := `
+                <script type="text/javascript">
+                `
+        htmlStr += `    parent.frames["log_frame"].Log("   ==> ` + strings.ReplaceAll(response, "\"", "\\\"") + `");`
+        htmlStr += `
+                </script>
+                `
+        return htmlStr
+}
+
+func genLoggingOneGETURL(connConfig string, rsType string, name string) string {
+        /* return example
+        <script type="text/javascript">
+                parent.frames["log_frame"].Log("curl -sX GET http://localhost:1024/spider/vpc/vpc-01 -H 'Content-Type: application/json' -d '{ "ConnectionName": "aws-ohio-config"}'  ");
+        </script>
+        */
+
+        url := "http://" + "localhost" + cr.ServerPort + "/spider/" + rsType + "/" + name + " -H 'Content-Type: application/json' -d '{\\\"ConnectionName\\\": \\\"" + connConfig  + "\\\"}'"
+        htmlStr := `
+                <script type="text/javascript">
+                `
+        htmlStr += `    parent.frames["log_frame"].Log("curl -sX GET ` +  url + `");`
+        htmlStr += `
+                </script>
+                `
+        return htmlStr
 }
 
 //====================================== Security Group
@@ -378,6 +483,21 @@ func makeSecurityGroupTRList_html(bgcolor string, height string, fontSize string
                 </tr>
                 `, bgcolor, height, fontSize, fontSize, fontSize, fontSize, fontSize)
 
+
+        strRemoveRule := fmt.Sprintf(`
+                <a href="javascript:$$REMOVERULE$$;">
+                        <font color=red size=%s><b>&nbsp;X</b></font>
+                </a>
+                `, fontSize)
+
+	strAddRule := fmt.Sprintf(`
+	<textarea style="font-size:12px;text-align:center;" name="security_text_box_$$ADDSG$$" id="security_text_box_$$ADDSG$$" cols=40>{"FromPort": "1", "ToPort" : "65535", "IPProtocol" : "udp", "Direction" : "inbound", "CIDR" : "0.0.0.0/0" }</textarea>
+                <a href="javascript:$$ADDRULE$$;">
+                        <font size=%s><mark><b>+</b></mark></font>
+                </a>
+                                                                `, fontSize)
+
+
 	strData := ""
 	// set data and make TR list
 	for i, one := range infoList {
@@ -385,16 +505,27 @@ func makeSecurityGroupTRList_html(bgcolor string, height string, fontSize string
 		str = strings.ReplaceAll(str, "$$VPCNAME$$", one.VpcIID.NameId)
 		str = strings.ReplaceAll(str, "$$SGNAME$$", one.IId.NameId)
 
+		sgName := one.IId.NameId
+
 		// for security rules info
 		strSRList := ""
-		for _, one := range *one.SecurityRules {
-			strSRList += "FromPort:" + one.FromPort + ", "
-			strSRList += "ToPort:" + one.ToPort + ", "
-			strSRList += "IPProtocol:" + one.IPProtocol + ", "
-			strSRList += "Direction:" + one.Direction + ", "
-			strSRList += "CIDR:" + one.CIDR + ", "
-			strSRList += "}<br>"
+		if one.SecurityRules != nil {
+			for _, rule := range *one.SecurityRules {
+				oneSR := fmt.Sprintf("{ \"FromPort\" : \"%s\", \"ToPort\" : \"%s\", \"IPProtocol\" : \"%s\", \"Direction\" : \"%s\", \"CIDR\" : \"%s\" }", 
+						rule.FromPort, rule.ToPort, rule.IPProtocol, rule.Direction, rule.CIDR)
+
+				strSRList += oneSR
+				strDelete := "deleteRule('"+sgName+"', '"+rule.FromPort+"', '"+rule.ToPort+"', '"+rule.IPProtocol+"', '"+rule.Direction+"', '"+rule.CIDR+"')"
+				strSRList += strings.ReplaceAll(strRemoveRule, "$$REMOVERULE$$", strDelete)
+
+				strSRList += "<br>"
+
+			}
 		}
+
+                SGAddRule := strings.ReplaceAll(strAddRule, "$$ADDSG$$", sgName)
+                strSRList += strings.ReplaceAll(SGAddRule, "$$ADDRULE$$", "postRule('"+sgName+"')")
+
 		str = strings.ReplaceAll(str, "$$SECURITYRULES$$", strSRList)
 
 		// for KeyValueList
@@ -402,6 +533,7 @@ func makeSecurityGroupTRList_html(bgcolor string, height string, fontSize string
 		for _, kv := range one.KeyValueList {
 			strKeyList += kv.Key + ":" + kv.Value + ", "
 		}
+		strKeyList = strings.TrimRight(strKeyList, ", ")
 		str = strings.ReplaceAll(str, "$$ADDITIONALINFO$$", strKeyList)
 
 		strData += str
@@ -442,7 +574,16 @@ func makePostSecurityGroupFunc_js() string {
                         var xhr = new XMLHttpRequest();
                         xhr.open("POST", "$$SPIDER_SERVER$$/spider/securitygroup", false);
                         xhr.setRequestHeader('Content-Type', 'application/json');
+
+			// client logging
+			parent.frames["log_frame"].Log("curl -sX POST " + "$$SPIDER_SERVER$$/spider/securitygroup -H 'Content-Type: application/json' -d '" + sendJson + "'");
+
                         xhr.send(sendJson);
+
+			// client logging
+			parent.frames["log_frame"].Log("   ==> " + xhr.response);
+
+
 
             location.reload();
                 }
@@ -464,8 +605,15 @@ func makeDeleteSecurityGroupFunc_js() string {
                                         var xhr = new XMLHttpRequest();
                                         xhr.open("DELETE", "$$SPIDER_SERVER$$/spider/securitygroup/" + checkboxes[i].value, false);
                                         xhr.setRequestHeader('Content-Type', 'application/json');
-                    sendJson = '{ "ConnectionName": "' + connConfig + '"}'
+					sendJson = '{ "ConnectionName": "' + connConfig + '"}'
+
+					// client logging
+					parent.frames["log_frame"].Log("curl -sX DELETE " + "$$SPIDER_SERVER$$/spider/securitygroup/" + checkboxes[i].value + " -H 'Content-Type: application/json' -d '" + sendJson + "'");
+
                                         xhr.send(sendJson);
+
+					// client logging
+					parent.frames["log_frame"].Log("   ==> " + xhr.response);
                                 }
                         }
             location.reload();
@@ -473,6 +621,118 @@ func makeDeleteSecurityGroupFunc_js() string {
         `
 	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
 	return strFunc
+}
+
+// make the string of javascript function
+func makeDeleteRuleFunc_js() string {
+	/* 
+	curl -sX DELETE http://localhost:1024/spider/securitygroup/${SG_NAME}/rules -H 'Content-Type: application/json' -d \
+        '{
+                "ConnectionName": "'${CONN_CONFIG}'",
+                "ReqInfo": {
+                "RuleInfoList" :
+                        [
+                                {
+                                        "Direction": "inbound",
+                                        "IPProtocol": "ALL",
+                                        "FromPort": "-1",
+                                        "ToPort": "-1",
+                                        "CIDR" : "0.0.0.0/0"
+                                }
+                        ]
+                }
+        }'
+	*/
+
+        strFunc := `
+                function deleteRule(sgName, fromPort, toPort, protocol, direction, cidr) {
+
+                        var connConfig = parent.frames["top_frame"].document.getElementById("connConfig").innerHTML;
+
+                        var xhr = new XMLHttpRequest();
+                        xhr.open("DELETE", "$$SPIDER_SERVER$$/spider/securitygroup/" + sgName + "/rules", false);
+                        xhr.setRequestHeader('Content-Type', 'application/json');
+                        sendJson = '{ "ConnectionName": "' + connConfig + '",'
+                        sendJson += ' "ReqInfo": {'
+                        sendJson += ' "RuleInfoList" : '
+                        sendJson += '       [  '
+			sendJson += '         { "FromPort": "' + fromPort + '", '
+			sendJson += '           "ToPort": "' + toPort + '", '
+			sendJson += '           "IPProtocol": "' + protocol + '", '
+			sendJson += '           "Direction": "' + direction + '", '
+			sendJson += '           "CIDR": "' + cidr + '"'
+			sendJson += '         }'
+                        sendJson += '       ]  '
+                        sendJson += '   } '
+                        sendJson += '}'
+
+                         // client logging
+                        parent.frames["log_frame"].Log("curl -sX DELETE " + "$$SPIDER_SERVER$$/spider/securitygroup/" + sgName + "/rules" + " -H 'Content-Type: application/json' -d '" + sendJson + "'");
+
+                        xhr.send(sendJson);
+
+                        // client logging
+                        parent.frames["log_frame"].Log("   => " + xhr.response);
+
+                        location.reload();
+                }
+        `
+        strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
+        return strFunc
+}
+
+// make the string of javascript function
+func makePostRuleFunc_js() string {
+        /*
+        curl -sX POST http://localhost:1024/spider/securitygroup/${SG_NAME}/rules -H 'Content-Type: application/json' -d \
+        '{
+                "ConnectionName": "'${CONN_CONFIG}'",
+                "ReqInfo": {
+                "RuleInfoList" :
+                        [
+                                {
+                                        "Direction": "inbound",
+                                        "IPProtocol": "ALL",
+                                        "FromPort": "-1",
+                                        "ToPort": "-1",
+                                        "CIDR" : "0.0.0.0/0"
+                                }
+                        ]
+                }
+        }'
+        */
+
+        strFunc := `
+                function postRule(sgName, rule) {
+                        var connConfig = parent.frames["top_frame"].document.getElementById("connConfig").innerHTML;
+                        var textbox = document.getElementById('security_text_box_' + sgName);
+
+                        var xhr = new XMLHttpRequest();
+                        xhr.open("POST", "$$SPIDER_SERVER$$/spider/securitygroup/" + sgName + "/rules", false);
+                        xhr.setRequestHeader('Content-Type', 'application/json');
+                        sendJson = '{ "ConnectionName": "' + connConfig + '",'
+                        sendJson += ' "ReqInfo": {'
+                        sendJson += ' "RuleInfoList" : '
+                        sendJson += '       [  '
+                        sendJson += textbox.value
+                        sendJson += '       ]  '
+                        sendJson += '   } '
+                        sendJson += '}'
+
+
+                         // client logging
+                        parent.frames["log_frame"].Log("curl -sX POST " + "$$SPIDER_SERVER$$/spider/securitygroup/" + sgName + "/rules" + " -H 'Content-Type: application/json' -d '" + sendJson + "'");
+
+                        xhr.send(sendJson);
+
+                        // client logging
+                        parent.frames["log_frame"].Log("   => " + xhr.response);
+
+                        location.reload();
+                }
+        `
+        strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
+        return strFunc
 }
 
 func SecurityGroup(c echo.Context) error {
@@ -484,6 +744,15 @@ func SecurityGroup(c echo.Context) error {
             <html>
             <head>
                 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<style>
+		th {
+		  border: 1px solid lightgray;
+		}
+		td {
+		  border: 1px solid lightgray;
+		  border-radius: 4px;
+		}
+		</style>
                 <script type="text/javascript">
                 alert(connConfig)
                 </script>
@@ -503,12 +772,23 @@ func SecurityGroup(c echo.Context) error {
                 <html>
                 <head>
                     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+			<style>
+			th {
+			  border: 1px solid lightgray;
+			}
+			td {
+			  border: 1px solid lightgray;
+			  border-radius: 4px;
+			}
+			</style>
                     <script type="text/javascript">
                 `
 	// (1) make Javascript Function
 	htmlStr += makeCheckBoxToggleFunc_js()
 	htmlStr += makePostSecurityGroupFunc_js()
 	htmlStr += makeDeleteSecurityGroupFunc_js()
+	htmlStr += makePostRuleFunc_js()
+	htmlStr += makeDeleteRuleFunc_js()
 
 	htmlStr += `
                     </script>
@@ -534,11 +814,21 @@ func SecurityGroup(c echo.Context) error {
 
 	// (4) make TR list with info list
 	// (4-1) get info list
+
+	// client logging
+	htmlStr += genLoggingGETURL(connConfig, "securitygroup")
+
 	resBody, err := getResourceList_with_Connection_JsonByte(connConfig, "securitygroup")
 	if err != nil {
 		cblog.Error(err)
+		// client logging
+                htmlStr += genLoggingResult(err.Error())
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+
+	// client logging
+	htmlStr += genLoggingResult(string(resBody[:len(resBody)-1]))
+
 	var info struct {
 		ResultList []*cres.SecurityInfo `json:"securitygroup"`
 	}
@@ -574,7 +864,7 @@ func SecurityGroup(c echo.Context) error {
                             </td>
                             <td>
                                 <a href="javascript:postSecurityGroup()">
-                                    <font size=3><b>+</b></font>
+                                    <font size=4><mark><b>+</b></mark></font>
                                 </a>
                             </td>
                         </tr>
@@ -652,6 +942,7 @@ func makeKeyPairTRList_html(bgcolor string, height string, fontSize string, info
 		for _, kv := range one.KeyValueList {
 			strKeyList += kv.Key + ":" + kv.Value + ", "
 		}
+		strKeyList = strings.TrimRight(strKeyList, ", ")
 		str = strings.ReplaceAll(str, "$$ADDITIONALINFO$$", strKeyList)
 
 		strData += str
@@ -685,7 +976,27 @@ func makePostKeyPairFunc_js() string {
                         var xhr = new XMLHttpRequest();
                         xhr.open("POST", "$$SPIDER_SERVER$$/spider/keypair", false);
                         xhr.setRequestHeader('Content-Type', 'application/json');
+
+			// client logging
+			parent.frames["log_frame"].Log("curl -sX POST " + "$$SPIDER_SERVER$$/spider/keypair -H 'Content-Type: application/json' -d '" + sendJson + "'");
+
                         xhr.send(sendJson);
+
+			// client logging
+			parent.frames["log_frame"].Log("   ==> " + xhr.response);
+			var jsonVal = JSON.parse(xhr.response)
+
+//---------------- download this private key 
+		  var keyFileName = jsonVal.IId.NameId + ".pem";
+		  var keyValue = jsonVal.PrivateKey;
+                  var tempElement = document.createElement('a');
+                  //tempElement.setAttribute('href','data:text/plain;charset=utf-8, ' + encodeURIComponent(keyValue));
+                  tempElement.setAttribute('href','data:text/plain;charset=utf-8,' + encodeURIComponent(keyValue));
+                  tempElement.setAttribute('download', keyFileName);
+                  document.body.appendChild(tempElement);
+                  tempElement.click();
+                  document.body.removeChild(tempElement);
+//---------------- download this private key 
 
             location.reload();
                 }
@@ -708,8 +1019,15 @@ func makeDeleteKeyPairFunc_js() string {
                                         var xhr = new XMLHttpRequest();
                                         xhr.open("DELETE", "$$SPIDER_SERVER$$/spider/keypair/" + checkboxes[i].value, false);
                                         xhr.setRequestHeader('Content-Type', 'application/json');
-                    sendJson = '{ "ConnectionName": "' + connConfig + '"}'
+					sendJson = '{ "ConnectionName": "' + connConfig + '"}'
+
+					// client logging
+					parent.frames["log_frame"].Log("curl -sX DELETE " + "$$SPIDER_SERVER$$/spider/keypair/" + checkboxes[i].value + " -H 'Content-Type: application/json' -d '" + sendJson + "'");
+
                                         xhr.send(sendJson);
+
+					// client logging
+					parent.frames["log_frame"].Log("   ==> " + xhr.response);
                                 }
                         }
             location.reload();
@@ -728,6 +1046,15 @@ func KeyPair(c echo.Context) error {
             <html>
             <head>
                 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<style>
+		th {
+		  border: 1px solid lightgray;
+		}
+		td {
+		  border: 1px solid lightgray;
+		  border-radius: 4px;
+		}
+		</style>
                 <script type="text/javascript">
                 alert(connConfig)
                 </script>
@@ -747,6 +1074,15 @@ func KeyPair(c echo.Context) error {
                 <html>
                 <head>
                     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+			<style>
+			th {
+			  border: 1px solid lightgray;
+			}
+			td {
+			  border: 1px solid lightgray;
+			  border-radius: 4px;
+			}
+			</style>
                     <script type="text/javascript">
                 `
 	// (1) make Javascript Function
@@ -778,11 +1114,21 @@ func KeyPair(c echo.Context) error {
 
 	// (4) make TR list with info list
 	// (4-1) get info list
+
+	// client logging
+	htmlStr += genLoggingGETURL(connConfig, "keypair")
+
 	resBody, err := getResourceList_with_Connection_JsonByte(connConfig, "keypair")
 	if err != nil {
 		cblog.Error(err)
+		// client logging
+                htmlStr += genLoggingResult(err.Error())
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+
+	// client logging
+	htmlStr += genLoggingResult(string(resBody[:len(resBody)-1]))
+
 	var info struct {
 		ResultList []*cres.KeyPairInfo `json:"keypair"`
 	}
@@ -812,7 +1158,7 @@ func KeyPair(c echo.Context) error {
                             </td>
                             <td>
                                 <a href="javascript:postKeyPair()">
-                                    <font size=3><b>+</b></font>
+                                    <font size=4><mark><b>+</b></mark></font>
                                 </a>
                             </td>
                         </tr>
@@ -934,25 +1280,38 @@ func makeVMTRList_html(connConfig string, bgcolor string, height string, fontSiz
 		// for security rules info
 		strSRList := ""
 		for _, one := range one.SecurityGroupIIds {
+/* mask for list performance
+			// client logging
+			strSRList += genLoggingOneGETURL(connConfig, "securitygroup", one.NameId)
+
 			resBody, err := getResource_with_Connection_JsonByte(connConfig, "securitygroup", one.NameId)
 			if err != nil {
 				cblog.Error(err)
 				break
 			}
+			// client logging
+			strSRList += genLoggingResult(string(resBody[:len(resBody)-1]))
+
 			var secInfo cres.SecurityInfo
 			json.Unmarshal(resBody, &secInfo)
 
 			strSRList += "["
-			for _, secRuleInfo := range *secInfo.SecurityRules {
-				strSRList += "{FromPort:" + secRuleInfo.FromPort + ", "
-				strSRList += "ToPort:" + secRuleInfo.ToPort + ", "
-				strSRList += "IPProtocol:" + secRuleInfo.IPProtocol + ", "
-				strSRList += "Direction:" + secRuleInfo.Direction + ", "
-				strSRList += "CIDR:" + secRuleInfo.CIDR
-				strSRList += "},<br>"
+			if secInfo.SecurityRules != nil {
+				for _, secRuleInfo := range *secInfo.SecurityRules {
+					strSRList += "{FromPort:" + secRuleInfo.FromPort + ", "
+					strSRList += "ToPort:" + secRuleInfo.ToPort + ", "
+					strSRList += "IPProtocol:" + secRuleInfo.IPProtocol + ", "
+					strSRList += "Direction:" + secRuleInfo.Direction + ", "
+					strSRList += "CIDR:" + secRuleInfo.CIDR
+					strSRList += "},<br>"
+				}
 			}
 			strSRList += "]"
+*/
+
+			strSRList += one.NameId + "," 
 		}
+		strSRList = strings.TrimSuffix(strSRList, ",")
 		str = strings.ReplaceAll(str, "$$SECURITYGROUP$$", strSRList)
 
 		// for Network Interface & PublicIP & PrivateIP
@@ -969,15 +1328,16 @@ func makeVMTRList_html(connConfig string, bgcolor string, height string, fontSiz
 		str = strings.ReplaceAll(str, "$$BLOCKDISK$$", one.VMBlockDisk)
 
 		// for SSH AccessPoint & Access Key & Access User
-		str = strings.ReplaceAll(str, "$$SSHACCESSPOINT$$", one.SSHAccessPoint)
-		str = strings.ReplaceAll(str, "$$ACCESSKEY$$", one.KeyPairIId.NameId)
-		str = strings.ReplaceAll(str, "$$ACCESSUSER$$", one.VMUserId)
+		str = strings.ReplaceAll(str, "$$SSHACCESSPOINT$$", "<mark>" + one.SSHAccessPoint + "</mark>")
+		str = strings.ReplaceAll(str, "$$ACCESSKEY$$", "<mark>" + one.KeyPairIId.NameId + "</mark>")
+		str = strings.ReplaceAll(str, "$$ACCESSUSER$$", "<mark>" + one.VMUserId + "</mark>")
 
 		// for KeyValueList
 		strKeyList := ""
 		for _, kv := range one.KeyValueList {
 			strKeyList += kv.Key + ":" + kv.Value + ", "
 		}
+		strKeyList = strings.TrimRight(strKeyList, ", ")
 		str = strings.ReplaceAll(str, "$$ADDITIONALINFO$$", strKeyList)
 
 		strData += str
@@ -988,22 +1348,29 @@ func makeVMTRList_html(connConfig string, bgcolor string, height string, fontSiz
 
 // make the string of javascript function
 func makeVMControlFunc_js() string {
-	//curl -sX GET http://localhost:1024/spider/controlvm/vm-01?action=suspend -H 'Content-Type: application/json' -d '{ "ConnectionName": "'${CONN_CONFIG}'"}'
+	//curl -sX PUT http://localhost:1024/spider/controlvm/vm-01?action=suspend -H 'Content-Type: application/json' -d '{ "ConnectionName": "'${CONN_CONFIG}'"}'
 
 	strFunc := `
                 function vmControl(vmName, action) {
                         var connConfig = parent.frames["top_frame"].document.getElementById("connConfig").innerHTML;
 
-												document.getElementById("vmcontrol-" + vmName).innerHTML = '<span style="color:red">Waiting...</span>';
-												setTimeout(function(){
-													var xhr = new XMLHttpRequest();
-													xhr.open("PUT", "$$SPIDER_SERVER$$/spider/controlvm/" + vmName + "?action=" + action, false);
-													xhr.setRequestHeader('Content-Type', 'application/json');
-													sendJson = '{ "ConnectionName": "' + connConfig + '"}'
-													xhr.send(sendJson);
-	
-													location.reload();
-												}, 10);
+			document.getElementById("vmcontrol-" + vmName).innerHTML = '<span style="color:red">Waiting...</span>';
+			setTimeout(function(){
+				var xhr = new XMLHttpRequest();
+				xhr.open("PUT", "$$SPIDER_SERVER$$/spider/controlvm/" + vmName + "?action=" + action, false);
+				xhr.setRequestHeader('Content-Type', 'application/json');
+				sendJson = '{ "ConnectionName": "' + connConfig + '"}'
+
+				// client logging
+				parent.frames["log_frame"].Log("PUT> " + "$$SPIDER_SERVER$$/spider/controlvm/" + vmName + "?action=" + action + " -H 'Content-Type: application/json' -d '" + sendJson + "'");
+
+				xhr.send(sendJson);
+
+				// client logging
+				parent.frames["log_frame"].Log("   ==> " + xhr.response);
+
+				location.reload();
+			}, 10);
                 }
         `
 	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
@@ -1063,9 +1430,16 @@ func makePostVMFunc_js() string {
                         var xhr = new XMLHttpRequest();
                         xhr.open("POST", "$$SPIDER_SERVER$$/spider/vm", false);
                         xhr.setRequestHeader('Content-Type', 'application/json');
+
+			// client logging
+			parent.frames["log_frame"].Log("curl -sX POST " + "$$SPIDER_SERVER$$/spider/vm -H 'Content-Type: application/json' -d '" + sendJson + "'");
+
                         xhr.send(sendJson);
 
-            location.reload();
+			// client logging
+			parent.frames["log_frame"].Log("   ==> " + xhr.response);
+
+			location.reload();
                 }
         `
 	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
@@ -1085,8 +1459,15 @@ func makeDeleteVMFunc_js() string {
                                         var xhr = new XMLHttpRequest();
                                         xhr.open("DELETE", "$$SPIDER_SERVER$$/spider/vm/" + checkboxes[i].value, false);
                                         xhr.setRequestHeader('Content-Type', 'application/json');
-                    sendJson = '{ "ConnectionName": "' + connConfig + '"}'
+					sendJson = '{ "ConnectionName": "' + connConfig + '"}'
+
+					// client logging
+					parent.frames["log_frame"].Log("curl -sX DELETE " + "$$SPIDER_SERVER$$/spider/vm/" + checkboxes[i].value + " -H 'Content-Type: application/json' -d '" + sendJson + "'");
+
                                         xhr.send(sendJson);
+
+					// client logging
+					parent.frames["log_frame"].Log("   ==> " + xhr.response);
                                 }
                         }
             location.reload();
@@ -1105,6 +1486,15 @@ func VM(c echo.Context) error {
             <html>
             <head>
                 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<style>
+		th {
+		  border: 1px solid lightgray;
+		}
+		td {
+		  border: 1px solid lightgray;
+		  border-radius: 4px;
+		}
+		</style>
                 <script type="text/javascript">
                 alert(connConfig)
                 </script>
@@ -1124,6 +1514,15 @@ func VM(c echo.Context) error {
                 <html>
                 <head>
                     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+			<style>
+			th {
+			  border: 1px solid lightgray;
+			}
+			td {
+			  border: 1px solid lightgray;
+			  border-radius: 4px;
+			}
+			</style>
                     <script type="text/javascript">
                 `
 	// (1) make Javascript Function
@@ -1160,11 +1559,21 @@ func VM(c echo.Context) error {
 
 	// (4) make TR list with info list
 	// (4-1) get info list
+
+	// client logging
+	htmlStr += genLoggingGETURL(connConfig, "vm")
+
 	resBody, err := getResourceList_with_Connection_JsonByte(connConfig, "vm")
 	if err != nil {
 		cblog.Error(err)
+		// client logging
+                htmlStr += genLoggingResult(err.Error())
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+
+	// client logging
+	htmlStr += genLoggingResult(string(resBody[:len(resBody)-1]))
+
 	var info struct {
 		ResultList []*cres.VMInfo `json:"vm"`
 	}
@@ -1190,7 +1599,7 @@ func VM(c echo.Context) error {
 		specName = "t2.micro"
 		subnetName = "subnet-01"
 		sgName = `["sg-01"]`
-		vmUser = "ec2-user"
+		vmUser = "cb-user"
 	case "AZURE":
 		imageName = "Canonical:UbuntuServer:18.04-LTS:latest"
 		specName = "Standard_B1ls"
@@ -1204,29 +1613,61 @@ func VM(c echo.Context) error {
 		sgName = `["sg-01"]`
 		vmUser = "cb-user"
 	case "ALIBABA":
-		imageName = "ubuntu_18_04_x64_20G_alibase_20200220.vhd"
+		imageName = "ubuntu_18_04_x64_20G_alibase_20220322.vhd"
 		specName = "ecs.t5-lc1m2.small"
 		subnetName = "subnet-01"
 		sgName = `["sg-01"]`
-		vmUser = "root"
+		vmUser = "cb-user"
+	case "TENCENT":
+		imageName = "img-pi0ii46r"
+		specName = "S5.MEDIUM8"
+		subnetName = "subnet-01"
+		sgName = `["sg-01"]`
+		vmUser = "cb-user"
+	case "IBM":
+		imageName = "r014-a044e2f5-dfe1-416c-8990-5dc895352728"
+		specName = "bx2-2x8"
+		subnetName = "subnet-01"
+		sgName = `["sg-01"]`
+		vmUser = "cb-user"
+
 	case "CLOUDIT":
-		imageName = "CentOS-7"
+		imageName = "Ubuntu 18.04"
 		specName = "small-2"
 		subnetName = "subnet-01"
 		sgName = `["sg-01"]`
-		vmUser = "root"
+		vmUser = "cb-user"
 	case "OPENSTACK":
 		imageName = "ubuntu18.04"
 		specName = "DS-Demo"
 		subnetName = "subnet-01"
 		sgName = `["sg-01"]`
-		vmUser = "ubuntu"
+		vmUser = "cb-user"
+	case "NCP":
+		imageName = "SPSW0LINUX000130"
+		specName = "SPSVRHICPUSSD002"
+		subnetName = "subnet-01"
+		sgName = `["sg-01"]`
+		vmUser = "cb-user"
+	case "KTCLOUD":
+		imageName = "97ef0091-fdf7-44e9-be79-c99dc9b1a0ad"
+		specName = "d3530ad2-462b-43ad-97d5-e1087b952b7d!87c0a6f6-c684-4fbe-a393-d8412bcf788d_disk100GB"
+		subnetName = "subnet-01"
+		sgName = `["sg-01"]`
+		vmUser = "cb-user"
+	case "NHNCLOUD":
+		imageName = "5396655e-166a-4875-80d2-ed8613aa054f"
+		specName = "m2.c4m8"
+		subnetName = "subnet-01"
+		sgName = `["sg-01"]`
+		vmUser = "cb-user"
+
 	case "DOCKER":
 		imageName = "nginx:latest"
-		subnetName = ""
-		sgName = `[]`
-		specName = ""
-		vmUser = ""
+		specName = "NA"
+		subnetName = "NA"
+		sgName = `["NA"]`
+		vmUser = "cb-user"
 	case "MOCK":
 		imageName = "mock-vmimage-01"
 		subnetName = "subnet-01"
@@ -1244,7 +1685,7 @@ func VM(c echo.Context) error {
 		specName = "t2.micro"
 		subnetName = "subnet-01"
 		sgName = `["sg-01"]`
-		vmUser = "ec2-user"
+		vmUser = "cb-user"
 	}
 
 	htmlStr += `
@@ -1291,16 +1732,16 @@ func VM(c echo.Context) error {
 
 	htmlStr += `
 				<br>
-                                <input style="font-size:12px;text-align:center;" type="text" name="text_box" id="12" value="$$VMUSER$$">
+                                <input style="font-size:12px;text-align:center;" type="text" name="text_box" id="12" value="$$VMUSER$$" disabled>
 				<br>
-                                <input style="font-size:12px;text-align:center;" type="password" name="text_box" id="13" value="">
+                                <input style="font-size:12px;text-align:center;" type="password" name="text_box" id="13" value="" disabled>
                             </td>
                             <td style="vertical-align:top">
                                 <input style="font-size:12px;text-align:center;" type="text" name="text_box" id="14" disabled value="N/A">
                             </td>
                             <td>
                                 <a href="javascript:postVM()">
-                                    <font size=3><b>+</b></font>
+                                    <font size=4><mark><b>+</b></mark></font>
                                 </a>
                             </td>
                         </tr>
@@ -1313,6 +1754,607 @@ func VM(c echo.Context) error {
 	htmlStr = strings.ReplaceAll(htmlStr, "$$SGNAME$$", sgName)
 	htmlStr = strings.ReplaceAll(htmlStr, "$$VMUSER$$", vmUser)
 
+	// make page tail
+	htmlStr += `
+                    </table>
+            <hr>
+                </body>
+                </html>
+        `
+
+	//fmt.Println(htmlStr)
+	return c.HTML(http.StatusOK, htmlStr)
+}
+
+
+//====================================== NLB: Network Load Balancer
+
+// number, VPC Name, NLB Name, Type, Scope, 
+// Listner(IP/Protocol/Port), VMGroup(Protocol/Port/VMs), HealthChecker(Protocol/Port/Interval/Timeoute/Threshold),
+// Additional Info, checkbox
+func makeNLBTRList_html(bgcolor string, height string, fontSize string, infoList []*cres.NLBInfo) string {
+	if bgcolor == "" {
+		bgcolor = "#FFFFFF"
+	}
+	if height == "" {
+		height = "30"
+	}
+	if fontSize == "" {
+		fontSize = "2"
+	}
+
+	// make base TR frame for info list
+	strTR := fmt.Sprintf(`
+                <tr bgcolor="%s" align="center" height="%s">
+                    <td>
+                            <font size=%s>$$NUM$$</font>
+                    </td>
+                    <td>
+                            <font size=%s>$$VPCNAME$$</font>
+                    </td>
+                    <td>
+                            <font size=%s>$$NLBNAME$$</font>
+                    </td>                    
+                    <td>
+                            <font size=%s>$$TYPE$$</font>
+                    </td>
+                    <td>
+                            <font size=%s>$$SCOPE$$</font>
+                    </td>
+		    <td>
+                            <font size=%s>$$LISTENER$$</font>
+                    </td>
+                    <td>
+                            <font size=%s>$$VMGROUP$$</font>
+                    </td>
+		    <td>
+                            <font size=%s>$$HEALTHCHECKER$$</font>
+                    </td>
+                    <td>
+                            <font size=%s>$$ADDITIONALINFO$$</font>
+                    </td>
+                    <td>
+                        <input type="checkbox" name="check_box" value=$$NLBNAME$$>
+                    </td>
+                </tr>
+                `, bgcolor, height, fontSize, fontSize, fontSize, fontSize, fontSize, fontSize, fontSize, fontSize, fontSize)
+
+	strData := ""
+	// set data and make TR list
+	for i, one := range infoList {
+		str := strings.ReplaceAll(strTR, "$$NUM$$", strconv.Itoa(i+1))
+		str = strings.ReplaceAll(str, "$$VPCNAME$$", one.VpcIID.NameId)
+		str = strings.ReplaceAll(str, "$$NLBNAME$$", one.IId.NameId)
+		str = strings.ReplaceAll(str, "$$TYPE$$", one.Type)
+		str = strings.ReplaceAll(str, "$$SCOPE$$", one.Scope)
+
+		// for Listener info
+		// for Listener KeyValueList
+		strKeyList := ""
+		for _, kv := range one.Listener.KeyValueList {
+			strKeyList += kv.Key + ":" + kv.Value + ", "
+		}
+		strKeyList = strings.TrimRight(strKeyList, ", ")
+		strListener := ""
+		strListener += "<b> => <mark>" + one.Listener.IP + ":" + one.Listener.Port + "</b> </mark> <br>"
+		if one.Listener.DNSName != "" {
+			strListener += "=> <mark> <b>" + one.Listener.DNSName + ":" + one.Listener.Port + "</b> </mark> <br>"
+		}
+		strListener += "--------------------------------<br>"
+		//if one.Listener.CspID != "" {
+		//	strListener += "CspID:" + one.Listener.CspID + ", "
+		//}
+		/* complicated to see 
+		if strKeyList != "" {
+			strListener += "(etc) " + strKeyList + "<br>"
+			strListener += "--------------------------------<br>"
+		}
+		*/
+		strListener += one.Listener.Protocol + "<br>"
+                strListener += "--------------------------------<br>"
+                strListener += `
+                        <input disabled='true' type='button' style="font-size:11px;color:gray" onclick="javascript:setListener('` + one.IId.NameId + `');" value='edit'/>
+                        <br>
+			`
+		
+		str = strings.ReplaceAll(str, "$$LISTENER$$", strListener)
+
+		// for VMGroup info
+		// for VMGroup KeyValueList
+		strKeyList = ""
+		for _, kv := range one.VMGroup.KeyValueList {
+			strKeyList += kv.Key + ":" + kv.Value + ", "
+		}
+		strKeyList = strings.TrimRight(strKeyList, ", ")
+		strVMList := ""
+		for _, vmIID := range *one.VMGroup.VMs {
+			strVMList += vmIID.NameId + ", "
+		}
+		strVMList = strings.TrimRight(strVMList, ", ")
+		strVMGroup := ""
+		strVMGroup += "<b> => <mark>" + one.VMGroup.Port + "</b> </mark> <br>"
+		strVMGroup += "--------------------------------<br>"
+		strVMGroup += "<mark> [ " + strVMList + " ] </mark>" + "<br>"
+		strVMGroup += "--------------------------------<br>"
+		//if one.VMGroup.CspID != "" {
+		//	strVMGroup += "CspID:" + one.VMGroup.CspID + ", "
+		//}
+		/* complicated to see 
+		if strKeyList != "" {
+			strVMGroup += "(etc) " + strKeyList + "<br>"
+			strVMGroup += "--------------------------------<br>"
+		}
+		*/
+		strVMGroup += one.VMGroup.Protocol + "<br>"
+		strVMGroup += "--------------------------------<br>"
+		strVMGroup += `
+			<input disabled='true' type='button' style="font-size:11px;color:gray" onclick="javascript:setVMGroup('` + one.IId.NameId + `');" value='edit'/>
+			<input disabled='true' type='button' style="font-size:11px;color:gray" onclick="javascript:addVMs('` + one.IId.NameId + `');" value='+'/>
+			<input disabled='true' type='button' style="font-size:11px;color:gray" onclick="javascript:removeVMs('` + one.IId.NameId + `');" value='-'/>
+			<br>
+			`
+		
+		str = strings.ReplaceAll(str, "$$VMGROUP$$", strVMGroup)
+
+		// for HealthChecker info
+		// for HealthChecker KeyValueList
+		strKeyList = ""
+		for _, kv := range one.HealthChecker.KeyValueList {
+			strKeyList += kv.Key + ":" + kv.Value + ", "
+		}
+		strKeyList = strings.TrimRight(strKeyList, ", ")
+
+		strHealthChecker := ""
+/* 
+		strHealthChecker := `
+			<div class="displayStatus">
+				<textarea id='displayStatus' hidden disabled="true" style="overflow:scroll;" wrap="off"></textarea>
+			</div>
+		`
+*/
+		strHealthChecker += "<b> <= <mark>" + one.HealthChecker.Port + "</b> </mark><br>"
+		strHealthChecker += "--------------------------------<br>"
+		strHealthChecker += "Interval:   " + strconv.Itoa(one.HealthChecker.Interval) + "<br>"
+		strHealthChecker += "Timeout:    " + strconv.Itoa(one.HealthChecker.Timeout) + "<br>"
+		strHealthChecker += "Threshold:  " + strconv.Itoa(one.HealthChecker.Threshold) + "<br>"
+		strHealthChecker += "--------------------------------<br>"
+		//if one.HealthChecker.CspID != "" {
+		//	strHealthChecker += "CspID:" + one.HealthChecker.CspID + ", "
+		//}
+		/* complicated to see 
+		if strKeyList != "" {
+			strHealthChecker += "(etc) " + strKeyList + "<br>"
+			strHealthChecker += "------------------------<br>"
+		}
+		*/
+		strHealthChecker += one.HealthChecker.Protocol + "<br>"
+		strHealthChecker += "--------------------------------<br>"
+/*
+		strHealthChecker += `
+			<a href="javascript:healthStatus('` + one.IId.NameId + `');">
+			    <font color=blue size=2><b><div class='displayText'>Status</div></b></font>
+			</a><br>`
+*/
+		strHealthChecker += `
+			<input disabled='true' type='button' style="font-size:11px;color:gray" onclick="javascript:setHealthChecker('` + one.IId.NameId + `');" value='edit'/>
+			<input type='button' style="font-size:11px;color:blue" onclick="javascript:healthStatus('` + one.IId.NameId + `');" value='Status'/>
+			<br>`
+		
+		str = strings.ReplaceAll(str, "$$HEALTHCHECKER$$", strHealthChecker)
+
+
+		// for KeyValueList
+		strKeyList = ""
+		for _, kv := range one.KeyValueList {
+			strKeyList += kv.Key + ":" + kv.Value + ", "
+		}
+		strKeyList = strings.TrimRight(strKeyList, ", ")
+		str = strings.ReplaceAll(str, "$$ADDITIONALINFO$$", strKeyList)
+
+		strData += str
+	}
+
+	return strData
+}
+
+// make the string of javascript function
+func makePostNLBFunc_js() string {
+
+// curl -sX POST http://localhost:1024/spider/nlb -H 'Content-Type: application/json' -d \
+//         '{
+//                 "ConnectionName": "'${CONN_CONFIG}'",
+//                 "ReqInfo": {
+//                         "Name": "spider-nlb-01",
+//                         "VPCName": "vpc-01",
+//                         "Type": "PUBLIC",
+//                         "Scope": "REGION",
+//                         "Listener": {
+//                                 "Protocol" : "TCP",
+//                                 "Port" : "80"
+//                         },
+//                         "VMGroup": {
+//                                 "Protocol" : "TCP",
+//                                 "Port" : "80",
+//                                 "VMs" : ["vm-01", "vm-02"]
+//                         },
+//                         "HealthChecker": {
+//                                 "Protocol" : "TCP",
+//                                 "Port" : "80",
+//                                 "Interval" : "10",
+//                                 "Timeout" : "10",
+//                                 "Threshold" : "3"
+//                         }
+//                 }
+//         }'
+
+	strFunc := `
+                function postNLB() {
+                        var connConfig = parent.frames["top_frame"].document.getElementById("connConfig").innerHTML;
+
+                        var textboxes = document.getElementsByName('text_box');
+                        sendJson = '{ "ConnectionName" : "' + connConfig + '", "ReqInfo" : \
+                        			{ \
+                        				"Name" : "$$NLBNAME$$", \
+                        				"VPCName" : "$$VPCNAME$$", \
+                        				"Type" : "$$TYPE$$", \
+                        				"Scope" : "$$SCOPE$$", \
+                        				"Listener" : { \
+                        					"Protocol" : "$$L_PROTOCOL$$", \
+                        					"Port" : "$$L_PORT$$" \
+                        				}, \
+                        				"VMGroup" : { \
+                        					"Protocol" : "$$V_PROTOCOL$$", \
+                        					"Port" : "$$V_PORT$$", \
+                        					"VMs" : $$VMS$$ \
+                        				}, \
+                        				"HealthChecker" : { \
+                        					"Protocol" : "$$H_PROTOCOL$$", \
+                        					"Port" : "$$H_PORT$$", \
+                        					"Interval" : "$$INTERVAL$$", \
+                        					"Timeout" : "$$TIMEOUT$$", \
+                        					"Threshold" : "$$THRESHOLD$$" \
+                        				} \
+                        			} \
+                        		}'
+
+                        for (var i = 0; i < textboxes.length; i++) { // @todo make parallel executions
+                                switch (textboxes[i].id) {
+                                        case "1":
+                                                sendJson = sendJson.replace("$$VPCNAME$$", textboxes[i].value);
+                                                break;
+                                        case "2":
+                                                sendJson = sendJson.replace("$$NLBNAME$$", textboxes[i].value);
+                                                break;
+                                        case "3":
+                                                sendJson = sendJson.replace("$$TYPE$$", textboxes[i].value);
+                                                break;
+                                        case "4":
+                                                sendJson = sendJson.replace("$$SCOPE$$", textboxes[i].value);
+                                                break;
+                                        case "5":
+                                                sendJson = sendJson.replace("$$L_PROTOCOL$$", textboxes[i].value);
+                                                break;
+                                        case "6":
+                                                sendJson = sendJson.replace("$$L_PORT$$", textboxes[i].value);
+                                                break;
+                                        case "7":
+                                                sendJson = sendJson.replace("$$V_PROTOCOL$$", textboxes[i].value);
+                                                break;
+                                        case "8":
+                                                sendJson = sendJson.replace("$$V_PORT$$", textboxes[i].value);
+                                                break;
+                                        case "9":
+                                                sendJson = sendJson.replace("$$VMS$$", textboxes[i].value);
+                                                break;
+                                        case "10":
+                                                sendJson = sendJson.replace("$$H_PROTOCOL$$", textboxes[i].value);
+                                                break;
+                                        case "11":
+                                                sendJson = sendJson.replace("$$H_PORT$$", textboxes[i].value);
+                                                break;
+                                        case "12":
+                                                sendJson = sendJson.replace("$$INTERVAL$$", textboxes[i].value);
+                                                break;
+                                        case "13":
+                                                sendJson = sendJson.replace("$$TIMEOUT$$", textboxes[i].value);
+                                                break;
+                                        case "14":
+                                                sendJson = sendJson.replace("$$THRESHOLD$$", textboxes[i].value);
+                                                break;                                              
+                                        default:
+                                                break;
+                                }
+                        }
+                        var xhr = new XMLHttpRequest();
+                        xhr.open("POST", "$$SPIDER_SERVER$$/spider/nlb", false);
+                        xhr.setRequestHeader('Content-Type', 'application/json');
+
+			// client logging
+			parent.frames["log_frame"].Log("curl -sX POST " + "$$SPIDER_SERVER$$/spider/nlb -H 'Content-Type: application/json' -d '" + sendJson + "'");
+
+                        xhr.send(sendJson);
+
+			// client logging
+			parent.frames["log_frame"].Log("   ==> " + xhr.response);
+
+
+
+            location.reload();
+                }
+        `
+	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
+	return strFunc
+}
+
+// make the string of javascript function
+func makeDeleteNLBFunc_js() string {
+	// curl -sX DELETE http://localhost:1024/spider/nlb/spider-nlb-01 -H 'Content-Type: application/json' -d \
+ //        '{
+ //                "ConnectionName": "'${CONN_CONFIG}'"
+ //        }'
+
+	strFunc := `
+                function deleteNLB() {
+                        var connConfig = parent.frames["top_frame"].document.getElementById("connConfig").innerHTML;
+                        var checkboxes = document.getElementsByName('check_box');
+                        for (var i = 0; i < checkboxes.length; i++) { // @todo make parallel executions
+                                if (checkboxes[i].checked) {
+                                        var xhr = new XMLHttpRequest();
+                                        xhr.open("DELETE", "$$SPIDER_SERVER$$/spider/nlb/" + checkboxes[i].value, false);
+                                        xhr.setRequestHeader('Content-Type', 'application/json');
+					sendJson = '{ "ConnectionName": "' + connConfig + '"}'
+
+					// client logging
+					parent.frames["log_frame"].Log("curl -sX DELETE " + "$$SPIDER_SERVER$$/spider/nlb/" + checkboxes[i].value + " -H 'Content-Type: application/json' -d '" + sendJson + "'");
+
+                                        xhr.send(sendJson);
+
+					// client logging
+					parent.frames["log_frame"].Log("   ==> " + xhr.response);
+                                }
+                        }
+            location.reload();
+                }
+        `
+	strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
+	return strFunc
+}
+
+// make the string of javascript function
+func makeGetHealthStatusNLBFunc_js() string {
+	// curl -sX GET http://localhost:1024/spider/nlb/spider-nlb-01/health -H 'Content-Type: application/json' -d \
+        // '{
+        //        "ConnectionName": "'${CONN_CONFIG}'"
+        // }'
+
+        strFunc := `
+		function convertHealthyInfo(org) {
+			const obj = JSON.parse(org);
+			var healthinfo = obj.healthinfo		
+			var all = healthinfo.AllVMs		
+			var text = "[All VMs]\n"
+			for (let i=0; i< all.length; i++) {
+				text += "\t" + all[i].NameId + "\n";
+			}
+			text += "\n"	
+			text += "[Healthy VMs]\n"
+			var healthy = healthinfo.HealthyVMs		
+			for (let i=0; i< healthy.length; i++) {
+				text += "\t" + healthy[i].NameId + "\n";
+			}
+			text += "\n"	
+			text += "[UnHealthy VMs]\n"
+			var unHealthy = healthinfo.UnHealthyVMs		
+			for (let i=0; i< unHealthy.length; i++) {
+				text += "\t" + unHealthy[i].NameId + "\n";
+			}
+
+			return text
+		}
+
+                function healthStatus(nlbName) {
+                        var connConfig = parent.frames["top_frame"].document.getElementById("connConfig").innerHTML;
+			var xhr = new XMLHttpRequest();
+			xhr.open("GET", "$$SPIDER_SERVER$$/spider/nlb/" + nlbName + "/health?ConnectionName=" + connConfig, false);
+
+			// client logging
+			parent.frames["log_frame"].Log("curl -sX GET " + "$$SPIDER_SERVER$$/spider/nlb/" + nlbName + "/health?ConnectionName=" + connConfig);
+
+			xhr.send();
+
+			// client logging
+			parent.frames["log_frame"].Log("   ==> " + xhr.response);
+
+			var healthy = convertHealthyInfo(xhr.response);
+			alert(healthy);
+		}
+
+        `
+        strFunc = strings.ReplaceAll(strFunc, "$$SPIDER_SERVER$$", "http://"+cr.ServiceIPorName+cr.ServicePort) // cr.ServicePort = ":1024"
+        return strFunc
+}
+
+func NLB(c echo.Context) error {
+	cblog.Info("call NLB()")
+
+	connConfig := c.Param("ConnectConfig")
+	if connConfig == "region not set" {
+		htmlStr := `
+            <html>
+            <head>
+                <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<style>
+		th {
+		  border: 1px solid lightgray;
+		}
+		td {
+		  border: 1px solid lightgray;
+		  border-radius: 4px;
+		}
+		</style>
+                <script type="text/javascript">
+                alert(connConfig)
+                </script>
+            </head>
+            <body>
+                <br>
+                <br>
+                <label style="font-size:24px;color:#606262;">&nbsp;&nbsp;&nbsp;Please select a Connection Configuration! (MENU: 2.CONNECTION)</label>   
+            </body>
+        `
+
+		return c.HTML(http.StatusOK, htmlStr)
+	}
+
+	// make page header
+	htmlStr := `
+                <html>
+                <head>
+                    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+			<style>
+			th {
+			  border: 1px solid lightgray;
+			}
+			td {
+			  border: 1px solid lightgray;
+			  border-radius: 4px;
+			}
+			</style>
+                    <script type="text/javascript">
+                `
+	// (1) make Javascript Function
+	htmlStr += makeCheckBoxToggleFunc_js()
+	htmlStr += makePostNLBFunc_js()
+	htmlStr += makeDeleteNLBFunc_js()
+	htmlStr += makeGetHealthStatusNLBFunc_js()
+
+	htmlStr += `
+                    </script>
+                </head>
+
+                <body>
+                    <table bordercolordark="#F8F8FF" cellpadding="0" cellspacing="1" bgcolor="#FFFFFF"  style="font-size:small;">
+                `
+
+	// (2) make Table Action TR
+	// colspan, f5_href, delete_href, fontSize
+	htmlStr += makeActionTR_html("10", "", "deleteNLB()", "2")
+
+	// (3) make Table Header TR
+	nameWidthList := []NameWidth{
+		{"VPC Name", "100"},
+		{"NLB Name", "100"},
+		{"NLB Type", "50"},
+		{"NLB Scope", "50"},
+		{"Listener", "200"},
+		{"VMGroup", "200"},
+		{"HealthChecker", "200"},
+		{"Additional Info", "200"},
+	}
+	htmlStr += makeTitleTRList_html("#DDDDDD", "2", nameWidthList, true)
+
+	// (4) make TR list with info list
+	// (4-1) get info list
+
+	// client logging
+	htmlStr += genLoggingGETURL(connConfig, "nlb")
+
+	resBody, err := getResourceList_with_Connection_JsonByte(connConfig, "nlb")
+	if err != nil {
+		cblog.Error(err)
+		// client logging
+                htmlStr += genLoggingResult(err.Error())
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	// client logging
+	htmlStr += genLoggingResult(string(resBody[:len(resBody)-1]))
+
+	var info struct {
+		ResultList []*cres.NLBInfo `json:"nlb"`
+	}
+	json.Unmarshal(resBody, &info)
+
+	// (4-2) make TR list with info list
+	htmlStr += makeNLBTRList_html("", "", "", info.ResultList)
+
+	// (5) make input field and add
+	// attach text box for add
+	nameList := vpcList(connConfig)
+
+	htmlStr += `
+                        <tr bgcolor="#FFFFFF" align="center" height="30">
+                            <td>
+                                    <font size=2>#</font>
+                            </td>
+                            <td>
+		`
+	// Select format of VPC  name=text_box, id=1
+	htmlStr += makeSelect_html("onchangeVPC", nameList, "1")
+
+	htmlStr += `
+                            </td>
+                            <td>
+                                <input style="font-size:12px;text-align:center;" type="text" name="text_box" id="2" value="spider-nlb-01">
+                            </td>
+                            <td>
+				<select style="font-size:12px;text-align:center;"  name="text_box" id="3">
+					<option value="PUBLIC">PUBLIC</option>
+					<option value="INTERNAL">INTERNAL</option>
+				</select>
+                            </td>
+                            <td>
+				<select style="font-size:12px;text-align:center;"  name="text_box" id="4">
+					<option value="REGION">REGION</option>
+					<option value="GLOBAL">GLOBAL</option>
+				</select>
+                            </td>
+                            <td>
+                                <!--Port:--> => <input style="font-size:12px;text-align:center;" type="text" name="text_box" id="6" maxlength="5" size="5" value="22">
+				<br>--------------------------------<br>
+                                <!--Protocol:-->
+					<select style="font-size:12px;text-align:center;"  name="text_box" id="5">
+						<option value="TCP">TCP</option>
+						<option value="UDP">UDP</option>
+					</select>
+                            </td>
+                            <td>
+                                <!--Port:--> => <input style="font-size:12px;text-align:center;" type="text" name="text_box" id="8" maxlength="5" size="5" value="22">
+				<br>--------------------------------<br>
+                                <!--VM:--> <input style="font-size:12px;text-align:center;" type="text" name="text_box" id="9" value="[ &quot;vm-01&quot;, &quot;vm-02&quot; ]">
+				<br>--------------------------------<br>
+                                <!--Protocol:-->
+					<select style="font-size:12px;text-align:center;"  name="text_box" id="7" >
+						<option value="TCP">TCP</option>
+						<option value="UDP">UDP</option>
+						<option value="HTTP">HTTP</option>
+						<option value="HTTPS">HTTPS</option>
+					</select>
+                            </td>
+                            <td>
+                                <!--Port:--> <= <input style="font-size:12px;text-align:center;" type="text" name="text_box" id="11" maxlength="5" size="5" value="22">
+				<br>--------------------------------<br>
+                                Interval: <input style="font-size:12px;text-align:center;" type="text" name="text_box" id="12" maxlength="5" size="5" value="10">
+                                <br> Timeout: <input style="font-size:12px;text-align:center;" type="text" name="text_box" id="13" maxlength="5" size="5" value="10">
+                                <br> Threshold: <input style="font-size:12px;text-align:center;" type="text" name="text_box" id="14" maxlength="5" size="5" value="3">
+				<br>--------------------------------<br>
+                                <!--Protocol:-->
+					<select style="font-size:12px;text-align:center;"  name="text_box" id="10" >
+						<option value="TCP">TCP</option>
+						<option value="HTTP">HTTP</option>
+						<option value="HTTPS">HTTPS</option>
+					</select>
+                            </td>
+                            <td>
+                                <input style="font-size:12px;text-align:center;" type="text" name="text_box" id="4" disabled value="N/A">                            
+                            </td>
+                            <td>
+                                <a href="javascript:postNLB()">
+                                    <font size=4><mark><b>+</b></mark></font>
+                                </a>
+                            </td>
+                        </tr>
+                `
 	// make page tail
 	htmlStr += `
                     </table>
@@ -1373,6 +2415,7 @@ func makeVMImageTRList_html(bgcolor string, height string, fontSize string, info
 		for _, kv := range one.KeyValueList {
 			strKeyList += kv.Key + ":" + kv.Value + ", "
 		}
+		strKeyList = strings.TrimRight(strKeyList, ", ")
 		str = strings.ReplaceAll(str, "$$ADDITIONALINFO$$", strKeyList)
 
 		strData += str
@@ -1390,6 +2433,15 @@ func VMImage(c echo.Context) error {
             <html>
             <head>
                 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<style>
+		th {
+		  border: 1px solid lightgray;
+		}
+		td {
+		  border: 1px solid lightgray;
+		  border-radius: 4px;
+		}
+		</style>
                 <script type="text/javascript">
                 alert(connConfig)
                 </script>
@@ -1409,6 +2461,15 @@ func VMImage(c echo.Context) error {
                 <html>
                 <head>
                     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+			<style>
+			th {
+			  border: 1px solid lightgray;
+			}
+			td {
+			  border: 1px solid lightgray;
+			  border-radius: 4px;
+			}
+			</style>
                 </head>
 
                 <body>
@@ -1427,11 +2488,21 @@ func VMImage(c echo.Context) error {
 
 	// (4) make TR list with info list
 	// (4-1) get info list
+
+	// client logging
+	htmlStr += genLoggingGETURL(connConfig, "vmimage")
+
 	resBody, err := getResourceList_with_Connection_JsonByte(connConfig, "vmimage")
 	if err != nil {
 		cblog.Error(err)
+		// client logging
+                htmlStr += genLoggingResult(err.Error())
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+
+	// client logging
+	htmlStr += genLoggingResult(string(resBody[:len(resBody)-1]))
+
 	var info struct {
 		ResultList []*cres.ImageInfo `json:"image"`
 	}
@@ -1518,6 +2589,7 @@ func makeVMSpecTRList_html(bgcolor string, height string, fontSize string, infoL
 		for _, kv := range one.KeyValueList {
 			strKeyList += kv.Key + ":" + kv.Value + ", "
 		}
+		strKeyList = strings.TrimRight(strKeyList, ", ")
 		str = strings.ReplaceAll(str, "$$ADDITIONALINFO$$", strKeyList)
 
 		strData += str
@@ -1535,6 +2607,15 @@ func VMSpec(c echo.Context) error {
             <html>
             <head>
                 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<style>
+		th {
+		  border: 1px solid lightgray;
+		}
+		td {
+		  border: 1px solid lightgray;
+		  border-radius: 4px;
+		}
+		</style>
                 <script type="text/javascript">
                 alert(connConfig)
                 </script>
@@ -1554,6 +2635,15 @@ func VMSpec(c echo.Context) error {
                 <html>
                 <head>
                     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+			<style>
+			th {
+			  border: 1px solid lightgray;
+			}
+			td {
+			  border: 1px solid lightgray;
+			  border-radius: 4px;
+			}
+			</style>
                 </head>
 
                 <body>
@@ -1573,11 +2663,21 @@ func VMSpec(c echo.Context) error {
 
 	// (4) make TR list with info list
 	// (4-1) get info list
+
+	// client logging
+	htmlStr += genLoggingGETURL(connConfig, "vmspec")
+
 	resBody, err := getResourceList_with_Connection_JsonByte(connConfig, "vmspec")
 	if err != nil {
 		cblog.Error(err)
+		// client logging
+                htmlStr += genLoggingResult(err.Error())
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+
+	// client logging
+	htmlStr += genLoggingResult(string(resBody[:len(resBody)-1]))
+
 	var info struct {
 		ResultList []*cres.VMSpecInfo `json:"vmspec"`
 	}

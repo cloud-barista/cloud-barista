@@ -214,3 +214,9 @@ func InitializeDriver() {
 	cli = etcdcli
 	ctx = context.Background()
 }
+
+func (etcdDriver *ETCDDriver) Merge() error {
+        config.Cblogger.Info("Do not need to etcd!")
+
+        return nil
+}

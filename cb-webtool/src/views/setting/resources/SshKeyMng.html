@@ -173,7 +173,7 @@
                                         value="{{$item.Name}}|{{$item.ConnectionName}}|{{$item.CspSshKeyName}}" />
                                     <input type="checkbox" name="chk" value="{{$item.Name}}" id="raw_{{$index}}"
                                         title="" />
-                                    <label for="td_ch1"></label> <span class="ov off"></span>
+                                    <label for="raw_{{$index}}"></label> <span class="ov off"></span>
                                 </td>
                                 <td class="btn_mtd ovm" data-th="Name">{{$item.ID}}
                                     <!-- <a href="javascript:void(0);"><img src="/assets/img/contents/icon_copy.png" class="td_icon" alt=""/></a> 
@@ -221,7 +221,7 @@
 
         <div class="d_box box_m box_w100">
             <div class="titbox_n">
-                <div class="tit initial"><strong>SSH Key Info</strong> <span class="stxt">[SG ID]</span></div>
+                <div class="tit initial"><strong>SSH Key Info</strong> [<span class="stxt"></span>]</div>
             </div>
 
             <div class="ds_cont">
@@ -233,8 +233,15 @@
                                 <li class="reg_1">
                                     <label>SSH Key Name</label>
                                     <span class="sbox">
+                                        <input type="hidden" id="dtlCspSshKeyId" name="" value="" placeholder=""
+                                               class="gray" title="" readonly />
                                         <input type="text" id="dtlCspSshKeyName" name="" value="" placeholder=""
                                             class="gray" title="" readonly />
+                                        /
+                                        <input type="text" id="dtlSshKeyName" name="" value="" placeholder=""
+                                               class="gray" title="" readonly />
+                                        <input type="hidden" id="dtlSshKeyId" name="" value="" placeholder=""
+                                               class="gray" title="" readonly />
                                         <!--<a href="javascript:void(0);"><img src="/assets/img/contents/icon_copy.png" class="icon" alt="" /></a>-->
                                     </span>
                                 </li>

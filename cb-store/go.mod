@@ -7,6 +7,7 @@ replace (
 	github.com/coreos/go-systemd => github.com/coreos/go-systemd/v22 v22.0.0
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt v3.2.1+incompatible
 	google.golang.org/grpc => google.golang.org/grpc v1.26.0
+	gopkg.in/yaml.v3 => gopkg.in/yaml.v3 v3.0.0
 )
 
 require (

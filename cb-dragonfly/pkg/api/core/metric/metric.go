@@ -1,13 +1,14 @@
 package metric
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cloud-barista/cb-dragonfly/pkg/util"
 	"net/http"
 	"sort"
 	"strings"
 
-	"github.com/cloud-barista/cb-dragonfly/pkg/config"
 	influxdbmetric "github.com/cloud-barista/cb-dragonfly/pkg/storage/metricstore/influxdb/metric"
 	v1 "github.com/cloud-barista/cb-dragonfly/pkg/storage/metricstore/influxdb/v1"
 
@@ -15,56 +16,28 @@ import (
 	"github.com/influxdata/influxdb1-client/models"
 )
 
-// CBMCISMetric 단일 MCIS Milkyway 메트릭
-type CBMCISMetric struct {
-	Result  string `json:"result"`
-	Unit    string `json:"unit"`
-	Desc    string `json:"desc"`
-	Elapsed string `json:"elapsed"`
-	SpecId  string `json:"specid"`
-}
-
-// MCBMCISMetric 멀티 MCIS Milkyway 메트릭
-type MCBMCISMetric struct {
-	ResultArray []CBMCISMetric `json:"resultarray"`
-}
-
-// Request GET Request 단일 Body 정보
-type Request struct {
-	Host string `json:"host"`
-	Spec string `json:"spec"`
-}
-
-// Mrequest GET Request 멀티 Body 정보
-type Mrequest struct {
-	MultiHost []Request `json:"multihost"`
-}
-
-type Parameter struct {
-	agent_ip    string
-	mcis_metric string
-}
-
-// GetVMMonInfo 가상머신 모니터링 메트릭 조회
-func GetVMMonInfo(nsId string, mcisId string, vmId string, metricName string, period string, aggregateType string, duration string) (interface{}, int, error) {
-	metric := types.Metric(metricName)
+// GetMonInfo 모니터링 메트릭 조회
+func GetMonInfo(info types.DBMetricRequestInfo) (interface{}, int, error) {
+	metric := types.Metric(info.MetricName)
 
 	// 메트릭 타입 유효성 체크
 	if metric == types.None {
-		return nil, http.StatusInternalServerError, errors.New(fmt.Sprintf("not found metric : %s", metricName))
+		return nil, http.StatusInternalServerError, errors.New(fmt.Sprintf("not found metric : %s", info.MetricName))
 	}
 
 	switch metric {
 
 	case types.Cpu, types.CpuFrequency, types.Memory, types.Network:
-
+		if !util.CheckMCISType(info.ServiceType) {
+			return nil, http.StatusBadRequest, errors.New(fmt.Sprintf("not supported metric data for %s, metric=%s", info.ServiceType, info.MetricName))
+		}
 		// cpu, cpufreq, memory, network 메트릭 조회
-		cpuMetric, err := v1.GetInstance().ReadMetric(config.GetInstance().Monitoring.DefaultPolicy == types.PushPolicy, nsId, mcisId, vmId, metric.ToAgentMetricKey(), period, aggregateType, duration)
+		cpuMetric, err := v1.GetInstance().ReadMetric(info)
 		if err != nil {
 			return nil, http.StatusInternalServerError, err
 		}
 		if cpuMetric == nil {
-			return nil, http.StatusNotFound, errors.New(fmt.Sprintf("not found metric data, metric=%s", metricName))
+			return nil, http.StatusNotFound, errors.New(fmt.Sprintf("not found metric data, metric=%s", info.MetricName))
 		}
 		resultMetric, err := influxdbmetric.MappingMonMetric(metric.ToString(), &cpuMetric)
 		if err != nil {
@@ -73,18 +46,20 @@ func GetVMMonInfo(nsId string, mcisId string, vmId string, metricName string, pe
 		return resultMetric, http.StatusOK, nil
 
 	case types.Disk:
-
+		if !util.CheckMCISType(info.ServiceType) {
+			return nil, http.StatusBadRequest, errors.New(fmt.Sprintf("not supported metric data for %s, metric=%s", info.ServiceType, info.MetricName))
+		}
 		// disk, diskio 메트릭 조회
-		diskMetric, err := v1.GetInstance().ReadMetric(config.GetInstance().Monitoring.DefaultPolicy == types.PushPolicy, nsId, mcisId, vmId, types.Disk.ToString(), period, aggregateType, duration)
+		diskMetric, err := v1.GetInstance().ReadMetric(info)
 		if err != nil {
 			return nil, http.StatusInternalServerError, err
 		}
-		diskIoMetric, err := v1.GetInstance().ReadMetric(config.GetInstance().Monitoring.DefaultPolicy == types.PushPolicy, nsId, mcisId, vmId, types.DiskIO.ToString(), period, aggregateType, duration)
+		diskIoMetric, err := v1.GetInstance().ReadMetric(info)
 		if err != nil {
 			return nil, http.StatusInternalServerError, err
 		}
 		if diskMetric == nil && diskIoMetric == nil {
-			return nil, http.StatusNotFound, errors.New(fmt.Sprintf("not found metric data, metric=%s", metricName))
+			return nil, http.StatusNotFound, errors.New(fmt.Sprintf("not found metric data, metric=%s", info.MetricName))
 		}
 
 		diskRow := diskMetric.(models.Row)
@@ -167,14 +142,96 @@ func GetVMMonInfo(nsId string, mcisId string, vmId string, metricName string, pe
 		}
 
 		resultMap := map[string]interface{}{}
-		resultMap["name"] = metricName
+		resultMap["name"] = info.MetricName
 		resultMap["tags"] = resultRow.Tags
 		resultMap["values"] = influxdbmetric.ConvertMetricValFormat(resultRow.Columns, resultRow.Values)
 		return resultMap, http.StatusOK, nil
 
-	default:
-		return nil, http.StatusInternalServerError, errors.New(fmt.Sprintf("NOT FOUND METRIC : %s", metricName))
-	}
+	case types.MCK8S_NODE:
+		if !util.CheckMCK8SType(info.ServiceType) {
+			return nil, http.StatusBadRequest, errors.New(fmt.Sprintf("not supported metric data for %s, metric=%s", info.ServiceType, info.MetricName))
+		}
 
-	return nil, http.StatusInternalServerError, errors.New(fmt.Sprintf("not found metric : %s", metricName))
+		info.MetricName = "kubernetes_node"
+		nodeMetric, err := v1.GetInstance().ReadMetric(info)
+		if err != nil {
+			return nil, http.StatusInternalServerError, err
+		}
+		if nodeMetric == nil {
+			return nil, http.StatusNotFound, errors.New(fmt.Sprintf("not found metric data, metric=%s", types.Node))
+		}
+
+		var resultData types.DBData
+		byteData, err := json.Marshal(nodeMetric)
+		if err != nil {
+			return nil, http.StatusInternalServerError, errors.New("internal server error with parsing metric data")
+		}
+		if err = json.Unmarshal(byteData, &resultData); err != nil {
+			return nil, http.StatusInternalServerError, errors.New("internal server error with parsing metric data")
+		}
+
+		resultData.Name = string(types.MCK8S_NODE)
+		return resultData, http.StatusOK, nil
+
+	case types.MCK8S_POD:
+		if !util.CheckMCK8SType(info.ServiceType) {
+			return nil, http.StatusBadRequest, errors.New(fmt.Sprintf("not supported metric data for %s, metric=%s", info.ServiceType, info.MetricName))
+		}
+		resultData := types.DBData{}
+		mck8sMeasurements := []string{"kubernetes_pod_container", "kubernetes_pod_network"}
+
+		for i, measurement := range mck8sMeasurements {
+			info.MetricName = measurement
+			podMetric, err := v1.GetInstance().ReadMetric(info)
+			if err != nil {
+				return nil, http.StatusInternalServerError, err
+			}
+			if podMetric == nil {
+				return nil, http.StatusNotFound, errors.New(fmt.Sprintf("not found metric data, metric=%s", types.MCK8S_POD))
+			}
+
+			var tmpData types.DBData
+			byteData, err := json.Marshal(podMetric)
+			if err != nil {
+				return nil, http.StatusInternalServerError, errors.New("internal server error with parsing metric data")
+			}
+			if err = json.Unmarshal(byteData, &tmpData); err != nil {
+				return nil, http.StatusInternalServerError, errors.New("internal server error with parsing metric data")
+			}
+
+			for _, column := range tmpData.Columns {
+				resultData.Columns = append(resultData.Columns, column)
+			}
+
+			if i == 0 {
+				for _, tmp := range tmpData.Values {
+					resultData.Values = append(resultData.Values, tmp)
+				}
+			} else {
+				for _, tmp := range tmpData.Values {
+					var copiedData []interface{}
+					for _, tmpElement := range tmp {
+						copiedData = append(copiedData, tmpElement)
+					}
+					for resultIndex, appendedValue := range resultData.Values {
+						if strings.EqualFold(tmp[0].(string), appendedValue[0].(string)) {
+
+							excludeTimeData := append(copiedData[:0], copiedData[1:]...)
+							for _, extractedData := range excludeTimeData {
+								resultData.Values[resultIndex] = append(resultData.Values[resultIndex], extractedData)
+							}
+						}
+						continue
+					}
+				}
+			}
+			resultData.Tags = tmpData.Tags
+		}
+
+		resultData.Name = string(types.MCK8S_POD)
+		resultData.Columns = util.Unique(resultData.Columns, false)
+		return resultData, http.StatusOK, nil
+	default:
+		return nil, http.StatusInternalServerError, errors.New(fmt.Sprintf("NOT FOUND METRIC : %s", info.MetricName))
+	}
 }

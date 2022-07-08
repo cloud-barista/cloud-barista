@@ -31,6 +31,7 @@ const (
 	rsSG  string = "sg"
 	rsKey string = "keypair"
 	rsVM  string = "vm"
+	rsNLB  string = "nlb"
 )
 
 //================ Image Handler
@@ -72,6 +73,11 @@ func ListImage(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
+
 	// Call common-runtime API
 	result, err := cmrt.ListImage(req.ConnectionName, rsImage)
 	if err != nil {
@@ -96,6 +102,11 @@ func GetImage(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
 
 	// Call common-runtime API
 	encodededImageName := c.Param("Name")
@@ -149,6 +160,11 @@ func ListVMSpec(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
+
 	// Call common-runtime API
 	result, err := cmrt.ListVMSpec(req.ConnectionName)
 	if err != nil {
@@ -173,6 +189,11 @@ func GetVMSpec(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
+
 	// Call common-runtime API
 	result, err := cmrt.GetVMSpec(req.ConnectionName, c.Param("Name"))
 	if err != nil {
@@ -193,6 +214,11 @@ func ListOrgVMSpec(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
+
 	// Call common-runtime API
 	result, err := cmrt.ListOrgVMSpec(req.ConnectionName)
 	if err != nil {
@@ -212,6 +238,11 @@ func GetOrgVMSpec(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
 
 	// Call common-runtime API
 	result, err := cmrt.GetOrgVMSpec(req.ConnectionName, c.Param("Name"))
@@ -344,6 +375,11 @@ func ListVPC(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
+
 	// Call common-runtime API
 	result, err := cmrt.ListVPC(req.ConnectionName, rsVPC)
 	if err != nil {
@@ -373,6 +409,11 @@ func ListAllVPC(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
+
 	// Call common-runtime API
 	allResourceList, err := cmrt.ListAllResource(req.ConnectionName, rsVPC)
 	if err != nil {
@@ -392,6 +433,11 @@ func GetVPC(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
 
 	// Call common-runtime API
 	result, err := cmrt.GetVPC(req.ConnectionName, rsVPC, c.Param("Name"))
@@ -517,7 +563,7 @@ func RemoveSubnet(c echo.Context) error {
 // (2) call common-runtime API
 // (3) return REST Json Format
 func RemoveCSPSubnet(c echo.Context) error {
-	cblog.Info("call DeleteCSPVPC()")
+	cblog.Info("call RemoveCSPSubnet()")
 
 	var req struct {
 		ConnectionName string
@@ -540,6 +586,28 @@ func RemoveCSPSubnet(c echo.Context) error {
 	return c.JSON(http.StatusOK, &resultInfo)
 }
 
+func GetSGOwnerVPC(c echo.Context) error {
+        cblog.Info("call GetSGOwnerVPC()")
+
+        var req struct {
+                ConnectionName string
+		ReqInfo        struct {
+			CSPId          string
+		}
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // Call common-runtime API
+        result, err := cmrt.GetSGOwnerVPC(req.ConnectionName, req.ReqInfo.CSPId)
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        return c.JSON(http.StatusOK, result)
+}
 
 type securityGroupRegisterReq struct {
         ConnectionName string
@@ -633,7 +701,7 @@ func CreateSecurity(c echo.Context) error {
 		//IId:           cres.IID{req.ReqInfo.VPCName + cm.SG_DELIMITER + req.ReqInfo.Name, ""},
 		IId:           cres.IID{req.ReqInfo.Name, req.ReqInfo.Name}, // for NCP: fixed NameID => SystemID, Driver: (1)search systemID with fixed NameID (2)replace fixed NameID into SysemID
 		VpcIID:        cres.IID{req.ReqInfo.VPCName, ""},
-		Direction:     req.ReqInfo.Direction,
+		// deprecated; Direction:     req.ReqInfo.Direction,
 		SecurityRules: req.ReqInfo.SecurityRules,
 	}
 
@@ -656,6 +724,11 @@ func ListSecurity(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
 
 	// Call common-runtime API
 	result, err := cmrt.ListSecurity(req.ConnectionName, rsSG)
@@ -685,6 +758,11 @@ func ListAllSecurity(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
+
 	// Call common-runtime API
 	allResourceList, err := cmrt.ListAllResource(req.ConnectionName, rsSG)
 	if err != nil {
@@ -704,6 +782,11 @@ func GetSecurity(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
 
 	// Call common-runtime API
 	result, err := cmrt.GetSecurity(req.ConnectionName, rsSG, c.Param("Name"))
@@ -767,6 +850,84 @@ func DeleteCSPSecurity(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, &resultInfo)
 }
+
+type ruleControlReq struct {
+	ConnectionName string
+	ReqInfo        struct {
+		RuleInfoList []struct {
+			Direction       string
+			IPProtocol      string
+			FromPort        string
+			ToPort          string
+			CIDR            string
+		}
+	}
+}
+// (1) get rules info from REST Call
+// (2) call common-runtime API
+// (3) return REST Json Format
+func AddRules(c echo.Context) error {
+        cblog.Info("call AddRules()")
+
+        req := ruleControlReq{}
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // Rest RegInfo => Driver ReqInfo
+        // create RuleInfo List
+        reqRuleInfoList := []cres.SecurityRuleInfo{}
+        for _, info := range req.ReqInfo.RuleInfoList {
+                ruleInfo := cres.SecurityRuleInfo{Direction: info.Direction,
+			IPProtocol: info.IPProtocol, FromPort: info.FromPort, ToPort: info.ToPort, CIDR: info.CIDR}
+                reqRuleInfoList = append(reqRuleInfoList, ruleInfo)
+        }
+
+        // Call common-runtime API
+        result, err := cmrt.AddRules(req.ConnectionName, c.Param("SGName"), reqRuleInfoList)
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        return c.JSON(http.StatusOK, result)
+}
+
+// (1) get rules info from REST Call
+// (2) call common-runtime API
+// (3) return REST Json Format
+func RemoveRules(c echo.Context) error {
+        cblog.Info("call RemoveRules()")
+
+        req := ruleControlReq{}
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // Rest RegInfo => Driver ReqInfo
+        // create RuleInfo List
+        reqRuleInfoList := []cres.SecurityRuleInfo{}
+        for _, info := range req.ReqInfo.RuleInfoList {
+                ruleInfo := cres.SecurityRuleInfo{Direction: info.Direction,
+                        IPProtocol: info.IPProtocol, FromPort: info.FromPort, ToPort: info.ToPort, CIDR: info.CIDR}
+                reqRuleInfoList = append(reqRuleInfoList, ruleInfo)
+        }
+
+        // Call common-runtime API
+	// no force option
+        result, err := cmrt.RemoveRules(req.ConnectionName, c.Param("SGName"), reqRuleInfoList)
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        resultInfo := BooleanInfo{
+                Result: strconv.FormatBool(result),
+        }
+
+        return c.JSON(http.StatusOK, &resultInfo)
+}
+
 
 type keyRegisterReq struct {
         ConnectionName string
@@ -889,6 +1050,11 @@ func ListKey(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
+
 	// Call common-runtime API
 	result, err := cmrt.ListKey(req.ConnectionName, rsKey)
 	if err != nil {
@@ -917,6 +1083,11 @@ func ListAllKey(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
+
 	// Call common-runtime API
 	allResourceList, err := cmrt.ListAllResource(req.ConnectionName, rsKey)
 	if err != nil {
@@ -935,6 +1106,11 @@ func GetKey(c echo.Context) error {
 
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	// To support for Get-Query Param Type API
+	if req.ConnectionName == "" {
+		req.ConnectionName = c.QueryParam("ConnectionName")
 	}
 
 	// Call common-runtime API
@@ -1262,6 +1438,30 @@ func deletePublicIP(c echo.Context) error {
 
 //================ VM Handler
 
+
+func GetVMUsingRS(c echo.Context) error {
+        cblog.Info("call GetVMUsingRS()")
+
+        var req struct {
+                ConnectionName string
+                ReqInfo        struct {
+                        CSPId          string
+                }
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // Call common-runtime API
+        result, err := cmrt.GetVMUsingRS(req.ConnectionName, req.ReqInfo.CSPId)
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        return c.JSON(http.StatusOK, result)
+}
+
 type vmRegisterReq struct {
         ConnectionName string
         ReqInfo        struct {
@@ -1397,6 +1597,11 @@ func ListVM(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
+
 	// Call common-runtime API
 	result, err := cmrt.ListVM(req.ConnectionName, rsVM)
 	if err != nil {
@@ -1426,6 +1631,11 @@ func ListAllVM(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
+
 	// Call common-runtime API
 	allResourceList, err := cmrt.ListAllResource(req.ConnectionName, rsVM)
 	if err != nil {
@@ -1445,6 +1655,11 @@ func GetVM(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
 
 	// Call common-runtime API
 	result, err := cmrt.GetVM(req.ConnectionName, rsVM, c.Param("Name"))
@@ -1520,6 +1735,11 @@ func ListVMStatus(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
+
 	// Call common-runtime API
 	result, err := cmrt.ListVMStatus(req.ConnectionName, rsVM)
 	if err != nil {
@@ -1545,6 +1765,11 @@ func GetVMStatus(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
+
 	// Call common-runtime API
 	result, err := cmrt.GetVMStatus(req.ConnectionName, rsVM, c.Param("Name"))
 	if err != nil {
@@ -1569,6 +1794,11 @@ func ControlVM(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	// To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
+
 	// Call common-runtime API
 	result, err := cmrt.ControlVM(req.ConnectionName, rsVM, c.Param("Name"), c.QueryParam("action"))
 	if err != nil {
@@ -1581,3 +1811,485 @@ func ControlVM(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, &resultInfo)
 }
+
+func GetNLBOwnerVPC(c echo.Context) error {
+        cblog.Info("call GetNLBOwnerVPC()")
+
+        var req struct {
+                ConnectionName string
+                ReqInfo        struct {
+                        CSPId          string
+                }
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // Call common-runtime API
+        result, err := cmrt.GetNLBOwnerVPC(req.ConnectionName, req.ReqInfo.CSPId)
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        return c.JSON(http.StatusOK, result)
+}
+
+type NLBRegisterReq struct {
+        ConnectionName string
+        ReqInfo        struct {
+                VPCName           string
+                Name           string
+                CSPId          string
+        }
+}
+
+func RegisterNLB(c echo.Context) error {
+        cblog.Info("call RegisterNLB()")
+
+        req := NLBRegisterReq{}
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // create UserIID
+        userIId := cres.IID{req.ReqInfo.Name, req.ReqInfo.CSPId}
+
+        // Call common-runtime API
+        result, err := cmrt.RegisterNLB(req.ConnectionName, req.ReqInfo.VPCName, userIId)
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        return c.JSON(http.StatusOK, result)
+}
+
+// (1) get args from REST Call
+// (2) call common-runtime API
+// (3) return REST Json Format
+func UnregisterNLB(c echo.Context) error {
+        cblog.Info("call UnregisterNLB()")
+
+        var req struct {
+                ConnectionName string
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // Call common-runtime API
+        result, err := cmrt.UnregisterResource(req.ConnectionName, rsNLB, c.Param("Name"))
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        resultInfo := BooleanInfo{
+                Result: strconv.FormatBool(result),
+        }
+
+        return c.JSON(http.StatusOK, &resultInfo)
+}
+
+type NLBReq struct {
+        ConnectionName string
+        ReqInfo        struct {
+                Name		string
+                VPCName		string
+                Type		string 	// PUBLIC(V) | INTERNAL
+                Scope		string 	// REGION(V) | GLOBAL
+
+		//------ Frontend
+		Listener        cres.ListenerInfo
+
+		//------ Backend
+		VMGroup         VMGroupReq
+		HealthChecker   HealthCheckerReq  // for int mapping with string
+        }
+}
+// for int mapping with string
+type HealthCheckerReq struct {
+	Protocol        string  // TCP|HTTP|HTTPS
+	Port            string  // Listener Port or 1-65535
+	Interval        string     // secs, Interval time between health checks.
+	Timeout         string     // secs, Waiting time to decide an unhealthy VM when no response.
+	Threshold       string     // num, The number of continuous health checks to change the VM status.
+}
+
+// for VM IID mapping
+type VMGroupReq struct {
+        Protocol        string  // TCP|HTTP|HTTPS
+        Port            string  // Listener Port or 1-65535
+        VMs        	[]string
+}
+
+func CreateNLB(c echo.Context) error {
+        cblog.Info("call CreateNLB()")
+
+        req := NLBReq{}
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // Rest RegInfo => Driver ReqInfo
+        reqInfo := cres.NLBInfo{
+                IId:           cres.IID{req.ReqInfo.Name, req.ReqInfo.Name}, 
+                VpcIID:        cres.IID{req.ReqInfo.VPCName, ""},
+                Type:        	req.ReqInfo.Type,
+                Scope:        	req.ReqInfo.Scope,
+                Listener: 	req.ReqInfo.Listener,
+                VMGroup: 	convertVMGroupInfo(req.ReqInfo.VMGroup),
+                HealthChecker: 	convertHealthCheckerInfo(req.ReqInfo.HealthChecker),
+        }
+
+        // Call common-runtime API
+        result, err := cmrt.CreateNLB(req.ConnectionName, rsNLB, reqInfo)
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        return c.JSON(http.StatusOK, result)
+}
+
+func convertVMGroupInfo(vgInfo VMGroupReq) cres.VMGroupInfo {
+	vmIIDList := []cres.IID{}
+	for _, vm := range vgInfo.VMs {
+		vmIIDList = append(vmIIDList, cres.IID{vm, ""})	
+	}
+	return cres.VMGroupInfo{vgInfo.Protocol, vgInfo.Port, &vmIIDList, "", nil}
+}
+
+func convertHealthCheckerInfo(hcInfo HealthCheckerReq) cres.HealthCheckerInfo {
+	interval, _ := strconv.Atoi(hcInfo.Interval)
+	timeout, _ := strconv.Atoi(hcInfo.Timeout)
+	threshold, _ := strconv.Atoi(hcInfo.Threshold)
+        return cres.HealthCheckerInfo{hcInfo.Protocol, hcInfo.Port, interval, timeout, threshold, "", nil}
+}
+
+func ListNLB(c echo.Context) error {
+        cblog.Info("call ListNLB()")
+
+        var req struct {
+                ConnectionName string
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
+
+        // Call common-runtime API
+        result, err := cmrt.ListNLB(req.ConnectionName, rsNLB)
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        var jsonResult struct {
+                Result []*cres.NLBInfo `json:"nlb"`
+        }
+        jsonResult.Result = result
+        return c.JSON(http.StatusOK, &jsonResult)
+}
+
+// list all NLBs for management
+// (1) get args from REST Call
+// (2) get all NLB List by common-runtime API
+// (3) return REST Json Format
+func ListAllNLB(c echo.Context) error {
+        cblog.Info("call ListAllNLB()")
+
+        var req struct {
+                ConnectionName string
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
+
+        // Call common-runtime API
+        allResourceList, err := cmrt.ListAllResource(req.ConnectionName, rsNLB)
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        return c.JSON(http.StatusOK, &allResourceList)
+}
+
+func GetNLB(c echo.Context) error {
+        cblog.Info("call GetNLB()")
+
+        var req struct {
+                ConnectionName string
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
+
+        // Call common-runtime API
+        result, err := cmrt.GetNLB(req.ConnectionName, rsNLB, c.Param("Name"))
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        return c.JSON(http.StatusOK, result)
+}
+
+func AddNLBVMs(c echo.Context) error {
+        cblog.Info("call AddNLBVMs()")
+
+        var req struct {
+                ConnectionName string
+                ReqInfo        struct {
+                        VMs      []string
+                }
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // Call common-runtime API
+        result, err := cmrt.AddNLBVMs(req.ConnectionName, c.Param("Name"), req.ReqInfo.VMs)
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        return c.JSON(http.StatusOK, result)
+}
+
+func RemoveNLBVMs(c echo.Context) error {
+        cblog.Info("call RemoveNLBVMs()")
+
+        var req struct {
+                ConnectionName string
+                ReqInfo        struct {
+                        VMs      []string
+                }
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // Call common-runtime API
+        result, err := cmrt.RemoveNLBVMs(req.ConnectionName, c.Param("Name"), req.ReqInfo.VMs)
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        return c.JSON(http.StatusOK, result)
+}
+
+func ChangeListener(c echo.Context) error {
+        cblog.Info("call ChangeListener()")
+
+        var req struct {
+                ConnectionName string
+                ReqInfo        struct {
+                        Protocol      	string
+                        Port		string
+                }
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        reqInfo := cres.ListenerInfo{
+                Protocol:       req.ReqInfo.Protocol,
+                Port:       	req.ReqInfo.Port,
+        }
+
+        // Call common-runtime API
+        result, err := cmrt.ChangeListener(req.ConnectionName, c.Param("Name"), reqInfo)
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        return c.JSON(http.StatusOK, result)
+}
+
+func ChangeVMGroup(c echo.Context) error {
+        cblog.Info("call ChangeVMGroup()")
+
+        var req struct {
+                ConnectionName string
+                ReqInfo        struct {
+                        Protocol      string
+                        Port          string
+                }
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        reqInfo := cres.VMGroupInfo{
+                Protocol:       req.ReqInfo.Protocol,
+                Port:       	req.ReqInfo.Port,
+	}
+
+        // Call common-runtime API
+        result, err := cmrt.ChangeVMGroup(req.ConnectionName, c.Param("Name"), reqInfo)
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        return c.JSON(http.StatusOK, result)
+}
+
+func ChangeHealthChecker(c echo.Context) error {
+        cblog.Info("call ChangeHealthChecker()")
+
+        var req struct {
+                ConnectionName string
+                ReqInfo        struct {
+                        Protocol      string
+                        Port          string
+                        Interval      string
+                        Timeout       string
+                        Threshold     string
+                }
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+	interval, err := strconv.Atoi(req.ReqInfo.Interval)
+	timeout, err := strconv.Atoi(req.ReqInfo.Timeout)
+	threshold, err := strconv.Atoi(req.ReqInfo.Threshold)
+
+        reqInfo := cres.HealthCheckerInfo{
+                Protocol:       req.ReqInfo.Protocol,
+                Port:           req.ReqInfo.Port,
+                Interval:       interval,
+                Timeout:       	timeout,
+                Threshold:      threshold,
+        }
+
+        // Call common-runtime API
+        result, err := cmrt.ChangeHealthChecker(req.ConnectionName, c.Param("Name"), reqInfo)
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        return c.JSON(http.StatusOK, result)
+}
+
+func GetVMGroupHealthInfo(c echo.Context) error {
+        cblog.Info("call GetVMGroupHealthInfo()")
+
+        var req struct {
+                ConnectionName string
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // To support for Get-Query Param Type API
+        if req.ConnectionName == "" {
+                req.ConnectionName = c.QueryParam("ConnectionName")
+        }
+
+        // Call common-runtime API
+        result, err := cmrt.GetVMGroupHealthInfo(req.ConnectionName, c.Param("Name"))
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        var jsonResult struct {
+                Result cres.HealthInfo `json:"healthinfo"`
+        }
+        jsonResult.Result = *result
+
+        return c.JSON(http.StatusOK, &jsonResult)
+}
+
+// (1) get args from REST Call
+// (2) call common-runtime API
+// (3) return REST Json Format
+func DeleteNLB(c echo.Context) error {
+        cblog.Info("call DeleteNLB()")
+
+        var req struct {
+                ConnectionName string
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // Call common-runtime API
+        result, _, err := cmrt.DeleteResource(req.ConnectionName, rsNLB, c.Param("Name"), c.QueryParam("force"))
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        resultInfo := BooleanInfo{
+                Result: strconv.FormatBool(result),
+        }
+
+        return c.JSON(http.StatusOK, &resultInfo)
+}
+
+// (1) get args from REST Call
+// (2) call common-runtime API
+// (3) return REST Json Format
+func DeleteCSPNLB(c echo.Context) error {
+        cblog.Info("call DeleteCSPNLB()")
+
+        var req struct {
+                ConnectionName string
+        }
+
+        if err := c.Bind(&req); err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        // Call common-runtime API
+        result, _, err := cmrt.DeleteCSPResource(req.ConnectionName, rsNLB, c.Param("Id"))
+        if err != nil {
+                return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+        }
+
+        resultInfo := BooleanInfo{
+                Result: strconv.FormatBool(result),
+        }
+
+        return c.JSON(http.StatusOK, &resultInfo)
+}
+
+func GetAllSPLockInfo(c echo.Context) error {
+        cblog.Info("call GetAllSPLockInfo()")
+
+        infoList := cmrt.GetAllSPLockInfo()
+
+        var jsonResult struct {
+                Result []string `json:"splockinfo"`
+        }
+        if infoList == nil {
+                infoList = []string{}
+        }
+        jsonResult.Result = infoList
+        return c.JSON(http.StatusOK, &jsonResult)
+}
+

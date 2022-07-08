@@ -24,6 +24,7 @@ var custom_message string
 var alert_message string
 
 var topic_name string
+var alert_post_url string
 
 stream
     |from()
@@ -40,3 +41,8 @@ stream
         .id('{{ .TaskName }}')
         .message(alert_message)
         .topic(topic_name)
+        .post(alert_post_url)
+          .endpoint(alert_post_url)
+          .captureResponse()
+          .timeout(10s)
+          .skipSSLVerification()
