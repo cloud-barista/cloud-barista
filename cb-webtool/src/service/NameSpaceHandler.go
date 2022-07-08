@@ -228,8 +228,8 @@ func RegNameSpace(nameSpaceInfo *tbcommon.TbNsInfo) (tbcommon.TbNsInfo, model.We
 	//return respBody, model.WebStatus{StatusCode: respStatus}
 }
 
-// NameSpace 수정 : 만들어 놓기는 했으나, tb에 namespace 없데이트 기능 없음
-func UpdateNameSpace(nameSpaceID string, nameSpaceInfo *tbcommon.TbNsInfo) (tbcommon.TbNsInfo, model.WebStatus) {
+// NameSpace 수정
+func UpdateNameSpace(nameSpaceID string, nameSpaceInfo *tbcommon.TbNsReq) (tbcommon.TbNsInfo, model.WebStatus) {
 	var originalUrl = "/ns/{nsId}"
 	var paramMapper = make(map[string]string)
 	paramMapper["{nsId}"] = nameSpaceID

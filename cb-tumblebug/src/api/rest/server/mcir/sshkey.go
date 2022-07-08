@@ -30,24 +30,25 @@ import (
 // @Accept  json
 // @Produce  json
 // @Param nsId path string true "Namespace ID" default(ns01)
+// @Param option query string false "Option: [required params for register] connectionName, name, cspSshKeyId, fingerprint, username, publicKey, privateKey" Enums(register)
 // @Param sshKeyInfo body mcir.TbSshKeyReq true "Details for an SSH Key object"
 // @Success 200 {object} mcir.TbSshKeyInfo
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
 // @Router /ns/{nsId}/resources/sshKey [post]
 func RestPostSshKey(c echo.Context) error {
+	fmt.Println("[POST SshKey]")
 
 	nsId := c.Param("nsId")
+
+	optionFlag := c.QueryParam("option")
 
 	u := &mcir.TbSshKeyReq{}
 	if err := c.Bind(u); err != nil {
 		return err
 	}
 
-	fmt.Println("[POST SshKey")
-	//fmt.Println("[Creating SshKey]")
-	//content, responseCode, _, err := CreateSshKey(nsId, u)
-	content, err := mcir.CreateSshKey(nsId, u)
+	content, err := mcir.CreateSshKey(nsId, u, optionFlag)
 	if err != nil {
 		common.CBLog.Error(err)
 		mapA := map[string]string{"message": err.Error()}
@@ -56,7 +57,6 @@ func RestPostSshKey(c echo.Context) error {
 	return c.JSON(http.StatusCreated, content)
 }
 
-/* function RestPutSshKey not yet implemented
 // RestPutSshKey godoc
 // @Summary Update SSH Key
 // @Description Update SSH Key
@@ -64,15 +64,29 @@ func RestPostSshKey(c echo.Context) error {
 // @Accept  json
 // @Produce  json
 // @Param sshKeyInfo body mcir.TbSshKeyInfo true "Details for an SSH Key object"
+// @Param nsId path string true "Namespace ID" default(ns01)
+// @Param sshKeyId path string true "SshKey ID"
 // @Success 200 {object} mcir.TbSshKeyInfo
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
 // @Router /ns/{nsId}/resources/sshKey/{sshKeyId} [put]
-*/
 func RestPutSshKey(c echo.Context) error {
-	//nsId := c.Param("nsId")
+	nsId := c.Param("nsId")
+	sshKeyId := c.Param("resourceId")
 
-	return nil
+	u := &mcir.TbSshKeyInfo{}
+	if err := c.Bind(u); err != nil {
+		return err
+	}
+
+	updatedSshKey, err := mcir.UpdateSshKey(nsId, sshKeyId, *u)
+	if err != nil {
+		common.CBLog.Error(err)
+		mapA := map[string]string{
+			"message": err.Error()}
+		return c.JSON(http.StatusInternalServerError, &mapA)
+	}
+	return c.JSON(http.StatusOK, updatedSshKey)
 }
 
 // RestGetSshKey godoc
@@ -105,6 +119,8 @@ type RestGetAllSshKeyResponse struct {
 // @Produce  json
 // @Param nsId path string true "Namespace ID" default(ns01)
 // @Param option query string false "Option" Enums(id)
+// @Param filterKey query string false "Field key for filtering (ex: systemLabel)"
+// @Param filterVal query string false "Field value for filtering (ex: Registered from CSP resource)"
 // @Success 200 {object} JSONResult{[DEFAULT]=RestGetAllSshKeyResponse,[ID]=common.IdList} "Different return structures by the given option param"
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg

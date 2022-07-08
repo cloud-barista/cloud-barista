@@ -30,6 +30,7 @@ ENV TUMBLEBUG_CALL_METHOD REST
 ENV SPIDER_URL http://cb-spider:1024/spider
 ENV TUMBLEBUG_URL http://cb-tumblebug:1323/tumblebug
 ENV BASE_PATH /mcks
+ENV LOG_LEVEL "info"
 
 ENV API_USERNAME default
 ENV API_PASSWORD default

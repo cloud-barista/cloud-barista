@@ -20,6 +20,8 @@ type AlertTaskReq struct {
 	AlertEventType    string `json:"alert_event_type"`
 	AlertEventName    string `json:"alert_event_name"`
 	AlertEventMessage string `json:"alert_event_message"`
+
+	AlertPostUrl string `json:"alert_post_url"`
 }
 
 type AlertTask struct {
@@ -42,6 +44,8 @@ type AlertTask struct {
 	AlertEventType    string `json:"alert_event_type,omitempty"`
 	AlertEventName    string `json:"alert_event_name,omitempty"`
 	AlertEventMessage string `json:"alert_event_message,omitempty"`
+
+	AlertPostUrl string `json:"alert_post_url,omitempty"`
 }
 
 type AlertEventHandlerReq struct {

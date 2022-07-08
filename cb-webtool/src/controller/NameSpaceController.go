@@ -121,7 +121,7 @@ func NameSpaceUpdateProc(c echo.Context) error {
 	}
 	defaultNameSpaceID := loginInfo.DefaultNameSpaceID
 
-	nameSpaceInfo := new(tbcommon.TbNsInfo)
+	nameSpaceInfo := new(tbcommon.TbNsReq)
 	if err := c.Bind(nameSpaceInfo); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}

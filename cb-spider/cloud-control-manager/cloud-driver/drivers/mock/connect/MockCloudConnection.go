@@ -16,6 +16,7 @@ import (
 	idrv "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces"
 	irs "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces/resources"
 	"github.com/sirupsen/logrus"
+
 )
 
 var cblogger *logrus.Logger
@@ -63,6 +64,12 @@ func (cloudConn *MockConnection) CreateKeyPairHandler() (irs.KeyPairHandler, err
 func (cloudConn *MockConnection) CreateVMSpecHandler() (irs.VMSpecHandler, error) {
 	cblogger.Info("Mock Driver: called CreateVMSpecHandler()!")
 	handler := mkrs.MockVMSpecHandler{cloudConn.MockName}
+	return &handler, nil
+}
+
+func (cloudConn *MockConnection) CreateNLBHandler() (irs.NLBHandler, error) {
+	cblogger.Info("Mock Driver: called CreateNLBHandler()!")
+	handler := mkrs.MockNLBHandler{cloudConn.MockName}
 	return &handler, nil
 }
 

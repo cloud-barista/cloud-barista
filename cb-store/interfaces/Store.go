@@ -20,4 +20,7 @@ type Store interface {
 	GetList(key string, sortAscend bool) ([]*KeyValue, error)
 	Delete(key string) error
 	Close() error
+
+        // --- management, nutsdb only
+        Merge() error
 }

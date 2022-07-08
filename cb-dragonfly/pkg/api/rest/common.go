@@ -15,15 +15,25 @@ type SimpleMsg struct {
 }
 
 type AgentType struct {
-	NsId        string `json:"ns_id"`
-	McisId      string `json:"mcis_id"`
-	VmId        string `json:"vm_id"`
-	PublicIp    string `json:"public_ip"`
-	UserName    string `json:"user_name"`
-	SshKey      string `json:"ssh_key"`
-	CspType     string `json:"cspType"`
-	Port        string `json:"port"`
 	ServiceType string `json:"service_type"`
+	NsId        string `json:"ns_id"`
+
+	// 쿠버네티스 모니터링
+	Mck8sId      string `json:"mck8s_id"`
+	APIServerURL string `json:"apiserver_url"`
+	ServerCA     string `json:"server_ca"`
+	ClientCA     string `json:"client_ca"`
+	ClientKey    string `json:"client_key"`
+	ClientToken  string `json:"client_token"`
+
+	// MCIS 모니터링
+	McisId   string `json:"mcis_id"`
+	VmId     string `json:"vm_id"`
+	PublicIp string `json:"public_ip"`
+	UserName string `json:"user_name"`
+	SshKey   string `json:"ssh_key"`
+	CspType  string `json:"cspType"`
+	Port     string `json:"port"`
 }
 
 type VMOnDemandMetricTags struct {

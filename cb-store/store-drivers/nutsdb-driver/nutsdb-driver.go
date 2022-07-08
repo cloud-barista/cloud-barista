@@ -237,3 +237,11 @@ func (nutsdbDriver *NUTSDBDriver) Close() error {
 func InitializeDriver() {
 	initialize()
 }
+
+func (nutsdbDriver *NUTSDBDriver) Merge() error {
+        err := db.Merge()
+        if nil != err {
+                config.Cblogger.Error(err)
+        }
+        return err
+}

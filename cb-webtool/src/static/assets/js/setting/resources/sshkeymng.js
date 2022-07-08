@@ -257,6 +257,9 @@ function deleteSshKey() {
 
 function showSshKeyInfo(sshKeyId) {
     console.log("target showSshKeyInfo : ", sshKeyId);
+
+    $(".stxt").html(sshKeyId);
+
     // var sshKeyId = target;
     // var apiInfo = "{{ .apiInfo}}";
     // var url = CommonURL+"/ns/"+NAMESPACE+"/resources/sshKey/"+ sshKeyId;
@@ -359,6 +362,77 @@ function createSSHKey() {
             }
             // }).catch(function(error){
             //     console.log("get create error : ",error);        
+            // });
+        }).catch((error) => {
+            console.warn(error);
+            console.log(error.response)
+            var errorMessage = error.response.statusText;
+            var statusCode = error.response.status;
+            commonErrorAlert(statusCode, errorMessage);
+        });
+    } else {
+        commonAlert("Input SSH Key Name")
+        $("#regCspSshKeyName").focus()
+        return;
+    }
+}
+
+// updateSshKey : TODO : update를 위한 form을 만들 것인가 ... 기존 detail에서 enable 시켜서 사용할 것인가
+function updateSSHKey() {
+    var sshKeyId = $("#dtlSshKeyId").val()
+    var sshKeyName = $("#dtlSshKeyName").val()
+    var cspSshKeyId = $("#dtlCspSshKeyId").val()
+    var cspSshKeyName = $("#dtlCspSshKeyName").val()
+    var description = $("#dtlDescription").val()
+    var publicKey = $("#dtlPublicKey").val()
+    var privateKey = $("#dtlPrivateKey").val()
+    var fingerprint = $("#dtlFingerprint").val()
+    var username = $("#dtlUsername").val()
+    var verifiedUsername = $("#dtlVerifiedUsername").val()// TODO : 사용자 이름 입력 받아야 함.
+    var connectionName = $("#dtlConnectionName").val()
+
+    console.log("info param cspSshKeyName : ", cspSshKeyName);
+    console.log("info param connectionName : ", connectionName);
+
+    var url = "/setting/resources" + "/sshkey/del/" + sshKeyId
+    console.log("ssh key URL : ", url)
+    var obj = {
+        connectionName : connectionName,
+        id : sshKeyId,
+        name : sshKeyName,
+        cspSshKeyId	: cspSshKeyId,
+        cspSshKeyName : cspSshKeyName,
+        description	: description,
+        privateKey : privateKey,
+        publicKey :	publicKey,
+        fingerprint	: fingerprint,
+        username :	username,
+        verifiedUsername :	verifiedUsername
+    }
+    console.log("info updateSSHKey obj Data : ", obj);
+    if (cspSshKeyName) {
+        axios.post(url, obj, {
+            headers: {
+                'Content-type': 'application/json',
+                // 'Authorization': apiInfo,
+            }
+        }).then(result => {
+            console.log(result);
+            if (result.status == 200 || result.status == 201) {
+                commonAlert(" SSH Key Modification Success")
+                //등록하고 나서 화면을 그냥 고칠 것인가?
+                displaySshKeyInfo("REG_SUCCESS");// TODO : MODIFY 성공일 때 어떻게 처리 할지 정의해서 보완할 것.
+                //getSshKeyList("name");
+                //아니면 화면을 리로딩 시킬것인가?
+                // location.reload();
+                // $("#btn_add2").click()
+                // $("#namespace").val('')
+                // $("#nsDesc").val('')
+            } else {
+                commonAlert("Fail Create SSH Key")
+            }
+            // }).catch(function(error){
+            //     console.log("get create error : ",error);
             // });
         }).catch((error) => {
             console.warn(error);

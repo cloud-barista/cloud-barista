@@ -52,9 +52,9 @@ create() {
 		{
 			"worker": [
 				{
-					"connection": "config-azure-koreacentral",
+					"connection": "config-ibm-jp-tok",
 					"count": 1,
-					"spec": "Standard_B2s"
+					"spec": "bx2-2x8"
 				}
 			]
 		}

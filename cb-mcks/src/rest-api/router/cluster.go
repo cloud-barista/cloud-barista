@@ -4,9 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cloud-barista/cb-mcks/src/core/model"
+	"github.com/cloud-barista/cb-mcks/src/core/app"
 	"github.com/cloud-barista/cb-mcks/src/core/service"
-	"github.com/cloud-barista/cb-mcks/src/utils/app"
 	"github.com/labstack/echo/v4"
 
 	logger "github.com/sirupsen/logrus"
@@ -26,7 +25,7 @@ import (
 func ListCluster(c echo.Context) error {
 	clusterList, err := service.ListCluster(c.Param("namespace"))
 	if err != nil {
-		logger.Infof("respond to an error (ListCluster) message=%v'", err)
+		logger.Warnf("(ListCluster) %s'", err.Error())
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
 
@@ -48,13 +47,13 @@ func ListCluster(c echo.Context) error {
 // @Router /ns/{namespace}/clusters/{cluster} [get]
 func GetCluster(c echo.Context) error {
 	if err := app.Validate(c, []string{"namespace", "cluster"}); err != nil {
-		logger.Error(err)
+		logger.Warnf("(CreateCluster) %s", err.Error())
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
 
 	cluster, err := service.GetCluster(c.Param("namespace"), c.Param("cluster"))
 	if err != nil {
-		logger.Infof("respond to an error (GetCluster) message=%v'", err)
+		logger.Warnf("(GetCluster) %s", err.Error())
 		return app.SendMessage(c, http.StatusNotFound, err.Error())
 	}
 
@@ -69,16 +68,18 @@ func GetCluster(c echo.Context) error {
 // @Accept json
 // @Produce json
 // @Param	namespace	path	string	true  "Namespace ID"
-// @Param ClusterReq body model.ClusterReq true "Request Body to create cluster"
+// @Param   minorversion  query    string   true  "string enums"    Enums(1.18, 1.23)
+// @Param   patchversion  path	int	true  "Patch version"
+// @Param ClusterReq body app.ClusterReq true "Request Body to create cluster"
 // @Success 200 {object} model.Cluster
 // @Failure 400 {object} app.Status
 // @Failure 500 {object} app.Status
 // @Router /ns/{namespace}/clusters [post]
 func CreateCluster(c echo.Context) error {
 	start := time.Now()
-	clusterReq := &model.ClusterReq{}
+	clusterReq := &app.ClusterReq{}
 	if err := c.Bind(clusterReq); err != nil {
-		logger.Error(err)
+		logger.Warnf("(CreateCluster) %s", err.Error())
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
 
@@ -86,18 +87,16 @@ func CreateCluster(c echo.Context) error {
 
 	err := app.ClusterReqValidate(*clusterReq)
 	if err != nil {
-		logger.Error(err)
+		logger.Warnf("(CreateCluster) %s", err.Error())
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
-
-	cluster, err := service.CreateCluster(c.Param("namespace"), clusterReq)
+	cluster, err := service.CreateCluster(c.Param("namespace"), c.QueryParam("minorversion"), c.QueryParam("patchversion"), clusterReq)
 	if err != nil {
-		logger.Infof("respond to an error (CreateCluster) message=%v", err)
+		logger.Warnf("(CreateCluster) %s", err.Error())
 		return app.SendMessage(c, http.StatusInternalServerError, err.Error())
 	}
 
-	duration := time.Since(start)
-	logger.Info("CreateCluster duration := ", duration)
+	logger.Info("(CreateCluster) Duration = ", time.Since(start))
 	return app.Send(c, http.StatusOK, cluster)
 }
 
@@ -110,21 +109,24 @@ func CreateCluster(c echo.Context) error {
 // @Produce json
 // @Param	namespace	path	string	true  "Namespace ID"
 // @Param	cluster	path	string	true  "Cluster Name"
-// @Success 200 {object} model.Status
+// @Success 200 {object} app.Status
 // @Failure 400 {object} app.Status
 // @Failure 500 {object} app.Status
 // @Router /ns/{namespace}/clusters/{cluster} [delete]
 func DeleteCluster(c echo.Context) error {
+	start := time.Now()
+
 	if err := app.Validate(c, []string{"namespace", "cluster"}); err != nil {
-		logger.Error(err)
+		logger.Warnf("(DeleteCluster) %s", err.Error())
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
 
 	status, err := service.DeleteCluster(c.Param("namespace"), c.Param("cluster"))
 	if err != nil {
-		logger.Infof("respond to an error (DeleteCluster) message=%v'", err)
+		logger.Warnf("(DeleteCluster) %s", err.Error())
 		return app.SendMessage(c, http.StatusInternalServerError, err.Error())
 	}
 
+	logger.Info("(DeleteCluster) Duration = ", time.Since(start))
 	return app.Send(c, http.StatusOK, status)
 }

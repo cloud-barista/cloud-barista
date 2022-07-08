@@ -75,14 +75,14 @@ kafka:
     ADVERTISED_PORT: 32000
     #    advertised.listeners: PLAINTEXT://localhost:9092
     DELETE_TOPIC_ENABLE: "true"
-    LOG_RETENTION_HOURS: 1
     # 1 hours (delete logs)
-    LOG_RETENTION_BYTES: "524288000"
+    LOG_RETENTION_HOURS: 1
     # 500 MB
-    LOG_SEGMENT_BYTES: "262144000"
+    LOG_RETENTION_BYTES: "524288000"
     # 250 MB
-    LOG_RETENTION_CHECK_INTERVAL_MS: 600000
+    LOG_SEGMENT_BYTES: "262144000"
     # 10 min (check interval)
+    LOG_RETENTION_CHECK_INTERVAL_MS: 600000
     MESSAGE_TIMESTAMP_TYPE: LogAppendTime
     LOG_MESSAGE_TIMESTAMP_TYPE: LogAppendTime
     #   LISTENERS: PLAINTEXT://:9092
@@ -122,7 +122,15 @@ fullnameOverride: "cb-dragonfly"
 serviceAccount:
   create: true
   annotations: {}
-  name:
+  name: dragonfly-sa
+
+clusterRole:
+  create: true
+  name: dragonfly-cr
+
+roleBinding:
+  create: true
+  name: dragonfly-cb
 
 podSecurityContext: {}
   # fsGroup: 2000

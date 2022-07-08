@@ -11,8 +11,10 @@ import (
 	idrv "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces"
 	irs "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces/resources"
 	"io/ioutil"
+	"math/rand"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -27,6 +29,7 @@ type IbmVMHandler struct {
 func (vmHandler *IbmVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, error) {
 	hiscallInfo := GetCallLogScheme(vmHandler.Region, call.VM, vmReqInfo.IId.NameId, "StartVM()")
 	start := call.Start()
+
 	// 1.Check VMReqInfo
 	err := checkVMReqInfo(vmReqInfo)
 	if err != nil {
@@ -35,6 +38,7 @@ func (vmHandler *IbmVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, err
 		LoggingError(hiscallInfo, createErr)
 		return irs.VMInfo{}, createErr
 	}
+
 	// 1-1 Exist Check
 	exist, err := existInstance(vmReqInfo.IId, vmHandler.VpcService, vmHandler.Ctx)
 	if err != nil {
@@ -181,7 +185,19 @@ func (vmHandler *IbmVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, err
 	// 4.Attach FloatingIP
 
 	// 4-1. Create FloatingIP
-	floatingIPName := *createInstance.Name + "-floatingip-" + *createInstance.Zone.Name
+	rand.Seed(time.Now().UnixNano())
+	floatingIPName := *createInstance.Zone.Name + "-floatingip-" + strconv.FormatInt(rand.Int63n(10000000), 10)
+	floatingIPExist, err := vmHandler.checkFloatingIPName(floatingIPName)
+	if err != nil || floatingIPExist {
+		createErr := errors.New(fmt.Sprintf("Failed to Create VM. err = Faild Generator FloatingIP Name"))
+		deleteErr := deleteInstance(*createInstance.ID, vmHandler.VpcService, vmHandler.Ctx)
+		if deleteErr != nil {
+			createErr = errors.New(fmt.Sprintf("%s, %s ", createErr.Error(), deleteErr.Error()))
+		}
+		cblogger.Error(createErr.Error())
+		LoggingError(hiscallInfo, createErr)
+		return irs.VMInfo{}, createErr
+	}
 	createFloatingIPOptions := &vpcv1.CreateFloatingIPOptions{}
 	createFloatingIPOptions.SetFloatingIPPrototype(&vpcv1.FloatingIPPrototype{
 		Name: &floatingIPName,
@@ -189,6 +205,7 @@ func (vmHandler *IbmVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, err
 			Name: createInstance.Zone.Name,
 		},
 	})
+
 	floatingIP, _, err := vmHandler.VpcService.CreateFloatingIPWithContext(vmHandler.Ctx, createFloatingIPOptions)
 
 	if err != nil {
@@ -664,7 +681,42 @@ func floatingIPUnBind(IPBindReqInfo IBMIPBindReqInfo, vpcService *vpcv1.VpcV1, c
 	return true, nil
 }
 
+func getFloatIPsNextHref(next *vpcv1.FloatingIPCollectionNext) (string, error) {
+	if next != nil {
+		href := *next.Href
+		u, err := url.Parse(href)
+		if err != nil {
+			return "", err
+		}
+		paramMap, _ := url.ParseQuery(u.RawQuery)
+		if paramMap != nil {
+			safe := paramMap["start"]
+			if safe != nil && len(safe) > 0 {
+				return safe[0], nil
+			}
+		}
+	}
+	return "", errors.New("NOT NEXT")
+}
+
 func getVMNextHref(next *vpcv1.InstanceCollectionNext) (string, error) {
+	if next != nil {
+		href := *next.Href
+		u, err := url.Parse(href)
+		if err != nil {
+			return "", err
+		}
+		paramMap, _ := url.ParseQuery(u.RawQuery)
+		if paramMap != nil {
+			safe := paramMap["start"]
+			if safe != nil && len(safe) > 0 {
+				return safe[0], nil
+			}
+		}
+	}
+	return "", errors.New("NOT NEXT")
+}
+func getVolumeNextHref(next *vpcv1.VolumeCollectionNext) (string, error) {
 	if next != nil {
 		href := *next.Href
 		u, err := url.Parse(href)
@@ -689,6 +741,10 @@ func checkVmIID(vmIID irs.IID) error {
 }
 
 func checkVMReqInfo(vmReqInfo irs.VMReqInfo) error {
+	err := notSupportRootDiskCustom(vmReqInfo)
+	if err != nil {
+		return err
+	}
 	if vmReqInfo.IId.NameId == "" {
 		return errors.New("invalid VM IID")
 	}
@@ -736,6 +792,46 @@ func existInstance(vmIID irs.IID, vpcService *vpcv1.VpcV1, ctx context.Context) 
 	}
 	return false, nil
 }
+
+func getRawVolume(volumeIId irs.IID, vpcService *vpcv1.VpcV1, ctx context.Context) (vpcv1.Volume, error) {
+	if volumeIId.SystemId == "" {
+		options := &vpcv1.ListVolumesOptions{}
+		volumes, _, err := vpcService.ListVolumesWithContext(ctx, options)
+		if err != nil {
+			return vpcv1.Volume{}, err
+		}
+		for {
+			for _, volume := range volumes.Volumes {
+				if *volume.Name == volumeIId.NameId {
+					return volume, nil
+				}
+			}
+			nextstr, _ := getVolumeNextHref(volumes.Next)
+			if nextstr != "" {
+				listVolumeOptionsNext := &vpcv1.ListVolumesOptions{
+					Start: core.StringPtr(nextstr),
+				}
+				volumes, _, err = vpcService.ListVolumesWithContext(ctx, listVolumeOptionsNext)
+				if err != nil {
+					return vpcv1.Volume{}, err
+				}
+			} else {
+				break
+			}
+		}
+		err = errors.New(fmt.Sprintf("not found Volume %s", volumeIId.NameId))
+		return vpcv1.Volume{}, err
+	} else {
+		options := &vpcv1.GetVolumeOptions{}
+		options.SetID(volumeIId.SystemId)
+		volume, _, err := vpcService.GetVolumeWithContext(ctx, options)
+		if err != nil {
+			return vpcv1.Volume{}, err
+		}
+		return *volume, err
+	}
+}
+
 func getRawInstance(vmIID irs.IID, vpcService *vpcv1.VpcV1, ctx context.Context) (vpcv1.Instance, error) {
 	if vmIID.SystemId == "" {
 		options := &vpcv1.ListInstancesOptions{}
@@ -891,7 +987,7 @@ func (vmHandler *IbmVMHandler) setVmInfo(instance vpcv1.Instance) (irs.VMInfo, e
 		},
 		StartTime: time.Time(*instance.CreatedAt).Local(),
 		Region: irs.RegionInfo{
-			Region: "",
+			Region: vmHandler.Region.Region,
 			Zone:   *instance.Zone.Name,
 		},
 		VMSpecName: *instance.Profile.Name,
@@ -903,8 +999,10 @@ func (vmHandler *IbmVMHandler) setVmInfo(instance vpcv1.Instance) (irs.VMInfo, e
 			NameId:   *instance.PrimaryNetworkInterface.Subnet.Name,
 			SystemId: *instance.PrimaryNetworkInterface.Subnet.ID,
 		},
-		PrivateIP: *instance.PrimaryNetworkInterface.PrimaryIpv4Address,
-		VMUserId:  CBDefaultVmUserName,
+		PrivateIP:      *instance.PrimaryNetworkInterface.PrimaryIpv4Address,
+		VMUserId:       CBDefaultVmUserName,
+		RootDeviceName: "Not visible in IBMCloud-VPC",
+		VMBlockDisk:    "Not visible in IBMCloud-VPC",
 	}
 	// KeyGet
 	instanceInitializationOptions := &vpcv1.GetInstanceInitializationOptions{}
@@ -930,11 +1028,71 @@ func (vmHandler *IbmVMHandler) setVmInfo(instance vpcv1.Instance) (irs.VMInfo, e
 	networkInterface, _, err := vmHandler.VpcService.GetInstanceNetworkInterfaceWithContext(vmHandler.Ctx, instanceNetworkInterfaceOptions)
 	// TODO : DNS
 	if err == nil {
+		// SET IP
 		vmInfo.NetworkInterface = *networkInterface.Name
 		if networkInterface.FloatingIps != nil && len(networkInterface.FloatingIps) > 0 {
 			vmInfo.PublicIP = *networkInterface.FloatingIps[0].Address
 			vmInfo.SSHAccessPoint = vmInfo.PublicIP + ":22"
 		}
+		// SET SG
+		getVpcOptions := &vpcv1.GetVPCOptions{}
+		getVpcOptions.SetID(*instance.VPC.ID)
+		vpc, _, _ := vmHandler.VpcService.GetVPCWithContext(vmHandler.Ctx, getVpcOptions)
+		var sgIIds []irs.IID
+		if vpc != nil && vpc.DefaultSecurityGroup != nil {
+			defaultSGId := *vpc.DefaultSecurityGroup.ID
+			vmSecurityGroups := networkInterface.SecurityGroups
+			for _, seg := range vmSecurityGroups {
+				if defaultSGId != *seg.ID {
+					sgIIds = append(sgIIds, irs.IID{NameId: *seg.Name, SystemId: *seg.ID})
+				}
+			}
+		}
+		vmInfo.SecurityGroupIIds = sgIIds
+	}
+
+	volumeIId := irs.IID{SystemId: *instance.BootVolumeAttachment.Volume.ID}
+	rawVolume, err := getRawVolume(volumeIId, vmHandler.VpcService, vmHandler.Ctx)
+	if err == nil {
+		vmInfo.RootDiskSize = strconv.Itoa(int(*rawVolume.Capacity))
 	}
 	return vmInfo, nil
+}
+
+func (vmHandler *IbmVMHandler) checkFloatingIPName(floatingIPName string) (exist bool, err error) {
+	options := &vpcv1.ListFloatingIpsOptions{}
+	floatingIPs, _, err := vmHandler.VpcService.ListFloatingIpsWithContext(vmHandler.Ctx, options)
+	if err != nil {
+		return false, err
+	}
+	for {
+		for _, floatingIP := range floatingIPs.FloatingIps {
+			if *floatingIP.Name == floatingIPName {
+				return true, nil
+			}
+		}
+		nextstr, _ := getFloatIPsNextHref(floatingIPs.Next)
+		if nextstr != "" {
+			listFloatingNext := &vpcv1.ListFloatingIpsOptions{
+				Start: core.StringPtr(nextstr),
+			}
+			floatingIPs, _, err = vmHandler.VpcService.ListFloatingIpsWithContext(vmHandler.Ctx, listFloatingNext)
+			if err != nil {
+				return false, err
+			}
+		} else {
+			break
+		}
+	}
+	return false, nil
+}
+
+func notSupportRootDiskCustom(vmReqInfo irs.VMReqInfo) error {
+	if vmReqInfo.RootDiskType != "" && strings.ToLower(vmReqInfo.RootDiskType) != "default" {
+		return errors.New("IBM-VPC_CANNOT_CHANGE_ROOTDISKTYPE")
+	}
+	if vmReqInfo.RootDiskSize != "" && strings.ToLower(vmReqInfo.RootDiskSize) != "default" {
+		return errors.New("IBM-VPC_CANNOT_CHANGE_ROOTDISKSIZE")
+	}
+	return nil
 }

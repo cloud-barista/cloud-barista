@@ -89,6 +89,12 @@
 										<!-- <li><a href="javascript:void(0);">Change</a></li> -->
 										<li><a href="javascript:void(0);" data-toggle="modal" data-target="#UnRegist"
 												onClick="commonConfirmOpen('DeleteCloudConnection')">Delete</a></li>
+										<li class="divider"></li>
+										<li><a href="javascript:void(0);" data-toggle="modal"
+												data-target="#Inspect_Resources">Inspect</a></li>
+										<li><a href="javascript:void(0);" data-toggle="modal"
+												data-target="#Inspect_Resources_All">Inspect All</a>
+										</li>
 									</ul>
 								</div>
 							</div>
@@ -223,72 +229,72 @@
 										-->
 					</div>
 
-				
-                                    
-									<div class="graybox">
-										
-										<div class="g_box">
-											
-											<div class="logicbox">
-												
-												<div class="txtbox">
-													
-													<div class="logic_tbox lg_1">
-														<div class="tit">Cloud Connection</div>
-														<div class="txt" id="infoNamePrs">
-															Connection<br /> Name
-														</div>
-													</div>
-													
-													<div class="line line_a line_p1"></div>
-													
-													<div class="logic_tbox lg_2">
-														<div class="tit">Cloud Provider</div>
-														<div class="txt" style="min-height: 70px;" id="infoProviderPrs">
-															Provider(CP)<br />Name & Icon
-														</div>
-													</div>
-													
-													<div class="line line_p2"></div>
-													<div class="line line_a line_p2_1"></div>
-													
-													<div class="logic_tbox lg_3">
-														<div class="tit">Cloud Region/zone</div>
-														<div class="txt" style="min-height: 70px;" id="infoRegionPrs">
-															Region<br />Name
-														</div>
-													</div>
-													
-													<div class="line line_p3"></div>
-													<div class="line line_a line_p3_1"></div>
-													
-													<div class="logic_tbox lg_4">
-														<div class="tit">Cloud Driver</div>
-														<div class="txt" style="min-height: 70px;" id="infoDriverPrs">
-															Driver<br />Name
-														</div>
-													</div>
-													
-													<div class="line line_p4"></div>
-													<div class="line line_a line_p4_1"></div>
-													
-													<div class="logic_tbox lg_5">
-														<div class="tit">Cloud Credential</div>
-														<div class="txt" style="min-height: 70px;" id="infoCredentialPrs">
-															Credential<br />Name
-														</div>
-													</div>
-													
-													
-												</div>
-												
-												<div class="mapcont">
-													<div id="map" class="map" style="height:300px;">
-													</div>
-												</div>
-											</div>
-											
-											
+
+
+					<div class="graybox">
+
+						<div class="g_box">
+
+							<div class="logicbox">
+
+								<div class="txtbox">
+
+									<div class="logic_tbox lg_1">
+										<div class="tit">Cloud Connection</div>
+										<div class="txt" id="infoNamePrs">
+											Connection<br /> Name
+										</div>
+									</div>
+
+									<div class="line line_a line_p1"></div>
+
+									<div class="logic_tbox lg_2">
+										<div class="tit">Cloud Provider</div>
+										<div class="txt" style="min-height: 70px;" id="infoProviderPrs">
+											Provider(CP)<br />Name & Icon
+										</div>
+									</div>
+
+									<div class="line line_p2"></div>
+									<div class="line line_a line_p2_1"></div>
+
+									<div class="logic_tbox lg_3">
+										<div class="tit">Cloud Region/zone</div>
+										<div class="txt" style="min-height: 70px;" id="infoRegionPrs">
+											Region<br />Name
+										</div>
+									</div>
+
+									<div class="line line_p3"></div>
+									<div class="line line_a line_p3_1"></div>
+
+									<div class="logic_tbox lg_4">
+										<div class="tit">Cloud Driver</div>
+										<div class="txt" style="min-height: 70px;" id="infoDriverPrs">
+											Driver<br />Name
+										</div>
+									</div>
+
+									<div class="line line_p4"></div>
+									<div class="line line_a line_p4_1"></div>
+
+									<div class="logic_tbox lg_5">
+										<div class="tit">Cloud Credential</div>
+										<div class="txt" style="min-height: 70px;" id="infoCredentialPrs">
+											Credential<br />Name
+										</div>
+									</div>
+
+
+								</div>
+
+								<div class="mapcont">
+									<div id="map" class="map" style="height:300px;">
+									</div>
+								</div>
+							</div>
+
+
 
 
 						</div>
@@ -554,6 +560,8 @@
 	{{template "CredentialModal" .}}
 
 	{{template "DriverModal" .}}
+
+	{{template "InspectModal" .}}
 
 </div>
 <!-- //contents -->

@@ -15,6 +15,12 @@ limitations under the License.
 package server
 
 import (
+	"context"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
+
 	"github.com/cloud-barista/cb-tumblebug/src/core/common"
 
 	rest_common "github.com/cloud-barista/cb-tumblebug/src/api/rest/server/common"
@@ -76,13 +82,15 @@ func RunServer(port string) {
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	// limit the application to 20 requests/sec using the default in-memory store
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(20)))
 
 	e.HideBanner = true
 	//e.colorer.Printf(banner, e.colorer.Red("v"+Version), e.colorer.Blue(website))
 
 	// Route for system management
 	e.GET("/tumblebug/swagger/*", echoSwagger.WrapHandler)
-	e.GET("/tumblebug/swaggerActive", rest_common.RestGetSwagger)
+	// e.GET("/tumblebug/swaggerActive", rest_common.RestGetSwagger)
 	e.GET("/tumblebug/health", rest_common.RestGetHealth)
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -123,6 +131,10 @@ func RunServer(port string) {
 	e.POST("/tumblebug/lookupImage", rest_mcir.RestLookupImage)
 
 	e.POST("/tumblebug/inspectResources", rest_common.RestInspectResources)
+	e.GET("/tumblebug/inspectResourcesOverview", rest_common.RestInspectResourcesOverview)
+
+	e.POST("/tumblebug/registerCspResources", rest_common.RestRegisterCspNativeResources)
+	e.POST("/tumblebug/registerCspResourcesAll", rest_common.RestRegisterCspNativeResourcesAll)
 
 	// @Tags [Admin] System environment
 	e.POST("/tumblebug/config", rest_common.RestPostConfig)
@@ -153,9 +165,23 @@ func RunServer(port string) {
 
 	//MCIS Management
 	g.POST("/:nsId/mcis", rest_mcis.RestPostMcis)
+	g.POST("/:nsId/registerCspVm", rest_mcis.RestPostRegisterCSPNativeVM)
+
+	e.POST("/tumblebug/mcisRecommendVm", rest_mcis.RestRecommendVm)
+	e.POST("/tumblebug/mcisDynamicCheckRequest", rest_mcis.RestPostMcisDynamicCheckRequest)
+
 	g.POST("/:nsId/mcisDynamic", rest_mcis.RestPostMcisDynamic)
-	g.GET("/:nsId/mcis/:mcisId", rest_mcis.RestGetMcis)
-	g.GET("/:nsId/mcis", rest_mcis.RestGetAllMcis)
+
+	//g.GET("/:nsId/mcis/:mcisId", rest_mcis.RestGetMcis, middleware.TimeoutWithConfig(middleware.TimeoutConfig{Timeout: 20 * time.Second}), middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(1)))
+	//g.GET("/:nsId/mcis", rest_mcis.RestGetAllMcis, middleware.TimeoutWithConfig(middleware.TimeoutConfig{Timeout: 20 * time.Second}), middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(1)))
+	// path specific timeout and ratelimit
+	g.GET("/:nsId/mcis/:mcisId", rest_mcis.RestGetMcis, middleware.TimeoutWithConfig(
+		middleware.TimeoutConfig{Timeout: 60 * time.Second}),
+		middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(2)))
+	g.GET("/:nsId/mcis", rest_mcis.RestGetAllMcis, middleware.TimeoutWithConfig(
+		middleware.TimeoutConfig{Timeout: 60 * time.Second}),
+		middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(2)))
+
 	g.PUT("/:nsId/mcis/:mcisId", rest_mcis.RestPutMcis)
 	g.DELETE("/:nsId/mcis/:mcisId", rest_mcis.RestDelMcis)
 	g.DELETE("/:nsId/mcis", rest_mcis.RestDelAllMcis)
@@ -169,8 +195,6 @@ func RunServer(port string) {
 	//g.DELETE("/:nsId/mcis/:mcisId/vm", rest_mcis.RestDelAllMcisVm)
 
 	//g.POST("/:nsId/mcis/recommend", rest_mcis.RestPostMcisRecommend)
-
-	g.POST("/:nsId/mcisRecommendVm", rest_mcis.RestRecommendVm)
 
 	g.GET("/:nsId/control/mcis/:mcisId", rest_mcis.RestGetControlMcis)
 	g.GET("/:nsId/control/mcis/:mcisId/vm/:vmId", rest_mcis.RestGetControlMcisVm)
@@ -191,6 +215,10 @@ func RunServer(port string) {
 
 	g.POST("/:nsId/monitoring/install/mcis/:mcisId", rest_mcis.RestPostInstallMonitorAgentToMcis)
 	g.GET("/:nsId/monitoring/mcis/:mcisId/metric/:metric", rest_mcis.RestGetMonitorData)
+
+	// MCIS Cloud Adaptive Network (for developer)
+	g.POST("/:nsId/network/mcis/:mcisId", rest_mcis.RestPostConfigureCloudAdaptiveNetworkToMcis)
+	g.PUT("/:nsId/network/mcis/:mcisId", rest_mcis.RestPutInjectCloudInformationForCloudAdaptiveNetwork)
 
 	//MCIR Management
 	g.POST("/:nsId/resources/image", rest_mcir.RestPostImage)
@@ -228,6 +256,9 @@ func RunServer(port string) {
 	g.PUT("/:nsId/resources/securityGroup/:resourceId", rest_mcir.RestPutSecurityGroup)
 	g.DELETE("/:nsId/resources/securityGroup/:resourceId", rest_mcir.RestDelResource)
 	g.DELETE("/:nsId/resources/securityGroup", rest_mcir.RestDelAllResources)
+
+	g.POST("/:nsId/resources/securityGroup/:securityGroupId/rules", rest_mcir.RestPostFirewallRules)
+	g.DELETE("/:nsId/resources/securityGroup/:securityGroupId/rules", rest_mcir.RestDelFirewallRules)
 
 	g.POST("/:nsId/resources/vNet", rest_mcir.RestPostVNet)
 	g.GET("/:nsId/resources/vNet/:resourceId", rest_mcir.RestGetResource)
@@ -276,12 +307,46 @@ func RunServer(port string) {
 	g.GET("/:nsId/testGetAssociatedObjectCount/:resourceType/:resourceId", rest_mcir.RestTestGetAssociatedObjectCount)
 
 	selfEndpoint := os.Getenv("SELF_ENDPOINT")
-	apidashboard := " http://" + selfEndpoint + "/tumblebug/swagger/index.html?url=http://" + selfEndpoint + "/tumblebug/swaggerActive"
+	apidashboard := " http://" + selfEndpoint + "/tumblebug/swagger/index.html"
 
 	fmt.Println(" Access to API dashboard" + " (username: " + API_USERNAME + " / password: " + API_PASSWORD + ")")
 	fmt.Printf(noticeColor, apidashboard)
 	fmt.Println("\n ")
 
+	// A context for graceful shutdown (It is based on the signal package)
+	// NOTE -
+	// Use os.Interrupt Ctrl+C or Ctrl+Break on Windows
+	// Use syscall.KILL for Kill(can't be caught or ignored) (POSIX)
+	// Use syscall.SIGTERM for Termination (ANSI)
+	// Use syscall.SIGINT for Terminal interrupt (ANSI)
+	// Use syscall.SIGQUIT for Terminal quit (POSIX)
+	gracefulShutdownContext, stop := signal.NotifyContext(context.TODO(),
+		os.Interrupt, syscall.SIGKILL, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+	defer stop()
+
+	// Wait graceful shutdown (and then main thread will be finished)
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+
+		// Block until a signal is triggered
+		<-gracefulShutdownContext.Done()
+
+		fmt.Println("\n[Stop] CB-Tumblebug REST Server")
+		ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
+		defer cancel()
+
+		if err := e.Shutdown(ctx); err != nil {
+			e.Logger.Panic(err)
+		}
+	}(&wg)
+
 	port = fmt.Sprintf(":%s", port)
-	e.Logger.Fatal(e.Start(port))
+	if err := e.Start(port); err != nil && err != http.ErrServerClosed {
+		e.Logger.Panic("shuttig down the server")
+	}
+
+	wg.Wait()
 }

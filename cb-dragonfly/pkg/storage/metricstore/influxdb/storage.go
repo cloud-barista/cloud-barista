@@ -2,7 +2,7 @@ package influxdb
 
 import (
 	"github.com/cloud-barista/cb-dragonfly/pkg/storage/metricstore/influxdb/v1"
-	"github.com/cloud-barista/cb-dragonfly/pkg/storage/metricstore/influxdb/v2"
+	"github.com/cloud-barista/cb-dragonfly/pkg/types"
 	"github.com/pkg/errors"
 )
 
@@ -10,7 +10,6 @@ type StoreType string
 
 const (
 	V1 StoreType = "v1"
-	V2 StoreType = "v2"
 )
 
 // Config is common interface of Monitoring Metric Storage Configuration
@@ -20,7 +19,7 @@ type Config interface{}
 type Storage interface {
 	Initialize() error
 	WriteMetric(database string, metrics map[string]interface{}) error
-	ReadMetric(isPush bool, nsId string, mcisId string, vmId string, metric string, period string, function string, duration string) (interface{}, error)
+	ReadMetric(info types.DBMetricRequestInfo) (interface{}, error)
 	DeleteMetric(database string, metric string, duration string) error
 }
 
@@ -32,13 +31,6 @@ func NewStorage(storeType StoreType, storageConfig Config) error {
 		// InfluxDB v1
 		if config, ok := storageConfig.(v1.Config); ok {
 			storage = v1.Storage{Config: config}
-		} else {
-			return invalidConfigError(storeType)
-		}
-	case V2:
-		// InfluxDB v2
-		if conf, ok := storageConfig.(v2.Config); ok {
-			storage = &v2.Storage{Config: conf}
 		} else {
 			return invalidConfigError(storeType)
 		}
@@ -56,8 +48,6 @@ func invalidConfigError(storeType StoreType) error {
 	switch storeType {
 	case V1:
 		return errors.Errorf("%s: %v", msg, v1.Config{})
-	case V2:
-		return errors.Errorf("%s: %v", msg, v2.Config{})
 	default:
 		return errors.New(msg)
 	}

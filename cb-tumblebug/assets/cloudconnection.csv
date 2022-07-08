@@ -88,25 +88,26 @@ GCP,gcp-us-west3,gcp-us-west3,us-west3,Salt Lake City Utah USA [zone:a],gcp-driv
 GCP,gcp-asia-south1,gcp-asia-south1,asia-south1,Mumbai India [zone:b],gcp-driver-v1.0.so,gcp-driver01
 GCP,gcp-asia-southeast2,gcp-asia-southeast2,asia-southeast2,Jakarta Indonesia [zone:a],gcp-driver-v1.0.so,gcp-driver01
 GCP,gcp-europe-central2,gcp-europe-central2,europe-central2,Warsaw Poland [zone:a],gcp-driver-v1.0.so,gcp-driver01
-ALIBABA,alibaba-ap-northeast-1,alibaba-ap-northeast-1,ap-northeast-1,Japan (Tokyo),alibaba-driver-v1.0.so,alibaba-driver01
-ALIBABA,alibaba-ap-south-1,alibaba-ap-south-1,ap-south-1,Mumbai Zone A,alibaba-driver-v1.0.so,alibaba-driver01
+ALIBABA,alibaba-ap-northeast-2,alibaba-ap-northeast-2,ap-northeast-2,South Korea (Seoul) [zone:a],alibaba-driver-v1.0.so,alibaba-driver01
+ALIBABA,alibaba-ap-northeast-1,alibaba-ap-northeast-1,ap-northeast-1,Japan (Tokyo) [zone:b],alibaba-driver-v1.0.so,alibaba-driver01
+ALIBABA,alibaba-ap-south-1,alibaba-ap-south-1,ap-south-1,Mumbai [zone:b],alibaba-driver-v1.0.so,alibaba-driver01
 ALIBABA,alibaba-ap-southeast-1,alibaba-ap-southeast-1,ap-southeast-1,Singapore [zone:c],alibaba-driver-v1.0.so,alibaba-driver01
-ALIBABA,alibaba-ap-southeast-2,alibaba-ap-southeast-2,ap-southeast-2,Australia (Sydney) [zone:a],alibaba-driver-v1.0.so,alibaba-driver01
+ALIBABA,alibaba-ap-southeast-2,alibaba-ap-southeast-2,ap-southeast-2,Australia (Sydney) [zone:2b],alibaba-driver-v1.0.so,alibaba-driver01
 ALIBABA,alibaba-ap-southeast-3,alibaba-ap-southeast-3,ap-southeast-3,Malaysia (Kuala Lumpur) [zone:b],alibaba-driver-v1.0.so,alibaba-driver01
-ALIBABA,alibaba-ap-southeast-5,alibaba-ap-southeast-5,ap-southeast-5,Indonesia (Jakarta) [zone:b],alibaba-driver-v1.0.so,alibaba-driver01
-ALIBABA,alibaba-us-west-1,alibaba-us-west-1,us-west-1,US (Silicon Valley) [zone:b],alibaba-driver-v1.0.so,alibaba-driver01
+ALIBABA,alibaba-ap-southeast-5,alibaba-ap-southeast-5,ap-southeast-5,Indonesia (Jakarta) [zone:c],alibaba-driver-v1.0.so,alibaba-driver01
+ALIBABA,alibaba-us-west-1,alibaba-us-west-1,us-west-1,US (Silicon Valley) [zone:a],alibaba-driver-v1.0.so,alibaba-driver01
 ALIBABA,alibaba-us-east-1,alibaba-us-east-1,us-east-1,US (Virginia) [zone:b],alibaba-driver-v1.0.so,alibaba-driver01
 ALIBABA,alibaba-eu-central-1,alibaba-eu-central-1,eu-central-1,Germany (Frankfurt) [zone:b],alibaba-driver-v1.0.so,alibaba-driver01
 ALIBABA,alibaba-eu-west-1,alibaba-eu-west-1,eu-west-1,UK (London) [zone:b],alibaba-driver-v1.0.so,alibaba-driver01
 ALIBABA,alibaba-me-east-1,alibaba-me-east-1,me-east-1,UAE (Dubai) [zone:a],alibaba-driver-v1.0.so,alibaba-driver01
-ALIBABA,alibaba-cn-hongkong,alibaba-cn-hongkong,cn-hongkong,China (Hong Kong) [zone:c],alibaba-driver-v1.0.so,alibaba-driver01
-ALIBABA,alibaba-cn-shanghai,alibaba-cn-shanghai,cn-shanghai,China (Shanghai) [zone:g],alibaba-driver-v1.0.so,alibaba-driver01
-ALIBABA,alibaba-cn-beijing,alibaba-cn-beijing,cn-beijing,China (Beijing) [zone:h],alibaba-driver-v1.0.so,alibaba-driver01
-ALIBABA,alibaba-cn-qingdao,alibaba-cn-qingdao,cn-qingdao,China (Qingdao) [zone:c],alibaba-driver-v1.0.so,alibaba-driver01
+ALIBABA,alibaba-cn-hongkong,alibaba-cn-hongkong,cn-hongkong,China (Hong Kong) [zone:d],alibaba-driver-v1.0.so,alibaba-driver01
+ALIBABA,alibaba-cn-shanghai,alibaba-cn-shanghai,cn-shanghai,China (Shanghai) [zone:n],alibaba-driver-v1.0.so,alibaba-driver01
+ALIBABA,alibaba-cn-beijing,alibaba-cn-beijing,cn-beijing,China (Beijing) [zone:l],alibaba-driver-v1.0.so,alibaba-driver01
+ALIBABA,alibaba-cn-qingdao,alibaba-cn-qingdao,cn-qingdao,China (Qingdao) [zone:b],alibaba-driver-v1.0.so,alibaba-driver01
 ALIBABA,alibaba-cn-zhangjiakou,alibaba-cn-zhangjiakou,cn-zhangjiakou,China (Zhangjiakou) [zone:c],alibaba-driver-v1.0.so,alibaba-driver01
-ALIBABA,alibaba-cn-huhehaote,alibaba-cn-huhehaote,cn-huhehaote,China (Hohhot) [zone:b],alibaba-driver-v1.0.so,alibaba-driver01
-ALIBABA,alibaba-cn-hangzhou,alibaba-cn-hangzhou,cn-hangzhou,China (HohHangzhouhot) [zone:h],alibaba-driver-v1.0.so,alibaba-driver01
-ALIBABA,alibaba-cn-shenz,alibaba-cn-shenzhen,cn-shenzhen,China (Shenzhen) [zone:e],alibaba-driver-v1.0.so,alibaba-driver01
+ALIBABA,alibaba-cn-huhehaote,alibaba-cn-huhehaote,cn-huhehaote,China (Huhehaote) [zone:b],alibaba-driver-v1.0.so,alibaba-driver01
+ALIBABA,alibaba-cn-hangzhou,alibaba-cn-hangzhou,cn-hangzhou,China (Hangzhou) [zone:k],alibaba-driver-v1.0.so,alibaba-driver01
+ALIBABA,alibaba-cn-shenzhen,alibaba-cn-shenzhen,cn-shenzhen,China (Shenzhen) [zone:f],alibaba-driver-v1.0.so,alibaba-driver01
 ALIBABA,alibaba-cn-heyuan,alibaba-cn-heyuan,cn-heyuan,China (Heyuan) [zone:b],alibaba-driver-v1.0.so,alibaba-driver01
 ALIBABA,alibaba-cn-chengdu,alibaba-cn-chengdu,cn-chengdu,China (Chengdu) [zone:b],alibaba-driver-v1.0.so,alibaba-driver01
 ALIBABA,alibaba-cn-wulanchabu,alibaba-cn-wulanchabu,cn-wulanchabu,China (Ulanqab) [zone:c],alibaba-driver-v1.0.so,alibaba-driver01
@@ -117,6 +118,8 @@ NCP,ncp-us-western,ncp-us-western,USWN,US West,ncp-driver-v1.0.so,ncp-driver01
 NCP,ncp-germany,ncp-germany,DEN,Germany,ncp-driver-v1.0.so,ncp-driver01
 NCP,ncp-singapore,ncp-singapore,SGN,Singapore,ncp-driver-v1.0.so,ncp-driver01
 NCP,ncp-japan,ncp-japan,JPN,Japan,ncp-driver-v1.0.so,ncp-driver01
+NCPVPC,ncpvpc-kr-1,ncpvpc-kr-1,KR,Korea 1,ncpvpc-driver-v1.0.so,ncpvpc-driver01
+NCPVPC,ncpvpc-sgn-4,ncpvpc-sgn-4,SGN,Singapore 4,ncpvpc-driver-v1.0.so,ncpvpc-driver01
 CLOUDIT,cloudit-region01,cloudit-region01,default,Korea Seoul (Internal),cloudit-driver-v1.0.so,cloudit-driver01
 TENCENT,tencent-ap-singapore,tencent-ap-singapore,ap-singapore,Singapore,tencent-driver-v1.0.so,tencent-driver01
 TENCENT,tencent-ap-jakarta,tencent-ap-jakarta,ap-jakarta,Jakarta,tencent-driver-v1.0.so,tencent-driver01
@@ -141,5 +144,18 @@ KTCLOUD,kt-kr-central-b,kt-kr-central-b,KOR-Cheonan,Cheon-an - South Korea,ktclo
 KTCLOUD,kt-kr-seoul-m,kt-kr-seoul-m,KOR-Seoul,Seoul - South Korea,ktcloud-driver-v1.0.so,ktcloud-driver01
 KTCLOUD,kt-kr-seoul-m2,kt-kr-seoul-m2,KOR-Seoul,Seoul - South Korea,ktcloud-driver-v1.0.so,ktcloud-driver01
 KTCLOUD,kt-us-west,kt-us-west,US,LA - US,ktcloud-driver-v1.0.so,ktcloud-driver01
+KTCLOUD,kt-kr-kimhae,kt-kr-kimhae,KOR-Kimhae,Kimhae - South Korea,ktcloud-driver-v1.0.so,ktcloud-driver01
+IBM,ibm-us-south,ibm-us-south,us-south,Dallas (US South),ibm-driver-v1.0.so,ibmvpc-driver01
+IBM,ibm-br-sao,ibm-br-sao,br-sao,Sao Paulo (Brazil),ibm-driver-v1.0.so,ibmvpc-driver01
+IBM,ibm-ca-tor,ibm-ca-tor,ca-tor,Toronto (Canada),ibm-driver-v1.0.so,ibmvpc-driver01
+IBM,ibm-us-east,ibm-us-east,us-east,Washington DC (US East),ibm-driver-v1.0.so,ibmvpc-driver01
+IBM,ibm-eu-de,ibm-eu-de,eu-de,Frankfurt (Germany),ibm-driver-v1.0.so,ibmvpc-driver01
+IBM,ibm-eu-gb,ibm-eu-gb,eu-gb,London (United Kingdom),ibm-driver-v1.0.so,ibmvpc-driver01
+IBM,ibm-jp-osa,ibm-jp-osa,jp-osa,Osaka (Japan),ibm-driver-v1.0.so,ibmvpc-driver01
+IBM,ibm-au-syd,ibm-au-syd,au-syd,Sydney (Australia),ibm-driver-v1.0.so,ibmvpc-driver01
+IBM,ibm-jp-tok,ibm-jp-tok,jp-tok,Tokyo (Japan),ibm-driver-v1.0.so,ibmvpc-driver01
+NHNCLOUD,nhncloud-kr-pangyo,nhncloud-kr-pangyo,KR1,South Korea (Pangyo),nhncloud-driver-v1.0.so,nhncloud-driver01
+NHNCLOUD,nhncloud-kr-pyeongchon,nhncloud-kr-pyeongchon,KR2,South Korea (Pyeongchon),nhncloud-driver-v1.0.so,nhncloud-driver01
+NHNCLOUD,nhncloud-jp-tokyo,nhncloud-jp-tokyo,JP1,Japan (Tokyo),nhncloud-driver-v1.0.so,nhncloud-driver01
 CLOUDTWIN,cloudtwin-region01,cloudtwin-region01,default,Korea Daejeon (Internal),cloudtwin-driver-v1.0.so,cloudtwin-driver01
 MOCK,mock-seoul,mock-seoul,default,Korea Seoul (Virtual),mock-driver-v1.0.so,mock-driver01

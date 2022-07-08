@@ -67,3 +67,25 @@ export OS_REGION="RegionOne"
 export OS_ZONE="RegionOne"
 
 ./connectioninfo-create.sh OPENSTACK
+
+
+# Ibm
+export IBM_API_KEY="key_id"
+
+export IBM_REGION="jp-tok"
+export IBM_ZONE="jp-tok-1"
+
+./connectioninfo-create.sh IBM
+
+
+# Cloudit
+export CI_IDENTITY_ENDPOINT="http://123.456.789.123:9090"
+export CI_AUTH_TOKEN="XXXXXXXXXXKEYXXXXXX"
+export CI_USERNAME="mcks"
+export CI_PASSWORD="mcks1234"
+export CI_TENANT_ID="tnt1234"
+
+export CI_REGION="Region"
+export CI_ZONE="default"
+
+./connectioninfo-create.sh CLOUDIT

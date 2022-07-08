@@ -16,12 +16,16 @@ import (
 	"errors"
 	_ "errors"
 	"fmt"
+	"log"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	keypair "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/common"
+	//cim "github.com/cloud-barista/cb-spider/cloud-info-manager"
 	compute "google.golang.org/api/compute/v1"
+	// "golang.org/x/oauth2/google"
 
 	call "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/call-log"
 	idrv "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces"
@@ -59,12 +63,10 @@ func (vmHandler *GCPVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, err
 	//이미지 URL처리
 	cblogger.Infof("[%s] Image Name에 해당하는 Image Url 정보를 조회합니다.", vmReqInfo.ImageIID.SystemId)
 	imageHandler := GCPImageHandler{Credential: vmHandler.Credential, Region: vmHandler.Region, Client: vmHandler.Client}
-
 	imageInfo, errImage := imageHandler.FindImageInfo(vmReqInfo.ImageIID.SystemId)
 	if errImage != nil {
 		return irs.VMInfo{}, nil
 	}
-
 	cblogger.Infof("ImageName: [%s] ---> ImageUrl : [%s]", vmReqInfo.ImageIID.SystemId, imageInfo.ImageUrl)
 	imageURL = imageInfo.ImageUrl
 	*/
@@ -166,7 +168,7 @@ func (vmHandler *GCPVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, err
 				Boot:       true,
 				Type:       "PERSISTENT",
 				InitializeParams: &compute.AttachedDiskInitializeParams{
-					DiskName:    vmName + "-" + zone, //disk name 도 매번 바뀌어야 하는 값
+					//DiskName:    vmName, //disk name 도 매번 바뀌어야 하는 값, 루트 디스크 이름은 특별히 지정하지 않는 경우 vm이름으로 생성됨
 					SourceImage: imageURL,
 				},
 			},
@@ -202,7 +204,10 @@ func (vmHandler *GCPVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, err
 	//=============================
 	// Root Disk Type 변경
 	//=============================
-	if vmReqInfo.RootDiskType == "" {
+	ctx := context.Background()
+
+	//var validDiskSize = ""
+	if vmReqInfo.RootDiskType == "" || strings.EqualFold(vmReqInfo.RootDiskType, "default") {
 		//디스크 정보가 없으면 건드리지 않음.
 	} else {
 		//https://cloud.google.com/compute/docs/disks#disk-types
@@ -212,19 +217,91 @@ func (vmHandler *GCPVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, err
 	//=============================
 	// Root Disk Size 변경
 	//=============================
-	if vmReqInfo.RootDiskSize == "" {
-		//디스크 정보가 없으면 건드리지 않음.
+	// if vmReqInfo.RootDiskSize == "" {
+	// 	//디스크 정보가 없으면 건드리지 않음.
+	// }
+
+	//=============================
+	// Root Disk Size 변경
+	//=============================
+	if vmReqInfo.RootDiskSize == "" || strings.EqualFold(vmReqInfo.RootDiskSize, "default") {
+		//instance.Disks[0].InitializeParams.DiskSizeGb = diskSize.minSize
 	} else {
-		if strings.EqualFold(vmReqInfo.RootDiskSize, "default") {
-			instance.Disks[0].InitializeParams.DiskSizeGb = 10
+
+		iDiskSize, err := strconv.ParseInt(vmReqInfo.RootDiskSize, 10, 64)
+		if err != nil {
+			cblogger.Error(err)
+			return irs.VMInfo{}, err
+		}
+
+		var diskType = ""
+
+		if vmReqInfo.RootDiskType == "" || strings.EqualFold(vmReqInfo.RootDiskType, "default") {
+			// cloudOSMetaInfo, err := cim.GetCloudOSMetaInfo("GCP") // cloudos_meta 에 DiskType, min, max 값 정의 되어있음.
+			// if err != nil {
+			// 	cblogger.Error(err)
+			// 	return irs.VMInfo{}, err
+			// }
+			// diskType = cloudOSMetaInfo.RootDiskType[0]
 		} else {
-			iDiskSize, err := strconv.ParseInt(vmReqInfo.RootDiskSize, 10, 64)
+			diskType = vmReqInfo.RootDiskType
+
+			// RootDiskType을 조회하여 diskSize의 min, max, default값 추출 한 뒤 입력된 diskSize가 있으면 비교시 사용
+			diskSizeResp, err := vmHandler.Client.DiskTypes.Get(projectID, zone, diskType).Context(ctx).Do()
+			if err != nil {
+				fmt.Println("Invalid Disk Type Error!!")
+				return irs.VMInfo{}, err
+			}
+
+			fmt.Printf("valid disk size: %#v\n", diskSizeResp.ValidDiskSize)
+
+			//valid disk size 정의
+			re := regexp.MustCompile("GB-?") //ex) 10GB-65536GB
+			diskSizeArr := re.Split(diskSizeResp.ValidDiskSize, -1)
+			diskMinSize, err := strconv.ParseInt(diskSizeArr[0], 10, 64)
 			if err != nil {
 				cblogger.Error(err)
 				return irs.VMInfo{}, err
 			}
-			instance.Disks[0].InitializeParams.DiskSizeGb = iDiskSize
+
+			diskMaxSize, err := strconv.ParseInt(diskSizeArr[1], 10, 64)
+			if err != nil {
+				cblogger.Error(err)
+				return irs.VMInfo{}, err
+			}
+
+			// diskUnit := "GB" // 기본 단위는 GB
+
+			if iDiskSize < diskMinSize {
+				fmt.Println("Disk Size Error!!: ", iDiskSize)
+				//return irs.VMInfo{}, errors.New("Requested disk size cannot be smaller than the minimum disk size, invalid")
+				return irs.VMInfo{}, errors.New("Root Disk Size must be at least the default size (" + strconv.FormatInt(diskMinSize, 10) + " GB).")
+			}
+
+			if iDiskSize > diskMaxSize {
+				fmt.Println("Disk Size Error!!: ", iDiskSize)
+				//return irs.VMInfo{}, errors.New("Requested disk size cannot be larger than the maximum disk size, invalid")
+				return irs.VMInfo{}, errors.New("Root Disk Size must be smaller than the maximum size (" + strconv.FormatInt(diskMaxSize, 10) + " GB).")
+			}
 		}
+
+		imageUrlArr := strings.Split(imageURL, "/")
+
+		// 이미지 사이즈 추출
+		imageResp, err := vmHandler.Client.Images.Get(imageUrlArr[6], imageUrlArr[9]).Context(ctx).Do() // 수정 필요
+		if err != nil {
+			log.Fatal(err)
+		}
+		imageSize := imageResp.DiskSizeGb
+
+		if iDiskSize < imageSize {
+			fmt.Println("Disk Size Error!!: ", iDiskSize)
+			//return irs.VMInfo{}, errors.New("Requested disk size cannot be smaller than the image size, invalid")
+			return irs.VMInfo{}, errors.New("Root Disk Size must be larger then the image size (" + strconv.FormatInt(imageSize, 10) + " GB).")
+		}
+
+		instance.Disks[0].InitializeParams.DiskSizeGb = iDiskSize
+
 	}
 
 	cblogger.Info("VM 생성 시작")
@@ -263,7 +340,6 @@ func (vmHandler *GCPVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, err
 			cblogger.Error(err)
 			return irs.VMInfo{}, err
 		}
-
 		cblogger.Info("Insert vm to marshal Json : ", string(js))
 		cblogger.Infof("Got compute.Operation, err: %#v, %v", op, err)
 	*/
@@ -283,9 +359,9 @@ func (vmHandler *GCPVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, err
 	if errVmInfo != nil {
 		cblogger.Errorf("[%s] VM을 생성했지만 정보 조회는 실패 함.", vmName)
 		cblogger.Error(errVmInfo)
+
 		return irs.VMInfo{}, errVmInfo
 	}
-
 	//ImageIId의 NameId는 사용자가 요청한 값으로 리턴
 	vmInfo.ImageIId.NameId = vmReqInfo.ImageIID.NameId
 	return vmInfo, nil
@@ -298,13 +374,11 @@ func (vmHandler *GCPVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, err
 	}
 	//vmInfo := vmHandler.mappingServerInfo(vm)
 	var securityTag []irs.IID
-
 	for _, item := range vm.Tags.Items {
 		iId := irs.IID{
 			NameId:   item,
 			SystemId: item,
 		}
-
 		securityTag = append(securityTag, iId)
 	}
 	//var vpcHandler *GCPVPCHandler
@@ -339,52 +413,15 @@ func (vmHandler *GCPVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo, err
 			{"DiskName", vm.Disks[0].Source},
 		},
 	}
-
 	return vmInfo, nil
 	*/
-}
-
-// VM 정보를 조회할 수 있을 때까지 최대 30초간 대기
-func (vmHandler *GCPVMHandler) WaitForRun(vmIID irs.IID) (irs.VMStatus, error) {
-	cblogger.Info("======> 생성된 VM의 최종 정보 확인을 위해 Running 될 때까지 대기함.")
-
-	waitStatus := "Running"
-
-	//===================================
-	// Suspending 되도록 3초 정도 대기 함.
-	//===================================
-	curRetryCnt := 0
-	maxRetryCnt := 120
-	for {
-		curStatus, errStatus := vmHandler.GetVMStatus(vmIID)
-		if errStatus != nil {
-			cblogger.Error(errStatus.Error())
-		}
-
-		cblogger.Info("===>VM Status : ", curStatus)
-		if curStatus == irs.VMStatus(waitStatus) { //|| curStatus == irs.VMStatus("Running") {
-			cblogger.Infof("===>VM 상태가 [%s]라서 대기를 중단합니다.", curStatus)
-			break
-		}
-
-		//if curStatus != irs.VMStatus(waitStatus) {
-		curRetryCnt++
-		cblogger.Errorf("VM 상태가 [%s]이 아니라서 1초 대기후 조회합니다.", waitStatus)
-		time.Sleep(time.Second * 1)
-		if curRetryCnt > maxRetryCnt {
-			cblogger.Errorf("장시간(%d 초) 대기해도 VM의 Status 값이 [%s]으로 변경되지 않아서 강제로 중단합니다.", maxRetryCnt, waitStatus)
-			return irs.VMStatus("Failed"), errors.New("장시간 기다렸으나 생성된 VM의 상태가 [" + waitStatus + "]으로 바뀌지 않아서 중단 합니다.")
-		}
-	}
-
-	return irs.VMStatus(waitStatus), nil
 }
 
 // stop이라고 보면 될듯
 func (vmHandler *GCPVMHandler) SuspendVM(vmID irs.IID) (irs.VMStatus, error) {
 	projectID := vmHandler.Credential.ProjectID
 	zone := vmHandler.Region.Zone
-	ctx := vmHandler.Ctx
+	//ctx := vmHandler.Ctx
 
 	// logger for HisCall
 	callogger := call.GetLogger("HISCALL")
@@ -398,7 +435,8 @@ func (vmHandler *GCPVMHandler) SuspendVM(vmID irs.IID) (irs.VMStatus, error) {
 		ErrorMSG:     "",
 	}
 	callLogStart := call.Start()
-	inst, err := vmHandler.Client.Instances.Stop(projectID, zone, vmID.SystemId).Context(ctx).Do()
+	//inst, err := vmHandler.Client.Instances.Stop(projectID, zone, vmID.SystemId).Context(ctx).Do()
+	inst, err := vmHandler.GCPInstanceStop(projectID, zone, vmID.SystemId)
 	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
 	spew.Dump(inst)
 	if err != nil {
@@ -411,6 +449,16 @@ func (vmHandler *GCPVMHandler) SuspendVM(vmID irs.IID) (irs.VMStatus, error) {
 
 	fmt.Println("instance stop status :", inst.Status)
 	return irs.VMStatus("Suspending"), nil
+}
+
+// GCP Instance Stop
+// Spider 의 suspendVM와 reboot에서 공통으로 사용하기 위해 별도로 뺌
+// suspend/resume/reboot는 async 인데 다른 function에서 사용하려면 해당 operation이 종료됐는지 체크 필요
+// 호출하는 function에 operaion을 전달하여 종료여부 판단이 필요하면 사용
+func (vmHandler *GCPVMHandler) GCPInstanceStop(projectID string, zoneID string, gpcInstanceID string) (*compute.Operation, error) {
+	ctx := vmHandler.Ctx
+	inst, err := vmHandler.Client.Instances.Stop(projectID, zoneID, gpcInstanceID).Context(ctx).Do()
+	return inst, err
 }
 
 func (vmHandler *GCPVMHandler) ResumeVM(vmID irs.IID) (irs.VMStatus, error) {
@@ -446,7 +494,13 @@ func (vmHandler *GCPVMHandler) ResumeVM(vmID irs.IID) (irs.VMStatus, error) {
 	return irs.VMStatus("Resuming"), nil
 }
 
+// reboot vm : using reset function
+// Suspend/Resume/Reboot 는 async 이므로 바로 return
 func (vmHandler *GCPVMHandler) RebootVM(vmID irs.IID) (irs.VMStatus, error) {
+	projectID := vmHandler.Credential.ProjectID
+	//region := vmHandler.Region.Region
+	zone := vmHandler.Region.Zone
+	ctx := vmHandler.Ctx
 
 	// logger for HisCall
 	callogger := call.GetLogger("HISCALL")
@@ -460,22 +514,97 @@ func (vmHandler *GCPVMHandler) RebootVM(vmID irs.IID) (irs.VMStatus, error) {
 		ErrorMSG:     "",
 	}
 	callLogStart := call.Start()
-	_, err := vmHandler.SuspendVM(vmID)
-	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+
+	status, err := vmHandler.GetVMStatus(vmID)
 	if err != nil {
-		callLogInfo.ErrorMSG = err.Error()
-		callogger.Info(call.String(callLogInfo))
+		callogger.Info(err)
 		return irs.VMStatus("Failed"), err
 	}
-	callogger.Info(call.String(callLogInfo))
+	// running 상태일 때는 reset
+	if status == "Running" {
+		callogger.Info("vm의 상태가 running이므로 reset 호춯")
+		operation, err := vmHandler.Client.Instances.Reset(projectID, zone, vmID.SystemId).Context(ctx).Do()
 
-	_, err2 := vmHandler.ResumeVM(vmID)
-	if err2 != nil {
-		return irs.VMStatus("Failed"), err2
+		if err != nil {
+			callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+			callLogInfo.ErrorMSG = err.Error()
+			callogger.Info(call.String(callLogInfo))
+			callogger.Info(operation)
+			return irs.VMStatus("Failed"), err
+		}
+	} else if status == "Suspended" {
+		callogger.Info("vm의 상태가 Suspended이므로 ResumeVM 호춯")
+		_, err := vmHandler.ResumeVM(vmID)
+		if err != nil {
+			return irs.VMStatus("Failed"), err
+		}
+	} else {
+		// running/suspended 이외에는 비정상
+		return irs.VMStatus("Failed"), errors.New(string("VM의 상태가 [" + status + "] 입니다."))
 	}
+	//callogger.Info(vmID)
+	//callogger.Info(status)
+
+	//operationType := 3 // operationZone := 3
+	//err = WaitOperationComplete(vmHandler.Client, projectID, region, zone, operation.Name, operationType)
+
+	//callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+	//if err != nil {
+	//	callLogInfo.ErrorMSG = err.Error()
+	//	callogger.Info(call.String(callLogInfo))
+	//	return irs.VMStatus("Failed"), err // stop 자체는 에러가 없으므로 wait 오류는 기록만.
+	//}
+	//callogger.Info(call.String(callLogInfo))
 
 	return irs.VMStatus("Rebooting"), nil
 }
+
+// reboot : suspend -> resome
+//func (vmHandler *GCPVMHandler) RebootVM(vmID irs.IID) (irs.VMStatus, error) {
+//	projectID := vmHandler.Credential.ProjectID
+//	region := vmHandler.Region.Region
+//	zone := vmHandler.Region.Zone
+//
+//	// logger for HisCall
+//	callogger := call.GetLogger("HISCALL")
+//	callLogInfo := call.CLOUDLOGSCHEMA{
+//		CloudOS:      call.GCP,
+//		RegionZone:   vmHandler.Region.Zone,
+//		ResourceType: call.VM,
+//		ResourceName: vmID.SystemId,
+//		CloudOSAPI:   "SuspendVM()",
+//		ElapsedTime:  "",
+//		ErrorMSG:     "",
+//	}
+//	callLogStart := call.Start()
+//	//_, err := vmHandler.SuspendVM(vmID)
+//	operation, err := vmHandler.GCPInstanceStop(projectID, zone, vmID.SystemId)
+//
+//	if err != nil {
+//		callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+//		callLogInfo.ErrorMSG = err.Error()
+//		callogger.Info(call.String(callLogInfo))
+//		return irs.VMStatus("Failed"), err
+//	}
+//
+//	operationZone := 3
+//	err = WaitOperationComplete(vmHandler.Client, projectID, region, zone, operation.Name, operationZone)
+//
+//	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
+//	if err != nil {
+//		callLogInfo.ErrorMSG = err.Error()
+//		callogger.Info(call.String(callLogInfo))
+//		//return irs.VMStatus("Failed"), err	// stop 자체는 에러가 없으므로 wait 오류는 기록만.
+//	}
+//	callogger.Info(call.String(callLogInfo))
+//
+//	_, err2 := vmHandler.ResumeVM(vmID)
+//	if err2 != nil {
+//		return irs.VMStatus("Failed"), err2
+//	}
+//
+//	return irs.VMStatus("Rebooting"), nil
+//}
 
 func (vmHandler *GCPVMHandler) TerminateVM(vmID irs.IID) (irs.VMStatus, error) {
 	projectID := vmHandler.Credential.ProjectID
@@ -714,12 +843,16 @@ func (vmHandler *GCPVMHandler) GetVM(vmID irs.IID) (irs.VMInfo, error) {
 func (vmHandler *GCPVMHandler) mappingServerInfo(server *compute.Instance) irs.VMInfo {
 	cblogger.Info("================맵핑=====================================")
 	spew.Dump(server)
+	fmt.Println("server: ", server)
 
 	//var gcpHanler *GCPVMHandler
 	vpcArr := strings.Split(server.NetworkInterfaces[0].Network, "/")
 	subnetArr := strings.Split(server.NetworkInterfaces[0].Subnetwork, "/")
 	vpcName := vpcArr[len(vpcArr)-1]
 	subnetName := subnetArr[len(subnetArr)-1]
+	diskInfo := vmHandler.getDiskInfo(server.Disks[0].Source)
+	diskTypeArr := strings.Split(diskInfo.Type, "/")
+	diskType := diskTypeArr[len(diskTypeArr)-1]
 
 	type IIDBox struct {
 		Items []irs.IID
@@ -764,6 +897,9 @@ func (vmHandler *GCPVMHandler) mappingServerInfo(server *compute.Instance) irs.V
 			NameId:   subnetName,
 			SystemId: subnetName,
 		},
+		RootDiskType:   diskType,
+		RootDiskSize:   strconv.FormatInt(diskInfo.SizeGb, 10),
+		RootDeviceName: server.Disks[0].DeviceName,
 		KeyValueList: []irs.KeyValue{
 			{"SubNetwork", server.NetworkInterfaces[0].Subnetwork},
 			{"AccessConfigName", server.NetworkInterfaces[0].AccessConfigs[0].Name},
@@ -843,6 +979,29 @@ func (vmHandler *GCPVMHandler) getImageInfo(diskname string) irs.IID {
 	return iId
 }
 
+// getVM에서 DiskSize, DiskType이 넘어오지 않아 Disk정보를 조회
+func (vmHandler *GCPVMHandler) getDiskInfo(diskname string) *compute.Disk {
+	projectID := vmHandler.Credential.ProjectID
+	zone := vmHandler.Region.Zone
+	dArr := strings.Split(diskname, "/")
+	var result string
+	if dArr != nil {
+		result = dArr[len(dArr)-1]
+	}
+	cblogger.Infof("result : [%s]", result)
+
+	info, err := vmHandler.Client.Disks.Get(projectID, zone, result).Do()
+
+	cblogger.Infof("********************************** Disk 정보 ****************")
+	spew.Dump(info)
+	if err != nil {
+		cblogger.Error(err)
+		return info
+	}
+
+	return info
+}
+
 // func (vmHandler *GCPVMHandler) getKeyPairInfo(diskname string) irs.IID {
 // 	projectID := vmHandler.Credential.ProjectID
 // 	zone := vmHandler.Region.Zone
@@ -861,3 +1020,39 @@ func (vmHandler *GCPVMHandler) getImageInfo(diskname string) irs.IID {
 
 // 	return result
 // }
+
+// VM 정보를 조회할 수 있을 때까지 최대 30초간 대기
+func (vmHandler *GCPVMHandler) WaitForRun(vmIID irs.IID) (irs.VMStatus, error) {
+	cblogger.Info("======> 생성된 VM의 최종 정보 확인을 위해 Running 될 때까지 대기함.")
+
+	waitStatus := "Running"
+
+	//===================================
+	// Suspending 되도록 3초 정도 대기 함.
+	//===================================
+	curRetryCnt := 0
+	maxRetryCnt := 120
+	for {
+		curStatus, errStatus := vmHandler.GetVMStatus(vmIID)
+		if errStatus != nil {
+			cblogger.Error(errStatus.Error())
+		}
+
+		cblogger.Info("===>VM Status : ", curStatus)
+		if curStatus == irs.VMStatus(waitStatus) { //|| curStatus == irs.VMStatus("Running") {
+			cblogger.Infof("===>VM 상태가 [%s]라서 대기를 중단합니다.", curStatus)
+			break
+		}
+
+		//if curStatus != irs.VMStatus(waitStatus) {
+		curRetryCnt++
+		cblogger.Errorf("VM 상태가 [%s]이 아니라서 1초 대기후 조회합니다.", waitStatus)
+		time.Sleep(time.Second * 1)
+		if curRetryCnt > maxRetryCnt {
+			cblogger.Errorf("장시간(%d 초) 대기해도 VM의 Status 값이 [%s]으로 변경되지 않아서 강제로 중단합니다.", maxRetryCnt, waitStatus)
+			return irs.VMStatus("Failed"), errors.New("장시간 기다렸으나 생성된 VM의 상태가 [" + waitStatus + "]으로 바뀌지 않아서 중단 합니다.")
+		}
+	}
+
+	return irs.VMStatus(waitStatus), nil
+}

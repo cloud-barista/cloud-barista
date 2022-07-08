@@ -1,14 +1,16 @@
 package lang
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
 	"regexp"
 	"strconv"
+	"strings"
+	"text/template"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 const (
@@ -19,11 +21,6 @@ const (
 	letterIdxMax  = 63 / letterIdxBits
 )
 
-var (
-	// Random source by nano time
-	randSrc = rand.NewSource(time.Now().UnixNano())
-)
-
 // NVL is null value logic
 func NVL(str string, def string) string {
 	if len(str) == 0 {
@@ -32,31 +29,9 @@ func NVL(str string, def string) string {
 	return str
 }
 
-// get store cluster key
-func GetStoreClusterKey(namespace string, clusterName string) string {
-	if clusterName == "" {
-		return fmt.Sprintf("/ns/%s/clusters", namespace)
-	} else {
-		return fmt.Sprintf("/ns/%s/clusters/%s", namespace, clusterName)
-	}
-}
-
-// get store node key
-func GetStoreNodeKey(namespace string, clusterName string, nodeName string) string {
-	if nodeName == "" {
-		return fmt.Sprintf("/ns/%s/clusters/%s/nodes", namespace, clusterName)
-	} else {
-		return fmt.Sprintf("/ns/%s/clusters/%s/nodes/%s", namespace, clusterName, nodeName)
-	}
-}
-
-// get uuid
-func GetUid() string {
-	return uuid.New().String()
-}
-
-// Random string generation
-func GetRandomString(n int) string {
+/* generate to a random string */
+func GenerateNewRandomString(n int) string {
+	randSrc := rand.NewSource(time.Now().UnixNano()) //Random source by nano time
 	b := make([]byte, n)
 	for i, cache, remain := n-1, randSrc.Int63(), letterIdxMax; i >= 0; {
 		if remain == 0 {
@@ -72,30 +47,35 @@ func GetRandomString(n int) string {
 	return string(b)
 }
 
-// get node name
-func GetNodeName(role string, idx int) string {
-	return fmt.Sprintf("%s-%d-%s", role[:1], idx, GetRandomString(5))
+/* generate to a new node name */
+func GenerateNewNodeName(role string, idx int) string {
+	return fmt.Sprintf("%s-%d-%s", role[:1], idx, GenerateNewRandomString(5))
 }
 
-func GetIdxToInt(idx string) int {
-	i, err := strconv.Atoi(idx)
-	if err != nil {
-		i = 0
-	}
-	return i
-}
-
-func GetMaxNumber(arr []int) int {
-	max := 0
-	for _, val := range arr {
-		if val > max {
-			max = val
+/* get a idex of node name */
+func GetNodeNameIndex(nodeName string) int {
+	a := strings.Split(nodeName, "-")
+	if len(a) >= 2 {
+		if idx, err := strconv.ParseInt(a[1], 0, 64); err != nil {
+			return 0
+		} else {
+			return int(idx)
 		}
 	}
-	return max
+	return 0
 }
 
-func CheckName(name string) error {
+/* replace all */
+func ReplaceAll(source string, olds []string, new string) string {
+
+	for _, s := range olds {
+		source = strings.ReplaceAll(source, s, new)
+	}
+	return source
+}
+
+/* verify cluster name */
+func VerifyClusterName(name string) error {
 	reg, _ := regexp.Compile("[a-z]([-a-z0-9]*[a-z0-9])?")
 	filtered := reg.FindString(name)
 
@@ -105,7 +85,8 @@ func CheckName(name string) error {
 	return nil
 }
 
-func CheckIpCidr(name string, val string) error {
+/* verify CIDR */
+func VerifyCIDR(name string, val string) error {
 	reg, _ := regexp.Compile("^((?:\\d{1,3}.){3}\\d{1,3})\\/(\\d{1,2})$")
 	filtered := reg.FindString(val)
 
@@ -115,6 +96,7 @@ func CheckIpCidr(name string, val string) error {
 	return nil
 }
 
+/* if it's not alpabet & number then replace to "" */
 func GetOnlyLettersAndNumbers(name string) string {
 	reg := regexp.MustCompile("[^a-zA-Z0-9]+")
 	val := reg.ReplaceAllString(name, "")
@@ -122,15 +104,38 @@ func GetOnlyLettersAndNumbers(name string) string {
 	return val
 }
 
+/* get a now string  */
 func GetNowUTC() string {
 	t := time.Now().UTC()
 	return t.Format(time.RFC3339)
 }
 
-func GetNodeLabel(key string, value string) string {
-	result := ""
-	if value != "" {
-		result = fmt.Sprintf("%s=%s", key, value)
+func ToPrettyJSON(data []byte) []byte {
+
+	if len(data) > 0 {
+		var buf bytes.Buffer
+		if err := json.Indent(&buf, data, "", "  "); err == nil {
+			return buf.Bytes()
+		}
 	}
-	return result
+	return data
+}
+
+func ToTemplateBytes(tpl string, todo interface{}) ([]byte, error) {
+
+	t, err := template.New("tpl").Funcs(
+		template.FuncMap{
+			"ToUpper": strings.ToUpper,
+		}).Parse(tpl)
+	if err != nil {
+		return nil, err
+	}
+
+	var out bytes.Buffer
+	err = t.Execute(&out, todo)
+	if err != nil {
+		return nil, err
+	}
+	return out.Bytes(), nil
+
 }

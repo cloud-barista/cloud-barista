@@ -1,5 +1,5 @@
 package mcis
 
 type PriorityInfo struct {
-	Policy PriorityCondition `json:"policy"`
+	Policy []PriorityCondition `json:"policy"`
 }

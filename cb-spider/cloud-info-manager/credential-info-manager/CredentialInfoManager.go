@@ -72,7 +72,13 @@ func RegisterCredential(credentialName string, providerName string, keyValueInfo
 		return nil, err
 	}
 
-	crdInfo := &CredentialInfo{credentialName, providerName, keyValueInfoList}
+	// Hide credential data for security
+        kvList := []icbs.KeyValue{}
+        for _, kv := range keyValueInfoList {
+                kv.Value = "Hidden for security."
+                kvList = append(kvList, kv)
+        }
+	crdInfo := &CredentialInfo{credentialName, providerName, kvList}
 	return crdInfo, nil
 }
 
@@ -83,8 +89,21 @@ func ListCredential() ([]*CredentialInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Hide credential data for security
+	returnInfoList := []*CredentialInfo{}
+	for _, info := range credentialInfoList {
 
-	return credentialInfoList, nil
+		kvList := []icbs.KeyValue{}
+		for _, kv := range info.KeyValueInfoList {
+			kv.Value = "Hidden for security."
+			kvList = append(kvList, kv)
+		}
+		info.KeyValueInfoList = kvList
+
+		returnInfoList = append(returnInfoList, info)
+	}
+
+	return returnInfoList, nil
 }
 
 // 1. check params
@@ -101,6 +120,14 @@ func GetCredential(credentialName string) (*CredentialInfo, error) {
 		cblog.Error(err)
 		return nil, err
 	}
+
+	// Hide credential data for security
+	kvList := []icbs.KeyValue{}
+	for _, kv := range crdInfo.KeyValueInfoList {
+		kv.Value = "Hidden for security."
+		kvList = append(kvList, kv)
+	}
+	crdInfo.KeyValueInfoList = kvList
 
 	return crdInfo, err
 }

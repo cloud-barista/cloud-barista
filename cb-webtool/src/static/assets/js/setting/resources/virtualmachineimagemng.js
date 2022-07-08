@@ -198,7 +198,7 @@ function deleteVirtualMachineImage() {
 function getVirtualMachineImageList(sort_type) {
     console.log("여기 : ", sort_type);
     var sortType = sort_type;
-    console.log("sortType : ", sortType);
+    console.log("sortType : ", sortType)
 
     getCommonVirtualMachineImageList("virtualmachineimagemng", sortType)
     // console.log(sort_type);
@@ -274,6 +274,7 @@ function setVirtualMachineImageListAtServerImage(data, sortType) {
                     + '<td class="overlay hidden column-50px" data-th="">'
                     + '<input type="hidden" id="img_info_' + index + '" value="' + item.name + '|' + item.cspImageId + '"/>'
                     + '<input type="checkbox" name="chk" value="' + item.name + '" id="raw_' + index + '" title="" /><label for="td_ch1"></label> <span class="ov off"></span></td>'
+                    + '<input type="hidden" value="' + item.systemLabel + '"/>'
                     + '<td class="btn_mtd ovm" data-th="connectionName ">' + item.connectionName + '<span class="ov"></span></td>'
                     + '<td class="btn_mtd ovm" data-th="cspImageId ">' + item.cspImageId + '<span class="ov"></span></td>'
                     + '<td class="overlay hidden" data-th="name">' + item.name + '</td>'
@@ -287,6 +288,7 @@ function setVirtualMachineImageListAtServerImage(data, sortType) {
                     + '<td class="overlay hidden column-50px" data-th="">'
                     + '<input type="hidden" id="img_info_' + index + '" value="' + item.name + '"/>'
                     + '<input type="checkbox" name="chk" value="' + item.name + '" id="raw_' + index + '" title="" /><label for="td_ch1"></label> <span class="ov off"></span></td>'
+                    + '<input type="hidden" value="' + item.systemLabel + '"/>'
                     + '<td class="btn_mtd ovm" data-th="cspImageId">' + item.cspImageId + '<span class="ov"></span></td>'
                     + '<td class="overlay hidden" data-th="name">' + item.name + '</td>'
                     + '<td class="overlay hidden" data-th="description">' + item.description + '</td>'

@@ -13,17 +13,18 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/beego/beego/v2 v2.0.2
 	github.com/cloud-barista/cb-log v0.5.0
-	github.com/cloud-barista/cb-spider v0.4.19
+	github.com/cloud-barista/cb-spider v0.5.0
 	github.com/cloud-barista/cb-store v0.5.0
-	github.com/cloud-barista/cb-tumblebug v0.4.18
+	github.com/cloud-barista/cb-tumblebug v0.5.0
+	github.com/ghodss/yaml v1.0.0
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/golang/protobuf v1.5.2
-	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/labstack/echo/v4 v4.6.1
+	github.com/mitchellh/mapstructure v1.4.1
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/client_golang v1.11.0
 	github.com/sirupsen/logrus v1.8.1

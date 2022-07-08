@@ -124,8 +124,9 @@ func Frame(c echo.Context) error {
  <!--   <frameset rows="66,*" frameborder="Yes" border=1"> -->
     <frameset rows="100,*" frameborder="Yes" border=1">
         <frame src="adminweb/top" name="top_frame" scrolling="auto" noresize marginwidth="0" marginheight="0"/>
-        <frameset frameborder="Yes" border=1">
-            <frame src="adminweb/driver" name="main_frame" scrolling="auto" noresize marginwidth="5" marginheight="0"/> 
+        <frameset rows="*,130" frameborder="Yes" border=2">
+            <frame src="adminweb/driver" id="main_frame" name="main_frame" scrolling="auto" /> 
+            <frame src="adminweb/log" id="log_frame" name="log_frame" scrolling="auto" /> 
         </frameset>
     </frameset>
     <noframes>
@@ -241,6 +242,16 @@ func Top(c echo.Context) error {
                     <font size=2>[mgmt]</font>
                 </a>
             </td>
+            <td width="140">
+                <!-- NLB Management -->
+                <a href="nlb/region not set" target="main_frame" id="nlbHref">
+                    <font size=2>3.NLB</font>
+                </a>
+                &nbsp;
+                <a href="nlbmgmt/region not set" target="main_frame" id="nlbmgmtHref">
+                    <font size=2>[mgmt]</font>
+                </a>
+            </td>
             <td width="230">
                 <!-- Image Management -->
                 <a href="vmimage/region not set" target="main_frame" id="vmimageHref">
@@ -256,6 +267,85 @@ func Top(c echo.Context) error {
 
     </table>
 </body>
+</html>
+	`
+
+	
+	htmlStr = strings.ReplaceAll(htmlStr, "$$TIME$$", cr.ShortStartTime)
+	return c.HTML(http.StatusOK, htmlStr)
+}
+
+//================ Log
+func Log(c echo.Context) error {
+	cblog.Info("call Log()")
+
+	htmlStr :=  ` 
+<html>
+	<head>
+		<style>
+			.footer {
+			   position: fixed;
+			   left: 2%;
+			   bmeottom:8 0;
+			   width: 96%;
+			   background-color:lightgray;
+			   color: white;
+			   text-align: center;
+			}
+			.clearbutton {
+			   position: fixed;
+			   left: 0%;
+			}
+
+		</style>
+		<script>
+			function init() {
+				var logObject = document.getElementById('printLog');
+				logObject.style.width = "100%"; // 800;
+				var height = parent.document.getElementById("log_frame").scrollHeight;
+				logObject.style.height = height-15;
+			}
+						
+			function main() {
+				Log("# Spider Client Log...");
+			}
+
+			function Log(s) {
+				var logObject = document.getElementById('printLog');
+				var curTime = "[" + new Date().toLocaleTimeString() + "] ";
+				logObject.value += (curTime + s + '\n');
+
+				if(logObject.selectionStart == logObject.selectionEnd) {
+					logObject.scrollTop = logObject.scrollHeight;
+				}
+			}
+
+			function clearLog() {
+				var logObject = document.getElementById('printLog');
+				var curTime = "[" + new Date().toLocaleTimeString() + "] ";
+				var s = "# Spider Client Log..."
+				logObject.value = (curTime + s + '\n');
+			}
+
+			function resizeLogArea() {
+				init()
+			}
+
+		</script>
+	</head>
+
+	<body onresize="resizeLogArea()">
+		<button class="clearbutton" onclick="clearLog()">X</button>
+
+		<div class="footer">
+			<textarea id='printLog' disabled="true" style="overflow:scroll;resize:none;" wrap="off"></textarea>
+		</div>
+		<script>
+			init();
+			main();
+		</script>
+
+	</body>
 </html>
 	`
 
@@ -437,7 +527,7 @@ func makeActionTR_html(colspan string, f5_href string,  delete_href string, font
 			</a>
 			&nbsp;
 			<a href="javascript:%s;">
-			    <font size=%s><b>&nbsp;X</b></font>
+			    <font color=red size=%s><b>&nbsp;X</b></font>
 			</a>
 			&nbsp;
 		    </td>

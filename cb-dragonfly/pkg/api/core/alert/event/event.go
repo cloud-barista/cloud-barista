@@ -13,11 +13,14 @@ import (
 func CreateEventLog(eventLog alerttypes.AlertEventLog) error {
 	var eventLogArr []alerttypes.AlertEventLog
 
-	eventLogStr := cbstore.GetInstance().StoreGet(eventLog.Id)
+	eventLogStr, err := cbstore.GetInstance().StoreGet(eventLog.Id)
+	if err != nil {
+		return err
+	}
 
-	if eventLogStr != "" {
+	if eventLogStr != nil {
 		// Get event log array
-		err := json.Unmarshal([]byte(eventLogStr), &eventLogArr)
+		err := json.Unmarshal([]byte(*eventLogStr), &eventLogArr)
 		if err != nil {
 			return err
 		}
@@ -40,14 +43,17 @@ func CreateEventLog(eventLog alerttypes.AlertEventLog) error {
 
 func ListEventLog(taskId string, logLevel string) ([]alerttypes.AlertEventLog, error) {
 	var eventLogArr []alerttypes.AlertEventLog
-	eventLogStr := cbstore.GetInstance().StoreGet(taskId)
-	if eventLogStr == "" {
+	eventLogStr, err := cbstore.GetInstance().StoreGet(taskId)
+	if err != nil {
+		return []alerttypes.AlertEventLog{}, err
+	}
+	if eventLogStr == nil {
 		return []alerttypes.AlertEventLog{}, nil
 	}
-	err := json.Unmarshal([]byte(eventLogStr), &eventLogArr)
-	if err != nil {
+	if err = json.Unmarshal([]byte(*eventLogStr), &eventLogArr); err != nil {
 		return nil, err
 	}
+
 	if logLevel == "" {
 		return eventLogArr, nil
 	}

@@ -196,13 +196,16 @@ Check out [CONTRIBUTING](https://github.com/cloud-barista/cb-tumblebug/blob/main
 
 
    Access to API dashboard (username: default / password: default)
-   http://xxx.xxx.xxx.xxx:1323/tumblebug/swagger/index.html?url=http://xxx.xxx.xxx.xxx:1323/tumblebug/swaggerActive
+   http://xxx.xxx.xxx.xxx:1323/tumblebug/swagger/index.html
 
   ⇨ http server started on [::]:1323
   ⇨ grpc server started on [::]:50252
   ```
 
-- Known Errors and Troubleshooting
+<details>
+<summary>Known Errors and Troubleshooting</summary>
+
+- Errors related to `golang.org/x/net/trace`
   ``` 
   panic: /debug/requests is already registered. 
   You may have two independent copies of golang.org/x/net/trace in your binary, 
@@ -210,11 +213,12 @@ Check out [CONTRIBUTING](https://github.com/cloud-barista/cb-tumblebug/blob/main
   This may involve a vendor copy of golang.org/x/net/trace.
   ```
 
-  run following to resolve if error occurs.
+  Solution: Run following to resolve this issue by removing duplicated files.
   ```Shell
   # rm -rf $GOPATH/src/go.etcd.io/etcd/vendor/golang.org/x/net/trace
   # make
   ```
+</details>
 
 ***
 ***

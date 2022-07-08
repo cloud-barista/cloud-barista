@@ -32,7 +32,8 @@ func SetMonConfig(newMonConfig config.Monitoring) (*config.Monitoring, int, erro
 
 	monConfig := config.Monitoring{
 		AgentInterval:           cbstore.GetInstance().StoreGetToInt(fmt.Sprintf("%s/%s", types.MonConfig, "agent_interval")),
-		CollectorInterval:       cbstore.GetInstance().StoreGetToInt(fmt.Sprintf("%s/%s", types.MonConfig, "collector_interval")),
+		MCISCollectorInterval:   cbstore.GetInstance().StoreGetToInt(fmt.Sprintf("%s/%s", types.MonConfig, "mcis_collector_interval")),
+		MCK8SCollectorInterval:  cbstore.GetInstance().StoreGetToInt(fmt.Sprintf("%s/%s", types.MonConfig, "mck8s_collector_interval")),
 		MaxHostCount:            cbstore.GetInstance().StoreGetToInt(fmt.Sprintf("%s/%s", types.MonConfig, "max_host_count")),
 		MonitoringPolicy:        cbstore.GetInstance().StoreGetToString(fmt.Sprintf("%s/%s", types.MonConfig, "monitoring_policy")),
 		DefaultPolicy:           cbstore.GetInstance().StoreGetToString(fmt.Sprintf("%s/%s", types.MonConfig, "default_policy")),
@@ -49,7 +50,8 @@ func SetMonConfig(newMonConfig config.Monitoring) (*config.Monitoring, int, erro
 func GetMonConfig() (*config.Monitoring, int, error) {
 	monConfig := config.Monitoring{
 		AgentInterval:           cbstore.GetInstance().StoreGetToInt(fmt.Sprintf("%s/%s", types.MonConfig, "agent_interval")),
-		CollectorInterval:       cbstore.GetInstance().StoreGetToInt(fmt.Sprintf("%s/%s", types.MonConfig, "collector_interval")),
+		MCISCollectorInterval:   cbstore.GetInstance().StoreGetToInt(fmt.Sprintf("%s/%s", types.MonConfig, "mcis_collector_interval")),
+		MCK8SCollectorInterval:  cbstore.GetInstance().StoreGetToInt(fmt.Sprintf("%s/%s", types.MonConfig, "mck8s_collector_interval")),
 		MaxHostCount:            cbstore.GetInstance().StoreGetToInt(fmt.Sprintf("%s/%s", types.MonConfig, "max_host_count")),
 		MonitoringPolicy:        cbstore.GetInstance().StoreGetToString(fmt.Sprintf("%s/%s", types.MonConfig, "monitoring_policy")),
 		DefaultPolicy:           cbstore.GetInstance().StoreGetToString(fmt.Sprintf("%s/%s", types.MonConfig, "default_policy")),
@@ -59,7 +61,7 @@ func GetMonConfig() (*config.Monitoring, int, error) {
 		DeployType:              cbstore.GetInstance().StoreGetToString(fmt.Sprintf("%s/%s", types.MonConfig, "deploy_type")),
 	}
 
-	if monConfig.AgentInterval == -1 || monConfig.CollectorInterval == -1 || monConfig.MaxHostCount == -1 || monConfig.MonitoringPolicy == "" || monConfig.DefaultPolicy == "" || monConfig.PullerInterval == -1 || monConfig.PullerAggregateInterval == -1 || monConfig.AggregateType == "" || monConfig.DeployType == "" {
+	if monConfig.AgentInterval == -1 || monConfig.MCISCollectorInterval == -1 || monConfig.MaxHostCount == -1 || monConfig.MonitoringPolicy == "" || monConfig.DefaultPolicy == "" || monConfig.PullerInterval == -1 || monConfig.PullerAggregateInterval == -1 || monConfig.AggregateType == "" || monConfig.DeployType == "" {
 		return nil, http.StatusInternalServerError, nil
 	}
 

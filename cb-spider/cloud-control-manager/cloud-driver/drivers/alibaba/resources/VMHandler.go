@@ -8,8 +8,10 @@ package resources
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,6 +21,7 @@ import (
 	call "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/call-log"
 	idrv "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces"
 	irs "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/interfaces/resources"
+	cim "github.com/cloud-barista/cb-spider/cloud-info-manager"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/sirupsen/logrus"
 	/*
@@ -35,6 +38,34 @@ var cblogger *logrus.Logger
 func init() {
 	// cblog is a global variable.
 	cblogger = cblog.GetLogger("CB-SPIDER")
+}
+
+// 주어진 이미지 id에 대한 이미지 사이즈 조회
+// -1 : 정보 조회 실패
+func (vmHandler *AlibabaVMHandler) GetImageSize(ImageSystemId string) (int64, error) {
+	cblogger.Debugf("ImageID : [%s]", ImageSystemId)
+
+	imageRequest := ecs.CreateDescribeImagesRequest()
+	imageRequest.Scheme = "https"
+
+	imageRequest.ImageId = ImageSystemId
+	imageRequest.ShowExpired = requests.NewBoolean(true) //default는 false, false일 때는 최신 이미지 정보만 조회됨, true일 때는 오래된 이미지도 조회
+
+	response, err := vmHandler.Client.DescribeImages(imageRequest)
+	if err != nil {
+		cblogger.Error(err)
+		return -1, err
+	}
+
+	if len(response.Images.Image) > 0 {
+		fmt.Println(response.Images.Image[0].Size)
+		imageSize := int64(response.Images.Image[0].Size)
+		return imageSize, nil
+
+	} else {
+		cblogger.Error("요청된 Image 정보[" + ImageSystemId + "]를 찾을 수 없습니다.")
+		return -1, errors.New("요청된 Image 정보[" + ImageSystemId + "]를 찾을 수 없습니다.")
+	}
 }
 
 // 참고 : VM 생성 시 인증 방식은 KeyPair 또는 ID&PWD 방식이 가능하지만 계정은 모두 root  - 비번 조회 기능은 없음
@@ -57,7 +88,6 @@ func (vmHandler *AlibabaVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo,
 		Client: vmHandler.Client,
 	}
 	cblogger.Info(keypairHandler)
-
 	keyPairInfo, errKeyPair := keypairHandler.GetKey(vmReqInfo.KeyPairIID)
 	if errKeyPair != nil {
 		cblogger.Error(errKeyPair)
@@ -160,7 +190,7 @@ func (vmHandler *AlibabaVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo,
 	//=============================
 	// Root Disk Type 변경
 	//=============================
-	if vmReqInfo.RootDiskType == "" {
+	if vmReqInfo.RootDiskType == "" || strings.EqualFold(vmReqInfo.RootDiskType, "default") {
 		//디스크 정보가 없으면 건드리지 않음.
 	} else {
 		request.SystemDiskCategory = vmReqInfo.RootDiskType
@@ -169,14 +199,106 @@ func (vmHandler *AlibabaVMHandler) StartVM(vmReqInfo irs.VMReqInfo) (irs.VMInfo,
 	//=============================
 	// Root Disk Size 변경
 	//=============================
-	if vmReqInfo.RootDiskSize == "" {
+	if vmReqInfo.RootDiskSize == "" || strings.EqualFold(vmReqInfo.RootDiskSize, "default") {
 		//디스크 정보가 없으면 건드리지 않음.
 	} else {
-		if strings.EqualFold(vmReqInfo.RootDiskSize, "default") {
-			request.SystemDiskSize = "40"
-		} else {
-			request.SystemDiskSize = vmReqInfo.RootDiskSize
+
+		rootDiskSize, err := strconv.ParseInt(vmReqInfo.RootDiskSize, 10, 64)
+		if err != nil {
+			cblogger.Error(err)
+			return irs.VMInfo{}, err
 		}
+
+		// cloudos_meta 에 DiskType, min, max 값 정의
+		cloudOSMetaInfo, err := cim.GetCloudOSMetaInfo("ALIBABA")
+		arrDiskSizeOfType := cloudOSMetaInfo.RootDiskSize
+
+		fmt.Println("arrDiskSizeOfType: ", arrDiskSizeOfType)
+
+		type diskSize struct {
+			diskType    string
+			diskMinSize int64
+			diskMaxSize int64
+			unit        string
+		}
+
+		diskSizeValue := diskSize{}
+		// DiskType default 도 건드리지 않음
+		if vmReqInfo.RootDiskType == "" || strings.EqualFold(vmReqInfo.RootDiskType, "default") {
+
+			//diskSizeArr := strings.Split(arrDiskSizeOfType[0], "|")
+			//diskSizeValue.diskType = diskSizeArr[0]
+			//diskSizeValue.unit = diskSizeArr[3]
+			//diskSizeValue.diskMinSize, err = strconv.ParseInt(diskSizeArr[1], 10, 64)
+			//if err != nil {
+			//	cblogger.Error(err)
+			//	return irs.VMInfo{}, err
+			//}
+			//
+			//diskSizeValue.diskMaxSize, err = strconv.ParseInt(diskSizeArr[2], 10, 64)
+			//if err != nil {
+			//	cblogger.Error(err)
+			//	return irs.VMInfo{}, err
+			//}
+		} else {
+			// diskType이 있으면 type에 맞는 min, max, default 값 사용
+			isExists := false
+			for idx, _ := range arrDiskSizeOfType {
+				diskSizeArr := strings.Split(arrDiskSizeOfType[idx], "|")
+				fmt.Println("diskSizeArr: ", diskSizeArr)
+
+				if strings.EqualFold(vmReqInfo.RootDiskType, diskSizeArr[0]) {
+					diskSizeValue.diskType = diskSizeArr[0]
+					diskSizeValue.unit = diskSizeArr[3]
+					diskSizeValue.diskMinSize, err = strconv.ParseInt(diskSizeArr[1], 10, 64)
+					if err != nil {
+						cblogger.Error(err)
+						return irs.VMInfo{}, err
+					}
+
+					diskSizeValue.diskMaxSize, err = strconv.ParseInt(diskSizeArr[2], 10, 64)
+					if err != nil {
+						cblogger.Error(err)
+						return irs.VMInfo{}, err
+					}
+					isExists = true
+				}
+			}
+			if !isExists {
+				return irs.VMInfo{}, errors.New("Invalid Root Disk Type : " + vmReqInfo.RootDiskType)
+			}
+
+			if rootDiskSize < diskSizeValue.diskMinSize {
+				fmt.Println("Disk Size Error!!: ", rootDiskSize, diskSizeValue.diskMinSize, diskSizeValue.diskMaxSize)
+				//return irs.VMInfo{}, errors.New("Requested disk size cannot be smaller than the minimum disk size, invalid")
+				return irs.VMInfo{}, errors.New("Root Disk Size must be at least the default size (" + strconv.FormatInt(diskSizeValue.diskMinSize, 10) + " GB).")
+			}
+
+			if rootDiskSize > diskSizeValue.diskMaxSize {
+				fmt.Println("Disk Size Error!!: ", rootDiskSize, diskSizeValue.diskMinSize, diskSizeValue.diskMaxSize)
+				//return irs.VMInfo{}, errors.New("Requested disk size cannot be larger than the maximum disk size, invalid")
+				return irs.VMInfo{}, errors.New("Root Disk Size must be smaller than the maximum size (" + strconv.FormatInt(diskSizeValue.diskMaxSize, 10) + " GB).")
+			}
+		}
+
+		imageSize, err := vmHandler.GetImageSize(vmReqInfo.ImageIID.SystemId)
+		if err != nil {
+			cblogger.Error(err)
+			return irs.VMInfo{}, err
+		}
+
+		if imageSize < 0 {
+			return irs.VMInfo{}, errors.New("요청된 이미지의 기본 사이즈 정보를 조회할 수 없습니다.")
+		} else {
+			if rootDiskSize < imageSize {
+				fmt.Println("Disk Size Error!!: ", rootDiskSize)
+				return irs.VMInfo{}, errors.New("Root Disk Size must be larger then the image size (" + strconv.FormatInt(imageSize, 10) + " GB).")
+			}
+
+		}
+
+		request.SystemDiskSize = vmReqInfo.RootDiskSize
+
 	}
 
 	spew.Dump(request)
@@ -351,6 +473,15 @@ func (vmHandler *AlibabaVMHandler) ResumeVM(vmIID irs.IID) (irs.VMStatus, error)
 	}
 
 	callLogStart := call.Start()
+
+	curStatus, errStatus := vmHandler.GetVMStatus(vmIID)
+	if errStatus != nil {
+		cblogger.Error(errStatus.Error())
+	}
+
+	if curStatus != "Suspended" {
+		return irs.VMStatus("Failed"), errors.New(string("vm 상태가 Suspended 가 아닙니다." + curStatus))
+	}
 	response, err := vmHandler.Client.StartInstance(request)
 	callLogInfo.ElapsedTime = call.Elapsed(callLogStart)
 
@@ -447,12 +578,10 @@ func (vmHandler *AlibabaVMHandler) TerminateVM(vmIID irs.IID) (irs.VMStatus, err
 			cblogger.Error(errSus.Error())
 			return irs.VMStatus("Failed"), errSus
 		}
-
 		if sus != "Suspending" {
 			cblogger.Errorf("[%s] VM의 Suspend 모드 실행 결과[%s]가 Suspending이 아닙니다.", vmIID.SystemId, sus)
 			return irs.VMStatus("Failed"), errors.New(vmIID.SystemId + " VM의 Suspend 모드 실행 결과 가 Suspending이 아닙니다.")
 		}
-
 		//===================================
 		// Suspending 되도록 3초 정도 대기 함.
 		//===================================
@@ -463,7 +592,6 @@ func (vmHandler *AlibabaVMHandler) TerminateVM(vmIID irs.IID) (irs.VMStatus, err
 			if errStatus != nil {
 				cblogger.Error(errStatus.Error())
 			}
-
 			cblogger.Info("===>VM Status : ", curStatus)
 			if curStatus != irs.VMStatus("Suspended") {
 				curRetryCnt++
@@ -569,6 +697,7 @@ func (vmHandler *AlibabaVMHandler) GetVM(vmIID irs.IID) (irs.VMInfo, error) {
 //func (vmHandler *AlibabaVMHandler) ExtractDescribeInstances() irs.VMInfo {
 func (vmHandler *AlibabaVMHandler) ExtractDescribeInstances(instancInfo *ecs.Instance) irs.VMInfo {
 	cblogger.Info(instancInfo)
+	diskInfo := vmHandler.getDiskInfo(instancInfo.InstanceId)
 
 	//time.Parse(layout, str)
 	vmInfo := irs.VMInfo{
@@ -587,6 +716,9 @@ func (vmHandler *AlibabaVMHandler) ExtractDescribeInstances(instancInfo *ecs.Ins
 		//PrivateIP
 		//PrivateIP: instancInfo.VpcAttributes.PrivateIpAddress.IpAddress[0],
 		//PrivateDNS
+		RootDiskType:   diskInfo.Category,
+		RootDiskSize:   strconv.Itoa(diskInfo.Size),
+		RootDeviceName: diskInfo.Device,
 
 		//VMBootDisk  string // ex) /dev/sda1
 		//VMBlockDisk string // ex)
@@ -767,33 +899,26 @@ func (vmHandler *AlibabaVMHandler) GetVMStatus(vmIID irs.IID) (irs.VMStatus, err
 const (
         Creating VMStatus = “Creating" // from launch to running
         Running VMStatus = “Running"
-
         Suspending VMStatus = “Suspending" // from running to suspended
         Suspended  VMStatus = “Suspended"
         Resuming VMStatus = “Resuming" // from suspended to running
-
         Rebooting VMStatus = “Rebooting" // from running to running
-
         Terminating VMStatus = “Terminating" // from running, suspended to terminated
         Terminated  VMStatus = “Terminated“
         NotExist  VMStatus = “NotExist“  // VM does not exist
-
         Failed  VMStatus = “Failed“
 )
-
 <최종 상태>
 Running(동작 상태): MCIS가 동작 상태
 Suspended(중지 상태): MCIS가 중지된 상태
 Failed(실패 상태): MCIS가 오류로 인해 중단된 상태
 Terminated(종료 상태): MCIS가 종료된 상태
-
 <전이 상태>
 Creating(생성 진행 상태): MCIS가 생성되는 중간 상태
 Suspending(중지 진행 상태): MCIS를 일시 중지하기 위한 중간 상태
 Resuming(재개 진행 상태): MCIS를 다시 실행하기 위한 중간 상태
 Rebooting(재시작 진행 상태): MCIS를 재부팅하는 상태
 Terminating(종료 진행 상태): MCIS의 종료를 실행하고 있는 중간 상태
-
 */
 func (vmHandler *AlibabaVMHandler) ConvertVMStatusString(vmStatus string) (irs.VMStatus, error) {
 	var resultStatus string
@@ -801,6 +926,8 @@ func (vmHandler *AlibabaVMHandler) ConvertVMStatusString(vmStatus string) (irs.V
 
 	if strings.EqualFold(vmStatus, "Pending") {
 		resultStatus = "Creating"
+	} else if strings.EqualFold(vmStatus, "Starting") {
+		resultStatus = "Resuming" // Resume 요청을 받아서 재기동되는 단계는 Resuming으로 맵핑함.
 	} else if strings.EqualFold(vmStatus, "Running") {
 		resultStatus = "Running"
 	} else if strings.EqualFold(vmStatus, "Stopping") {
@@ -865,4 +992,20 @@ func (vmHandler *AlibabaVMHandler) ListVMStatus() ([]*irs.VMStatusInfo, error) {
 	}
 
 	return vmInfoList, nil
+}
+
+func (vmHandler *AlibabaVMHandler) getDiskInfo(instanceId string) ecs.Disk {
+
+	diskRequest := ecs.CreateDescribeDisksRequest()
+	diskRequest.Scheme = "https"
+
+	diskRequest.InstanceId = instanceId
+
+	response, err := vmHandler.Client.DescribeDisks(diskRequest)
+	if err != nil {
+		fmt.Print(err.Error())
+	}
+	fmt.Println("response: ", response)
+
+	return response.Disks.Disk[0]
 }

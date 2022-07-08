@@ -1602,6 +1602,245 @@
 </div>
 <!-- SSH Assist popup -->
 
+
+<!-- Recommend Assist popup -->
+<div class="modal fade popup_editBox" id="recommendVmAssist" tabindex="-1" role="dialog" aria-hidden="true">
+
+	<input type="hidden" id="t_regRecommendConn" value="" />
+	<input type="hidden" id="t_regRecommendCspSpec" value="" />
+
+	<div class="modal-dialog modal-dialog-scrollable modal-dialog-centered" role="document">
+		<div class="modal-content recommend-modal">
+
+			<div class="modal-body">
+				<div class="pop-body">
+
+					<div class="title_box">
+						<div class="title">Recommended VM List</div>
+					</div>
+
+					<div class="pop-cont">
+						<div class="spec_box">
+							<div class="toptxt search">
+								<!-- <label>Search</label> -->
+								<!-- <input type="submit" name="" class="btn_search_spec" title="" value=""
+									onclick="searchSpecsByRange('searchVmSpecAssistAtReg')" /> -->
+								<input type="hidden" id="longitude" name="" value="" class="pline" title="" />
+								<input type="hidden" id="latitude" name="" value="" class="pline" title="" />
+								<ul>
+									<li class="reg_1">
+										<label class="assistLabel"></span>Priority Option</label>
+										<select class="selectbox white pline w3"
+											name="assistRecommendSpecConnectionName"
+											id="assistRecommendSpecConnectionName">
+											<option value="" selected>Select Priority Option</option>
+											<option value="location" selected>Location</option>
+											<option value="cost">Cost</option>
+											<option value="latency">Latency</option>
+										</select>
+									</li>
+									<li class="reg_1">
+										<label class="assistLabel"></span>Limit</label>
+										<input type="text" class="pline" value="5" name="recommendVmLimit"
+											id="recommendVmLimit">
+									</li>
+									<li class="reg_1">
+										<input type="submit" name="" class="btn_search_spec" title="" value=""
+											onclick="getRecommendVmInfo()" />
+									</li>
+
+								</ul>
+
+							</div>
+
+							<div class="s_box recommend s_box_1">
+								<ul>
+
+									<li>
+										<label>Memory</label>
+										<div class="s_slider_box">
+											<input type="text" id="num_memory_min" name="assist_max_num_memory_min"
+												value="0" placeholder="1" class="components_input txt_ipbox" title=""
+												disabled />
+											<div class="slider_ip">
+												<button class="btn_s btn_s_minus">-</button>
+												<div class="slider_bar">
+													<!-- <input type="text" name="" value="" placeholder=""
+															class="slider_bar" title="" data-slider-min="0"
+															data-slider-max="100" data-slider-step="1"
+															data-slider-value="1" /> -->
+												</div>
+												<button class="btn_s btn_s_plus">+</button>
+											</div>
+											<input type="text" id="num_memory_max" name="assist_max_num_memory_min"
+												value="100" placeholder="1" class="components_input txt_ipbox" title=""
+												disabled />
+										</div>
+										<span class="stxt">TiB</span>
+									</li>
+
+								</ul>
+							</div>
+
+							<div class="s_box recommend s_box_2">
+								<ul>
+									<li>
+										<label>CPU</label>
+										<div class="s_slider_box">
+											<input type="text" id="num_vCPU_min" name="assist_num_vCPU_min" value="0"
+												placeholder="0" class="components_input txt_ipbox" title="" disabled />
+											<div class="slider_ip">
+												<button class="btn_s btn_s_minus">-</button>
+												<div class="slider_bar">
+													<!-- <input type="text" name="" value="" placeholder=""
+															class="slider_bar" title="" data-slider-min="0"
+															data-slider-max="10" data-slider-step="1"
+															data-slider-value="0" /> -->
+												</div>
+												<button class="btn_s btn_s_plus">+</button>
+											</div>
+											<input type="text" id="num_vCPU_max" name="assist_num_vCPU_max" value="100"
+												placeholder="0" class="components_input txt_ipbox" title="" disabled />
+										</div>
+										<span class="stxt">Unit</span>
+									</li>
+								</ul>
+							</div>
+
+							<div class="s_box recommend s_box_2">
+								<ul>
+									<li>
+										<label>COST</label>
+										<div class="s_slider_box">
+											<input type="text" id="num_cost_min" name="assist_num_vCPU_min" value="0"
+												placeholder="0" class="components_input txt_ipbox" title="" disabled />
+											<div class="slider_ip">
+												<button class="btn_s btn_s_minus">-</button>
+												<div class="slider_bar">
+													<!-- <input type="text" name="" value="" placeholder=""
+															class="slider_bar" title="" data-slider-min="0"
+															data-slider-max="10" data-slider-step="1"
+															data-slider-value="0" /> -->
+												</div>
+												<button class="btn_s btn_s_plus">+</button>
+											</div>
+											<input type="text" id="num_cost_max" name="assist_num_vCPU_max" value="100"
+												placeholder="0" class="components_input txt_ipbox" title="" disabled />
+										</div>
+										<span class="stxt">Unit</span>
+									</li>
+								</ul>
+							</div>
+
+
+						</div>
+
+						<div class="mapcont">
+							<div class="map" id="recommend_map" style="height:150px;"></div>
+							<!--							<div class="map" id="map" style="height:300px;"></div>-->
+						</div>
+
+						<!-- table scrollbar -->
+						<div class="dtbox scrollbar-inner">
+							<div class="dataTable dt_overlay">
+								<table cellpadding="0" cellspacing="0" summary="" id="popRecommendSpec">
+									<thead>
+										<tr>
+											<th>Provider</th>
+											<th>Region</th>
+											<th>Name</th>
+											<th>CSPSpec</th>
+											<th>Price</th>
+											<th>Memory</th>
+											<th>CPU</th>
+											<th>EvaluationScore01</th>
+										</tr>
+									</thead>
+									<tbody id="assistRecommendSpecList">
+
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<!-- //table scrollbar -->
+
+					</div>
+
+				</div>
+
+				<div class="btnbox">
+					<div class="btn_right">
+						<button name="" value="" class="btn_apply btn_co btn_cr_g"
+							onclick="applyAssistValidCheck('recommendVmAssist')"><span>Apply</span></button>
+						<button name="" value="" class="btn_cancel btn_co btn_cr_b" data-dismiss="modal">cancel</button>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+
+</div>
+<!-- Recommend Assist popup -->
+
+
+<!-- Connection Assist popup -->
+<div class="modal fade popup_editBox" id="connectionAssist" tabindex="-1" role="dialog" aria-hidden="true">
+
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+
+			<div class="modal-body">
+				<div class="pop-body">
+
+					<div class="title_box btnbox">
+						<div class="title">Connection List</div>
+					</div>
+
+					<div class="pop-cont">
+
+						<!-- table scrollbar -->
+						<div class="dtbox scrollbar-inner">
+							<div class="dataTable dt_overlay">
+								<table cellpadding="0" cellspacing="0" summary="" id="popConnection">
+									<thead>
+										<tr>
+											<th>Connection</th>
+											<th>Spec</th>
+										</tr>
+									</thead>
+									<tbody id="assistConnectionList">
+
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<!-- //table scrollbar -->
+
+					</div>
+
+				</div>
+
+				<div class="btnbox">
+					<div class="btn_right">
+						<button name="" value="" class="btn_co btn_cr_g" onclick="checkMcisNameExist()"
+							id="btn_create_mcis"><span>Create
+								MCIS</span></button>
+						<button name="" value="" class="btn_apply btn_co btn_cr_g"
+							onclick="applyAssistValidCheck('recommendVmAssist')"><span>Apply</span></button>
+						<button name="" value="" class="btn_cancel btn_co btn_cr_b" data-dismiss="modal">cancel</button>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+
+</div>
+<!-- Connection Assist popup -->
+
 <script src="/assets/js/jquery-ui.min.js"></script>
 <script src="/assets/js/operation/manages/mcismng/vmassistpopup.js"></script>
 

@@ -243,13 +243,14 @@ github.com/cloud-barista/cb-log v0.4.0/go.mod h1:C0KNV97sw8IoLSlNuSiCGDQIuS/wXJa
 github.com/cloud-barista/cb-log v0.5.0 h1:WoUnXtNNNTA7wRgQa6sFNs57O3mLAOrh4aDHC4cU0CI=
 github.com/cloud-barista/cb-log v0.5.0/go.mod h1:C0KNV97sw8IoLSlNuSiCGDQIuS/wXJaZWV/6MOwc20c=
 github.com/cloud-barista/cb-spider v0.4.5/go.mod h1:/6DT/uHT/XEN6pm3Ne89awbjrFBJl8PE6F3i8T4SW/Y=
-github.com/cloud-barista/cb-spider v0.4.19 h1:Ovl99GVV7fElKQEyy+e9ILhJ9kmECis78603loaVisY=
 github.com/cloud-barista/cb-spider v0.4.19/go.mod h1:QhEE8dYh0xUvi4tSyxrbIZn1TzCwpDfFQTVTYIGlS6s=
+github.com/cloud-barista/cb-spider v0.5.0 h1:klEKNixTInlZhZnjzcDb1u9hqB05EQ5ftPqlZwJyeHE=
+github.com/cloud-barista/cb-spider v0.5.0/go.mod h1:QhEE8dYh0xUvi4tSyxrbIZn1TzCwpDfFQTVTYIGlS6s=
 github.com/cloud-barista/cb-store v0.4.1/go.mod h1:d3mwxDF2gC4lc7a+DFc2eo1OqqS9sHygLGUrU94hhj0=
 github.com/cloud-barista/cb-store v0.5.0 h1:1pqgmon1CQWQvjalm23K15G23qhP9hMoy9AUb8tn7bs=
 github.com/cloud-barista/cb-store v0.5.0/go.mod h1:EhuQfTQRoLPE6jCMMRGbM4OEIZv+Zk2Zf6wxsJ5GyEM=
-github.com/cloud-barista/cb-tumblebug v0.4.18 h1:JnMHvQCYn+kHu5ZjL/+kLeR+7ZnIGXQEx4XwXguBF+I=
-github.com/cloud-barista/cb-tumblebug v0.4.18/go.mod h1:98ttfmX1/krEx2oKFuCYBqiT5AG1H6cQSPVPfk8st9A=
+github.com/cloud-barista/cb-tumblebug v0.5.0 h1:x2JJc17PSvtIjeeq3q68vk2HeoYCddkkVo7wnBVoHnA=
+github.com/cloud-barista/cb-tumblebug v0.5.0/go.mod h1:98ttfmX1/krEx2oKFuCYBqiT5AG1H6cQSPVPfk8st9A=
 github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58/go.mod h1:EOBUe0h4xcZ5GoxqC5SDxFQ8gwyZPKQoEzownBlhI80=
 github.com/cockroachdb/datadriven v0.0.0-20190809214429-80d97fb3cbaa/go.mod h1:zn76sxSg3SzpJ0PPJaLDCu+Bu0Lg3sKTORVIj19EIF8=
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
@@ -438,6 +439,7 @@ github.com/garyburd/redigo v0.0.0-20150301180006-535138d7bcd7/go.mod h1:NR3MbYis
 github.com/getkin/kin-openapi v0.2.0/go.mod h1:V1z9xl9oF5Wt7v32ne4FmiF1alpS4dM6mNzoywPOXlk=
 github.com/getkin/kin-openapi v0.61.0/go.mod h1:7Yn5whZr5kJi6t+kShccXS8ae1APpYTW6yheSwk8Yi4=
 github.com/ghodss/yaml v0.0.0-20150909031657-73d445a93680/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
+github.com/ghodss/yaml v1.0.0 h1:wQHKEahhL6wmXdzwWG11gIVCkOv05bNOh+Rxn0yngAk=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/glendc/gopher-json v0.0.0-20170414221815-dc4743023d0c/go.mod h1:Gja1A+xZ9BoviGJNA2E9vFkPjjsl+CoJxSXiQM1UXtw=
 github.com/globalsign/mgo v0.0.0-20180905125535-1ca0a4f7cbcb/go.mod h1:xkRDCp4j0OGD1HRkm4kmhM+pmpv3AKq5SU7GMg4oO/Q=

@@ -2,7 +2,9 @@
 package cmd
 
 import (
-	"github.com/cloud-barista/cb-mcks/src/grpc-api/config"
+	"os"
+
+	"github.com/cloud-barista/cb-mcks/src/grpc-api/cbadm/app"
 	"github.com/spf13/cobra"
 )
 
@@ -14,18 +16,12 @@ const (
 )
 
 var (
-	configFile string
-	inData     string
-	inFile     string
-	inType     string
-	outType    string
-
-	nameSpaceID string
 	clusterName string
-	nodeName    string
-
-	parser config.Parser
 )
+
+type CbadmOptions struct {
+	app.Options
+}
 
 // ===== [ Types ] =====
 
@@ -38,6 +34,12 @@ var (
 // NewRootCmd - 어플리케이션 진입점으로 사용할 Root Cobra Command 생성
 func NewRootCmd() *cobra.Command {
 
+	o := CbadmOptions{
+		Options: app.Options{
+			OutStream: os.Stdout,
+		},
+	}
+
 	rootCmd := &cobra.Command{
 		Use:   "cbadm",
 		Short: "cbadm is a lightweight grpc cli tool",
@@ -45,19 +47,26 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	// 옵션 플래그 설정
-	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "./grpc_conf.yaml", "config file")
-	rootCmd.PersistentFlags().StringVarP(&inType, "input", "i", "yaml", "input format (json/yaml)")
-	rootCmd.PersistentFlags().StringVarP(&outType, "output", "o", "yaml", "output format (json/yaml)")
+	rootCmd.PersistentFlags().StringVar(&o.Name, "name", "", "name")
+	rootCmd.PersistentFlags().StringVarP(&o.ConfigFile, "config", "c", "", "configuration file path")
+	rootCmd.PersistentFlags().StringVarP(&o.Namespace, "namespace", "n", "", "cloud-baristar namespace")
+	rootCmd.PersistentFlags().StringVarP(&o.Filename, "file", "f", "", "filepath")
+	rootCmd.PersistentFlags().StringVarP(&o.Data, "data", "d", "", "input string data")
+	rootCmd.PersistentFlags().StringVarP(&o.Output, "output", "o", "yaml", "output format (json/yaml)")
 
-	// Viper 를 사용하는 설정 파서 생성
-	parser = config.MakeParser()
+	if err := app.OnConfigInitialize(o.ConfigFile); err != nil {
+		o.PrintlnError(err)
+		os.Exit(1)
+	}
 
 	//  Adds the commands for application.
+	rootCmd.AddCommand(NewCommandConfig(&o.Options))
 	rootCmd.AddCommand(NewVersionCmd())
 
-	rootCmd.AddCommand(NewHealthyCmd())
-	rootCmd.AddCommand(NewClusterCmd())
-	rootCmd.AddCommand(NewNodeCmd())
+	rootCmd.AddCommand(NewHealthyCmd(&o.Options))
+	rootCmd.AddCommand(NewGetCmd(&o.Options))
+	rootCmd.AddCommand(NewCreateCmd(&o.Options))
+	rootCmd.AddCommand(NewDeleteCmd(&o.Options))
 
 	return rootCmd
 }

@@ -52,7 +52,7 @@ create() {
 		{
 			"name": "${v_CLUSTER_NAME}",
 			"label": "",
-			"installMonAgent": "no",
+			"installMonAgent": "",
 			"description": "",
 			"config": {
 				"kubernetes": {
@@ -64,16 +64,16 @@ create() {
 			},
 			"controlPlane": [
 				{
-					"connection": "config-aws-ap-northeast-1",
-					"count": 1,
-					"spec": "t2.medium"
+					"connection": "config-azure-koreacentral",
+					"count": 3,
+					"spec": "Standard_B2s"
 				}
 			],
 			"worker": [
 				{
-					"connection": "config-gcp-asia-northeast3",
+					"connection": "config-ibm-jp-tok",
 					"count": 1,
-					"spec": "n1-standard-2"
+					"spec": "bx2-2x8"
 				}
 			]
 		}
@@ -88,7 +88,7 @@ EOF
 			"ReqInfo": {
 					"name": "'${v_CLUSTER_NAME}'",
 					"label": "",
-					"installMonAgent": "no",
+					"installMonAgent": "no",                              
 					"description": "",
 					"config": {
 						"kubernetes": {

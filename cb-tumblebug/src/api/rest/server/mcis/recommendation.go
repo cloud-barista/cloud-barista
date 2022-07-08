@@ -28,15 +28,14 @@ import (
 // @Tags [Infra service] MCIS Provisioning management
 // @Accept  json
 // @Produce  json
-// @Param nsId path string true "Namespace ID" default(common)
 // @Param deploymentPlan body mcis.DeploymentPlan false "Recommend MCIS plan (filter and priority)"
 // @Success 200 {object} []mcir.TbSpecInfo
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
-// @Router /ns/{nsId}/mcisRecommendVm [post]
+// @Router /mcisRecommendVm [post]
 func RestRecommendVm(c echo.Context) error {
 
-	nsId := c.Param("nsId")
+	nsId := common.SystemCommonNs
 
 	u := &mcis.DeploymentPlan{}
 	if err := c.Bind(u); err != nil {
@@ -53,4 +52,48 @@ func RestRecommendVm(c echo.Context) error {
 	// result := RestFilterSpecsResponse{}
 	// result.Spec = content
 	return c.JSON(http.StatusOK, &content)
+}
+
+type RestPostMcisRecommendResponse struct {
+	//VmReq          []TbVmRecommendReq    `json:"vmReq"`
+	VmRecommend    []mcis.TbVmRecommendInfo `json:"vmRecommend"`
+	PlacementAlgo  string                   `json:"placementAlgo"`
+	PlacementParam []common.KeyValue        `json:"placementParam"`
+}
+
+// RestPostMcisRecommend godoc
+// @Deprecated
+func RestPostMcisRecommend(c echo.Context) error {
+	// @Summary Get MCIS recommendation
+	// @Description Get MCIS recommendation
+	// @Tags [Infra service] MCIS Provisioning management
+	// @Accept  json
+	// @Produce  json
+	// @Param nsId path string true "Namespace ID" default(ns01)
+	// @Param mcisRecommendReq body mcis.McisRecommendReq true "Details for an MCIS object"
+	// @Success 200 {object} RestPostMcisRecommendResponse
+	// @Failure 404 {object} common.SimpleMsg
+	// @Failure 500 {object} common.SimpleMsg
+	// @Router /ns/{nsId}/mcis/recommend [post]
+	nsId := c.Param("nsId")
+
+	req := &mcis.McisRecommendReq{}
+	if err := c.Bind(req); err != nil {
+		return err
+	}
+
+	result, err := mcis.CorePostMcisRecommend(nsId, req)
+	if err != nil {
+		mapA := map[string]string{"message": err.Error()}
+		return c.JSON(http.StatusInternalServerError, &mapA)
+	}
+
+	content := RestPostMcisRecommendResponse{}
+	content.VmRecommend = result
+	content.PlacementAlgo = req.PlacementAlgo
+	content.PlacementParam = req.PlacementParam
+
+	common.PrintJsonPretty(content)
+
+	return c.JSON(http.StatusCreated, content)
 }

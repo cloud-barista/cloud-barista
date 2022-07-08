@@ -21,7 +21,7 @@ func NewVersionCmd() *cobra.Command {
 
 	versionCmd := &cobra.Command{
 		Use:   "version",
-		Short: "This is a version command for cbadm",
+		Short: "Version command for cbadm",
 		Long:  "This is a version command for cbadm",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Printf("CBADM CLI VERSION %s\n", CLIVersion)

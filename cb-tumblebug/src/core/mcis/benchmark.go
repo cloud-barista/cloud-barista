@@ -160,13 +160,13 @@ func CallMilkyway(wg *sync.WaitGroup, vmList []string, nsId string, mcisId strin
 		common.CBLog.Error(err)
 		errStr = err.Error()
 	}
-	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		common.CBLog.Error(err)
 		errStr = err.Error()
 	}
+	defer res.Body.Close()
 	fmt.Println(string(body))
 
 	fmt.Println("HTTP Status code: " + strconv.Itoa(res.StatusCode))
@@ -343,8 +343,6 @@ func RunAllBenchmarks(nsId string, mcisId string, host string) (*BenchmarkInfoAr
 	csvWriter2.Flush()
 
 	if err != nil {
-		//mapError := map[string]string{"message": "Benchmark Error"}
-		//return c.JSON(http.StatusFailedDependency, &mapError)
 		return nil, fmt.Errorf("Benchmark Error")
 	}
 
@@ -392,14 +390,10 @@ func CoreGetBenchmark(nsId string, mcisId string, action string, host string) (*
 	if strings.Contains(vaildActions, action) {
 		content, err = BenchmarkAction(nsId, mcisId, action, option)
 	} else {
-		//mapA := map[string]string{"message": "Not available action"}
-		//return c.JSON(http.StatusFailedDependency, &mapA)
 		return nil, fmt.Errorf("Not available action")
 	}
 
 	if err != nil {
-		//mapError := map[string]string{"message": "Benchmark Error"}
-		//return c.JSON(http.StatusFailedDependency, &mapError)
 		return nil, fmt.Errorf("Benchmark Error")
 	}
 

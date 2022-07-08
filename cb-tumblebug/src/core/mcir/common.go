@@ -106,7 +106,6 @@ func DelAllResources(nsId string, resourceType string, subString string, forceFl
 			deleteStatus = ""
 
 			err := DelResource(nsId, resourceType, v, forceFlag)
-			common.CBLog.Error(err)
 
 			if err != nil {
 				deleteStatus = err.Error()
@@ -122,8 +121,6 @@ func DelAllResources(nsId string, resourceType string, subString string, forceFl
 
 // DelResource deletes the TB MCIR object
 func DelResource(nsId string, resourceType string, resourceId string, forceFlag string) error {
-
-	fmt.Printf("DelResource() called; %s %s %s %s \n", nsId, resourceType, resourceId, forceFlag) // for debug
 
 	err := common.CheckString(nsId)
 	if err != nil {
@@ -145,10 +142,7 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 
 	if !check {
 		errString := "The " + resourceType + " " + resourceId + " does not exist."
-		//mapA := map[string]string{"message": errString}
-		//mapB, _ := json.Marshal(mapA)
 		err := fmt.Errorf(errString)
-		//return http.StatusNotFound, mapB, err
 		return err
 	}
 
@@ -189,7 +183,6 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 			err := common.CBStore.Delete(key)
 			if err != nil {
 				common.CBLog.Error(err)
-				//return http.StatusInternalServerError, nil, err
 				return err
 			}
 
@@ -201,7 +194,6 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 				fmt.Println("Data deleted successfully..")
 			}
 
-			//return http.StatusOK, nil, nil
 			return nil
 		case common.StrSpec:
 			// delete spec info
@@ -229,7 +221,6 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 				fmt.Println("Data deleted successfully..")
 			}
 
-			//return http.StatusOK, nil, nil
 			return nil
 		case common.StrSSHKey:
 			temp := TbSshKeyInfo{}
@@ -277,7 +268,6 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 		*/
 		default:
 			err := fmt.Errorf("invalid resourceType")
-			//return http.StatusBadRequest, nil, err
 			return err
 		}
 
@@ -358,7 +348,6 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 			err := common.CBStore.Delete(key)
 			if err != nil {
 				common.CBLog.Error(err)
-				//return http.StatusInternalServerError, nil, err
 				return err
 			}
 
@@ -370,7 +359,6 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 				fmt.Println("Data deleted successfully..")
 			}
 
-			//return http.StatusOK, nil, nil
 			return nil
 		case common.StrSpec:
 			// delete spec info
@@ -458,12 +446,10 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 
 	if resourceType == common.StrVNet {
 		// var subnetKeys []string
-		fmt.Printf("childResources: %s", childResources) // for debug
 		subnets := childResources.([]TbSubnetInfo)
 		for _, v := range subnets {
 			subnetKey := common.GenChildResourceKey(nsId, common.StrSubnet, resourceId, v.Id)
 			// subnetKeys = append(subnetKeys, subnetKey)
-			fmt.Printf("subnetKey: %s", subnetKey) // for debug
 			err = common.CBStore.Delete(subnetKey)
 			if err != nil {
 				common.CBLog.Error(err)
@@ -482,8 +468,6 @@ func DelResource(nsId string, resourceType string, resourceId string, forceFlag 
 
 // DelChildResource deletes the TB MCIR object
 func DelChildResource(nsId string, resourceType string, parentResourceId string, resourceId string, forceFlag string) error {
-
-	fmt.Printf("DelChildResource() called; %s %s %s %s \n", nsId, resourceType, parentResourceId, resourceId) // for debug
 
 	var parentResourceType string
 	switch resourceType {
@@ -516,10 +500,7 @@ func DelChildResource(nsId string, resourceType string, parentResourceId string,
 
 	if !check {
 		errString := "The " + parentResourceType + " " + parentResourceId + " does not exist."
-		//mapA := map[string]string{"message": errString}
-		//mapB, _ := json.Marshal(mapA)
 		err := fmt.Errorf(errString)
-		//return http.StatusNotFound, mapB, err
 		return err
 	}
 
@@ -532,10 +513,7 @@ func DelChildResource(nsId string, resourceType string, parentResourceId string,
 
 	if !check {
 		errString := "The " + resourceType + " " + resourceId + " does not exist."
-		//mapA := map[string]string{"message": errString}
-		//mapB, _ := json.Marshal(mapA)
 		err := fmt.Errorf(errString)
-		//return http.StatusNotFound, mapB, err
 		return err
 	}
 
@@ -551,15 +529,6 @@ func DelChildResource(nsId string, resourceType string, parentResourceId string,
 	fmt.Println("childResourceKey: " + childResourceKey)
 
 	parentKeyValue, _ := common.CBStore.Get(parentResourceKey)
-	/*
-		if keyValue == nil {
-			mapA := map[string]string{"message": "Failed to find the resource with given ID."}
-			mapB, _ := json.Marshal(mapA)
-			err := fmt.Errorf("Failed to find the resource with given ID.")
-			return http.StatusNotFound, mapB, err
-		}
-	*/
-	//fmt.Println("keyValue: " + keyValue.Key + " / " + keyValue.Value)
 
 	//cspType := common.GetResourcesCspType(nsId, resourceType, resourceId)
 
@@ -582,11 +551,9 @@ func DelChildResource(nsId string, resourceType string, parentResourceId string,
 				return err
 			}
 			tempReq.ConnectionName = temp.ConnectionName
-			// url = common.SpiderRestUrl + "/vpc/" + temp.Name
 			url = fmt.Sprintf("%s/vpc/%s/subnet/%s", common.SpiderRestUrl, temp.Name, resourceId)
 		default:
 			err := fmt.Errorf("invalid resourceType")
-			//return http.StatusBadRequest, nil, err
 			return err
 		}
 
@@ -731,245 +698,6 @@ func DelEleInSlice(arr interface{}, index int) {
 	}
 }
 
-// SpiderNameIdSystemId is struct for mapping NameID and System ID from CB-Spider response
-type SpiderNameIdSystemId struct {
-	NameId   string
-	SystemId string
-}
-
-// SpiderAllListWrapper is struct for wrapping SpiderAllList struct from CB-Spider response.
-type SpiderAllListWrapper struct {
-	AllList SpiderAllList
-}
-
-// SpiderAllList is struct for OnlyCSPList, OnlySpiderList MappedList from CB-Spider response.
-type SpiderAllList struct {
-	MappedList     []SpiderNameIdSystemId
-	OnlySpiderList []SpiderNameIdSystemId
-	OnlyCSPList    []SpiderNameIdSystemId
-}
-
-// TbInspectResourcesResponse is struct for response of InspectResources request
-type TbInspectResourcesResponse struct {
-	// ResourcesOnCsp       interface{} `json:"resourcesOnCsp"`
-	// ResourcesOnSpider    interface{} `json:"resourcesOnSpider"`
-	// ResourcesOnTumblebug interface{} `json:"resourcesOnTumblebug"`
-	ResourcesOnCsp       []resourceOnCspOrSpider `json:"resourcesOnCsp"`
-	ResourcesOnSpider    []resourceOnCspOrSpider `json:"resourcesOnSpider"`
-	ResourcesOnTumblebug []resourceOnTumblebug   `json:"resourcesOnTumblebug"`
-}
-
-type resourceOnCspOrSpider struct {
-	Id          string `json:"id"`
-	CspNativeId string `json:"cspNativeId"`
-}
-
-type resourceOnTumblebug struct {
-	Id          string `json:"id"`
-	CspNativeId string `json:"cspNativeId"`
-	NsId        string `json:"nsId"`
-	//McisId      string `json:"mcisId"`
-	Type      string `json:"type"`
-	ObjectKey string `json:"objectKey"`
-}
-
-// InspectResources returns the state list of TB MCIR objects of given connConfig and resourceType
-func InspectResources(connConfig string, resourceType string) (TbInspectResourcesResponse, error) {
-
-	nsList, err := common.ListNsId()
-	if err != nil {
-		nullObj := TbInspectResourcesResponse{}
-		common.CBLog.Error(err)
-		err = fmt.Errorf("an error occurred while getting namespaces' list: " + err.Error())
-		return nullObj, err
-	}
-	// var TbResourceList []string
-	var TbResourceList []resourceOnTumblebug
-	for _, ns := range nsList {
-		/*
-			resourceListInNs := ListResourceId(ns, resourceType)
-			for i, _ := range resourceListInNs {
-				resourceListInNs[i] = ns + "/" + resourceListInNs[i]
-			}
-			TbResourceList = append(TbResourceList, resourceListInNs...)
-		*/
-
-		resourceListInNs, err := ListResource(ns, resourceType)
-		if err != nil {
-			nullObj := TbInspectResourcesResponse{}
-			common.CBLog.Error(err)
-			err := fmt.Errorf("an error occurred while getting resource list")
-			return nullObj, err
-		}
-		if resourceListInNs == nil {
-			continue
-		}
-
-		switch resourceType {
-		case common.StrVNet:
-			resourcesInNs := resourceListInNs.([]TbVNetInfo) // type assertion
-			for _, resource := range resourcesInNs {
-				if resource.ConnectionName == connConfig { // filtering
-					temp := resourceOnTumblebug{}
-					temp.Id = resource.Id
-					temp.CspNativeId = resource.CspVNetId
-					temp.NsId = ns
-					//temp.McisId = ""
-					temp.Type = resourceType
-					temp.ObjectKey = common.GenResourceKey(ns, resourceType, resource.Id)
-
-					TbResourceList = append(TbResourceList, temp)
-				}
-			}
-		case common.StrSecurityGroup:
-			resourcesInNs := resourceListInNs.([]TbSecurityGroupInfo) // type assertion
-			for _, resource := range resourcesInNs {
-				if resource.ConnectionName == connConfig { // filtering
-					temp := resourceOnTumblebug{}
-					temp.Id = resource.Id
-					temp.CspNativeId = resource.CspSecurityGroupId
-					temp.NsId = ns
-					//temp.McisId = ""
-					temp.Type = resourceType
-					temp.ObjectKey = common.GenResourceKey(ns, resourceType, resource.Id)
-
-					TbResourceList = append(TbResourceList, temp)
-				}
-			}
-		case common.StrSSHKey:
-			resourcesInNs := resourceListInNs.([]TbSshKeyInfo) // type assertion
-			for _, resource := range resourcesInNs {
-				if resource.ConnectionName == connConfig { // filtering
-					temp := resourceOnTumblebug{}
-					temp.Id = resource.Id
-					temp.CspNativeId = resource.CspSshKeyName
-					temp.NsId = ns
-					//temp.McisId = ""
-					temp.Type = resourceType
-					temp.ObjectKey = common.GenResourceKey(ns, resourceType, resource.Id)
-
-					TbResourceList = append(TbResourceList, temp)
-				}
-			}
-		}
-	}
-
-	client := resty.New().SetCloseConnection(true)
-	client.SetAllowGetMethodPayload(true)
-
-	// Create Req body
-	type JsonTemplate struct {
-		ConnectionName string
-	}
-	tempReq := JsonTemplate{}
-	tempReq.ConnectionName = connConfig
-
-	var spiderRequestURL string
-	switch resourceType {
-	case common.StrVNet:
-		spiderRequestURL = common.SpiderRestUrl + "/allvpc"
-	case common.StrSecurityGroup:
-		spiderRequestURL = common.SpiderRestUrl + "/allsecuritygroup"
-	case common.StrSSHKey:
-		spiderRequestURL = common.SpiderRestUrl + "/allkeypair"
-	}
-
-	resp, err := client.R().
-		SetHeader("Content-Type", "application/json").
-		SetBody(tempReq).
-		SetResult(&SpiderAllListWrapper{}). // or SetResult(AuthSuccess{}).
-		//SetError(&AuthError{}).       // or SetError(AuthError{}).
-		Get(spiderRequestURL)
-
-	if err != nil {
-		nullObj := TbInspectResourcesResponse{}
-		common.CBLog.Error(err)
-		err := fmt.Errorf("an error occurred while requesting to CB-Spider")
-		return nullObj, err
-	}
-
-	fmt.Println("HTTP Status code: " + strconv.Itoa(resp.StatusCode()))
-	switch {
-	case resp.StatusCode() >= 400 || resp.StatusCode() < 200:
-		nullObj := TbInspectResourcesResponse{}
-		err := fmt.Errorf(string(resp.Body()))
-		common.CBLog.Error(err)
-		return nullObj, err
-	default:
-	}
-
-	temp, _ := resp.Result().(*SpiderAllListWrapper) // type assertion
-
-	result := TbInspectResourcesResponse{}
-
-	/*
-		// Implementation style 1
-		if len(TbResourceList) > 0 {
-			result.ResourcesOnTumblebug = TbResourceList
-		} else {
-			result.ResourcesOnTumblebug = []resourceOnTumblebug{}
-		}
-	*/
-	// Implementation style 2
-	result.ResourcesOnTumblebug = []resourceOnTumblebug{}
-	result.ResourcesOnTumblebug = append(result.ResourcesOnTumblebug, TbResourceList...)
-
-	// result.ResourcesOnCsp = append((*temp).AllList.MappedList, (*temp).AllList.OnlyCSPList...)
-	// result.ResourcesOnSpider = append((*temp).AllList.MappedList, (*temp).AllList.OnlySpiderList...)
-	result.ResourcesOnCsp = []resourceOnCspOrSpider{}
-	result.ResourcesOnSpider = []resourceOnCspOrSpider{}
-
-	for _, v := range (*temp).AllList.MappedList {
-		tmpObj := resourceOnCspOrSpider{}
-		tmpObj.Id = v.NameId
-		tmpObj.CspNativeId = v.SystemId
-
-		result.ResourcesOnCsp = append(result.ResourcesOnCsp, tmpObj)
-		result.ResourcesOnSpider = append(result.ResourcesOnSpider, tmpObj)
-	}
-
-	for _, v := range (*temp).AllList.OnlySpiderList {
-		tmpObj := resourceOnCspOrSpider{}
-		tmpObj.Id = v.NameId
-		tmpObj.CspNativeId = v.SystemId
-
-		result.ResourcesOnSpider = append(result.ResourcesOnSpider, tmpObj)
-	}
-
-	for _, v := range (*temp).AllList.OnlyCSPList {
-		tmpObj := resourceOnCspOrSpider{}
-		tmpObj.Id = v.NameId
-		tmpObj.CspNativeId = v.SystemId
-
-		result.ResourcesOnCsp = append(result.ResourcesOnCsp, tmpObj)
-	}
-
-	return result, nil
-}
-
-/*
-// RegisterExistingResources
-func RegisterExistingResources(nsId string, connConfig string) (interface{}, error) {
-	fmt.Println("RegisterExistingResources called;") // for debug
-
-	vpcInspectionResult, err := InspectResources(connConfig, common.StrVNet)
-	if err != nil {
-		common.CBLog.Error(err)
-		err := fmt.Errorf("in RegisterExistingResources(); an error occurred while calling InspectResources()")
-		return nil, err
-	}
-
-	vNetsInCspOnly := vpcInspectionResult.ResourcesOnCsp
-	vNetsInSpiderOnly :=
-	for _, v := range vpcInspectionResult.ResourcesOnTumblebug {
-		vNetId := v.Id
-		fmt.Println("vNetId: " + vNetId) // for debug
-	}
-
-	return nil, nil
-}
-*/
-
 // ListResourceId returns the list of TB MCIR object IDs of given resourceType
 func ListResourceId(nsId string, resourceType string) ([]string, error) {
 
@@ -1021,16 +749,13 @@ func ListResourceId(nsId string, resourceType string) ([]string, error) {
 			resourceList = append(resourceList, trimmedString)
 		}
 	}
-	// for _, v := range resourceList {
-	// 	fmt.Println("<" + v + "> \n")
-	// }
-	// fmt.Println("===============================================")
+
 	return resourceList, nil
 
 }
 
 // ListResource returns the list of TB MCIR objects of given resourceType
-func ListResource(nsId string, resourceType string) (interface{}, error) {
+func ListResource(nsId string, resourceType string, filterKey string, filterVal string) (interface{}, error) {
 
 	err := common.CheckString(nsId)
 	if err != nil {
@@ -1053,7 +778,7 @@ func ListResource(nsId string, resourceType string) (interface{}, error) {
 		return nil, err
 	}
 
-	fmt.Println("[Get " + resourceType + " list")
+	fmt.Println("[Get] " + resourceType + " list")
 	key := "/ns/" + nsId + "/resources/" + resourceType
 	fmt.Println(key)
 
@@ -1062,17 +787,6 @@ func ListResource(nsId string, resourceType string) (interface{}, error) {
 
 	if err != nil {
 		common.CBLog.Error(err)
-		/*
-			fmt.Println("func ListResource; common.CBStore.GetList gave error")
-			var resourceList []string
-			for _, v := range keyValue {
-				resourceList = append(resourceList, strings.TrimPrefix(v.Key, "/ns/"+nsId+"/resources/"+resourceType+"/"))
-			}
-			for _, v := range resourceList {
-				fmt.Println("<" + v + "> \n")
-			}
-			fmt.Println("===============================================")
-		*/
 		return nil, err
 	}
 	if keyValue != nil {
@@ -1080,11 +794,20 @@ func ListResource(nsId string, resourceType string) (interface{}, error) {
 		case common.StrImage:
 			res := []TbImageInfo{}
 			for _, v := range keyValue {
+
 				tempObj := TbImageInfo{}
 				err = json.Unmarshal([]byte(v.Value), &tempObj)
 				if err != nil {
 					common.CBLog.Error(err)
 					return nil, err
+				}
+				// Check the JSON body inclues both filterKey and filterVal strings. (assume key and value)
+				if filterKey != "" {
+					// If not inclues both, do not append current item to the list result.
+					itemValueForCompare := strings.ToLower(v.Value)
+					if !(strings.Contains(itemValueForCompare, strings.ToLower(filterKey)) && strings.Contains(itemValueForCompare, strings.ToLower(filterVal))) {
+						continue
+					}
 				}
 				res = append(res, tempObj)
 			}
@@ -1098,6 +821,14 @@ func ListResource(nsId string, resourceType string) (interface{}, error) {
 					common.CBLog.Error(err)
 					return nil, err
 				}
+				// Check the JSON body inclues both filterKey and filterVal strings. (assume key and value)
+				if filterKey != "" {
+					// If not inclues both, do not append current item to the list result.
+					itemValueForCompare := strings.ToLower(v.Value)
+					if !(strings.Contains(itemValueForCompare, strings.ToLower(filterKey)) && strings.Contains(itemValueForCompare, strings.ToLower(filterVal))) {
+						continue
+					}
+				}
 				res = append(res, tempObj)
 			}
 			return res, nil
@@ -1109,6 +840,14 @@ func ListResource(nsId string, resourceType string) (interface{}, error) {
 				if err != nil {
 					common.CBLog.Error(err)
 					return nil, err
+				}
+				// Check the JSON body inclues both filterKey and filterVal strings. (assume key and value)
+				if filterKey != "" {
+					// If not inclues both, do not append current item to the list result.
+					itemValueForCompare := strings.ToLower(v.Value)
+					if !(strings.Contains(itemValueForCompare, strings.ToLower(filterKey)) && strings.Contains(itemValueForCompare, strings.ToLower(filterVal))) {
+						continue
+					}
 				}
 				res = append(res, tempObj)
 			}
@@ -1122,6 +861,14 @@ func ListResource(nsId string, resourceType string) (interface{}, error) {
 					common.CBLog.Error(err)
 					return nil, err
 				}
+				// Check the JSON body inclues both filterKey and filterVal strings. (assume key and value)
+				if filterKey != "" {
+					// If not inclues both, do not append current item to the list result.
+					itemValueForCompare := strings.ToLower(v.Value)
+					if !(strings.Contains(itemValueForCompare, strings.ToLower(filterKey)) && strings.Contains(itemValueForCompare, strings.ToLower(filterVal))) {
+						continue
+					}
+				}
 				res = append(res, tempObj)
 			}
 			return res, nil
@@ -1134,15 +881,41 @@ func ListResource(nsId string, resourceType string) (interface{}, error) {
 					common.CBLog.Error(err)
 					return nil, err
 				}
+				// Check the JSON body inclues both filterKey and filterVal strings. (assume key and value)
+				if filterKey != "" {
+					// If not inclues both, do not append current item to the list result.
+					itemValueForCompare := strings.ToLower(v.Value)
+					if !(strings.Contains(itemValueForCompare, strings.ToLower(filterKey)) && strings.Contains(itemValueForCompare, strings.ToLower(filterVal))) {
+						continue
+					}
+				}
 				res = append(res, tempObj)
 			}
 			return res, nil
 		}
 
-		//return true, nil
+	} else { //return empty object according to resourceType
+		switch resourceType {
+		case common.StrImage:
+			res := []TbImageInfo{}
+			return res, nil
+		case common.StrSecurityGroup:
+			res := []TbSecurityGroupInfo{}
+			return res, nil
+		case common.StrSpec:
+			res := []TbSpecInfo{}
+			return res, nil
+		case common.StrSSHKey:
+			res := []TbSshKeyInfo{}
+			return res, nil
+		case common.StrVNet:
+			res := []TbVNetInfo{}
+			return res, nil
+		}
 	}
 
-	return nil, nil // When err == nil && keyValue == nil
+	err = fmt.Errorf("Some exceptional case happened. Please check the references of " + common.GetFuncName())
+	return nil, err // if interface{} == nil, make err be returned. Should not come this part if there is no err.
 }
 
 // GetAssociatedObjectCount returns the number of MCIR's associated Tumblebug objects
@@ -1163,8 +936,6 @@ func GetAssociatedObjectCount(nsId string, resourceType string, resourceId strin
 
 	if !check {
 		errString := "The " + resourceType + " " + resourceId + " does not exist."
-		//mapA := map[string]string{"message": errString}
-		//mapB, _ := json.Marshal(mapA)
 		err := fmt.Errorf(errString)
 		return -1, err
 	}
@@ -1176,7 +947,6 @@ func GetAssociatedObjectCount(nsId string, resourceType string, resourceId strin
 	fmt.Println("[Get count] " + resourceType + ", " + resourceId)
 
 	key := common.GenResourceKey(nsId, resourceType, resourceId)
-	//fmt.Println(key)
 
 	keyValue, err := common.CBStore.Get(key)
 	if err != nil {
@@ -1212,8 +982,6 @@ func GetAssociatedObjectList(nsId string, resourceType string, resourceId string
 
 	if !check {
 		errString := "The " + resourceType + " " + resourceId + " does not exist."
-		//mapA := map[string]string{"message": errString}
-		//mapB, _ := json.Marshal(mapA)
 		err := fmt.Errorf(errString)
 		return nil, err
 	}
@@ -1225,7 +993,6 @@ func GetAssociatedObjectList(nsId string, resourceType string, resourceId string
 	fmt.Println("[Get count] " + resourceType + ", " + resourceId)
 
 	key := common.GenResourceKey(nsId, resourceType, resourceId)
-	//fmt.Println(key)
 
 	keyValue, err := common.CBStore.Get(key)
 	if err != nil {
@@ -1233,38 +1000,6 @@ func GetAssociatedObjectList(nsId string, resourceType string, resourceId string
 		return nil, err
 	}
 	if keyValue != nil {
-		/*
-			objList := gjson.Get(keyValue.Value, "associatedObjectList")
-			objList.ForEach(func(key, value gjson.Result) bool {
-				result = append(result, value.String())
-				return true
-			})
-		*/
-
-		/*
-			switch resourceType {
-			case common.StrImage:
-				res := TbImageInfo{}
-				json.Unmarshal([]byte(keyValue.Value), &res)
-				//result = res.
-			case common.StrSecurityGroup:
-				res := TbSecurityGroupInfo{}
-				json.Unmarshal([]byte(keyValue.Value), &res)
-
-			case common.StrSpec:
-				res := TbSpecInfo{}
-				json.Unmarshal([]byte(keyValue.Value), &res)
-
-			case common.StrSSHKey:
-				res := TbSshKeyInfo{}
-				json.Unmarshal([]byte(keyValue.Value), &res)
-				result = res.AssociatedObjectList
-			case common.StrVNet:
-				res := TbVNetInfo{}
-				json.Unmarshal([]byte(keyValue.Value), &res)
-
-			}
-		*/
 
 		type stringList struct {
 			AssociatedObjectList []string `json:"associatedObjectList"`
@@ -1303,8 +1038,6 @@ func UpdateAssociatedObjectList(nsId string, resourceType string, resourceId str
 
 		if !check {
 			errString := "The " + resourceType + " " + resourceId + " does not exist."
-			//mapA := map[string]string{"message": errString}
-			//mapB, _ := json.Marshal(mapA)
 			err := fmt.Errorf(errString)
 			return -1, err
 		}
@@ -1317,7 +1050,6 @@ func UpdateAssociatedObjectList(nsId string, resourceType string, resourceId str
 	fmt.Println("[Set count] " + resourceType + ", " + resourceId)
 
 	key := common.GenResourceKey(nsId, resourceType, resourceId)
-	//fmt.Println(key)
 
 	keyValue, err := common.CBStore.Get(key)
 	if err != nil {
@@ -1336,28 +1068,20 @@ func UpdateAssociatedObjectList(nsId string, resourceType string, resourceId str
 					return nil, err
 				}
 			}
-			// fmt.Println("len(objList): " + strconv.Itoa(len(objList))) // for debug
-			// fmt.Print("objList: ")                                     // for debug
-			// fmt.Println(objList)                                       // for debug
-
 			var anyJson map[string]interface{}
 			json.Unmarshal([]byte(keyValue.Value), &anyJson)
 			if anyJson["associatedObjectList"] == nil {
 				arrayToBe := []string{objectKey}
-				// fmt.Println("array_to_be: ", array_to_be) // for debug
 
 				anyJson["associatedObjectList"] = arrayToBe
 			} else { // anyJson["associatedObjectList"] != nil
 				arrayAsIs := anyJson["associatedObjectList"].([]interface{})
-				// fmt.Println("array_as_is: ", array_as_is) // for debug
 
 				arrayToBe := append(arrayAsIs, objectKey)
-				// fmt.Println("array_to_be: ", array_to_be) // for debug
 
 				anyJson["associatedObjectList"] = arrayToBe
 			}
 			updatedJson, _ := json.Marshal(anyJson)
-			// fmt.Println(string(updatedJson)) // for debug
 
 			keyValue.Value = string(updatedJson)
 		case common.StrDelete:
@@ -1423,8 +1147,6 @@ func GetResource(nsId string, resourceType string, resourceId string) (interface
 
 	if !check {
 		errString := "The " + resourceType + " " + resourceId + " does not exist."
-		//mapA := map[string]string{"message": errString}
-		//mapB, _ := json.Marshal(mapA)
 		err := fmt.Errorf(errString)
 		return nil, err
 	}
@@ -1432,7 +1154,6 @@ func GetResource(nsId string, resourceType string, resourceId string) (interface
 	fmt.Println("[Get resource] " + resourceType + ", " + resourceId)
 
 	key := common.GenResourceKey(nsId, resourceType, resourceId)
-	//fmt.Println(key)
 
 	keyValue, err := common.CBStore.Get(key)
 	if err != nil {
@@ -1535,7 +1256,6 @@ func CheckResource(nsId string, resourceType string, resourceId string) (bool, e
 	fmt.Println("[Check resource] " + resourceType + ", " + resourceId)
 
 	key := common.GenResourceKey(nsId, resourceType, resourceId)
-	//fmt.Println(key)
 
 	keyValue, err := common.CBStore.Get(key)
 	if err != nil {
@@ -1599,7 +1319,6 @@ func CheckChildResource(nsId string, resourceType string, parentResourceId strin
 
 	key := common.GenResourceKey(nsId, parentResourceType, parentResourceId)
 	key += "/" + resourceType + "/" + resourceId
-	//fmt.Println(key)
 
 	keyValue, err := common.CBStore.Get(key)
 	if err != nil {
@@ -1652,11 +1371,8 @@ type NameOnly struct {
 func GetNameFromStruct(u interface{}) string {
 	var result = ReturnValue{CustomStruct: u}
 
-	//fmt.Println(result)
-
 	msg, ok := result.CustomStruct.(NameOnly)
 	if ok {
-		//fmt.Printf("Message1 is %s\n", msg.Name)
 		return msg.Name
 	} else {
 		return ""
@@ -1673,12 +1389,11 @@ func LoadCommonResource() (common.IdList, error) {
 	var waitSpecImg sync.WaitGroup
 	var wait sync.WaitGroup
 
-	// Check 'common' namespace. Create one if not.
-	commonNsId := "common"
-	_, err := common.GetNs(commonNsId)
+	// Check common namespace. Create one if not.
+	_, err := common.GetNs(common.SystemCommonNs)
 	if err != nil {
 		nsReq := common.NsReq{}
-		nsReq.Name = commonNsId
+		nsReq.Name = common.SystemCommonNs
 		nsReq.Description = "Namespace for common resources"
 		_, nsErr := common.CreateNs(&nsReq)
 		if nsErr != nil {
@@ -1708,11 +1423,27 @@ func LoadCommonResource() (common.IdList, error) {
 			go func(i int, row []string) {
 				defer wait.Done()
 				// RandomSleep for safe parallel executions
-				common.RandomSleep(20)
+				common.RandomSleep(0, 20)
 				specReqTmp := TbSpecReq{}
-				// [0]connectionName, [1]cspSpecName, [2]CostPerHour, [3]evaluationScore01, ..., [12]evaluationScore10
-				specReqTmp.ConnectionName = row[0]
-				specReqTmp.CspSpecName = row[1]
+				// 0	providerName
+				// 1	regionName
+				// 2	connectionName
+				// 3	cspSpecName
+				// 4	CostPerHour
+				// 5	evaluationScore01
+				// 6	evaluationScore02
+				// 7	evaluationScore03
+				// 8	evaluationScore04
+				// 9	evaluationScore05
+				// 10	evaluationScore06
+				// 11	evaluationScore07
+				// 12	evaluationScore08
+				// 13	evaluationScore09
+				// 14	evaluationScore10
+				// 15	rootDiskType
+				// 16	rootDiskSize
+				specReqTmp.ConnectionName = row[2]
+				specReqTmp.CspSpecName = row[3]
 				// Give a name for spec object by combining ConnectionName and CspSpecName
 				// To avoid naming-rule violation, modify the string
 				specReqTmp.Name = specReqTmp.ConnectionName + "-" + specReqTmp.CspSpecName
@@ -1724,7 +1455,7 @@ func LoadCommonResource() (common.IdList, error) {
 				common.PrintJsonPretty(specReqTmp)
 
 				// Register Spec object
-				_, err1 := RegisterSpecWithCspSpecName(commonNsId, &specReqTmp)
+				_, err1 := RegisterSpecWithCspSpecName(common.SystemCommonNs, &specReqTmp)
 				if err1 != nil {
 					common.CBLog.Error(err1)
 					// If already exist, error will occur
@@ -1733,15 +1464,22 @@ func LoadCommonResource() (common.IdList, error) {
 				}
 				specObjId := specReqTmp.Name
 
+				// Update registered Spec object with ProviderName
+				providerName := row[0]
+				// Update registered Spec object with RegionName
+				regionName := row[1]
+				rootDiskType := row[15]
+				rootDiskSize := row[16]
+
 				// Update registered Spec object with Cost info
-				costPerHour, err2 := strconv.ParseFloat(strings.ReplaceAll(row[2], " ", ""), 32)
+				costPerHour, err2 := strconv.ParseFloat(strings.ReplaceAll(row[4], " ", ""), 32)
 				if err2 != nil {
 					common.CBLog.Error(err2)
 					// If already exist, error will occur. Even if error, do not return here to update information
 					// return err
 				}
 
-				evaluationScore01, err2 := strconv.ParseFloat(strings.ReplaceAll(row[3], " ", ""), 32)
+				evaluationScore01, err2 := strconv.ParseFloat(strings.ReplaceAll(row[5], " ", ""), 32)
 				if err2 != nil {
 					common.CBLog.Error(err2)
 					// If already exist, error will occur. Even if error, do not return here to update information
@@ -1749,11 +1487,16 @@ func LoadCommonResource() (common.IdList, error) {
 				}
 
 				specUpdateRequest :=
-					TbSpecInfo{CostPerHour: float32(costPerHour),
+					TbSpecInfo{
+						ProviderName:      providerName,
+						RegionName:        regionName,
+						CostPerHour:       float32(costPerHour),
+						RootDiskType:      rootDiskType,
+						RootDiskSize:      rootDiskSize,
 						EvaluationScore01: float32(evaluationScore01),
 					}
 
-				updatedSpecInfo, err3 := UpdateSpec(commonNsId, specObjId, specUpdateRequest)
+				updatedSpecInfo, err3 := UpdateSpec(common.SystemCommonNs, specObjId, specUpdateRequest)
 				if err3 != nil {
 					common.CBLog.Error(err3)
 					// If already exist, error will occur
@@ -1804,7 +1547,7 @@ func LoadCommonResource() (common.IdList, error) {
 			go func(i int, row []string) {
 				defer wait.Done()
 				// RandomSleep for safe parallel executions
-				common.RandomSleep(20)
+				common.RandomSleep(0, 20)
 				imageReqTmp := TbImageReq{}
 				// row0: ProviderName
 				// row1: connectionName
@@ -1823,7 +1566,7 @@ func LoadCommonResource() (common.IdList, error) {
 				common.PrintJsonPretty(imageReqTmp)
 
 				// Register Spec object
-				_, err1 := RegisterImageWithId(commonNsId, &imageReqTmp)
+				_, err1 := RegisterImageWithId(common.SystemCommonNs, &imageReqTmp)
 				if err1 != nil {
 					common.CBLog.Error(err1)
 					// If already exist, error will occur
@@ -1836,7 +1579,7 @@ func LoadCommonResource() (common.IdList, error) {
 
 				imageUpdateRequest := TbImageInfo{GuestOS: osType}
 
-				updatedImageInfo, err2 := UpdateImage(commonNsId, imageObjId, imageUpdateRequest)
+				updatedImageInfo, err2 := UpdateImage(common.SystemCommonNs, imageObjId, imageUpdateRequest)
 				if err2 != nil {
 					common.CBLog.Error(err2)
 					//return err
@@ -1957,19 +1700,19 @@ func LoadDefaultResource(nsId string, resType string, connectionName string) err
 				reqTmp.VNetId = resourceName
 
 				// open all firewall for default securityGroup
-				rule := SpiderSecurityRuleInfo{FromPort: "1", ToPort: "65535", IPProtocol: "tcp", Direction: "inbound", CIDR: "0.0.0.0/0"}
-				var ruleList []SpiderSecurityRuleInfo
+				rule := TbFirewallRuleInfo{FromPort: "1", ToPort: "65535", IPProtocol: "tcp", Direction: "inbound", CIDR: "0.0.0.0/0"}
+				var ruleList []TbFirewallRuleInfo
 				ruleList = append(ruleList, rule)
-				rule = SpiderSecurityRuleInfo{FromPort: "1", ToPort: "65535", IPProtocol: "udp", Direction: "inbound", CIDR: "0.0.0.0/0"}
+				rule = TbFirewallRuleInfo{FromPort: "1", ToPort: "65535", IPProtocol: "udp", Direction: "inbound", CIDR: "0.0.0.0/0"}
 				ruleList = append(ruleList, rule)
-				rule = SpiderSecurityRuleInfo{FromPort: "-1", ToPort: "-1", IPProtocol: "icmp", Direction: "inbound", CIDR: "0.0.0.0/0"}
+				rule = TbFirewallRuleInfo{FromPort: "-1", ToPort: "-1", IPProtocol: "icmp", Direction: "inbound", CIDR: "0.0.0.0/0"}
 				ruleList = append(ruleList, rule)
 				common.PrintJsonPretty(ruleList)
 				reqTmp.FirewallRules = &ruleList
 
 				common.PrintJsonPretty(reqTmp)
 
-				resultInfo, err := CreateSecurityGroup(nsId, &reqTmp)
+				resultInfo, err := CreateSecurityGroup(nsId, &reqTmp, "")
 				if err != nil {
 					common.CBLog.Error(err)
 					// If already exist, error will occur
@@ -1990,7 +1733,7 @@ func LoadDefaultResource(nsId string, resType string, connectionName string) err
 
 				common.PrintJsonPretty(reqTmp)
 
-				resultInfo, err := CreateSshKey(nsId, &reqTmp)
+				resultInfo, err := CreateSshKey(nsId, &reqTmp, "")
 				if err != nil {
 					common.CBLog.Error(err)
 					// If already exist, error will occur
@@ -2030,7 +1773,6 @@ func DelAllDefaultResources(nsId string) (common.IdList, error) {
 	list, err := DelAllResources(nsId, common.StrSecurityGroup, matchedSubstring, "false")
 	if err != nil {
 		common.CBLog.Error(err)
-		//return err
 		output.IdList = append(output.IdList, err.Error())
 	}
 	output.IdList = append(output.IdList, list.IdList...)
@@ -2038,7 +1780,6 @@ func DelAllDefaultResources(nsId string) (common.IdList, error) {
 	list, err = DelAllResources(nsId, common.StrSSHKey, matchedSubstring, "false")
 	if err != nil {
 		common.CBLog.Error(err)
-		//return err
 		output.IdList = append(output.IdList, err.Error())
 	}
 	output.IdList = append(output.IdList, list.IdList...)
@@ -2046,7 +1787,6 @@ func DelAllDefaultResources(nsId string) (common.IdList, error) {
 	list, err = DelAllResources(nsId, common.StrVNet, matchedSubstring, "false")
 	if err != nil {
 		common.CBLog.Error(err)
-		//return err
 		output.IdList = append(output.IdList, err.Error())
 	}
 	output.IdList = append(output.IdList, list.IdList...)

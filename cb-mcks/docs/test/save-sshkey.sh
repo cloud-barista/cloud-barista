@@ -31,7 +31,7 @@ if [ "${v_CONFIG}" == "" ]; then echo "[ERROR] missing <connection info>"; exit 
 
 
 # variable - name
-NM_SSH_KEY="${v_CONFIG/config-/}-sshkey"
+NM_SSH_KEY="config-${v_CONFIG/config-/}-sshkey"
 
 c_URL_TUMBLEBUG_NS="${c_URL_TUMBLEBUG}/ns/${v_NAMESPACE}"
 

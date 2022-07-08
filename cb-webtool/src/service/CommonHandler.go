@@ -126,10 +126,14 @@ func CallLoginInfo(c echo.Context) model.LoginInfo {
 	// cookieUsername, cookeierr := c.Request().Cookie("Username")
 	cookieUserID, cookeierr := c.Request().Cookie("UserID")
 	if cookeierr != nil {
-		fmt.Println(cookieUserID)
+		fmt.Println(cookeierr)
 		// return nil
+		return model.LoginInfo{}
 	}
 	fmt.Println(cookieUserID)
+	if cookieUserID == nil {
+		return model.LoginInfo{}
+	}
 	cookieUserIDStr := cookieUserID.Value
 	fmt.Println(cookieUserIDStr)
 

@@ -68,7 +68,7 @@
 												Group Name</a></li>
 										<li><a href="javascript:void(0);"
 												onclick="tableSort('securityGroupList', 'Connection Name<')">Connection
-												Name<< /a>
+												Name</a>
 										</li>
 										<!--
 														<li><a href="javascript:void(0);" onclick='getSGList("cspSecurityGroupName")'>Security Group Name</a></li>
@@ -158,7 +158,7 @@
 							{{ $length := len .SecurityGroupList }}
 							{{ if eq $length 0 }}
 							<tr>
-								<td class="overlay hidden" data-th="" colspan="5">No Data</td>
+								<td class="overlay hidden" data-th="" colspan="6">No Data</td>
 							</tr>
 							{{ end }}
 
@@ -169,7 +169,8 @@
 										value="{{$item.CspSecurityGroupName}}" />
 									<input type="checkbox" name="chk" value="{{$item.CspSecurityGroupName}}"
 										id="raw_{{$index}}" title="" />
-									<label for="td_ch1"></label> <span class="ov off"></span>
+									<label for="raw_{{$index}}"></label> <span class="ov off"></span>
+									<input type="hidden" value="{{$item.SystemLabel}}" /><!-- SystemLabel -->
 								</td>
 								<td class="btn_mtd ovm" data-th="cspSecurityGroupName">{{$item.CspSecurityGroupName
 									}}<span class="ov"></span></td>

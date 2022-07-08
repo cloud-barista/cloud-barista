@@ -4,9 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cloud-barista/cb-mcks/src/core/model"
+	"github.com/cloud-barista/cb-mcks/src/core/app"
 	"github.com/cloud-barista/cb-mcks/src/core/service"
-	"github.com/cloud-barista/cb-mcks/src/utils/app"
 
 	"github.com/labstack/echo/v4"
 	logger "github.com/sirupsen/logrus"
@@ -26,13 +25,13 @@ import (
 // @Router /ns/{namespace}/clusters/{cluster}/nodes [get]
 func ListNode(c echo.Context) error {
 	if err := app.Validate(c, []string{"cluster"}); err != nil {
-		logger.Error(err)
+		logger.Warnf("(ListNode) %s", err.Error())
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
 
 	nodeList, err := service.ListNode(c.Param("namespace"), c.Param("cluster"))
 	if err != nil {
-		logger.Error(err)
+		logger.Warnf("(ListNode) %s", err.Error())
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
 
@@ -55,13 +54,13 @@ func ListNode(c echo.Context) error {
 // @Router /ns/{namespace}/clusters/{cluster}/nodes/{node} [get]
 func GetNode(c echo.Context) error {
 	if err := app.Validate(c, []string{"cluster", "node"}); err != nil {
-		logger.Error(err)
+		logger.Warnf("(GetNode) %s", err.Error())
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
 
 	node, err := service.GetNode(c.Param("namespace"), c.Param("cluster"), c.Param("node"))
 	if err != nil {
-		logger.Infof("not found a node (namespace=%s, cluster=%s, node=%s, cause=%s)", c.Param("namespace"), c.Param("cluster"), c.Param("node"), err)
+		logger.Warnf("(GetNode) %s", err.Error())
 		return app.SendMessage(c, http.StatusNotFound, err.Error())
 	}
 
@@ -77,7 +76,7 @@ func GetNode(c echo.Context) error {
 // @Produce json
 // @Param	namespace	path	string	true  "Namespace ID"
 // @Param	cluster	path	string	true  "Cluster Name"
-// @Param nodeReq body model.NodeReq true "Request Body to add node"
+// @Param nodeReq body app.NodeReq true "Request Body to add node"
 // @Success 200 {object} model.Node
 // @Failure 400 {object} app.Status
 // @Failure 500 {object} app.Status
@@ -85,30 +84,29 @@ func GetNode(c echo.Context) error {
 func AddNode(c echo.Context) error {
 	start := time.Now()
 	if err := app.Validate(c, []string{"cluster"}); err != nil {
-		logger.Error(err)
+		logger.Errorf("(AddNode) %s", err.Error())
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
 
-	nodeReq := &model.NodeReq{}
+	nodeReq := &app.NodeReq{}
 	if err := c.Bind(nodeReq); err != nil {
-		logger.Error(err)
+		logger.Warnf("(AddNode) %s", err.Error())
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
 
 	err := app.NodeReqValidate(*nodeReq)
 	if err != nil {
-		logger.Error(err)
+		logger.Warnf("(AddNode) %s", err.Error())
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
 
 	node, err := service.AddNode(c.Param("namespace"), c.Param("cluster"), nodeReq)
 	if err != nil {
-		logger.Error(err)
+		logger.Warnf("(AddNode) %s", err.Error())
 		return app.SendMessage(c, http.StatusInternalServerError, err.Error())
 	}
 
-	duration := time.Since(start)
-	logger.Info(" duration := ", duration)
+	logger.Info("(AddNode) Duration = ", time.Since(start))
 	return app.Send(c, http.StatusOK, node)
 }
 
@@ -122,21 +120,28 @@ func AddNode(c echo.Context) error {
 // @Param	namespace	path	string	true  "Namespace ID"
 // @Param	cluster	path	string	true  "Cluster Name"
 // @Param	node	path	string	true  "Node Name"
-// @Success 200 {object} model.Status
+// @Success 200 {object} app.Status
 // @Failure 400 {object} app.Status
 // @Failure 500 {object} app.Status
 // @Router /ns/{namespace}/clusters/{cluster}/nodes/{node} [delete]
 func RemoveNode(c echo.Context) error {
+	start := time.Now()
 	if err := app.Validate(c, []string{"cluster", "node"}); err != nil {
-		logger.Error(err)
+		logger.Warnf("(RemoveNode) %s", err.Error())
 		return app.SendMessage(c, http.StatusBadRequest, err.Error())
 	}
 
 	status, err := service.RemoveNode(c.Param("namespace"), c.Param("cluster"), c.Param("node"))
 	if err != nil {
-		logger.Error(err)
+		logger.Warnf("(RemoveNode) %s", err.Error())
 		return app.SendMessage(c, http.StatusInternalServerError, err.Error())
+	} else {
+		if status.Code == app.STATUS_NOTFOUND {
+			return app.Send(c, http.StatusNotFound, status)
+		} else {
+			logger.Info("(RemoveNode) Duration = ", time.Since(start))
+			return app.Send(c, http.StatusOK, status)
+		}
 	}
 
-	return app.Send(c, http.StatusOK, status)
 }

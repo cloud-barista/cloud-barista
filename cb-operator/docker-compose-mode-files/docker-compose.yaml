@@ -75,7 +75,7 @@ services:
 
   # CB-Spider
   cb-spider:
-    image: cloudbaristaorg/cb-spider:0.5.0
+    image: cloudbaristaorg/cb-spider:0.6.0
     container_name: cb-spider
     ports:
       - "0.0.0.0:1024:1024"
@@ -97,7 +97,7 @@ services:
 
   # CB-Tumblebug
   cb-tumblebug:
-    image: cloudbaristaorg/cb-tumblebug:0.5.0
+    image: cloudbaristaorg/cb-tumblebug:0.6.0
     container_name: cb-tumblebug
     ports:
       - "0.0.0.0:1323:1323"
@@ -116,6 +116,8 @@ services:
       - DRAGONFLY_REST_URL=http://cb-dragonfly:9090/dragonfly
       - API_USERNAME=default
       - API_PASSWORD=default
+      - CB_NETWORK_SERVICE_ENDPOINT=localhost:8053
+      - CB_NETWORK_ETCD_ENDPOINTS="localhost:2379"
       - AUTOCONTROL_DURATION_MS=10000
       - SELF_ENDPOINT=localhost:1323
       - GOLANG_PROTOBUF_REGISTRATION_CONFLICT=ignore
@@ -169,7 +171,7 @@ services:
       - cb-tumblebug
 
   cb-tumblebug-mapui:
-    image: cloudbaristaorg/cb-mapui:0.5.0
+    image: cloudbaristaorg/cb-mapui:0.6.0
     container_name: cb-tumblebug-mapui
     ports:
       - 0.0.0.0:1324:1324
@@ -178,7 +180,7 @@ services:
 
   # CB-MCKS
   cb-mcks:
-    image: cloudbaristaorg/cb-mcks:0.5.0
+    image: cloudbaristaorg/cb-mcks:0.6.0
     container_name: cb-mcks
     ports:
       - "0.0.0.0:1470:1470"
@@ -203,7 +205,7 @@ services:
 
 # CB-Dragonfly
   cb-dragonfly:
-    image: cloudbaristaorg/cb-dragonfly:0.5.0
+    image: cloudbaristaorg/cb-dragonfly:0.6.0
     container_name: cb-dragonfly
     volumes:
       - ./conf/cb-dragonfly/:/go/src/github.com/cloud-barista/cb-dragonfly/conf/
@@ -308,7 +310,7 @@ services:
 
   # CB-Webtool
   cb-webtool:
-    image: cloudbaristaorg/cb-webtool:0.5.0
+    image: cloudbaristaorg/cb-webtool:0.6.0
     container_name: cb-webtool
     ports:
       - "0.0.0.0:1234:1234"

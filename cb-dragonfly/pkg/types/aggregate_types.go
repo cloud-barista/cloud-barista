@@ -3,12 +3,13 @@ package types
 type AggregateType string
 
 const (
-	MIN                   AggregateType = "min"
-	MAX                   AggregateType = "max"
-	AVG                   AggregateType = "avg"
-	LAST                  AggregateType = "last"
-	ReadConnectionTimeout               = 6
+	MIN  AggregateType = "min"
+	MAX  AggregateType = "max"
+	AVG  AggregateType = "avg"
+	LAST AggregateType = "last"
 )
+
+const ReadConnectionTimeout = 5
 
 func (a AggregateType) ToString() string {
 	switch a {

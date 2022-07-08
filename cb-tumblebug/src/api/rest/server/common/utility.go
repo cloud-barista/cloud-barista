@@ -18,13 +18,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 
 	"github.com/cloud-barista/cb-tumblebug/src/core/common"
-	"github.com/cloud-barista/cb-tumblebug/src/core/mcir"
 	"github.com/cloud-barista/cb-tumblebug/src/core/mcis"
 )
 
@@ -87,6 +85,7 @@ func RestGetHealth(c echo.Context) error {
 	return c.JSON(http.StatusOK, &okMessage)
 }
 
+/*
 // RestGetSwagger func is to get API document web.
 // RestGetSwagger godoc
 // @Summary Get API document web
@@ -115,6 +114,7 @@ func RestGetSwagger(c echo.Context) error {
 	data["host"] = os.Getenv("SELF_ENDPOINT")
 	return c.JSON(http.StatusOK, data)
 }
+*/
 
 // RestGetConnConfig func is a rest api wrapper for GetConnConfig.
 // RestGetConnConfig godoc
@@ -330,8 +330,8 @@ func RestDeleteObjects(c echo.Context) error {
 
 // Request struct for RestInspectResources
 type RestInspectResourcesRequest struct {
-	ConnectionName string `json:"connectionName"`
-	Type           string `json:"type" example:"vNet" enums:"vNet,securityGroup,sshKey,vm"`
+	ConnectionName string `json:"connectionName" example:"aws-ap-southeast-1"`
+	ResourceType   string `json:"resourceType" example:"vNet" enums:"vNet,securityGroup,sshKey,vm"`
 }
 
 // RestInspectResources godoc
@@ -341,27 +341,123 @@ type RestInspectResourcesRequest struct {
 // @Accept  json
 // @Produce  json
 // @Param connectionName body RestInspectResourcesRequest true "Specify connectionName and resource type"
-// @Success 200 {object} mcis.TbInspectResourcesResponse
+// @Success 200 {object} mcis.InspectResource
 // @Failure 404 {object} common.SimpleMsg
 // @Failure 500 {object} common.SimpleMsg
 // @Router /inspectResources [post]
 func RestInspectResources(c echo.Context) error {
-
-	fmt.Println("RestInspectResources called;") // for debug
 
 	u := &RestInspectResourcesRequest{}
 	if err := c.Bind(u); err != nil {
 		return err
 	}
 
-	fmt.Printf("[List Resource Status: %s]", u.Type)
+	fmt.Printf("[List Resource Status: %s]", u.ResourceType)
 	var content interface{}
 	var err error
-	if u.Type == common.StrVNet || u.Type == common.StrSecurityGroup || u.Type == common.StrSSHKey {
-		content, err = mcir.InspectResources(u.ConnectionName, u.Type)
-	} else if u.Type == "vm" {
-		content, err = mcis.InspectVMs(u.ConnectionName)
+	// if u.Type == common.StrVNet || u.Type == common.StrSecurityGroup || u.Type == common.StrSSHKey {
+	// 	content, err = mcis.InspectResources(u.ConnectionName, u.Type)
+	// } else if u.Type == "vm" {
+	// 	content, err = mcis.InspectVMs(u.ConnectionName)
+	// }
+	content, err = mcis.InspectResources(u.ConnectionName, u.ResourceType)
+
+	if err != nil {
+		common.CBLog.Error(err)
+		mapA := map[string]string{"message": err.Error()}
+		return c.JSON(http.StatusInternalServerError, &mapA)
 	}
+
+	return c.JSON(http.StatusOK, &content)
+
+}
+
+// RestInspectResourcesOverview godoc
+// @Summary Inspect Resources Overview (vNet, securityGroup, sshKey, vm) registered in CB-Tumblebug and CSP for all connections
+// @Description Inspect Resources Overview (vNet, securityGroup, sshKey, vm) registered in CB-Tumblebug and CSP for all connections
+// @Tags [Admin] System management
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} mcis.InspectResourceAllResult
+// @Failure 404 {object} common.SimpleMsg
+// @Failure 500 {object} common.SimpleMsg
+// @Router /inspectResourcesOverview [get]
+func RestInspectResourcesOverview(c echo.Context) error {
+	content, err := mcis.InspectResourcesOverview()
+	if err != nil {
+		common.CBLog.Error(err)
+		mapA := map[string]string{"message": err.Error()}
+		return c.JSON(http.StatusInternalServerError, &mapA)
+	}
+	return c.JSON(http.StatusOK, &content)
+}
+
+// Request struct for RestRegisterCspNativeResources
+type RestRegisterCspNativeResourcesRequest struct {
+	ConnectionName string `json:"connectionName" example:"aws-ap-southeast-1"`
+	NsId           string `json:"nsId" example:"ns01"`
+	McisName       string `json:"mcisName" example:"csp"`
+}
+
+// RestRegisterCspNativeResources godoc
+// @Summary Register CSP Native Resources (vNet, securityGroup, sshKey, vm) to CB-Tumblebug
+// @Description Register CSP Native Resources (vNet, securityGroup, sshKey, vm) to CB-Tumblebug
+// @Tags [Admin] System management
+// @Accept  json
+// @Produce  json
+// @Param Request body RestRegisterCspNativeResourcesRequest true "Specify connectionName, NS Id, and MCIS Name""
+// @Param option query string false "Option to specify resourceType" Enums(onlyVm, exceptVm)
+// @Success 200 {object} mcis.RegisterResourceResult
+// @Failure 404 {object} common.SimpleMsg
+// @Failure 500 {object} common.SimpleMsg
+// @Router /registerCspResources [post]
+func RestRegisterCspNativeResources(c echo.Context) error {
+
+	u := &RestRegisterCspNativeResourcesRequest{}
+	if err := c.Bind(u); err != nil {
+		return err
+	}
+	option := c.QueryParam("option")
+
+	content, err := mcis.RegisterCspNativeResources(u.NsId, u.ConnectionName, u.McisName, option)
+
+	if err != nil {
+		common.CBLog.Error(err)
+		mapA := map[string]string{"message": err.Error()}
+		return c.JSON(http.StatusInternalServerError, &mapA)
+	}
+
+	return c.JSON(http.StatusOK, &content)
+
+}
+
+// Request struct for RestRegisterCspNativeResources
+type RestRegisterCspNativeResourcesRequestAll struct {
+	NsId     string `json:"nsId" example:"ns01"`
+	McisName string `json:"mcisName" example:"csp"`
+}
+
+// RestRegisterCspNativeResourcesAll godoc
+// @Summary Register CSP Native Resources (vNet, securityGroup, sshKey, vm) from all Clouds to CB-Tumblebug
+// @Description Register CSP Native Resources (vNet, securityGroup, sshKey, vm) from all Clouds to CB-Tumblebug
+// @Tags [Admin] System management
+// @Accept  json
+// @Produce  json
+// @Param Request body RestRegisterCspNativeResourcesRequestAll true "Specify NS Id and MCIS Name"
+// @Param option query string false "Option to specify resourceType" Enums(onlyVm, exceptVm)
+// @Success 200 {object} mcis.RegisterResourceAllResult
+// @Failure 404 {object} common.SimpleMsg
+// @Failure 500 {object} common.SimpleMsg
+// @Router /registerCspResourcesAll [post]
+func RestRegisterCspNativeResourcesAll(c echo.Context) error {
+
+	u := &RestRegisterCspNativeResourcesRequest{}
+	if err := c.Bind(u); err != nil {
+		return err
+	}
+	option := c.QueryParam("option")
+
+	content, err := mcis.RegisterCspNativeResourcesAll(u.NsId, u.McisName, option)
 
 	if err != nil {
 		common.CBLog.Error(err)

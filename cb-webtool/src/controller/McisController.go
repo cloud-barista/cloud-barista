@@ -437,6 +437,75 @@ func McisRegProc(c echo.Context) error {
 
 }
 
+// MCIS 등록
+func McisDynamicRegProc(c echo.Context) error {
+	log.Println("McisDynamicRegProc : ")
+	loginInfo := service.CallLoginInfo(c)
+	if loginInfo.UserID == "" {
+		return c.Redirect(http.StatusTemporaryRedirect, "/login")
+	}
+
+	// map[description:bb installMonAgent:yes name:aa vm:[map[connectionName:gcp-asia-east1 description:dd imageId:gcp-jsyoo-ubuntu name:cc provider:GCP securityGroupIds:[gcp-jsyoo-sg-01] specId:gcp-jsyoo-01 sshKeyId:gcp-jsyoo-sshkey subnetId:jsyoo-gcp-sub-01 vNetId:jsyoo-gcp-01 vm_add_cnt:0 vm_cnt:]]]
+	log.Println("get info")
+
+	mcisInfo := &tbmcis.TbMcisDynamicReq{}
+	if err := c.Bind(mcisInfo); err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": "fail",
+			"status":  "5001",
+		})
+	}
+	log.Println(mcisInfo) // 여러개일 수 있음.
+
+	defaultNameSpaceID := loginInfo.DefaultNameSpaceID
+	// TODO : defaultNameSpaceID 가 없으면 설정화면으로 보낼 것
+
+	// // socket의 key 생성 : ns + 구분 + id
+	taskKey := defaultNameSpaceID + "||" + "mcis" + "||" + mcisInfo.Name // TODO : 공통 function으로 뺄 것.
+
+	service.StoreWebsocketMessage(util.TASK_TYPE_MCIS, taskKey, util.MCIS_LIFECYCLE_CREATE, util.TASK_STATUS_REQUEST, c) // session에 작업내용 저장
+
+	go service.RegMcisDynamicByAsync(defaultNameSpaceID, mcisInfo, c)
+	// 원래는 호출 결과를 return하나 go routine으로 바꾸면서 요청성공으로 return
+	log.Println("before return")
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "success",
+		"status":  200,
+	})
+
+}
+
+// 추천 vm spec 조회
+// Recommend MCIS plan (filter and priority)
+func GetMcisRecommendVmSpecList(c echo.Context) error {
+
+	log.Println("McisRegProc : ")
+	loginInfo := service.CallLoginInfo(c)
+	if loginInfo.UserID == "" {
+		return c.Redirect(http.StatusTemporaryRedirect, "/login")
+	}
+
+	mcisDeploymentPlan := &tbmcis.DeploymentPlan{}
+	if err := c.Bind(mcisDeploymentPlan); err != nil {
+		// if err := c.Bind(mCISInfoList); err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": "fail",
+			"status":  "fail",
+		})
+	}
+	log.Println(mcisDeploymentPlan)
+
+	vmSpecList, _ := service.GetMcisRecommendVmSpecList(mcisDeploymentPlan)
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message":    "success",
+		"status":     200,
+		"VmSpecList": vmSpecList,
+	})
+}
+
 // MCIS 삭제
 func McisDelProc(c echo.Context) error {
 	log.Println("McisDelProc : ")
@@ -675,6 +744,43 @@ func VmRegProc(c echo.Context) error {
 
 }
 
+// Register existing VM in a CSP to Cloud-Barista MCIS
+func RegisterCspVm(c echo.Context) error {
+	log.Println("RegisterCspVm : ")
+	loginInfo := service.CallLoginInfo(c)
+	if loginInfo.UserID == "" {
+		return c.Redirect(http.StatusTemporaryRedirect, "/login")
+	}
+
+	mcisReq := &tbmcis.TbMcisReq{}
+	if err := c.Bind(mcisReq); err != nil {
+		// if err := c.Bind(mCISInfoList); err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": "fail",
+			"status":  "fail",
+		})
+	}
+	log.Println(mcisReq)
+
+	defaultNameSpaceID := loginInfo.DefaultNameSpaceID
+	resultMcisInfo, respStatus := service.RegCspVm(defaultNameSpaceID, mcisReq)
+
+	if respStatus.StatusCode != 200 && respStatus.StatusCode != 201 {
+		return c.JSON(respStatus.StatusCode, map[string]interface{}{
+			"error":  respStatus.Message,
+			"status": respStatus.StatusCode,
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message":  "success",
+		"status":   200,
+		"McisInfo": resultMcisInfo,
+	})
+
+}
+
 // MCIS 의 특정 VM의 정보를 가져온다. 단. 텀블벅 조회가 아니라 이미 저장되어 있는 store에서 꺼낸다.
 func GetVmInfoData(c echo.Context) error {
 	log.Println("GetVmInfoData")
@@ -768,14 +874,14 @@ func McisLifeCycle(c echo.Context) error {
 		})
 	}
 
-	taskKey := defaultNameSpaceID + "||" + "mcis" + "||" + mcisLifeCycle.McisID                                           // TODO : 공통 function으로 뺄 것.
-	service.StoreWebsocketMessage(util.TASK_TYPE_MCIS, taskKey, mcisLifeCycle.LifeCycleType, util.TASK_STATUS_REQUEST, c) // session에 작업내용 저장
+	taskKey := defaultNameSpaceID + "||" + "mcis" + "||" + mcisLifeCycle.McisID                                            // TODO : 공통 function으로 뺄 것.
+	service.StoreWebsocketMessage(util.TASK_TYPE_MCIS, taskKey, mcisLifeCycle.QueryParams[0], util.TASK_STATUS_REQUEST, c) // session에 작업내용 저장
 
 	//
 	// TODO : defaultNameSpaceID 가 없으면 설정화면으로 보낼 것
 
 	//_, respStatus := service.McisLifeCycle(mcisLifeCycle)
-	go service.McisLifeCycleByAsync(mcisLifeCycle, c)
+	go service.McisLifeCycleByAsync(mcisLifeCycle, mcisLifeCycle.QueryParams, c)
 
 	//log.Println("McisLifeCycle service returned")
 	//if respStatus.StatusCode != 200 && respStatus.StatusCode != 201 {
@@ -972,4 +1078,117 @@ func CommandVmOfMcis(c echo.Context) error {
 		"status":        respStatus.StatusCode,
 		"commandResult": respMessage,
 	})
+}
+
+/*
+// Check avaiable ConnectionConfig list for creating MCIS Dynamically
+	사용 가능한 connection config  목록 조회
+GetMcisListByID
+*/
+func GetConnectionConfigCandidateList(c echo.Context) error {
+	log.Println("McisDynamicCheck : ")
+
+	loginInfo := service.CallLoginInfo(c)
+	if loginInfo.UserID == "" {
+		return c.Redirect(http.StatusTemporaryRedirect, "/login")
+	}
+
+	mcisReq := new(tbmcis.McisConnectionConfigCandidatesReq)
+	if err := c.Bind(mcisReq); err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": "fail",
+			"status":  "fail",
+		})
+	}
+
+	checkMcisDynamicReqInfo, respStatus := service.GetMcisDynamicCheckList(mcisReq)
+	log.Println("RegMcisDynamicCheck result")
+	if respStatus.StatusCode != 200 && respStatus.StatusCode != 201 {
+		return c.JSON(respStatus.StatusCode, map[string]interface{}{
+			"error":  respStatus.Message,
+			"status": respStatus.StatusCode,
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message":         respStatus.Message,
+		"status":          respStatus.StatusCode,
+		"mcisDynamicInfo": checkMcisDynamicReqInfo,
+	})
+
+}
+
+func RegAdaptiveNetwork(c echo.Context) error {
+	log.Println("RegAdaptiveNetwork : ")
+	loginInfo := service.CallLoginInfo(c)
+	if loginInfo.UserID == "" {
+		return c.Redirect(http.StatusTemporaryRedirect, "/login")
+	}
+
+	networkReq := new(tbmcis.NetworkReq)
+	if err := c.Bind(networkReq); err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": "fail",
+			"status":  "fail",
+		})
+	}
+
+	mcisID := c.Param("mcisID")
+	defaultNameSpaceID := loginInfo.DefaultNameSpaceID
+
+	agentInstallContentWrapper, respStatus := service.RegAdaptiveNetwork(defaultNameSpaceID, mcisID, networkReq)
+	log.Println("RegAdaptiveNetwork result")
+	if respStatus.StatusCode != 200 && respStatus.StatusCode != 201 {
+		return c.JSON(respStatus.StatusCode, map[string]interface{}{
+			"error":  respStatus.Message,
+			"status": respStatus.StatusCode,
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message":       respStatus.Message,
+		"status":        respStatus.StatusCode,
+		"networkResult": agentInstallContentWrapper,
+	})
+
+}
+
+func UpdateAdaptiveNetwork(c echo.Context) error {
+	log.Println("UpdateAdaptiveNetwork : ")
+	loginInfo := service.CallLoginInfo(c)
+	if loginInfo.UserID == "" {
+		return c.Redirect(http.StatusTemporaryRedirect, "/login")
+	}
+
+	networkReq := new(tbmcis.NetworkReq)
+	if err := c.Bind(networkReq); err != nil {
+
+		log.Println(err)
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{
+			"message": "fail",
+			"status":  "fail",
+		})
+	}
+
+	mcisID := c.Param("mcisID")
+	defaultNameSpaceID := loginInfo.DefaultNameSpaceID
+
+	agentInstallContentWrapper, respStatus := service.UpdateAdaptiveNetwork(defaultNameSpaceID, mcisID, networkReq)
+	log.Println("RegAdaptiveNetwork result")
+	if respStatus.StatusCode != 200 && respStatus.StatusCode != 201 {
+
+		return c.JSON(respStatus.StatusCode, map[string]interface{}{
+			"error":  respStatus.Message,
+			"status": respStatus.StatusCode,
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message":       respStatus.Message,
+		"status":        respStatus.StatusCode,
+		"networkResult": agentInstallContentWrapper,
+	})
+
 }

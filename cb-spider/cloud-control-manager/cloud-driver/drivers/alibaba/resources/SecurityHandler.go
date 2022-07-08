@@ -13,6 +13,7 @@ package resources
 import (
 	"errors"
 	"strings"
+	"encoding/json"
 
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/ecs"
 	call "github.com/cloud-barista/cb-spider/cloud-control-manager/cloud-driver/call-log"
@@ -25,6 +26,13 @@ type AlibabaSecurityHandler struct {
 	Region idrv.RegionInfo
 	Client *ecs.Client
 }
+
+type RuleAction string
+
+const (
+	Add RuleAction = "Add"
+	Remove RuleAction = "Remove"
+)
 
 func (securityHandler *AlibabaSecurityHandler) CreateSecurity(securityReqInfo irs.SecurityReqInfo) (irs.SecurityInfo, error) {
 	cblogger.Infof("securityReqInfo : ", securityReqInfo)
@@ -39,6 +47,7 @@ func (securityHandler *AlibabaSecurityHandler) CreateSecurity(securityReqInfo ir
 	request.Description = securityReqInfo.IId.NameId
 	request.SecurityGroupName = securityReqInfo.IId.NameId
 	request.VpcId = securityReqInfo.VpcIID.SystemId
+	request.SecurityGroupType = "enterprise"
 	cblogger.Debugf("보안 그룹 생성 요청 정보", request)
 
 	// logger for HisCall
@@ -72,44 +81,90 @@ func (securityHandler *AlibabaSecurityHandler) CreateSecurity(securityReqInfo ir
 	//=======================================
 	// 보안 정책 추가
 	//=======================================
-	cblogger.Infof("보안 그룹[%s]에 인바운드/아웃바운드 보안 정책 처리", createRes.SecurityGroupId)
-	createRuleRes, errRule := securityHandler.AuthorizeSecurityRules(createRes.SecurityGroupId, securityReqInfo.VpcIID.SystemId, securityReqInfo.SecurityRules)
-	if errRule != nil {
-		cblogger.Errorf("Unable to create security group rule %q, %v", securityReqInfo.IId.NameId, err)
-		return irs.SecurityInfo{}, errRule
-	} else {
-		cblogger.Info("Successfully set security group AuthorizeSecurityRules")
+	defaultRuleRequest := ecs.CreateAuthorizeSecurityGroupEgressRequest()
+	defaultRuleRequest.Scheme = "https"
+	defaultRuleRequest.IpProtocol = "all"
+	defaultRuleRequest.PortRange = "-1/-1"
+	defaultRuleRequest.SecurityGroupId = createRes.SecurityGroupId
+	defaultRuleRequest.DestCidrIp = "0.0.0.0/0"
+	defaultRuleRequest.Priority = "100"
+
+	cblogger.Infof("[%s] [%s] outbound rule Request", defaultRuleRequest.IpProtocol, defaultRuleRequest.PortRange)
+	spew.Dump(request)
+	response, err := securityHandler.Client.AuthorizeSecurityGroupEgress(defaultRuleRequest)
+	if err != nil {
+		cblogger.Errorf("Unable to create security group[%s] outbound rule - [%s] [%s] AuthorizeSecurityGroup Request", defaultRuleRequest.SecurityGroupId, defaultRuleRequest.IpProtocol, defaultRuleRequest.PortRange)
+		cblogger.Error(err)
+		return irs.SecurityInfo{}, err
 	}
+	cblogger.Infof("[%s] [%s] AuthorizeSecurityGroup Request success - RequestId:[%s]", defaultRuleRequest.IpProtocol, defaultRuleRequest.PortRange, response)
+	
+	cblogger.Infof("보안 그룹[%s]에 인바운드/아웃바운드 보안 정책 처리", defaultRuleRequest.SecurityGroupId)
+	return securityHandler.AddRules(irs.IID{SystemId: createRes.SecurityGroupId}, securityReqInfo.SecurityRules)
 
-	cblogger.Debug("AuthorizeSecurityRules Result")
-	// spew.Dump(createRuleRes)
-	cblogger.Debug(createRuleRes)
-
-	securityInfo, _ := securityHandler.GetSecurity(irs.IID{SystemId: createRes.SecurityGroupId})
-	//securityInfo.IId.NameId = securityReqInfo.IId.NameId
-	return securityInfo, nil
+	//createRuleRes, errRule := securityHandler.AuthorizeSecurityRules(createRes.SecurityGroupId, securityReqInfo.VpcIID.SystemId, securityReqInfo.SecurityRules)
+	//createRuleRes, errRule := securityHandler.AuthorizeSecurityRules(createRes.SecurityGroupId, securityReqInfo.SecurityRules)
+	//if errRule != nil {
+	//	cblogger.Errorf("Unable to create security group rule %q, %v", securityReqInfo.IId.NameId, err)
+	//	return irs.SecurityInfo{}, errRule
+	//} else {
+	//	cblogger.Info("Successfully set security group AuthorizeSecurityRules")
+	//}
+	//
+	//cblogger.Debug("AuthorizeSecurityRules Result")
+	//// spew.Dump(createRuleRes)
+	//cblogger.Debug(createRuleRes)
+	//
+	//securityInfo, _ := securityHandler.GetSecurity(irs.IID{SystemId: createRes.SecurityGroupId})
+	////securityInfo.IId.NameId = securityReqInfo.IId.NameId
+	//return securityInfo, nil
 }
 
-func (securityHandler *AlibabaSecurityHandler) AuthorizeSecurityRules(securityGroupId string, vpcId string, securityRuleInfos *[]irs.SecurityRuleInfo) (*[]irs.SecurityRuleInfo, error) {
-	cblogger.Infof("securityGroupId : [%s] / vpcId : [%s] / securityRuleInfos : [%v]", securityGroupId, vpcId, securityRuleInfos)
+// SecurityGroup에 Rule 추가
+// 공통 함수명은 AddRules 이나 실제 Alibaba는 AuthorizeSecurityRules
+// SecurityGroup 생성시에도 호출
+// 저장 후 rule 목록 조회하여 return
+//  - vpcId deprecated
+//  - function name 변경 : AuthorizeSecurityRules to AddRules
+//func (securityHandler *AlibabaSecurityHandler) AuthorizeSecurityRules(securityGroupId string, vpcId string, securityRuleInfos *[]irs.SecurityRuleInfo) (*[]irs.SecurityRuleInfo, error) {
+//func (securityHandler *AlibabaSecurityHandler) AuthorizeSecurityRules(securityGroupId string, securityRuleInfos *[]irs.SecurityRuleInfo) (*[]irs.SecurityRuleInfo, error) {
+func (securityHandler *AlibabaSecurityHandler) AddRules(securityIID irs.IID, reqSecurityRules *[]irs.SecurityRuleInfo) (irs.SecurityInfo, error) {
+	securityGroupId := securityIID.SystemId
+	cblogger.Infof("securityGroupId : [%s]  / securityRuleInfos : [%v]", securityGroupId, reqSecurityRules)
 	//cblogger.Info("AuthorizeSecurityRules ", securityRuleInfos)
-	spew.Dump(securityRuleInfos)
+	spew.Dump(reqSecurityRules)
 
-	/*
-		if strings.EqualFold(curRule.Direction, "inbound") {
-		} else if strings.EqualFold(curRule.Direction, "outbound") {
+	if len(*reqSecurityRules) < 1 {
+		return irs.SecurityInfo{}, errors.New("invalid value - The SecurityRules to add is empty")
+	}
+
+	presentRules, presentRulesErr := securityHandler.ExtractSecurityRuleInfo(securityGroupId)
+	if presentRulesErr != nil {
+		cblogger.Error(presentRulesErr)
+		return irs.SecurityInfo{}, presentRulesErr
+	}
+
+	checkResult := sameRulesCheck(&presentRules, reqSecurityRules, Add)
+	cblogger.Infof("checkResult: [%v]", checkResult)
+	if checkResult != nil {
+		errorMsg := ""
+		for _, rule := range *checkResult {
+			jsonRule, err := json.Marshal(rule)
+			if err != nil {
+				cblogger.Error(err)
+			}
+			errorMsg += string(jsonRule)
 		}
-	*/
+		return irs.SecurityInfo{}, errors.New("invalid value - "+ errorMsg +" already exists!")
+	}
 
-	for _, curRule := range *securityRuleInfos {
-		//if curRule.Direction == "inbound" {
+	for _, curRule := range *reqSecurityRules {
 		if strings.EqualFold(curRule.Direction, "inbound") {
 			request := ecs.CreateAuthorizeSecurityGroupRequest()
 			request.Scheme = "https"
 			request.IpProtocol = curRule.IPProtocol
 			request.PortRange = curRule.FromPort + "/" + curRule.ToPort
 			request.SecurityGroupId = securityGroupId
-			//request.SourceCidrIp = "0.0.0.0/0"
 			request.SourceCidrIp = curRule.CIDR
 
 			cblogger.Infof("[%s] [%s] inbound rule Request", request.IpProtocol, request.PortRange)
@@ -118,17 +173,15 @@ func (securityHandler *AlibabaSecurityHandler) AuthorizeSecurityRules(securityGr
 			if err != nil {
 				cblogger.Errorf("Unable to create security group[%s] inbound rule - [%s] [%s] AuthorizeSecurityGroup Request", securityGroupId, request.IpProtocol, request.PortRange)
 				cblogger.Error(err)
-				return nil, err
+				return irs.SecurityInfo{}, err
 			}
 			cblogger.Infof("[%s] [%s] AuthorizeSecurityGroup Request success - RequestId:[%s]", request.IpProtocol, request.PortRange, response)
-			//} else if curRule.Direction == "outbound" {
 		} else if strings.EqualFold(curRule.Direction, "outbound") {
 			request := ecs.CreateAuthorizeSecurityGroupEgressRequest()
 			request.Scheme = "https"
 			request.IpProtocol = curRule.IPProtocol
 			request.PortRange = curRule.FromPort + "/" + curRule.ToPort
 			request.SecurityGroupId = securityGroupId
-			//request.DestCidrIp = "0.0.0.0/0"
 			request.DestCidrIp = curRule.CIDR
 
 			cblogger.Infof("[%s] [%s] outbound rule Request", request.IpProtocol, request.PortRange)
@@ -137,13 +190,115 @@ func (securityHandler *AlibabaSecurityHandler) AuthorizeSecurityRules(securityGr
 			if err != nil {
 				cblogger.Errorf("Unable to create security group[%s] outbound rule - [%s] [%s] AuthorizeSecurityGroup Request", securityGroupId, request.IpProtocol, request.PortRange)
 				cblogger.Error(err)
-				return nil, err
+				return irs.SecurityInfo{}, err
 			}
 			cblogger.Infof("[%s] [%s] AuthorizeSecurityGroup Request success - RequestId:[%s]", request.IpProtocol, request.PortRange, response)
 		}
 	}
 
-	return nil, nil
+	securityInfo, _ := securityHandler.GetSecurity(irs.IID{SystemId: securityGroupId})
+	//securityInfo.IId.NameId = securityReqInfo.IId.NameId
+	return securityInfo, nil
+}
+
+// SecurityGroup의 Rule 제거
+// 공통 함수명은 RemoveRules 이나 실제 Alibaba는 RevokeSecurityRules
+
+// If the security group rule to be deleted does not exist, the RevokeSecurityGroup operation succeeds but no rule is deleted.
+//func (securityHandler *AlibabaSecurityHandler) RevokeSecurityRules(securityGroupId string, securityRuleInfos *[]irs.SecurityRuleInfo) (*[]irs.SecurityRuleInfo, error) {
+func (securityHandler *AlibabaSecurityHandler) RemoveRules(securityIID irs.IID, reqSecurityRules *[]irs.SecurityRuleInfo) (bool, error) {
+	securityGroupId := securityIID.SystemId
+	cblogger.Infof("securityGroupId : [%s]  / securityRuleInfos : [%v]", securityGroupId, reqSecurityRules)
+	spew.Dump(reqSecurityRules)
+
+	presentRules, presentRulesErr := securityHandler.ExtractSecurityRuleInfo(securityGroupId)
+	if presentRulesErr != nil {
+		cblogger.Error(presentRulesErr)
+		return false, presentRulesErr
+	}
+
+	checkResult := sameRulesCheck(&presentRules, reqSecurityRules, Remove)
+	cblogger.Infof("checkResult: [%v]", checkResult)
+	if checkResult != nil {
+		errorMsg := ""
+		for _, rule := range *checkResult {
+			jsonRule, err := json.Marshal(rule)
+			if err != nil {
+				cblogger.Error(err)
+			}
+			errorMsg += string(jsonRule)
+		}
+		return false, errors.New("invalid value - "+ errorMsg +" does not exist!")
+	}
+
+
+	// "cidr": "string",
+	// "fromPort": "string",
+	// "ipprotocol": "string",
+	// "toPort": "string"
+	for _, curRule := range *reqSecurityRules {
+		if strings.EqualFold(curRule.Direction, "inbound") {
+			// 3가지 case중 1번 사용.
+			// SourceGroupId : The ID of the source security group
+			// - At least one of SourceGroupId and SourceCidrIp must be specified.
+			//   .If SourceGroupId is specified but SourceCidrIp is not, the NicType parameter can be set only to intranet.
+			//     -> securityRuleInfo 에는 nicType, policy 가 들어있지 않음.
+			//   .If both SourceGroupId and SourceCidrIp are specified, SourceCidrIp takes precedence.
+			//nicType := "intranet"
+
+			request := ecs.CreateRevokeSecurityGroupRequest()
+			// case 1. 특정 CIDR block 의 인바운드 Rule 삭제 : IpProtocol, PortRange, SourcePortRange (optional), NicType, Policy, DestCidrIp (optional), and SourceCidrIp
+			request.IpProtocol = curRule.IPProtocol
+			request.PortRange = curRule.FromPort + "/" + curRule.ToPort
+			request.SecurityGroupId = securityGroupId
+			request.SourceCidrIp = curRule.CIDR
+
+			//// case 2. 특정 securityGroup의 인바운드 Rule 삭제 : IpProtocol, PortRange, SourcePortRange (optional), NicType, Policy, DestCidrIp (optional), and SourceCidrIp
+			//request.SecurityGroupId = securityGroupId
+			////request.SourceGroupId = SourceGroupId
+			//request.IpProtocol = curRule.IPProtocol
+			//request.PortRange = curRule.FromPort + "/" + curRule.ToPort
+			////request.NicType = nicType
+			////request.Policy =
+			//
+			//// case 3. 접두사(prefix)목록과 연결 된 인바운드 Rule 삭제 : IpProtocol, PortRange, SourcePortRange (optional), NicType, Policy, DestCidrIp (optional), and SourceCidrIp
+			//request.SecurityGroupId = securityGroupId
+			////request.SourcePrefixListId =
+			//request.IpProtocol = curRule.IPProtocol
+			//request.PortRange = curRule.FromPort + "/" + curRule.ToPort
+			////request.NicType = nicType
+			////request.Policy =
+
+			cblogger.Infof("[%s] [%s] inbound rule Request", request.IpProtocol, request.PortRange)
+			spew.Dump(request)
+			response, err := securityHandler.Client.RevokeSecurityGroup(request)
+			if err != nil {
+				cblogger.Errorf("Unable to revoke security group[%s] inbound rule - [%s] [%s] RevokeSecurityGroup Request", securityGroupId, request.IpProtocol, request.PortRange)
+				cblogger.Error(err)
+				return false, err
+			}
+			cblogger.Infof("[%s] [%s] RevokeSecurityGroup Request success - RequestId:[%s]", request.IpProtocol, request.PortRange, response)
+		} else if strings.EqualFold(curRule.Direction, "outbound") {
+			request := ecs.CreateRevokeSecurityGroupEgressRequest()
+			request.Scheme = "https"
+			request.IpProtocol = curRule.IPProtocol
+			request.PortRange = curRule.FromPort + "/" + curRule.ToPort
+			request.SecurityGroupId = securityGroupId
+			request.DestCidrIp = curRule.CIDR
+
+			cblogger.Infof("[%s] [%s] outbound rule Request", request.IpProtocol, request.PortRange)
+			spew.Dump(request)
+			response, err := securityHandler.Client.RevokeSecurityGroupEgress(request)
+			if err != nil {
+				cblogger.Errorf("Unable to revoke security group[%s] outbound rule - [%s] [%s] RevokeSecurityGroupEgress Request", securityGroupId, request.IpProtocol, request.PortRange)
+				cblogger.Error(err)
+				return false, err
+			}
+			cblogger.Infof("[%s] [%s] RevokeSecurityGroupEgress Request success - RequestId:[%s]", request.IpProtocol, request.PortRange, response)
+		}
+	}
+
+	return true, nil
 }
 
 func (securityHandler *AlibabaSecurityHandler) ListSecurity() ([]*irs.SecurityInfo, error) {
@@ -236,7 +391,7 @@ func (securityHandler *AlibabaSecurityHandler) GetSecurity(securityIID irs.IID) 
 	//ecs.DescribeSecurityGroupsResponse.SecurityGroups
 	//ecs.SecurityGroups
 	//spew.Dump(result)
-	
+
 	//ecs.DescribeSecurityGroupsResponse
 	if result.TotalCount < 1 {
 		return irs.SecurityInfo{}, errors.New("Notfound: '" + securityIID.SystemId + "' SecurityGroup Not found")
@@ -298,13 +453,13 @@ func (securityHandler *AlibabaSecurityHandler) ExtractSecurityRuleInfo(securityG
 	*/
 	var curSecurityRuleInfo irs.SecurityRuleInfo
 	for _, curPermission := range response.Permissions.Permission {
-		curSecurityRuleInfo.Direction = curPermission.Direction
+		// curSecurityRuleInfo.Direction = curPermission.Direction
 
 		if strings.EqualFold(curPermission.Direction, "ingress") {
-			// curSecurityRuleInfo.Direction = "inbound"
+			curSecurityRuleInfo.Direction = "inbound"
 			curSecurityRuleInfo.CIDR = curPermission.SourceCidrIp
 		} else if strings.EqualFold(curPermission.Direction, "egress") {
-			// curSecurityRuleInfo.Direction = "outbound"
+			curSecurityRuleInfo.Direction = "outbound"
 			curSecurityRuleInfo.CIDR = curPermission.DestCidrIp
 		}
 
@@ -357,4 +512,67 @@ func (securityHandler *AlibabaSecurityHandler) DeleteSecurity(securityIID irs.II
 	cblogger.Info(response)
 	cblogger.Infof("Successfully delete security group %q.", securityIID.SystemId)
 	return true, nil
+}
+
+// 동일한 rule이 있는지 체크
+// RuleAction이 Add면 중복인 rule 리턴, Remove면 없는 rule 리턴
+func sameRulesCheck(presentSecurityRules *[]irs.SecurityRuleInfo, reqSecurityRules *[]irs.SecurityRuleInfo, action RuleAction) (*[]irs.SecurityRuleInfo) {
+	var checkResult []irs.SecurityRuleInfo
+	cblogger.Infof("presentSecurityRules: [%v] / reqSecurityRules: [%v]", presentSecurityRules, reqSecurityRules)
+	for _, reqRule := range *reqSecurityRules {
+		hasFound := false
+		reqRulePort := ""
+		if reqRule.FromPort == "" {
+			reqRulePort = reqRule.ToPort
+		} else if reqRule.ToPort == "" {
+			reqRulePort = reqRule.FromPort
+		} else if reqRule.FromPort == reqRule.ToPort {
+			reqRulePort = reqRule.FromPort
+		} else {
+			reqRulePort = reqRule.FromPort + "-" + reqRule.ToPort
+		}
+
+		for _, present := range *presentSecurityRules {
+			presentPort := ""
+			if present.FromPort == "" {
+				presentPort = present.ToPort
+			} else if present.ToPort == "" {
+				presentPort = present.FromPort
+			} else if present.FromPort == present.ToPort {
+				presentPort = present.FromPort
+			} else {
+				presentPort = present.FromPort + "-" + present.ToPort
+			}
+
+			if !strings.EqualFold(reqRule.Direction, present.Direction) {
+				continue
+			}
+			if !strings.EqualFold(reqRule.IPProtocol, present.IPProtocol) {
+				continue
+			}
+			if !strings.EqualFold(reqRulePort, presentPort) {
+				continue
+			}
+			if !strings.EqualFold(reqRule.CIDR, present.CIDR) {
+				continue
+			}
+
+			if action == Add {
+				checkResult = append(checkResult, reqRule)
+			}
+			hasFound = true
+			break
+		}
+
+		// Remove일때는 못 찾아야 append
+		if action == Remove && !hasFound {
+			checkResult = append(checkResult, reqRule)
+		}
+	}
+
+	if len(checkResult) > 0 {
+		return &checkResult
+	}
+
+	return nil
 }

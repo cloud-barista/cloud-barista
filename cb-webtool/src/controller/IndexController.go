@@ -304,6 +304,11 @@ func ApiCall(c echo.Context) error {
 
 	jsonMap := make(map[string]interface{})
 	err = json.Unmarshal([]byte(resultStr), &jsonMap)
+	if err != nil {
+		fmt.Println(err)
+		jsonMap["a"] = resultStr
+	}
+	fmt.Println(resultStr)
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		// "resp": resultStr,

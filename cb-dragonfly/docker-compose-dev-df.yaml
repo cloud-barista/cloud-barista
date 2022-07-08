@@ -1,6 +1,39 @@
 version: "3.3"
 services:
 
+  # zookeeper for CB-Dragonfly
+  cb-dragonfly-zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: cb-dragonfly-zookeeper
+    ports:
+      - 2181:2181
+    restart: always
+
+  # Kafka for CB-Dragonfly
+  cb-dragonfly-kafka:
+    image: wurstmeister/kafka:2.12-2.4.1
+    container_name: cb-dragonfly-kafka
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: cb-dragonfly-kafka
+      KAFKA_PORT: 9092
+      KAFKA_ZOOKEEPER_CONNECT: cb-dragonfly-zookeeper:2181
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      # 1 hours (delete logs)
+      KAFKA_LOG_RETENTION_HOURS: 1
+      # 500 MB
+      KAFKA_LOG_RETENTION_BYTES: 524288000
+      # 250 MB
+      KAFKA_LOG_SEGMENT_BYTES: 262144000
+      # 10 min (check interval)
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 600000
+      KAFKA_MESSAGE_TIMESTAMP_TYPE: LogAppendTime
+      KAFKA_LOG_MESSAGE_TIMESTAMP_TYPE: LogAppendTime
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 9092:9092
+    restart: always
+
   # InfluxDB for CB-Dragonfly
   cb-dragonfly-influxdb:
     image: influxdb:1.8-alpine
@@ -45,38 +78,17 @@ services:
       - --kapacitor-username=cbmon
       - --kapacitor-password=password
     depends_on:
+      - cb-dragonfly-zookeeper
+      - cb-dragonfly-kafka
       - cb-dragonfly-influxdb
       - cb-dragonfly-kapacitor
 
-  # Zookeeper for CB-Dragonfly
-  cb-dragonfly-zookeeper:
-    image: wurstmeister/zookeeper
-    container_name: cb-dragonfly-zookeeper
+  cb-dragonfly-kafdrop:
+    image: obsidiandynamics/kafdrop
+    container_name: kafdrop
     ports:
-      - 2181:2181
-    restart: always
-
-  # Kafka for CB-Dragonfly
-  cb-dragonfly-kafka:
-    image: wurstmeister/kafka:2.12-2.4.1
-    container_name: cb-dragonfly-kafka
+      - 9000:9000
     environment:
-      KAFKA_ADVERTISED_HOST_NAME: cb-dragonfly-kafka
-      KAFKA_PORT: 9092
-      KAFKA_ZOOKEEPER_CONNECT: cb-dragonfly-zookeeper:2181
-      KAFKA_DELETE_TOPIC_ENABLE: "true"
-      KAFKA_LOG_RETENTION_HOURS: 1
-      # 1 hours (delete logs)
-      KAFKA_LOG_RETENTION_BYTES: 524288000
-      # 500 MB
-      KAFKA_LOG_SEGMENT_BYTES: 262144000
-      # 250 MB
-      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 600000
-      # 10 min (check interval)
-      KAFKA_MESSAGE_TIMESTAMP_TYPE: LogAppendTime
-      KAFKA_LOG_MESSAGE_TIMESTAMP_TYPE: LogAppendTime
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    ports:
-      - 9092:9092
+      KAFKA_BROKERCONNECT: "cb-dragonfly-kafka:9092"
+      JVM_OPTS: "-Xms128M -Xmx256M"
     restart: always

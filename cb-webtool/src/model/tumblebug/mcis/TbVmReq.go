@@ -3,9 +3,13 @@ package mcis
 type TbVmReq struct {
 	ConnectionName string `json:"connectionName"`
 	Description    string `json:"description"`
+	IdByCsp        string `json:"idByCsp"`
 	ImageID        string `json:"imageId"`
 	Label          string `json:"label"`
 	Name           string `json:"name"`
+
+	RootDiskSize     string `json:"rootDiskSize"`
+	RootDiskType     string `json:"rootDiskType"`
 
 	SecurityGroupIDs []string `json:"securityGroupIds"`
 

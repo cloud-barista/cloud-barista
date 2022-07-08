@@ -2,29 +2,29 @@ apiVersion: v2
 name: cloud-barista
 description: Cloud-Barista Helm chart
 type: application
-version: 0.5.0
-appVersion: 0.5.0
+version: 0.6.0
+appVersion: 0.6.0
 dependencies:
   - name: cb-dragonfly
-    version: 0.5.0
+    version: 0.6.0
     condition: cb-dragonfly.enabled
   - name: cb-restapigw
     version: 0.5.0
     condition: cb-restapigw.enabled
   - name: cb-spider
-    version: 0.5.0
+    version: 0.6.0
     condition: cb-spider.enabled
   - name: cb-tumblebug
-    version: 0.5.0
+    version: 0.6.0
     condition: cb-tumblebug.enabled
   - name: cb-mcks
-    version: 0.5.0
+    version: 0.6.0
     condition: cb-mcks.enabled
   - name: cb-ladybug
-    version: 0.5.0
+    version: 0.6.0
     condition: cb-ladybug.enabled
   - name: cb-webtool
-    version: 0.5.0
+    version: 0.6.0
     condition: cb-webtool.enabled
   # - name: docker-registry
   #   version: ~1.9.3

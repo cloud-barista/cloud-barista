@@ -37,14 +37,14 @@ jobs:
       #     registering problem matchers for error output
       # This step uses GitHub's setup-go: https://github.com/actions/setup-go
       - name: Set up Go ${{ matrix.go-version }}
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
         
       # This action checks-out your repository under $GITHUB_WORKSPACE, so your workflow can access it.
       # This step uses GitHub's checkout: https://github.com/actions/checkout
       - name: Checkout source code
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v3
 
       # This step builds source codes
       - name: Build test

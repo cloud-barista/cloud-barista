@@ -18,6 +18,10 @@ env:
   value: "default"
 - name: API_PASSWORD
   value: "default"
+- name: CB_NETWORK_SERVICE_ENDPOINT
+  value: cb-network:8053
+- name: CB_NETWORK_ETCD_ENDPOINTS
+  value: "etcd:2379"
 - name: AUTOCONTROL_DURATION_MS
   value: "10000"
 - name: SELF_ENDPOINT

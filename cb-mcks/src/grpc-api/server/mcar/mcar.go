@@ -5,8 +5,7 @@ import (
 	"fmt"
 
 	"github.com/beego/beego/v2/core/validation"
-	"github.com/cloud-barista/cb-mcks/src/core/model"
-	"github.com/cloud-barista/cb-mcks/src/utils/config"
+	"github.com/cloud-barista/cb-mcks/src/core/app"
 	"github.com/cloud-barista/cb-mcks/src/utils/lang"
 )
 
@@ -35,16 +34,18 @@ func (s *MCARService) Validate(params map[string]string) error {
 	return nil
 }
 
-func (s *MCARService) ClusterReqDef(clusterReq *model.ClusterReq) error {
-	clusterReq.Config.Kubernetes.NetworkCni = lang.NVL(clusterReq.Config.Kubernetes.NetworkCni, config.NETWORKCNI_KILO)
-	clusterReq.Config.Kubernetes.PodCidr = lang.NVL(clusterReq.Config.Kubernetes.PodCidr, config.POD_CIDR)
-	clusterReq.Config.Kubernetes.ServiceCidr = lang.NVL(clusterReq.Config.Kubernetes.ServiceCidr, config.SERVICE_CIDR)
-	clusterReq.Config.Kubernetes.ServiceDnsDomain = lang.NVL(clusterReq.Config.Kubernetes.ServiceDnsDomain, config.SERVICE_DOMAIN)
+func (s *MCARService) ClusterReqDef(clusterReq *app.ClusterReq) error {
+	if clusterReq.Config.Kubernetes.NetworkCni == "" {
+		clusterReq.Config.Kubernetes.NetworkCni = app.NETWORKCNI_KILO
+	}
+	clusterReq.Config.Kubernetes.PodCidr = lang.NVL(clusterReq.Config.Kubernetes.PodCidr, app.POD_CIDR)
+	clusterReq.Config.Kubernetes.ServiceCidr = lang.NVL(clusterReq.Config.Kubernetes.ServiceCidr, app.SERVICE_CIDR)
+	clusterReq.Config.Kubernetes.ServiceDnsDomain = lang.NVL(clusterReq.Config.Kubernetes.ServiceDnsDomain, app.SERVICE_DOMAIN)
 
 	return nil
 }
 
-func (s *MCARService) ClusterReqValidate(req model.ClusterReq) error {
+func (s *MCARService) ClusterReqValidate(req app.ClusterReq) error {
 	if len(req.ControlPlane) == 0 {
 		return errors.New("control plane node must be at least one")
 	}
@@ -54,27 +55,27 @@ func (s *MCARService) ClusterReqValidate(req model.ClusterReq) error {
 	if len(req.Worker) == 0 {
 		return errors.New("worker node must be at least one")
 	}
-	if !(req.Config.Kubernetes.NetworkCni == config.NETWORKCNI_CANAL || req.Config.Kubernetes.NetworkCni == config.NETWORKCNI_KILO) {
+	if !(req.Config.Kubernetes.NetworkCni == app.NETWORKCNI_CANAL || req.Config.Kubernetes.NetworkCni == app.NETWORKCNI_KILO) {
 		return errors.New("network cni allows only canal or kilo")
 	}
 
 	if len(req.Name) == 0 {
 		return errors.New("cluster name is empty")
 	} else {
-		err := lang.CheckName(req.Name)
+		err := lang.VerifyClusterName(req.Name)
 		if err != nil {
 			return err
 		}
 	}
 
 	if len(req.Config.Kubernetes.PodCidr) > 0 {
-		err := lang.CheckIpCidr("podCidr", req.Config.Kubernetes.PodCidr)
+		err := lang.VerifyCIDR("podCidr", req.Config.Kubernetes.PodCidr)
 		if err != nil {
 			return err
 		}
 	}
 	if len(req.Config.Kubernetes.ServiceCidr) > 0 {
-		err := lang.CheckIpCidr("serviceCidr", req.Config.Kubernetes.ServiceCidr)
+		err := lang.VerifyCIDR("serviceCidr", req.Config.Kubernetes.ServiceCidr)
 		if err != nil {
 			return err
 		}
@@ -83,7 +84,7 @@ func (s *MCARService) ClusterReqValidate(req model.ClusterReq) error {
 	return nil
 }
 
-func (s *MCARService) NodeReqValidate(req model.NodeReq) error {
+func (s *MCARService) NodeReqValidate(req app.NodeReq) error {
 	if len(req.ControlPlane) > 0 {
 		return errors.New("control plane node is not supported")
 	}

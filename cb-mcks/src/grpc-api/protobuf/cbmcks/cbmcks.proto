@@ -40,6 +40,8 @@ service MCAR {
 	rpc ListNode (NodeAllQryRequest) returns (ListNodeInfoResponse) {}
 	rpc GetNode (NodeQryRequest) returns (NodeInfoResponse) {}
 	rpc RemoveNode (NodeQryRequest) returns (StatusResponse) {}
+	
+	rpc ListSpec (SpecQryRequest) returns (ListSpecInfoResponse) {}
 }
 
 //////////////////////////////////
@@ -61,19 +63,22 @@ message ClusterInfo {
 	ClusterStatusInfo status = 3 [json_name="status", (gogoproto.jsontag) = "status", (gogoproto.moretags) = "yaml:\"status\""];
 	string mcis = 4 [json_name="mcis", (gogoproto.jsontag) = "mcis", (gogoproto.moretags) = "yaml:\"mcis\""];
 	string namespace = 5 [json_name="namespace", (gogoproto.jsontag) = "namespace", (gogoproto.moretags) = "yaml:\"namespace\""];
-	string cluster_config = 6 [json_name="clusterConfig", (gogoproto.jsontag) = "clusterConfig", (gogoproto.moretags) = "yaml:\"clusterConfig\""];
-	string cp_leader = 7 [json_name="cpLeader", (gogoproto.jsontag) = "cpLeader", (gogoproto.moretags) = "yaml:\"cpLeader\""];
-	string network_cni = 8 [json_name="networkCni", (gogoproto.jsontag) = "networkCni", (gogoproto.moretags) = "yaml:\"networkCni\""];
-	string label = 9 [json_name="label", (gogoproto.jsontag) = "label", (gogoproto.moretags) = "yaml:\"label\""];
-	string install_mon_agent = 10 [json_name="installMonAgent", (gogoproto.jsontag) = "installMonAgent", (gogoproto.moretags) = "yaml:\"installMonAgent\""];
-	string description = 11 [json_name="description", (gogoproto.jsontag) = "description", (gogoproto.moretags) = "yaml:\"description\""];
-	string created_time = 12 [json_name="createdTime", (gogoproto.jsontag) = "createdTime", (gogoproto.moretags) = "yaml:\"createdTime\""];
-	repeated NodeInfo nodes = 13 [json_name="nodes", (gogoproto.jsontag) = "nodes", (gogoproto.moretags) = "yaml:\"nodes\""];
+	string k8s_version = 6 [json_name="k8sVersion", (gogoproto.jsontag) = "k8sVersion", (gogoproto.moretags) = "yaml:\"k8sVersion\""];
+	string cluster_config = 7 [json_name="clusterConfig", (gogoproto.jsontag) = "clusterConfig", (gogoproto.moretags) = "yaml:\"clusterConfig\""];
+	string cp_leader = 8 [json_name="cpLeader", (gogoproto.jsontag) = "cpLeader", (gogoproto.moretags) = "yaml:\"cpLeader\""];
+	string network_cni = 9 [json_name="networkCni", (gogoproto.jsontag) = "networkCni", (gogoproto.moretags) = "yaml:\"networkCni\""];
+	string label = 10 [json_name="label", (gogoproto.jsontag) = "label", (gogoproto.moretags) = "yaml:\"label\""];
+	string install_mon_agent = 11 [json_name="installMonAgent", (gogoproto.jsontag) = "installMonAgent", (gogoproto.moretags) = "yaml:\"installMonAgent\""];
+	string description = 12 [json_name="description", (gogoproto.jsontag) = "description", (gogoproto.moretags) = "yaml:\"description\""];
+	string created_time = 13 [json_name="createdTime", (gogoproto.jsontag) = "createdTime", (gogoproto.moretags) = "yaml:\"createdTime\""];
+	repeated NodeInfo nodes = 14 [json_name="nodes", (gogoproto.jsontag) = "nodes", (gogoproto.moretags) = "yaml:\"nodes\""];
 }
 
 message ClusterCreateRequest {
 	string namespace = 1 [json_name="namespace", (gogoproto.jsontag) = "namespace", (gogoproto.moretags) = "yaml:\"namespace\""];
-	ClusterCreateInfo item = 2 [json_name="ReqInfo", (gogoproto.jsontag) = "ReqInfo", (gogoproto.moretags) = "yaml:\"ReqInfo\""];
+	string minorversion = 2 [json_name="minorversion", (gogoproto.jsontag) = "minorversion", (gogoproto.moretags) = "yaml:\"minorversion\""];
+	string patchversion = 3 [json_name="patchversion", (gogoproto.jsontag) = "patchversion", (gogoproto.moretags) = "yaml:\"patchversion\""];
+	ClusterCreateInfo item = 4 [json_name="ReqInfo", (gogoproto.jsontag) = "ReqInfo", (gogoproto.moretags) = "yaml:\"ReqInfo\""];
 }
 
 message ClusterCreateInfo {
@@ -166,3 +171,37 @@ message NodeQryRequest {
 	string cluster = 2 [json_name="cluster", (gogoproto.jsontag) = "cluster", (gogoproto.moretags) = "yaml:\"cluster\""];
 	string node = 3 [json_name="node", (gogoproto.jsontag) = "node", (gogoproto.moretags) = "yaml:\"node\""];
 }
+
+//////////////////////////////////
+// SPEC 메시지 정의
+//////////////////////////////////
+
+message SpecInfoResponse {
+	SpecInfo item = 1 [json_name="item", (gogoproto.jsontag) = "item", (gogoproto.moretags) = "yaml:\"item\""];
+}
+
+message ListSpecInfoResponse {
+	string kind = 1 [json_name="kind", (gogoproto.jsontag) = "kind", (gogoproto.moretags) = "yaml:\"kind\""];
+	repeated SpecInfo items = 2 [json_name="items", (gogoproto.jsontag) = "items", (gogoproto.moretags) = "yaml:\"items\""];
+}
+
+message SpecInfo {
+	string name = 1 [json_name="name", (gogoproto.jsontag) = "name", (gogoproto.moretags) = "yaml:\"name\""];
+	string memory = 2 [json_name="memory", (gogoproto.jsontag) = "memory", (gogoproto.moretags) = "yaml:\"memory\""];
+	CpuInfo cpu = 3 [json_name="cpu", (gogoproto.jsontag) = "cpu", (gogoproto.moretags) = "yaml:\"cpu\""];
+}
+
+message CpuInfo {
+	string clock = 1 [json_name="clock", (gogoproto.jsontag) = "clock", (gogoproto.moretags) = "yaml:\"clock\""];
+	string count = 2 [json_name="count", (gogoproto.jsontag) = "count", (gogoproto.moretags) = "yaml:\"count\""];
+}
+
+message SpecQryRequest {
+	string connectionname = 1 [json_name="connectionName", (gogoproto.jsontag) = "connectionName", (gogoproto.moretags) = "yaml:\"connectionName\""];
+	string control_plane = 2 [json_name="cluster", (gogoproto.jsontag) = "cluster", (gogoproto.moretags) = "yaml:\"cluster\""];
+	string cpu_min = 3 [json_name="cpuMin", (gogoproto.jsontag) = "cpuMin", (gogoproto.moretags) = "yaml:\"cpuMin\""];
+	string cpu_max = 4 [json_name="cpuMax", (gogoproto.jsontag) = "cpuMax", (gogoproto.moretags) = "yaml:\"cpuMax\""];
+	string memory_min = 5 [json_name="memoryMin", (gogoproto.jsontag) = "memoryMin", (gogoproto.moretags) = "yaml:\"memoryMin\""];
+	string memory_max = 6 [json_name="memoryMax", (gogoproto.jsontag) = "memoryMax", (gogoproto.moretags) = "yaml:\"memoryMax\""];
+}
+
