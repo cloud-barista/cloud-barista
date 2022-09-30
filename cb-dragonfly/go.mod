@@ -20,7 +20,6 @@ require (
 	github.com/cloud-barista/cb-store v0.4.1
 	github.com/confluentinc/confluent-kafka-go v1.7.0
 	github.com/coreos/bbolt v1.3.4 // indirect
-	github.com/deepmap/oapi-codegen v1.8.1 // indirect
 	github.com/go-openapi/spec v0.20.6 // indirect
 	github.com/go-openapi/swag v0.21.1 // indirect
 	github.com/gogo/protobuf v1.3.2
@@ -29,13 +28,10 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/influxdata/influxdb v1.9.2 // indirect
-	github.com/influxdata/influxdb-client-go v1.4.0
 	github.com/influxdata/influxdb1-client v0.0.0-20200827194710-b269163b24ab
-	github.com/influxdata/line-protocol v0.0.0-20210311194329-9aa0e372d097 // indirect
 	github.com/jonboulle/clockwork v0.2.2 // indirect
-	github.com/labstack/echo/v4 v4.3.0
+	github.com/labstack/echo/v4 v4.9.0
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/pkg/errors v0.9.1
 	github.com/shaodan/kapacitor-client v0.0.0-20181228024026-84c816949946
