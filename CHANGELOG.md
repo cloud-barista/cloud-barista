@@ -1,3 +1,41 @@
+# v0.7.0 (Cortado, 2022.11.25.)
+
+## [CB-Spider]
+
+- ChangeLog: <https://github.com/cloud-barista/cb-spider/blob/master/CHANGELOG.md#v070-cortado-20221125>
+- API reference: <https://github.com/cloud-barista/cb-spider/wiki/CB-Spider-User-Interface>
+
+## [CB-Tumblebug]
+
+- ChangeLog: https://github.com/cloud-barista/cb-tumblebug/blob/main/CHANGELOG.md#v070-cortado-20221125
+- API reference: https://cloud-barista.github.io/cb-tumblebug-api-web/?url=https://raw.githubusercontent.com/cloud-barista/cb-tumblebug/v0.7.0/src/api/rest/docs/swagger.yaml
+
+## [CB-Dragonfly]
+
+- ChangeLog: https://github.com/cloud-barista/cb-dragonfly/releases/tag/v0.7.0
+- API reference: https://documenter.getpostman.com/view/16665192/2s8YsnXbVH
+
+## [CB-MCKS]
+
+- ChangeLog: https://github.com/cloud-barista/cb-mcks/blob/master/CHANGELOG.md#v070-cortado-20221125
+- API reference: https://cloud-barista.github.io/cb-mcks-api-web/?url=https://raw.githubusercontent.com/cloud-barista/cb-mcks/v0.7.0/src/docs/swagger.yaml
+
+## [cb-webtool]
+
+- ChangeLog: https://github.com/cloud-barista/cb-webtool/blob/master/CHANGELOG.md#v070-cortado-20221125
+
+## [cb-operator]
+
+- ChangeLog: https://github.com/cloud-barista/cb-operator/blob/master/CHANGELOG.md#v070-cortado-20221125
+
+## [cb-log]
+
+- ChangeLog: https://github.com/cloud-barista/cb-log/blob/master/CHANGELOG.md#v070-cortado-20221125
+
+## [cb-store]
+
+- ChangeLog: https://github.com/cloud-barista/cb-store/blob/master/CHANGELOG.md#v070-cortado-20221125
+
 # v0.6.0 (Cafe Latte, 2022.07.08.)
 
 ## [CB-Spider]
