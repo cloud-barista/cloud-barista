@@ -1,0 +1,3 @@
+[submodule "cb-spider"]
+	path = cb-spider
+	url = https://github.com/cloud-barista/cb-spider
