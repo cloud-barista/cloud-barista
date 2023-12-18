@@ -1,3 +1,6 @@
 [submodule "cb-spider"]
 	path = cb-spider
 	url = https://github.com/cloud-barista/cb-spider
+[submodule "cb-tumblebug"]
+	path = cb-tumblebug
+	url = https://github.com/cloud-barista/cb-tumblebug
