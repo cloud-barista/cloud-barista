@@ -25,26 +25,6 @@ If you have any difficulties in using Cloud-Barista, please let us know.
 (Open an issue or Join the Cloud-Barista Slack)
 ```
 
-#### Localization and Globalization of CB-Tumblebug (CB-Tumblebug의 현지화 및 세계화)
-
-```
-[English] As an opensource project initiated by Korean members, 
-we would like to promote participation of Korean contributors during initial stage of this project. 
-So, CB-Tumblebug Repo will accept use of Korean language in its early stages.
-On the other hand, we hope this project flourishes regardless of contributor's country eventually.
-So, the maintainers recommend using English at least for the title of Issues, Pull Requests, and Commits, 
-while CB-Tumblebug Repo accommodates local languages in the contents of them.
-```
-
-```
-[한국어] CB-Tumblebug은 한국에서 시작된 오픈 소스 프로젝트로서 
-프로젝트의 초기 단계에는 한국 기여자들의 참여를 촉진하고자 합니다. 
-따라서 초기 단계의 CB-Tumblebug는 한국어 사용을 받아 들일 것입니다.
-다른 한편으로, 이 프로젝트가 국가에 관계없이 번성하기를 희망합니다.
-따라서 개발 히스토리 관리를 위해 이슈, 풀 요청, 커밋 등의 
-제목에 대해서는 영어 사용을 권장하며, 내용에 대한 한국어 사용은 수용할 것입니다.
-```
-
 </details>
 
 ---
@@ -56,14 +36,8 @@ Main frameworks or tools are as follow,
   - Upstream repo: <https://github.com/cloud-barista/cb-spider>
 - **CB-Tumblebug** (manages multi-cloud infrastructures)
   - Upstream repo: <https://github.com/cloud-barista/cb-tumblebug>
-- **CB-MCKS** (manages multi-cloud Kubernetes clusters)
-  - Upstream repo: <https://github.com/cloud-barista/cb-mcks>
-- **CB-Ladybug** (manages multi-cloud applications)
-  - Upstream repo: <https://github.com/cloud-barista/cb-ladybug>
 - **CB-Dragonfly** (monitors multi-cloud services)
   - Upstream repo: <https://github.com/cloud-barista/cb-dragonfly>
-- CB-Waterstrider/**cb-webtool** (provides Web GUI to Cloud-Barista users)
-  - Upstream repo: <https://github.com/cloud-barista/cb-webtool>
 - CB-Bridge/**cb-operator** (operation tool for Cloud-Barista system runtime)
   - Upstream repo: <https://github.com/cloud-barista/cb-operator>
 - CB-Bridge/**cb-store** (provides an unified DB interface for meta info of Cloud-Barista)
@@ -93,7 +67,7 @@ Please note that the source code of CB-Larva would not be released and archived 
 
 ## [실행 환경]
 
-- Linux (추천: Ubuntu v18.04)
+- Linux (추천: Ubuntu v22.04)
 
 ***
 
@@ -115,56 +89,29 @@ Please note that the source code of CB-Larva would not be released and archived 
       - CB-Dragonfly API 서버 주소를 conf/setup.env 에 설정
     - CB-Tumblebug 실행
 
-  - CB-MCKS 설치 및 실행
-    - [cloud-barista/cb-mcks README를 참고하여 설정, 설치](/cb-mcks/)
-      - CB-Spider API 서버 주소를 conf/setup.env 에 설정
-      - CB-Tumblebug API 서버 주소를 conf/setup.env 에 설정
-    - CB-MCKS 실행
-
-  - CB-Ladybug 설치 및 실행
-    - [cloud-barista/cb-ladybug README를 참고하여 설정, 설치](/cb-ladybug/)
-      - CB-MCKS API 서버 주소를 conf/setup.env 에 설정
-    - CB-Ladybug 실행
-
   - CB-Dragonfly 설치 및 실행
     - [cloud-barista/cb-dragonfly README를 참고하여 설정, 설치](/cb-dragonfly/)
     - CB-Dragonfly 실행
 
-  - cb-webtool 설치 및 실행
-    - [cloud-barista/cb-webtool README를 참고하여 설정, 설치](/cb-webtool/)
-      - CB-Spider API 서버 주소를 conf/setup.env 에 설정
-      - CB-Tumblebug API 서버 주소를 conf/setup.env 에 설정
-      - CB-Dragonfly API 서버 주소를 conf/setup.env 에 설정
-    - cb-webtool 실행
 
 ***
 
 ## [사용 방법 및 예시]
 
-### 주요 서비스 1) 멀티 클라우드 인프라 서비스 (MCIS)
+### 주요 서비스: 멀티 클라우드 인프라 서비스 (MCIS)
 
 - 멀티 클라우드 인프라 서비스 환경 구성
   - [CB-Tumblebug 설정 및 실행](https://github.com/cloud-barista/cb-tumblebug#cb-tumblebug-%EC%86%8C%EC%8A%A4-%EB%B9%8C%EB%93%9C-%EB%B0%8F-%EC%8B%A4%ED%96%89-%EB%B0%A9%EB%B2%95-%EC%83%81%EC%84%B8)
     - CB-Spider (필수)
     - CB-Dragonfly (MCIS 모니터링, CB-Tumblebug 자동 제어 기능에 필요)
-    - cb-webtool (Web기반 GUI)
 - [멀티 클라우드 인프라 서비스 사용 방법](https://github.com/cloud-barista/cb-tumblebug#cb-tumblebug-%EA%B8%B0%EB%8A%A5-%EC%82%AC%EC%9A%A9-%EB%B0%A9%EB%B2%95)
 - [멀티 클라우드 인프라 유스케이스](https://github.com/cloud-barista/cb-tumblebug/blob/main/README.md#3-%EB%A9%80%ED%8B%B0-%ED%81%B4%EB%9D%BC%EC%9A%B0%EB%93%9C-%EC%9D%B8%ED%94%84%EB%9D%BC-%EC%9C%A0%EC%8A%A4%EC%BC%80%EC%9D%B4%EC%8A%A4)
-
-### 주요 서비스 2) 멀티 클라우드 쿠버네티스 서비스 (MCKS)
-
-- 멀티 클라우드 쿠버네티스 서비스 환경 구성
-  - [CB-MCKS 설정 및 실행](https://github.com/cloud-barista/cb-mcks#getting-started)
-    - CB-Spider (필수)
-    - CB-Tumblebug (필수)
-    - cb-webtool (Web기반 GUI)
-- [멀티 클라우드 쿠버네티스 서비스 사용 방법](https://github.com/cloud-barista/cb-mcks/tree/master/docs/test#test)
 
 ***
 
 ## [API 및 문서]
 
-- [API 규격](https://github.com/cloud-barista/docs/blob/master/technical_docs/API/CB-User_REST-API.md)
+- [API 규격](https://github.com/cloud-barista/docs/blob/master/technical_docs/cloud-barista/API/CB-User_REST-API.md)
 - [문서 통합 Repository](https://github.com/cloud-barista/docs)
 
 ***
@@ -175,7 +122,6 @@ Please note that the source code of CB-Larva would not be released and archived 
 - CSP 연동 검증 상태
   - CB-Spider 기준 테스트 완료된 CSP: [링크 1](https://github.com/cloud-barista/cb-spider#3-제공-자원) 및 [링크 2](https://github.com/cloud-barista/cb-spider/wiki/Supported-CloudOS) 참고
   - CB-Tumblebug 기준 테스트 완료된 CSP: [링크](https://github.com/cloud-barista/cb-tumblebug/wiki/Supported-CSPs) 참고
-  - CB-MCKS 기준 테스트 완료된 CSP: [링크](https://github.com/cloud-barista/cb-mcks/wiki/Supported-Cloud-Providers) 참고
   - 현재는 개발 단계이므로 기능 안정성은 낮을 수 있음 (버그 리포트 기여 환영합니다!)
 
 ***
