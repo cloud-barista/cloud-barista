@@ -7,6 +7,3 @@
 [submodule "cb-dragonfly"]
 	path = cb-dragonfly
 	url = https://github.com/cloud-barista/cb-dragonfly
-[submodule "cb-log"]
-	path = cb-log
-	url = https://github.com/cloud-barista/cb-log
