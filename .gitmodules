@@ -1,0 +1,18 @@
+[submodule "cb-spider"]
+	path = cb-spider
+	url = https://github.com/cloud-barista/cb-spider
+[submodule "cb-tumblebug"]
+	path = cb-tumblebug
+	url = https://github.com/cloud-barista/cb-tumblebug
+[submodule "cb-dragonfly"]
+	path = cb-dragonfly
+	url = https://github.com/cloud-barista/cb-dragonfly
+[submodule "cb-log"]
+	path = cb-log
+	url = https://github.com/cloud-barista/cb-log
+[submodule "cb-store"]
+	path = cb-store
+	url = https://github.com/cloud-barista/cb-store
+[submodule "cb-operator"]
+	path = cb-operator
+	url = https://github.com/cloud-barista/cb-operator
