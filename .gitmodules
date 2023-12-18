@@ -4,3 +4,6 @@
 [submodule "cb-tumblebug"]
 	path = cb-tumblebug
 	url = https://github.com/cloud-barista/cb-tumblebug
+[submodule "cb-dragonfly"]
+	path = cb-dragonfly
+	url = https://github.com/cloud-barista/cb-dragonfly
