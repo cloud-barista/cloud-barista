@@ -30,7 +30,7 @@ If you have any difficulties in using Cloud-Barista, please let us know.
 ---
 *This repository is an integrated archive for repository of major frameworks.* These repositories are included and listed in the root directory. This repo reflects the latest release only.
 
-Main frameworks or tools are as follow,
+The main frameworks or tools are as follows (the release version of each repository may vary),
 
 - **CB-Spider** (connects all clouds in a single interface)
   - Upstream repo: <https://github.com/cloud-barista/cb-spider>
@@ -38,8 +38,10 @@ Main frameworks or tools are as follow,
   - Upstream repo: <https://github.com/cloud-barista/cb-tumblebug>
 - **CB-Dragonfly** (monitors multi-cloud services)
   - Upstream repo: <https://github.com/cloud-barista/cb-dragonfly>
+  - Note: not updated since v0.8.0, possible to be deprecated
 - CB-Bridge/**cb-operator** (operation tool for Cloud-Barista system runtime)
   - Upstream repo: <https://github.com/cloud-barista/cb-operator>
+  - Note: As the components of Cloud-Barista are currently simplified, using cb-operator might require additional effort for users. It is recommended to use cb-tumblebug directly.
 - CB-Bridge/**cb-store** (provides an unified DB interface for meta info of Cloud-Barista)
   - Upstream repo: <https://github.com/cloud-barista/cb-store>
 - CB-Bridge/**cb-log** (provides log library to Cloud-Barista system)
@@ -76,6 +78,7 @@ Please note that the source code of CB-Larva would not be released and archived 
 - Cloud-Barista 플랫폼 통합 실행 (Docker 이미지 기반)
   - cb-operator 를 통해 Cloud-Barista 전체 FW를 통합 실행할 수 있음
     - 참고: [cloud-barista/cb-operator](/cb-operator/)
+    - As the components of Cloud-Barista are currently simplified, using cb-operator might require additional effort for users. It is recommended to use cb-tumblebug directly.
 
 - Cloud-Barista 플랫폼 개별 FW 소스 다운로드 및 설치
 
