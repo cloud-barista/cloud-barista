@@ -7,9 +7,13 @@
 
 *The Cloud-Barista is a Multi-Cloud Service Platform SW.*
 
-Cloud-Barista consists of multiple frameworks (sub-systems) to accommodate microservice-like architecture.
+Cloud-Barista is an open source multi-cloud platform designed to make cross cloud operations simple and consistent.
+It provides common APIs and core components to connect to different cloud providers and manage infrastructure in a unified way.
+This helps teams build portable cloud environments and reduce provider specific complexity.
 
-Please take a look [Cloud-Barista Website](https://cloud-barista.github.io/technology/) for a detail decription.
+Cloud-Barista currently consists of the following main components:
+ - CB-Spider: A multi-cloud interface that connects to various cloud providers.
+ - CB-Tumblebug: A multi-cloud orchestration that manages multi-cloud infrastructures
 
 <details>
 <summary>Note for developing and using Cloud-Barista</summary>
@@ -41,7 +45,7 @@ The main frameworks or tools are as follows (the release version of each reposit
   - Upstream repo: <https://github.com/cloud-barista/cb-log>  
 - CB-Bridge/cb-store (provides an unified DB interface for meta info of Cloud-Barista)
   - Upstream repo: <https://github.com/cloud-barista/cb-store>  
-- CB-Bridge/cb-operator (operation tool for Cloud-Barista system runtime)
+- (Deprecated) CB-Bridge/cb-operator (operation tool for Cloud-Barista system runtime)
   - Upstream repo: <https://github.com/cloud-barista/cb-operator>
   - Note: As the components of Cloud-Barista are currently simplified, using cb-operator might require additional effort for users. It is recommended to use cb-tumblebug directly.
   - Note: not updated, possible to be removed  
@@ -57,29 +61,5 @@ The main frameworks or tools are as follows (the release version of each reposit
   - CB-Tumblebug Installation and Execution (Docker Compose based)
     - [Refer to cloud-barista/cb-tumblebug README for configuration and installation](https://github.com/cloud-barista/cb-tumblebug)
     - Run CB-Tumblebug (CB-Spider runs simultaneously)
-
-
-- Cloud-Barista Platform Individual Framework Source Download and Installation
-
-  - CB-Tumblebug Installation and Execution
-    - [Refer to cloud-barista/cb-tumblebug README for configuration and installation](https://github.com/cloud-barista/cb-tumblebug)
-      - Configure CB-Spider API server address in conf/setup.env
-      - Configure CB-Dragonfly API server address in conf/setup.env
-    - Run CB-Tumblebug
-
-  - CB-Spider Installation and Execution
-    - [Refer to cloud-barista/cb-spider README for configuration and installation](https://github.com/cloud-barista/cb-spider)
-    - Run CB-Spider
-
-
-***
-
-## [Notable Information]
-
-- Development Stage: Function development priority stage (stabilization and supplementation required for commercial use)
-- CSP Integration Verification Status
-  - CSPs tested and completed based on CB-Spider: Refer to [Link 1](https://github.com/cloud-barista/cb-spider#3-제공-자원) and [Link 2](https://github.com/cloud-barista/cb-spider/wiki/Supported-CloudOS)
-  - CSPs tested and completed based on CB-Tumblebug: Refer to [Link](https://github.com/cloud-barista/cb-tumblebug?tab=readme-ov-file#cb-tb-)
-  - Currently in development stage, so functional stability may be low (bug reports and contributions are welcome!)
 
 ***
